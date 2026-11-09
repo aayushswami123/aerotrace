@@ -1,6 +1,7 @@
 """The MCP server while the index is being built: progress, the early answer, failures, shutting down."""
 
 import errno
+import inspect
 import json
 import os
 import signal
@@ -358,7 +359,15 @@ async def test_tool_schemas_are_unchanged(repo_factory):
         tools = (await client.list_tools()).tools
     got = {t.name: {"description": t.description, "inputSchema": t.input_schema} for t in tools}
     want = json.loads((GOLDEN / "mcp_tool_schemas.json").read_text())
-    assert got == want  # no `ctx` parameter shows, nothing else moved
+
+    def same_text(tools: dict) -> dict:
+        # Python 3.13 strips docstring indentation when compiling, 3.11 and 3.12 do not; cleandoc gives
+        # both the same text. Input schemas are compared exactly.
+        return {n: {**t, "description": inspect.cleandoc(t["description"])} for n, t in tools.items()}
+
+    assert same_text(got) == same_text(want)  # nothing moved
+    for name, t in got.items():
+        assert "ctx" not in t["inputSchema"].get("properties", {}), name
 
 
 # ---------------------------------------------------------------- shutting down mid-build
