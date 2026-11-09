@@ -467,6 +467,19 @@ class Collector:
                 ):
                     self.mark_address_taken(ref, (usr, rel, ""), c, self.address_use(stack, idx))
                 return
+            if ref is not None and ref.kind == K.OVERLOADED_DECL_REF:
+                # An overload set used as a value in a template (`T p = ov;`): which one is picked depends on
+                # T, so every candidate may have its address taken (#31).
+                if (
+                    k == K.DECL_REF_EXPR
+                    and not self.is_callee(stack, idx)
+                    and not self.is_broken_callee(stack, idx)
+                ):
+                    how = self.address_use(stack, idx)
+                    for d in _overloaded_decls(ref):
+                        if d.kind in FUNC_KINDS:
+                            self.mark_address_taken(d, (usr, rel, ""), c, how)
+                return
             self.on_ref(c, stack, idx, usr, rel)
         elif k == K.MEMBER_REF and len(stack) == 1:
             self.on_ref(c, stack, idx, usr, rel, force_write=True)  # constructor initializer: `: x_(0)`

@@ -149,3 +149,26 @@ def test_cli_check_keeps_crlf_in_the_patch_file(repo_factory, tmp_path, capsys):
     c = json.loads(capsys.readouterr().out)
     assert c["change"]["not_followed"]["outside"] == [] and c["change"]["not_followed"]["mismatched"] == []
     assert [n["name"] for n in c["nodes"] if n["distance"] == 0] == ["add"]
+
+
+# ------------------------------------------------ #31: an overload set used as a value in a template
+
+
+def test_overload_used_as_a_value_in_a_template_is_address_taken(gaps):
+    rows = gaps.execute(
+        """SELECT f.signature FROM edges e JOIN functions s ON s.id = e.src JOIN functions f ON f.id = e.dst
+           WHERE s.name = 'ptrcall' AND e.kind = 'calls' AND e.confidence = 'via_pointer'"""
+    )
+    # g1<int (*)(int)> stores ov(int) in p: the call through int (*)(int) may reach it
+    assert "int ov(int)" in {r[0] for r in rows}
+    sites = gaps.execute(
+        """SELECT f.signature, a.line, a.how FROM address_sites a JOIN functions f ON f.id = a.function_id
+           WHERE f.name = 'ov' ORDER BY 1"""
+    )
+    assert [tuple(r) for r in sites] == [
+        ("int ov(int)", 23, "stored in p"),
+        ("int ov(int, int)", 23, "stored in p"),
+    ]
+    # must not: free_fn(t) in a template is a call, not a use as a value
+    sql = "SELECT f.name FROM address_taken a JOIN functions f ON f.id = a.function_id"
+    assert "free_fn" not in {r[0] for r in gaps.execute(sql)}
