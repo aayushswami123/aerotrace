@@ -1,6 +1,6 @@
 # AeroTrace
 
-**Before an AI agent edits your C or C++ code, AeroTrace tells it what the change can break. It runs on
+**Before an AI agent edits your C or C++ code, AeroTrace can tell it what the change can break. It runs on
 your machine, and it says how sure it is about every link.**
 
 <!-- DEMO VIDEO: docs/launch/demo.mp4 (about 60 seconds: an agent edits a Redis function, `aerotrace check`
