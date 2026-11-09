@@ -74,7 +74,7 @@ button.it:hover, button.it.sel { border-color: var(--line); background: var(--bg
 .node { cursor: pointer; }
 .node .shape { stroke: var(--bg); stroke-width: 1.5; }
 .node .icon { fill: none; stroke-width: 2; stroke-linecap: round; }
-.node text { fill: var(--fg); font-size: 11px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+.node text { fill: var(--fg); font-size: var(--lbl, 13px); font-weight: 500; paint-order: stroke; stroke: var(--bg); stroke-width: 0.25em; stroke-linejoin: round; }
 .s-changed .shape, .s-new .shape { fill: var(--changed); stroke: var(--fg); stroke-width: 2.5; }
 .s-removed .shape { fill: var(--bg); stroke: var(--changed); stroke-width: 2.5; stroke-dasharray: 4 2; }
 .s-changed .icon, .s-new .icon { stroke: var(--on-changed); }

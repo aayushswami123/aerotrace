@@ -101,6 +101,14 @@
     prevR = r;
   }
 
+  /* Long names are cut so labels stay readable; the full name is in the hover title and the details. */
+  var LABEL_MAX = 28;
+  function shortName(s) {
+    if (s.length <= LABEL_MAX) { return s; }
+    if (s.indexOf("::") >= 0) { return "\u2026" + s.slice(s.length - LABEL_MAX + 1); }
+    return s.slice(0, LABEL_MAX - 1) + "\u2026";
+  }
+
   /* ------------------------------------------------------------ draw every node once */
   var nodeLayer = document.getElementById("nodes");
   var bubbleLayer = document.getElementById("bubbles");
@@ -120,7 +128,7 @@
     g.appendChild(sel_("path", { "class": "shape", "d": D.shapes[st][0] }));
     g.appendChild(sel_("path", { "class": "icon", "d": D.shapes[st][1] }));
     var t = sel_("text", { "class": "lbl", "x": "15", "y": "4" });
-    t.textContent = N[i][NAME];
+    t.textContent = shortName(N[i][NAME]);
     g.appendChild(t);
     var tt = sel_("title", {});
     tt.textContent = sayNode(i);
@@ -284,7 +292,10 @@
     frame = window.requestAnimationFrame(function () {
       frame = 0;
       svg.setAttribute("viewBox", vb.x.toFixed(1) + " " + vb.y.toFixed(1) + " " + vb.w.toFixed(1) + " " + vb.h.toFixed(1));
-      if (shownCount <= 60 || lodScale() > 0.8) { svg.classList.add("lod"); } else { svg.classList.remove("lod"); }
+      var sc = lodScale();
+      if (shownCount <= 60 || sc > 0.8) { svg.classList.add("lod"); } else { svg.classList.remove("lod"); }
+      /* Labels keep about 13 screen pixels when zoomed out (one CSS variable, so it stays cheap at 5,000 nodes). */
+      svg.style.setProperty("--lbl", (sc > 0 ? Math.min(Math.max(13 / sc, 13), 48) : 13).toFixed(1) + "px");
     });
   }
   function fit() {

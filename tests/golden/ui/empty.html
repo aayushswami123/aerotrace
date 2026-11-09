@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-KIY4GSsS62WWKjFRnFTpWi/+Ti7e1VSxlHy4GPiw8js=&#x27;; style-src &#x27;sha256-knIJrdrkO01nGTq7o+lbwBuNd+5R/cG+VGS881uhTWQ=&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-12S0xbZwCCBjgd4xwUc/3EsyiL4S+43g5BIqHlN5XIo=&#x27;; style-src &#x27;sha256-j+FCz5I/rbCyl+1PP9EFzlVWHHsMl4jOVH8XJQu9eks=&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <title>AeroTrace: Nothing found that this change can break, in the code AeroTrace can see.</title>
@@ -82,7 +82,7 @@ button.it:hover, button.it.sel { border-color: var(--line); background: var(--bg
 .node { cursor: pointer; }
 .node .shape { stroke: var(--bg); stroke-width: 1.5; }
 .node .icon { fill: none; stroke-width: 2; stroke-linecap: round; }
-.node text { fill: var(--fg); font-size: 11px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+.node text { fill: var(--fg); font-size: var(--lbl, 13px); font-weight: 500; paint-order: stroke; stroke: var(--bg); stroke-width: 0.25em; stroke-linejoin: round; }
 .s-changed .shape, .s-new .shape { fill: var(--changed); stroke: var(--fg); stroke-width: 2.5; }
 .s-removed .shape { fill: var(--bg); stroke: var(--changed); stroke-width: 2.5; stroke-dasharray: 4 2; }
 .s-changed .icon, .s-new .icon { stroke: var(--on-changed); }
@@ -252,6 +252,14 @@ svg.lg { width: 18px; height: 18px; }
     prevR = r;
   }
 
+  /* Long names are cut so labels stay readable; the full name is in the hover title and the details. */
+  var LABEL_MAX = 28;
+  function shortName(s) {
+    if (s.length <= LABEL_MAX) { return s; }
+    if (s.indexOf("::") >= 0) { return "\u2026" + s.slice(s.length - LABEL_MAX + 1); }
+    return s.slice(0, LABEL_MAX - 1) + "\u2026";
+  }
+
   /* ------------------------------------------------------------ draw every node once */
   var nodeLayer = document.getElementById("nodes");
   var bubbleLayer = document.getElementById("bubbles");
@@ -271,7 +279,7 @@ svg.lg { width: 18px; height: 18px; }
     g.appendChild(sel_("path", { "class": "shape", "d": D.shapes[st][0] }));
     g.appendChild(sel_("path", { "class": "icon", "d": D.shapes[st][1] }));
     var t = sel_("text", { "class": "lbl", "x": "15", "y": "4" });
-    t.textContent = N[i][NAME];
+    t.textContent = shortName(N[i][NAME]);
     g.appendChild(t);
     var tt = sel_("title", {});
     tt.textContent = sayNode(i);
@@ -435,7 +443,10 @@ svg.lg { width: 18px; height: 18px; }
     frame = window.requestAnimationFrame(function () {
       frame = 0;
       svg.setAttribute("viewBox", vb.x.toFixed(1) + " " + vb.y.toFixed(1) + " " + vb.w.toFixed(1) + " " + vb.h.toFixed(1));
-      if (shownCount <= 60 || lodScale() > 0.8) { svg.classList.add("lod"); } else { svg.classList.remove("lod"); }
+      var sc = lodScale();
+      if (shownCount <= 60 || sc > 0.8) { svg.classList.add("lod"); } else { svg.classList.remove("lod"); }
+      /* Labels keep about 13 screen pixels when zoomed out (one CSS variable, so it stays cheap at 5,000 nodes). */
+      svg.style.setProperty("--lbl", (sc > 0 ? Math.min(Math.max(13 / sc, 13), 48) : 13).toFixed(1) + "px");
     });
   }
   function fit() {

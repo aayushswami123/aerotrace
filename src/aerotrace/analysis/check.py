@@ -475,7 +475,8 @@ class _Run:
                                   "exact", why, 1, fn.id, fn.qualified_name, [a.line], "reads"))  # fmt: skip
         up = {h.fn.id: h for h in si.upstream}
         for h in si.upstream:
-            self._hit(h, f"calls {{via}}, which calls {fn.name}", up, (fn.id, fn.qualified_name))
+            how = "calls" if h.distance == 2 else "leads to"  # further up, `via` does not call it directly
+            self._hit(h, f"calls {{via}}, which {how} {fn.name}", up, (fn.id, fn.qualified_name))
         for b in si.blind_spots:
             if not b.startswith("Stopped at depth"):  # one depth line for the whole answer (the diff's)
                 self.blind(b, fn.id)
