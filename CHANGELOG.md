@@ -7,6 +7,14 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace callers`, `callees` and `impact` (blast radius): transitive, with a depth limit, nearest first,
+  capped output, and a confidence label on every result. Impact also lists functions that read data the
+  changed function writes, and ends with the limits of the answer.
+- `aerotrace find`: by name, `ns::Class::method`, `name@file` or `file.c:LINE`. A name that matches several
+  functions returns all of them; we never pick one silently.
+- Function-pointer pass: a call through a pointer of type T is linked (`via_pointer`) to every function of
+  type T whose address is taken. On Redis this links `call()` to all 323 command handlers.
+
 - `aerotrace index`: parses C and C++ with libclang and stores calls, overrides, reads and writes of
   globals, struct fields and static locals in `.aerotrace/index.db`.
 - Uses the project's `compile_commands.json` (repo root, `build*/`, `cmake-build-*/`, `out/*/` or `--build-dir`).

@@ -18,7 +18,7 @@ from aerotrace.index.merge import merge
 from aerotrace.toolchain import libclang
 from aerotrace.toolchain.compdb import CompileUnit, find_units, system_include_args, unit_language
 
-PARSER_VERSION = "2"  # bump when parse output changes, so old cache entries are ignored
+PARSER_VERSION = "3"  # bump when parse output changes, so old cache entries are ignored
 
 
 @dataclass

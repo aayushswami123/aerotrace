@@ -75,7 +75,11 @@ def test_blind_spots_are_recorded_not_guessed(c_conn):
     rows = c_conn.execute(
         "SELECT f.name, b.kind FROM blind_spots b JOIN functions f ON f.id = b.function_id ORDER BY 1"
     ).fetchall()
-    assert [tuple(r) for r in rows] == [("calls_missing", "unresolved_call"), ("dispatch", "pointer_call")]
+    assert [tuple(r) for r in rows] == [
+        ("apply", "pointer_call"),
+        ("calls_missing", "unresolved_call"),
+        ("dispatch", "pointer_call"),
+    ]
     taken = c_conn.execute(
         "SELECT f.name FROM address_taken a JOIN functions f ON f.id = a.function_id ORDER BY 1"
     ).fetchall()
@@ -187,3 +191,15 @@ def test_compiler_builtins_are_external_not_unresolved(c_conn):
         c_conn.execute("SELECT COUNT(*) FROM blind_spots WHERE function_id = ?", (row["id"],)).fetchone()[0]
         == 0
     )
+
+
+def test_pointer_calls_only_match_functions_of_the_same_type(c_conn):
+    rows = c_conn.execute(
+        """SELECT f.name, b.detail FROM blind_spots b JOIN functions f ON f.id = b.function_id
+           WHERE b.kind = 'pointer_call' ORDER BY 1"""
+    ).fetchall()
+    assert [tuple(r) for r in rows] == [
+        ("apply", "call through a pointer to 'int (int)'; no function of that type has its address taken"),
+        ("dispatch", "call through a pointer to 'void (void)'; may reach 2 functions of that type"),
+    ]
+    assert not any(src.startswith("apply@") for src, _, _, _ in edges(c_conn, "calls"))

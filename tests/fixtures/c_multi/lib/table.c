@@ -10,3 +10,9 @@ static handler table[] = {on_a, on_b};
 void dispatch(int i) {
     table[i]();
 }
+
+typedef int (*getter)(int);
+
+int apply(getter g, int x) {
+    return g(x);
+}

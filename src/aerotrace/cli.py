@@ -125,6 +125,79 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _open(args: argparse.Namespace):
+    from aerotrace.index import store
+
+    root = find_root(args.root)
+    try:
+        return store.connect(root)
+    except FileNotFoundError as e:
+        _err(str(e))
+        return None
+
+
+def _resolve_one(conn, query: str):
+    """The single function `query` names, or None after explaining the choices."""
+    from aerotrace.analysis import render, symbols
+
+    fns = symbols.find(conn, query)
+    if len(fns) == 1:
+        return fns[0]
+    _err(render.candidates_text(query, fns or symbols.search(conn, query)))
+    return None
+
+
+def cmd_find(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import symbols
+
+    conn = _open(args)
+    if conn is None:
+        return 2
+    fns = symbols.find(conn, args.query) or symbols.search(conn, args.query, args.limit)
+    if args.json:
+        print(json.dumps([f.brief() for f in fns[: args.limit]], indent=2))
+    else:
+        for f in fns[: args.limit]:
+            print(f"{f.qualified_name}@{f.file}  {f.where}  {f.signature}")
+    return 0 if fns else 1
+
+
+def cmd_walk(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import graph, render
+
+    conn = _open(args)
+    if conn is None:
+        return 2
+    fn = _resolve_one(conn, args.symbol)
+    if fn is None:
+        return 1
+    w = graph.walk(conn, fn, args.command, args.depth)
+    print(
+        json.dumps(render.walk_json(w, args.limit), indent=2)
+        if args.json
+        else render.walk_text(w, args.limit)
+    )
+    return 0
+
+
+def cmd_impact(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import graph, render
+
+    conn = _open(args)
+    if conn is None:
+        return 2
+    fn = _resolve_one(conn, args.symbol)
+    if fn is None:
+        return 1
+    imp = graph.impact(conn, fn, args.depth)
+    print(
+        json.dumps(render.impact_json(imp, args.limit), indent=2)
+        if args.json
+        else render.impact_text(imp, args.limit)
+    )
+    return 0
+
+
 # ---------------------------------------------------------------- parser
 
 
@@ -150,6 +223,23 @@ def build_parser() -> argparse.ArgumentParser:
     i.add_argument("--show-errors", type=int, default=10, metavar="N", help="list parse errors for N files")
     i.add_argument("--json", action="store_true", help="print the build report as JSON")
     i.set_defaults(func=cmd_index)
+
+    def query(name: str, help_: str, func, symbol: bool = True) -> None:
+        q = with_root(sub.add_parser(name, help=help_))
+        q.add_argument(
+            "symbol" if symbol else "query",
+            help="function name, ns::Class::method, name@file, or file.c:LINE",
+        )
+        if symbol:
+            q.add_argument("--depth", type=int, default=5, help="how many call steps to follow (default 5)")
+        q.add_argument("--limit", type=int, default=50, help="most results to print (default 50)")
+        q.add_argument("--json", action="store_true")
+        q.set_defaults(func=func)
+
+    query("find", "find functions by name or file:line", cmd_find, symbol=False)
+    query("callers", "who calls this function, directly or through others", cmd_walk)
+    query("callees", "what this function calls, directly or through others", cmd_walk)
+    query("impact", "what could break if this function changes (callers + data readers)", cmd_impact)
 
     s = with_root(sub.add_parser("status", help="what is in the index and whether it is up to date"))
     s.add_argument("--json", action="store_true")

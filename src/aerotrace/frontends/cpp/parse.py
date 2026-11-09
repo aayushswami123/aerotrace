@@ -117,6 +117,17 @@ def unary_kind(c: Cursor) -> int | None:
     return cindex.conf.lib.clang_getCursorUnaryOperatorKind(c) if _has_operator_api() else None
 
 
+FUNCTION_TYPES = {TypeKind.FUNCTIONPROTO, TypeKind.FUNCTIONNOPROTO}
+
+
+def function_type(t) -> str:
+    """Canonical spelling of a function type, or of the function a pointer points to ('' otherwise)."""
+    t = t.get_canonical()
+    if t.kind == TypeKind.POINTER:
+        t = t.get_pointee().get_canonical()
+    return t.spelling if t.kind in FUNCTION_TYPES else ""
+
+
 def file_hash(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -179,9 +190,9 @@ class Collector:
         self.class_bases: dict[str, list[str]] = {}
         self.calls: set[tuple] = set()  # (caller_usr, caller_file, callee_usr, line, dispatch, callee_name)
         self.accesses: set[tuple] = set()  # (fn_usr, fn_file, var_usr, "reads"/"writes", line)
-        self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line)
+        self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line, function type called or "")
         self.overrides: set[tuple] = set()  # (usr, base_usr)
-        self.address_taken: set[str] = set()  # function usrs used as a value, not called
+        self.address_taken: dict[str, str] = {}  # function usr -> its type, for functions used as a value
         self.external_calls: dict[tuple[str, str], int] = {}
 
     # -- repo membership
@@ -346,7 +357,7 @@ class Collector:
             return  # overloaded operator calls show up as a bare reference
         ref = self.canonical(ref)
         if ref.get_usr():
-            self.address_taken.add(ref.get_usr())
+            self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
 
     def scan_initializer(self, var: Cursor) -> None:
         """Functions named in a global's initializer (handler tables) have their address taken."""
@@ -369,12 +380,13 @@ class Collector:
         ref = c.referenced
         line = c.location.line
         if ref is None or ref.kind not in FUNC_KINDS or self.is_std_function(ref):
-            self.pointer_calls.add((usr, rel, line))  # through a pointer, std::function or a dependent name
+            # through a pointer, std::function or a dependent name: remember the type that is called
+            self.pointer_calls.add((usr, rel, line, self.called_type(c)))
             return
         ref = self.canonical(ref)
         target = ref.get_usr()
         if not target:
-            self.pointer_calls.add((usr, rel, line))
+            self.pointer_calls.add((usr, rel, line, ""))
             return
         if self.is_builtin(ref) or (self.cursor_rel(ref) is None and not self.might_be_defined_here(ref)):
             key = (usr, rel)
@@ -387,6 +399,14 @@ class Collector:
         """A function declared in a system header can still be defined in the repo (own strlcpy)."""
         defn = ref.get_definition()
         return defn is not None and self.cursor_rel(defn) is not None
+
+    @staticmethod
+    def called_type(call: Cursor) -> str:
+        """The function type a call through a pointer expects, e.g. 'void (struct client *)'."""
+        callee = next(call.get_children(), None)
+        while callee is not None and callee.kind in WRAPPER_KINDS and callee.type.kind == TypeKind.INVALID:
+            callee = next(callee.get_children(), None)
+        return function_type(callee.type) if callee is not None else ""
 
     @staticmethod
     def is_builtin(ref: Cursor) -> bool:
@@ -568,6 +588,6 @@ def _collect_unit(
     result["accesses"] = sorted(list(t) for t in col.accesses)
     result["pointer_calls"] = sorted(list(t) for t in col.pointer_calls)
     result["overrides"] = sorted(list(t) for t in col.overrides)
-    result["address_taken"] = sorted(col.address_taken)
+    result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
     result["external_calls"] = sorted([u, f, n] for (u, f), n in col.external_calls.items())
     return result

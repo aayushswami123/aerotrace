@@ -20,7 +20,7 @@ class Graph:
     variables: list[dict] = field(default_factory=list)
     edges: list[tuple] = field(default_factory=list)  # (src, dst, kind, confidence, line)
     blind_spots: list[tuple] = field(default_factory=list)  # (function_id, kind, line, detail)
-    address_taken: list[str] = field(default_factory=list)  # function ids
+    address_taken: list[tuple[str, str]] = field(default_factory=list)  # (function id, function type)
     class_bases: dict[str, list[str]] = field(default_factory=dict)
 
 
@@ -87,7 +87,8 @@ def merge(results: list[dict]) -> Graph:
     dispatch_calls: set[tuple] = set()  # (src, static target id, line)
     blind: set[tuple] = set()
     overrides: set[tuple[str, str]] = set()
-    taken: set[str] = set()
+    taken: dict[str, str] = {}  # function id -> type
+    pointer_sites: set[tuple] = set()  # (src, line, called type)
 
     for res in results:
         visible = set(res.get("deps", {}))
@@ -111,23 +112,43 @@ def merge(results: list[dict]) -> Graph:
             src = fns.id_of(fn, ffile)
             for dst, conf in vars_.resolve(var, visible):
                 edges.add((src, dst, kind, conf, line))
-        for fn, ffile, line in res.get("pointer_calls", []):
+        for fn, ffile, line, ftype in res.get("pointer_calls", []):
             if fn in fns.defs:
-                blind.add(
-                    (fns.id_of(fn, ffile), "pointer_call", line, "call through a pointer; target unknown")
-                )
+                pointer_sites.add((fns.id_of(fn, ffile), line, ftype))
         for usr, base in res.get("overrides", []):
             for a in fns.ids(usr):
                 for b in fns.ids(base):
                     overrides.add((a, b))
-        for usr in res.get("address_taken", []):
-            taken.update(fns.ids(usr))
+        for usr, ftype in res.get("address_taken", []):
+            for fid in fns.ids(usr):
+                taken.setdefault(fid, ftype)
         for fn, ffile, n in res.get("external_calls", []):
             if fn in fns.defs:
                 external[fns.id_of(fn, ffile)] += n
 
     for a, b in overrides:
         edges.add((a, b, "overrides", "exact", 0))
+
+    # Function-pointer pass: a call through a pointer of type T may reach any function of type T whose
+    # address is taken somewhere (stored in a table, passed as a callback). Labelled `via_pointer`, and
+    # the call site stays a blind spot, because the real target is still not proven.
+    by_type: dict[str, list[str]] = defaultdict(list)
+    for fid, ftype in sorted(taken.items()):
+        if ftype:
+            by_type[ftype].append(fid)
+    for src, line, ftype in sorted(pointer_sites):
+        candidates = [c for c in by_type.get(ftype, []) if c != src] if ftype else []
+        for dst in candidates:
+            edges.add((src, dst, "calls", "via_pointer", line))
+        if not ftype:
+            detail = "call through a pointer or dependent name; target unknown"
+        elif candidates:
+            detail = (
+                f"call through a pointer to '{ftype}'; may reach {len(candidates)} functions of that type"
+            )
+        else:
+            detail = f"call through a pointer to '{ftype}'; no function of that type has its address taken"
+        blind.add((src, "pointer_call", line, detail))
 
     # A virtual call through a pointer or reference may land on any override of the method it names.
     overridden_by: dict[str, set[str]] = defaultdict(set)
@@ -156,5 +177,5 @@ def merge(results: list[dict]) -> Graph:
             graph.variables.append({**rec, "id": vars_.id_of(usr, f), "clash": len(files) > 1})
     graph.edges = sorted(edges)
     graph.blind_spots = sorted(blind)
-    graph.address_taken = sorted(taken)
+    graph.address_taken = sorted(taken.items())
     return graph

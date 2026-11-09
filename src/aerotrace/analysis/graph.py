@@ -1,0 +1,224 @@
+"""Callers, callees and blast radius over the index. Everything here is deterministic."""
+
+from __future__ import annotations
+
+import sqlite3
+from dataclasses import dataclass, field
+
+from aerotrace.analysis import symbols
+from aerotrace.analysis.symbols import Fn
+
+# From strongest to weakest. A path is as weak as its weakest link.
+CONFIDENCE_ORDER = ("exact", "virtual", "ambiguous", "via_pointer", "data")
+ALL_CALL_CONFIDENCE = ("exact", "virtual", "ambiguous", "via_pointer")
+CONFIDENCE_MEANING = {
+    "exact": "a direct call the compiler resolved",
+    "virtual": "a virtual call that may land on this override",
+    "ambiguous": "more than one function has this name; this is one of them",
+    "via_pointer": "a call through a function pointer of the matching type",
+    "data": "reads data the changed function writes",
+}
+
+
+def weaker(a: str, b: str) -> str:
+    return a if CONFIDENCE_ORDER.index(a) >= CONFIDENCE_ORDER.index(b) else b
+
+
+@dataclass
+class Hit:
+    fn: Fn
+    distance: int
+    confidence: str  # weakest link on the best path found
+    via: str | None  # the function one step closer to the start (its qualified name)
+    lines: list[int]  # where, in the closer function or in this one, the link is
+
+
+@dataclass
+class Walk:
+    start: Fn
+    direction: str  # "callers" | "callees"
+    depth: int
+    hits: list[Hit] = field(default_factory=list)
+    truncated_at_depth: bool = False  # more functions exist beyond `depth`
+
+    def by_distance(self) -> dict[int, list[Hit]]:
+        out: dict[int, list[Hit]] = {}
+        for h in self.hits:
+            out.setdefault(h.distance, []).append(h)
+        return out
+
+
+def _neighbours(
+    conn: sqlite3.Connection, ids: list[str], direction: str, allowed: tuple[str, ...]
+) -> dict[str, list[tuple[str, str, int]]]:
+    """For each id: [(neighbour id, confidence, line)] one call step away, in a stable order."""
+    near, far = ("dst", "src") if direction == "callers" else ("src", "dst")
+    marks_c = ",".join("?" * len(allowed))
+    out: dict[str, list[tuple[str, str, int]]] = {}
+    for i in range(0, len(ids), 400):
+        chunk = ids[i : i + 400]
+        marks = ",".join("?" * len(chunk))
+        for r in conn.execute(
+            f"""SELECT {near} AS a, {far} AS b, confidence, line FROM edges
+                WHERE kind = 'calls' AND {near} IN ({marks}) AND confidence IN ({marks_c})
+                ORDER BY a, b, confidence, line""",
+            [*chunk, *allowed],
+        ):
+            out.setdefault(r["a"], []).append((r["b"], r["confidence"], r["line"]))
+    return out
+
+
+def walk(
+    conn: sqlite3.Connection,
+    start: Fn,
+    direction: str,
+    depth: int,
+    allowed: tuple[str, ...] = ALL_CALL_CONFIDENCE,
+    extra_first_step: dict[str, tuple[str, list[int]]] | None = None,
+) -> Walk:
+    """Breadth-first walk over call links. Each function appears once, at its shortest distance;
+    among equally short paths, the strongest confidence wins.
+
+    `extra_first_step` adds functions at distance 1 with a given confidence (used for data coupling).
+    """
+    rank = CONFIDENCE_ORDER.index
+    # id -> (distance, confidence of the best path, the function one step closer, lines of that link)
+    best: dict[str, tuple[int, str, str | None, list[int]]] = {start.id: (0, "exact", None, [])}
+    seeds = sorted(f for f in (extra_first_step or {}) if f != start.id)
+    for fid in seeds:
+        conf, lines = extra_first_step[fid]  # type: ignore[index]
+        best[fid] = (1, conf, start.id, list(lines))
+
+    frontier = [start.id]
+    reached_depth = False
+    for distance in range(1, depth + 1):
+        nbrs = _neighbours(conn, frontier, direction, allowed)
+        found: dict[str, tuple[int, str, str | None, list[int]]] = {}
+        for a in frontier:
+            path_conf = best[a][1]
+            for b, conf, line in nbrs.get(a, []):
+                if b in best and best[b][0] < distance:
+                    continue  # already reached by a shorter path
+                c = weaker(path_conf, conf)
+                cur = found.get(b) or best.get(b)
+                if cur is None or rank(c) < rank(cur[1]):
+                    found[b] = (distance, c, a, [line])
+                elif cur[1] == c and cur[2] == a and line not in cur[3]:
+                    cur[3].append(line)
+        best.update(found)
+        frontier = sorted(set(found) | (set(seeds) if distance == 1 else set()))
+        if not frontier:
+            break
+        reached_depth = distance == depth
+
+    truncated = False
+    if reached_depth:
+        more = _neighbours(conn, frontier, direction, allowed)
+        truncated = any(b not in best for links in more.values() for b, _, _ in links)
+
+    fns = symbols.get_many(conn, [i for i in best if i != start.id])
+    names = {start.id: start.qualified_name} | {i: f.qualified_name for i, f in fns.items()}
+    hits = [
+        Hit(fns[i], d, c, names.get(v) if v else None, sorted(ls))
+        for i, (d, c, v, ls) in best.items()
+        if i != start.id and i in fns
+    ]
+    hits.sort(
+        key=lambda h: (h.distance, CONFIDENCE_ORDER.index(h.confidence), h.fn.file, h.fn.line_start, h.fn.id)
+    )
+    return Walk(start, direction, depth, hits, truncated)
+
+
+# ---------------------------------------------------------------- blast radius
+
+
+@dataclass
+class Impact:
+    target: Fn
+    callers: Walk  # everything upstream, including functions coupled through data
+    data_readers: dict[str, list[str]]  # reader qualified name -> variables it reads that the target writes
+    writes: list[str]  # variables the target writes
+    blind_spots: list[str]  # plain-English limits of this answer
+
+
+def data_coupling(
+    conn: sqlite3.Connection, fid: str
+) -> tuple[list[str], dict[str, tuple[set[str], list[int]]]]:
+    """Variables `fid` writes, and the other functions that read them: {reader id: ({var names}, [lines])}."""
+    writes = [
+        r[0]
+        for r in conn.execute(
+            """SELECT DISTINCT v.qualified_name FROM edges e JOIN variables v ON v.id = e.dst
+               WHERE e.src = ? AND e.kind = 'writes' ORDER BY 1""",
+            (fid,),
+        )
+    ]
+    readers: dict[str, tuple[set[str], list[int]]] = {}
+    for r in conn.execute(
+        """SELECT r.src AS reader, v.qualified_name AS var, r.line AS line
+           FROM edges w JOIN edges r ON r.dst = w.dst AND r.kind = 'reads'
+           JOIN variables v ON v.id = w.dst
+           WHERE w.src = ? AND w.kind = 'writes' AND r.src != ?
+           ORDER BY reader, var, line""",
+        (fid, fid),
+    ):
+        names, lines = readers.setdefault(r["reader"], (set(), []))
+        names.add(r["var"])
+        lines.append(r["line"])
+    return writes, readers
+
+
+def impact(conn: sqlite3.Connection, target: Fn, depth: int = 5) -> Impact:
+    """What could break if `target` changes: its callers (transitively, up to `depth`), and functions
+    that read data it writes, plus their callers."""
+    writes, readers = data_coupling(conn, target.id)
+    extra = {rid: ("data", sorted(set(lines))) for rid, (_, lines) in readers.items()}
+    callers = walk(conn, target, "callers", depth, extra_first_step=extra)
+    names = symbols.get_many(conn, list(readers))
+    data_readers = {names[r].qualified_name: sorted(v) for r, (v, _) in readers.items() if r in names}
+    return Impact(
+        target, callers, dict(sorted(data_readers.items())), writes, blind_spots_for(conn, target, callers)
+    )
+
+
+def blind_spots_for(conn: sqlite3.Connection, target: Fn, callers: Walk) -> list[str]:
+    """Plain-English reasons the caller list may be incomplete."""
+    notes: list[str] = []
+    taken = conn.execute("SELECT type FROM address_taken WHERE function_id = ?", (target.id,)).fetchone()
+    if taken is not None:
+        n_ptr = sum(1 for h in callers.hits if h.distance == 1 and h.confidence == "via_pointer")
+        if n_ptr:
+            notes.append(
+                f"{target.name} is used as a function pointer. {n_ptr} caller(s) were matched by type; "
+                "calls from outside this repo (callbacks into libraries) are not visible."
+            )
+        else:
+            notes.append(
+                f"{target.name} is used as a function pointer, but no call site of type '{taken[0]}' was found. "
+                "It may be called from outside the repo, or through a cast."
+            )
+    if target.clash:
+        notes.append(
+            f"Another function has the same clang ID as {target.name}. Callers that could not tell them "
+            "apart are marked 'ambiguous'."
+        )
+    if target.linkage == "external":
+        unknown = conn.execute(
+            "SELECT COUNT(*) FROM blind_spots WHERE kind = 'pointer_call' AND detail LIKE '%target unknown%'"
+        ).fetchone()[0]
+        if unknown:
+            notes.append(
+                f"{unknown} call sites in the repo go through pointers of unknown type and could reach anything."
+            )
+    if callers.truncated_at_depth:
+        notes.append(f"Stopped at depth {callers.depth}; more callers exist further up.")
+    meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+    if meta.get("flags_source") == "guessed":
+        notes.append("Compile flags were guessed (no compile_commands.json), so some code may be missing.")
+    n_err = int(meta.get("files_with_errors", "0"))
+    if n_err:
+        notes.append(
+            f"{n_err} source file{'s' if n_err != 1 else ''} had parse errors; links in them may be missing."
+        )
+    notes.append("Only one build configuration was analysed; code under other #ifdef settings is not seen.")
+    return notes
