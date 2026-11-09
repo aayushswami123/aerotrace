@@ -1,6 +1,9 @@
 ℹ️  Nothing found that this change can break, but 2 parts of the change could not be followed.
     You changed 1 function in 1 C/C++ file (compared with HEAD).
 
+What changed (1)
+  ◆ CHANGED    getGenericCommand  src/t_string.c:380  (you changed 2 lines in it)
+
 Changes AeroTrace could not follow (2)
   ? src/t_string.c: lines 40-42 outside any function.
   ? src/extra.c is not in the index (not in compile_commands.json, excluded, or a header no indexed file includes).

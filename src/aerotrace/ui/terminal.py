@@ -46,7 +46,8 @@ def style_for(stream: TextIO, env: Mapping[str, str]) -> tuple[bool, bool]:
         tty = bool(stream.isatty())
     except (AttributeError, ValueError):
         tty = False
-    return (tty and not no_color and not dumb, utf8 and not no_color and not dumb)
+    # NO_COLOR is about colour only; Unicode icons stay unless the stream can't show them.
+    return (tty and not no_color and not dumb, utf8 and not dumb)
 
 
 def strip_ansi(text: str) -> str:
@@ -89,8 +90,20 @@ def headline(data: dict) -> tuple[str, list[str]]:
         return "risk", ["AeroTrace could not read its index, so it checked nothing.", data["message"]]
     if st == "nothing_to_check":
         where = _where(change) if change else ""
-        lines = [f"No C or C++ changes to check{(' ' + where) if where else ''}."]
+        gaps = not_followed_lines(data)
+        if gaps:
+            lines = [
+                f"No change AeroTrace could check {where}, but {n_(len(gaps), 'part')} of it could not be followed."
+            ]
+        else:
+            lines = [f"No C or C++ changes to check{(' ' + where) if where else ''}."]
         other = change.get("other_files", 0)
+        if gaps:
+            if other:
+                lines.append(
+                    f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)"
+                )
+            return "info", lines
         if other:
             lines.append(
                 f"{n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++. "
@@ -146,7 +159,21 @@ def headline(data: dict) -> tuple[str, list[str]]:
         lines.append(f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)")
     if icon == "clear":
         lines.append("No other indexed function calls what changed or reads what it writes.")
+        # A pass never hides what the index as a whole can't see.
+        limits = index_limits(data)
+        lines += [f"Index limit: {t}" for t in limits[:INDEX_LIMITS_UNDER_PASS]]
+        if len(limits) > INDEX_LIMITS_UNDER_PASS:
+            lines.append(
+                f"... and {len(limits) - INDEX_LIMITS_UNDER_PASS:,} more index limits, listed below."
+            )
     return icon, lines
+
+
+INDEX_LIMITS_UNDER_PASS = 5
+
+
+def index_limits(data: dict) -> list[str]:
+    return [b["text"] for b in data["sections"]["blind_spots"] if b["scope"] == "index"]
 
 
 def _where(change: dict) -> str:
@@ -226,6 +253,16 @@ def detail(n: dict) -> str:
 # ---------------------------------------------------------------- the renderer
 
 
+def _gaps(o: _Out, data: dict, limit: int) -> None:
+    gaps = not_followed_lines(data)
+    if gaps:
+        o.section(f"Changes AeroTrace could not follow ({len(gaps):,})")
+        for g in gaps[:limit]:
+            o.note("unknown", g)
+        if len(gaps) > limit:
+            o.lines.append(f"  ... and {len(gaps) - limit:,} more.")
+
+
 class _Out:
     def __init__(self, color: bool, unicode: bool):
         self.color, self.unicode = color, unicode
@@ -253,34 +290,52 @@ class _Out:
         self.lines.append(f"  {self.paint(self.icon(key), key)} {text}")
 
 
-_CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+# Control characters, bidi controls (which can reorder what is shown) and line/paragraph separators.
+_UNSAFE = re.compile("[\x00-\x1f\x7f-\x9f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069\u2028\u2029]")
 
 
-def _clean(v: object) -> object:
-    """Data strings with control characters replaced, so a name can't send escape codes to the terminal."""
+def safe_text(s: str, ascii_only: bool = False) -> str:
+    """`s` with unsafe characters shown as \\uXXXX, so a name can't send escape codes or reorder text."""
+    s = _UNSAFE.sub(lambda m: f"\\u{ord(m.group()):04x}", s)
+    return s.encode("ascii", "backslashreplace").decode("ascii") if ascii_only else s
+
+
+def clean(v: object, ascii_only: bool = False) -> object:
+    """Every string in `v` passed through safe_text."""
     if isinstance(v, str):
-        return _CONTROL.sub("?", v)
+        return safe_text(v, ascii_only)
     if isinstance(v, list):
-        return [_clean(x) for x in v]
+        return [clean(x, ascii_only) for x in v]
     if isinstance(v, dict):
-        return {k: _clean(x) for k, x in v.items()}
+        return {k: clean(x, ascii_only) for k, x in v.items()}
     return v
 
 
 def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int = 8) -> str:
     """The whole terminal answer as one string (no trailing newline)."""
     check(data)
-    data = _clean(data)  # type: ignore[assignment]
+    data = clean(data, not unicode)  # type: ignore[assignment]
     o = _Out(color, unicode)
     icon, head = headline(data)
     o.lines.append(o.paint(f"{o.icon(icon)} {head[0]}", "head"))
     o.lines += [f"    {line}" for line in head[1:]]
     if data["status"] != "ok":
+        if data["status"] == "nothing_to_check":
+            _gaps(o, data, limit)
         return "\n".join(o.lines)
 
     nodes = {n["id"]: n for n in data["nodes"]}
     sec = data["sections"]
     used: set[str] = set()
+    changed = [n for n in data["nodes"] if n["status"] in ("changed", "new", "removed")]
+    if changed:
+        o.section(f"What changed ({len(changed):,})")
+        for n in changed[:limit]:
+            word = node_word(n["status"], n["certainty"]).ljust(WORD_WIDTH)
+            why = f"  ({n['why'].rstrip('.')})" if n["why"] else ""
+            o.lines.append(f"  {o.icon(n['status'])} {word}  {title(n)}  {n['file']}:{n['line']}{why}")
+        if len(changed) > limit:
+            o.lines.append(f"  ... and {len(changed) - limit:,} more.")
     for key, heading in (("functions", "Functions"), ("data", "Data")):
         ids = sec[key]
         if not ids:
@@ -301,13 +356,7 @@ def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int 
             kinds = ", ".join(f"{c:,} {w}" for w, c in sorted(by.items(), key=lambda kv: (-kv[1], kv[0])))
             o.lines.append(f"  ... and {len(rest):,} more ({kinds}). Raise --limit or use --html to see all.")
 
-    gaps = not_followed_lines(data)
-    if gaps:
-        o.section(f"Changes AeroTrace could not follow ({len(gaps):,})")
-        for g in gaps[:limit]:
-            o.note("unknown", g)
-        if len(gaps) > limit:
-            o.lines.append(f"  ... and {len(gaps) - limit:,} more.")
+    _gaps(o, data, limit)
 
     tests = sec.get("tests_to_run")
     if tests is None:
@@ -335,6 +384,8 @@ def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int 
 
     for scope, heading in (("change", "Blind spots in this change"), ("index", "Limits of the index")):
         spots = [b for b in sec["blind_spots"] if b["scope"] == scope]
+        if scope == "index" and icon == "clear" and len(spots) <= INDEX_LIMITS_UNDER_PASS:
+            continue  # already printed under the headline
         if spots:
             o.section(f"{heading} ({len(spots):,})")
             for b in spots[:limit]:

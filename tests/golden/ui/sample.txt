@@ -3,6 +3,11 @@
     You changed 1 function, removed 1 function and changed 1 declaration in 2 C/C++ files (compared with HEAD).
     (1 other file in the diff is not C or C++.)
 
+What changed (3)
+  ◆ CHANGED    client.bufpos (field)  src/server.h:1201  (its declaration changed)
+  ◆ CHANGED    getGenericCommand  src/t_string.c:380  (you changed 6 lines in it)
+  ◆ REMOVED    checkStringLength  src/t_string.c:95  (this change removes it)
+
 Functions (11)
   ✖ BREAKS     getCommand  src/t_string.c:398
                passes 1 argument; getGenericCommand now takes 2. Link: exact.

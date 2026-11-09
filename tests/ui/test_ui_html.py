@@ -30,6 +30,7 @@ CASES = {
     "no_index": samples.no_index,
     "index_error": samples.index_error,
     "nothing_to_check": samples.nothing_to_check,
+    "nothing_to_check_gaps": samples.nothing_to_check_gaps,
     "empty": samples.base,
 }
 
@@ -198,6 +199,20 @@ def test_status_table_pairs_colour_with_shape_icon_and_word() -> None:
         assert word in text.split('class="legend"', 1)[1]
 
 
+def test_nothing_to_check_lists_skipped_parts() -> None:
+    text = ui_html.render(samples.nothing_to_check_gaps())
+    assert "h-clear" not in text and "✅" not in text
+    assert "src/extra.c is not in the index" in text
+
+
+def test_bidi_controls_are_shown_not_applied() -> None:
+    d = samples.sample()
+    d["nodes"][3]["name"] = "admin\u202eolleh"
+    text = ui_html.render(d)
+    assert "\u202e" not in text
+    assert "admin\\u202eolleh" in text
+
+
 def test_empty_states_have_no_graph_and_no_all_clear() -> None:
     for case in ("no_index", "index_error"):
         text = ui_html.render(CASES[case]())
@@ -215,7 +230,13 @@ def test_size_budget(n: int, budget_kb: int) -> None:
 def test_write_html(tmp_path: Path) -> None:
     out = tmp_path / "report.html"
     assert ui_html.write_html(samples.sample(), out, tmp_path).startswith("Wrote ")
-    assert ui_html.write_html(samples.sample(), out, tmp_path).startswith("Replaced the existing file ")
+    assert ui_html.write_html(samples.sample(), out, tmp_path).startswith("Replaced the existing HTML file ")
+    src = tmp_path / "server.c"
+    src.write_text("int main(void) { return 0; }\n")
+    for bad in (src, tmp_path / "notes.txt", tmp_path / "report"):
+        with pytest.raises(ValueError, match=r"must end in \.html"):
+            ui_html.write_html(samples.sample(), bad, tmp_path)
+    assert src.read_text() == "int main(void) { return 0; }\n"
     (tmp_path / ".aerotrace").mkdir()
     with pytest.raises(ValueError, match="belongs to the index"):
         ui_html.write_html(samples.sample(), tmp_path / ".aerotrace" / "r.html", tmp_path)

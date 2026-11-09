@@ -7,8 +7,8 @@ Draft README sections for the launch (work item 9). Not README.md yet.
 
 # AeroTrace
 
-**Before an AI agent edits your C or C++ code, AeroTrace tells it what the change will break. It runs on
-your machine, and its answers come from the compiler, not a guess.**
+**Before an AI agent edits your C or C++ code, AeroTrace tells it what the change can break. It runs on
+your machine, and it says how sure it is about every link.**
 
 <!-- DEMO VIDEO: docs/launch/demo.mp4 (about 60 seconds: an agent edits a Redis function, `aerotrace check`
      shows what it would break, the agent fixes the callers). Placeholder until recorded. -->
@@ -16,6 +16,9 @@ your machine, and its answers come from the compiler, not a guess.**
 {{BENCH_HEADLINE}}
 
 ## Install
+
+<!-- This URL only works once the repo is public. Until then, install from a local clone:
+     uv tool install /path/to/aerotrace -->
 
 ```bash
 uv tool install git+https://github.com/aayushswami123/aerotrace
@@ -59,9 +62,12 @@ are kept.
   AeroTrace could not follow", never dropped.
 - **Function pointers are matched by type.** A call through a pointer is linked to every function of
   that type and labelled `probable`.
-- **Code it cannot see is unknown, not safe.** Data passed to a library or through `void *` is labelled
-  `unknown`. "Nothing found" always comes with the list of what was not checked.
-- **It does not run your build or your tests.** When it knows which tests reach the change, it lists them; you run them.
+- **Many links are `probable`, not `exact`.** Calls through function pointers, virtual calls and functions
+  that share a name can't be resolved by the compiler alone, so AeroTrace lists them and says so.
+- **"Nothing found" is not "safe".** It always comes with the list of what AeroTrace could not check:
+  changed lines outside any function, files not in the index, and the index's own limits.
+- **It does not run your build or your tests.** Mapping changes to the tests that reach them is coming; until
+  then, the answer says the test list is not known.
 - Tested on Linux and macOS.
 
 Nothing leaves your machine: no network calls during analysis, no telemetry, and the HTML report loads

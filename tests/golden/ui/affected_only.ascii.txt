@@ -1,6 +1,9 @@
 [!] This change may affect 1 thing you didn't touch (1 direct). None is sure to break.
     You changed 1 function in 1 C/C++ file (compared with HEAD).
 
+What changed (1)
+  [*] CHANGED    getGenericCommand  src/t_string.c:380  (you changed 2 lines in it)
+
 Functions (1)
   [~] AFFECTED   getCommand  src/t_string.c:398
                  calls getGenericCommand. Link: exact.

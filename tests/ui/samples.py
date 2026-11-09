@@ -284,6 +284,15 @@ def nothing_to_check() -> dict:
     return d
 
 
+def nothing_to_check_gaps() -> dict:
+    """No function or declaration could be placed, but C files changed: never an all-clear."""
+    d = nothing_to_check()
+    d["change"].update(files=2, other_files=0)
+    d["change"]["not_followed"]["not_indexed"] = ["src/extra.c"]
+    d["change"]["not_followed"]["mismatched"] = ["src/t_string.c"]
+    return d
+
+
 def hostile() -> dict:
     """Names and reasons that try to break out of HTML, JSON and the terminal."""
     d = sample()

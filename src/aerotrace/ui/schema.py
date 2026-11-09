@@ -9,6 +9,9 @@ The full description, with an example, is in docs/plans/launch-ui.md section 1. 
   `analysis.graph.CONFIDENCE_ORDER`.
 - `breaks` means "will not build or link" and nothing else.
 - Counts come from `summary` and `proof` only, because lists may be capped.
+- Ids are opaque, except two forms Part C makes for things the index can't have:
+  `removed:{file}:{line}:{name}` (a function the change removes, as in analysis/diff.py) and
+  `new:{file}:{line}:{name}` (a function that is new in a patch that is not applied yet).
 
 `check()` only checks shape and consistency. It refuses data that would show a wrong all-clear.
 """
@@ -116,6 +119,12 @@ def check(data: Any) -> dict:
     if change is not None:
         _check_change(change)
     if status != "ok":
+        # Nothing was analysed, so nothing may be listed; but what the change skipped is still shown.
+        if status == "nothing_to_check" and change is None:
+            _fail("change is required when status is 'nothing_to_check'")
+        for key in ("nodes", "edges"):
+            if data.get(key):
+                _fail(f"status {status!r} can't list {key}")
         return data
     if change is None:
         _fail("change is required when status is 'ok'")
@@ -141,6 +150,14 @@ def check(data: Any) -> dict:
     ids = _check_nodes(data["nodes"])
     _check_edges(data["edges"], ids)
     blind = _check_sections(data["sections"], ids)
+    listed = set(data["sections"]["functions"]) | set(data["sections"]["data"])
+    for n in data["nodes"]:
+        if n["status"] not in CHANGE_STATUSES and n["id"] not in listed:
+            _fail(f"node {n['id']!r} is in no section (put it in sections.functions or sections.data)")
+        if n["status"] in CHANGE_STATUSES and n["id"] in listed:
+            _fail(
+                f"node {n['id']!r} is part of the change; it is listed under 'What changed', not in a section"
+            )
     _check_counts(data, summary, blind)
     return data
 
@@ -236,10 +253,14 @@ def _check_edges(edges: Any, ids: set[str]) -> None:
 def _check_sections(sections: Any, ids: set[str]) -> list[dict]:
     if not isinstance(sections, dict):
         _fail("sections must be an object")
+    listed: set[str] = set()
     for k in ("functions", "data"):
         for nid in _str_list(sections.get(k), f"sections.{k}"):
             if nid not in ids:
                 _fail(f"sections.{k}: {nid!r} is not a node")
+            if nid in listed:
+                _fail(f"sections: {nid!r} is listed twice")
+            listed.add(nid)
     tests = sections.get("tests_to_run")
     if tests is not None:
         if not isinstance(tests, list):
@@ -272,29 +293,30 @@ def _check_sections(sections: Any, ids: set[str]) -> list[dict]:
 
 def _check_counts(data: dict, summary: dict, blind: list[dict]) -> None:
     """The headline must never be more hopeful than the lists."""
-    seen = {
-        "breaks_exact": 0,
-        "breaks_probable": 0,
-        "affected": 0,
-        "unknown": 0,
-        "no_effect": 0,
-    }
+    seen = dict.fromkeys(
+        ("breaks_exact", "breaks_probable", "affected_direct", "affected_further", "unknown", "no_effect"), 0
+    )
     for n in data["nodes"]:
         st = n["status"]
         if st == "breaks":
             seen["breaks_exact" if n["certainty"] == "exact" else "breaks_probable"] += 1
+        elif st == "affected":
+            seen["affected_direct" if n["distance"] == 1 else "affected_further"] += 1
         elif st in seen:
             seen[st] += 1
-    have = {
-        "breaks_exact": summary["breaks_exact"],
-        "breaks_probable": summary["breaks_probable"],
-        "affected": summary["affected_direct"] + summary["affected_further"],
-        "unknown": summary["unknown"],
-        "no_effect": summary["no_effect"],
-    }
+    left_out = data["omitted"]["nodes"]
     for k, n in seen.items():
-        if n > have[k]:
-            _fail(f"summary says {have[k]} {k.replace('_', ' ')}, but nodes list {n}")
+        if n > summary[k]:
+            _fail(f"summary says {summary[k]} {k.replace('_', ' ')}, but nodes list {n}")
+        if not left_out and n != summary[k]:
+            _fail(
+                f"summary says {summary[k]} {k.replace('_', ' ')}, but nodes list {n} and none were left out"
+            )
+    found = sum(summary[k] for k in seen)
+    if not found and left_out:
+        _fail(f"{left_out} nodes were left out, but the summary counts none (a wrong all-clear)")
+    if not found and data["proof"]["stopped_early"]:
+        _fail("the walk stopped early, but the summary counts nothing (a wrong all-clear)")
     nf = data["change"]["not_followed"]
     gaps = sum(len(nf[k]) for k in NOT_FOLLOWED_KEYS) + sum(b["scope"] == "change" for b in blind)
     if gaps and not summary["not_followed"]:

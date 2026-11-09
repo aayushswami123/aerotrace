@@ -19,7 +19,7 @@ def _bad(d: dict, match: str) -> None:
 
 def test_samples_pass() -> None:
     for f in (samples.sample, samples.nothing, samples.unclear, samples.affected_only, samples.no_index,
-              samples.index_error, samples.nothing_to_check, samples.hostile):  # fmt: skip
+              samples.index_error, samples.nothing_to_check, samples.nothing_to_check_gaps, samples.hostile):  # fmt: skip
         schema.check(f())
     schema.check(samples.big(300))
 
@@ -79,6 +79,47 @@ def test_summary_can_not_be_more_hopeful_than_the_nodes() -> None:
     d = samples.sample()
     d["summary"].update(affected_direct=0, affected_further=0)
     _bad(d, "affected")
+
+
+def test_summary_must_match_when_nothing_was_left_out() -> None:
+    d = samples.sample()
+    d["summary"]["breaks_exact"] = 5  # says "can break 5", but only 3 exact breaks are listed
+    _bad(d, "none were left out")
+    d["omitted"]["nodes"] = 2
+    schema.check(d)  # fine: 2 more are not in the report
+
+
+def test_no_all_clear_when_nodes_were_left_out_or_the_walk_stopped() -> None:
+    d = samples.nothing()
+    d["omitted"]["nodes"] = 3
+    _bad(d, "left out")
+    d = samples.nothing()
+    d["proof"]["stopped_early"] = True
+    _bad(d, "stopped early")
+
+
+def test_every_node_is_in_exactly_one_section() -> None:
+    d = samples.sample()
+    d["sections"]["functions"].pop()
+    _bad(d, "in no section")
+    d = samples.sample()
+    d["sections"]["data"].append(d["sections"]["functions"][0])
+    _bad(d, "listed twice")
+    d = samples.sample()
+    d["sections"]["functions"].append(d["nodes"][0]["id"])
+    _bad(d, "part of the change")
+
+
+def test_non_ok_status_is_still_checked() -> None:
+    d = samples.nothing_to_check()
+    d["change"]["not_followed"]["outside"] = [{"file": "a.c"}]
+    _bad(d, "outside")
+    d = samples.no_index()
+    d["nodes"] = samples.sample()["nodes"]
+    _bad(d, "can't list nodes")
+    d = samples.nothing_to_check()
+    d["change"] = None
+    _bad(d, "change is required")
 
 
 def test_skipped_parts_need_a_count() -> None:

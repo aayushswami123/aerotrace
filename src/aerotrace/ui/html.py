@@ -25,7 +25,7 @@ from aerotrace.ui.schema import (
     check,
     node_word,
 )
-from aerotrace.ui.terminal import ICONS, detail, headline, not_followed_lines, proof_line, title
+from aerotrace.ui.terminal import ICONS, clean, detail, headline, not_followed_lines, proof_line, title
 
 _PLACEHOLDER = re.compile(r"\{\{([A-Z]+)\}\}")
 _SLASHES = re.compile(r"/(?=/)|(?<=/)/")
@@ -145,7 +145,17 @@ def _details(heading: str, count: int, items: list[str]) -> str:
     )
 
 
+def _gap_section(data: dict) -> str:
+    gaps = not_followed_lines(data)
+    if not gaps:
+        return ""
+    items = [f'<li class="plain"><i aria-hidden="true">?</i> {_e(g)}</li>' for g in gaps]
+    return _details("Changes AeroTrace could not follow", len(gaps), items)
+
+
 def _list(data: dict) -> str:
+    if data["status"] == "nothing_to_check":
+        return _gap_section(data)
     if data["status"] != "ok":
         return ""
     nodes = data["nodes"]
@@ -159,10 +169,8 @@ def _list(data: dict) -> str:
         ids = sec[key]
         if ids:
             parts.append(_details(heading, len(ids), [_node_item(index[x], nodes[index[x]]) for x in ids]))
-    gaps = not_followed_lines(data)
-    if gaps:
-        items = [f'<li class="plain"><i aria-hidden="true">?</i> {_e(g)}</li>' for g in gaps]
-        parts.append(_details("Changes AeroTrace could not follow", len(gaps), items))
+    if gaps := _gap_section(data):
+        parts.append(gaps)
     tests = sec.get("tests_to_run")
     if tests is None:
         parts.append('<p class="note">Tests: not known yet (no test map in the index).</p>')
@@ -243,6 +251,7 @@ def _graph(data: dict) -> str:
 def render(data: dict) -> str:
     """The whole HTML report as one string. Same data, same bytes."""
     check(data)
+    data = clean(data)  # type: ignore[assignment]  # bidi and control characters shown as \uXXXX
     css, js = _asset("report.css"), _asset("report.js")
     csp = (
         f"default-src 'none'; script-src 'sha256-{_sha256(js)}'; style-src 'sha256-{_sha256(css)}'; "
@@ -265,17 +274,22 @@ def render(data: dict) -> str:
 def write_html(data: dict, out: Path, root: Path) -> str:
     """Write the report to `out` and return one line saying what happened.
 
-    Refuses to write inside the repo's `.aerotrace/` folder (that belongs to the index).
+    Refuses to write inside the repo's `.aerotrace/` folder (that belongs to the index), and to any name
+    that does not end in .html or .htm, so it can never overwrite source code or other files.
     """
     out_abs, index_dir = out.resolve(), (root / ".aerotrace").resolve()
-    if out_abs == index_dir or index_dir in out_abs.parents:
-        raise ValueError(f"Won't write the report inside {index_dir}; that folder belongs to the index.")
     if out_abs.is_dir():
         raise ValueError(f"{out} is a folder. Give a file name, for example {out / 'aerotrace-report.html'}.")
+    if out_abs.suffix.lower() not in (".html", ".htm"):
+        raise ValueError(
+            f"Won't write the report to {out}: the name must end in .html, for example report.html."
+        )
+    if out_abs == index_dir or index_dir in out_abs.parents:
+        raise ValueError(f"Won't write the report inside {index_dir}; that folder belongs to the index.")
     text = render(data)
     existed = out_abs.exists()
     out_abs.parent.mkdir(parents=True, exist_ok=True)
     out_abs.write_bytes(text.encode("utf-8"))
     size = len(text.encode("utf-8"))
-    what = "Replaced the existing file" if existed else "Wrote"
+    what = "Replaced the existing HTML file" if existed else "Wrote"
     return f"{what} {out} ({size / 1024:,.0f} KB). Open it in any browser; it works offline."

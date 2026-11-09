@@ -128,15 +128,21 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
 - `status: "unknown"` and `certainty: "unknown"` always go together (rejected otherwise).
 - Changed, new and removed nodes have distance 0, and only they do.
 - **Ids.** Node ids are the index ids. A removed function uses the key `removed:{file}:{line}:{name}`
-  from `diff.py`. `Hit.via` is a qualified name, not an id: Part C maps it to an id. If a name maps to
+  from `diff.py`; a function that is new in a patch not applied yet uses `new:{file}:{line}:{name}`. `Hit.via` is a qualified name, not an id: Part C maps it to an id. If a name maps to
   more than one id, Part C sets `via` to null and keeps `via_name`. Under the 5,000-node cap, edges and
   `via` pointing at dropped nodes are removed (`via_name` stays). Every id in `via`, `edges` and
   `sections` must exist, or `check` stops.
 - **Counts are explicit** and can't be more hopeful than the lists: for each status, `summary` must be
-  at least what `nodes` shows. If `change.not_followed` lists anything, or a blind spot has scope
+  at least what `nodes` shows, and exactly that when `omitted.nodes` is 0 (so "can break 5" with 3
+  listed is refused). An all-zero summary is refused when nodes were left out or the walk stopped early.
+  If `change.not_followed` lists anything, or a blind spot has scope
   `change`, then `summary.not_followed` must be > 0 ("a wrong all-clear").
 - Blind spots have a `scope`: `change` ones (about this diff) block the all-clear; `index` ones (global
   limits like "macros are not followed") are always shown but don't block it forever.
+- Every node that is not part of the change is in exactly one of `sections.functions` /
+  `sections.data`; changed, new and removed nodes are in neither (they are listed under "What changed").
+- Non-ok statuses are checked too: `nothing_to_check` needs `change`, and lists what it skipped
+  (`not_followed`), so a diff of unindexed files is never an all-clear. Non-ok data can't list nodes.
 - Tests sections may be `null` when there is no test map yet. Then the output says "Tests: not known yet",
   never "Tests to run (0)".
 - Part C should add its own test: its output for a fixture passes `ui.schema.check` and renders.
@@ -149,7 +155,7 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
 |--------------------------------------------|--------|---------|
 | TTY, UTF-8                                 | yes    | Unicode |
 | not a TTY (pipe, file, CI log), UTF-8      | no     | Unicode |
-| `NO_COLOR` set and not empty               | no     | ASCII   |
+| `NO_COLOR` set and not empty               | no     | Unicode (NO_COLOR is about colour only) |
 | stream encoding is not UTF-8               | (TTY)  | ASCII   |
 | `TERM=dumb`                                | no     | ASCII   |
 
@@ -167,8 +173,12 @@ Icons, always next to a word:
 | no test         | ○       | `[ ]`  | NO TEST           | none                |
 
 Only bold, red and yellow, only on the icon and the word (works on light and dark terminals). No dim,
-grey or background colours. Lines are not wrapped. Data strings have control characters replaced with
-`?`, so a name can't send escape codes. Numbers use `1,234`.
+grey or background colours. Lines are not wrapped. In data strings, control characters, bidi controls
+(U+061C, U+200E/F, U+202A-202E, U+2066-2069) and U+2028/2029 are shown as `\uXXXX` (terminal and HTML),
+so a name can't send escape codes or reorder text. In ASCII mode every non-ASCII character is escaped
+too (`backslashreplace`), so a non-UTF-8 stream never raises UnicodeEncodeError. Numbers use `1,234`.
+A short "What changed" section names the changed, new and removed functions. Under a ✅, the index-wide
+limits are printed right below the headline ("Index limit: ..."), so a pass never hides them.
 
 ### 2.1 Headline (from counts only)
 
@@ -190,7 +200,8 @@ followed."). The proof line at the end says only what is true about the run:
 
 Names are Redis-flavoured but made up: display test data, not facts about Redis.
 
-Normal, NO_COLOR (`sample.nocolor.txt`; the Unicode version `sample.txt` differs only in the icons):
+Normal, ASCII (`sample.ascii.txt`, for non-UTF-8 streams; `sample.txt` differs only in the icons;
+this block is from before review #38 and now also has a "What changed" section after the headline):
 
 ```text
 [!] This change can break 3 things you didn't touch.
@@ -279,7 +290,7 @@ Limits of the index (1)
 index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
 ```
 
-Index missing (`no_index.nocolor.txt`), never a pass in any mode:
+Index missing (`no_index.ascii.txt`), never a pass in any mode:
 
 ```text
 [!] AeroTrace has no index for this repo yet, so it checked nothing.
@@ -494,3 +505,19 @@ Apache-2.0.
 | 14 | NIT: R1 resolved | Owner asked for `--html`; noted in section 0. |
 | 15 | NIT: direct counts first | "(2 direct, 4 further up)". |
 | 16 | NIT: refuse `--html` inside `.aerotrace/`; say when overwriting | `write_html`; tested. |
+
+## 10. Changes after PR review (#38)
+
+| # | point | done |
+|---|-------|------|
+| 1 | MUST: `check()` must not stop early for non-ok statuses; `nothing_to_check` with skipped parts lists them, never ✅ | `check()` validates `change` for every status, requires it for `nothing_to_check`, and refuses nodes/edges on non-ok data. The headline becomes "ℹ️ No change AeroTrace could check (...), but N parts of it could not be followed." with the list, in terminal and HTML. Golden `nothing_to_check_gaps`. |
+| 2 | SHOULD: reject contradictions | With nothing omitted, summary counts must equal the nodes (direct/further split included). An all-zero summary with omitted nodes or `stopped_early` is refused. |
+| 3 | SHOULD: no node outside a section; no duplicates | Every non-change node is in exactly one of functions/data; duplicates and changed nodes in sections are refused. |
+| 4 | SHOULD: terminal names what changed | New "What changed (N)" section, one line per changed/new/removed node. |
+| 5 | SHOULD: non-UTF-8 streams | ASCII mode escapes non-ASCII with `backslashreplace`; tested with the hostile names. |
+| 6 | SHOULD: README overclaims | Pitch says "says how sure it is about every link"; limits say many links are `probable`; the `void *` claim is gone; test mapping is "coming"; the install URL has a note that it works once the repo is public. |
+| 7 | SHOULD: `write_html` must not overwrite non-HTML files | Refuses any name not ending in .html/.htm (so never source code); says "Replaced the existing HTML file". |
+| 8 | Decision: ✅ only when nothing in the change was skipped; index limits under a ✅ | Done: `Index limit: ...` lines right under the ✅ headline (up to 5, then "and N more, listed below"). |
+| 9 | NIT: bidi and line separators | Shown as `\uXXXX` in terminal and HTML. |
+| 10 | NIT: NO_COLOR controls colour only | `style_for` keeps Unicode icons unless the stream isn't UTF-8 or TERM=dumb. ASCII goldens renamed `*.ascii.txt`. |
+| - | Contract: `new:{file}:{line}:{name}` ids | Added to section 1.2 and `schema.py`. |
