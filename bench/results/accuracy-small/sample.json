@@ -1,0 +1,287 @@
+{
+ "seed": "aerotrace-bench-small-1/",
+ "cap": 40,
+ "functions": [
+  {
+   "repo": "redis",
+   "id": "src/sentinel.c:populateDict",
+   "mentions": 2
+  },
+  {
+   "repo": "redis",
+   "id": "src/iothread.c:assignClientToIOThread",
+   "mentions": 4
+  },
+  {
+   "repo": "redis",
+   "id": "src/networking.c:addReplySetLen",
+   "mentions": 13
+  },
+  {
+   "repo": "redis",
+   "id": "src/latency.c:latencyCommand",
+   "mentions": 2
+  },
+  {
+   "repo": "redis",
+   "id": "src/networking.c:rewriteClientCommandVector",
+   "mentions": 28
+  },
+  {
+   "repo": "redis",
+   "id": "src/bio.c:bioCreateFsyncJob",
+   "mentions": 3
+  },
+  {
+   "repo": "redis",
+   "id": "src/eval.c:evalCalcFunctionName",
+   "mentions": 3
+  },
+  {
+   "repo": "redis",
+   "id": "src/cluster_asm.c:asmLogTaskEvent",
+   "mentions": 4
+  },
+  {
+   "repo": "redis",
+   "id": "src/util.c:getAbsolutePath",
+   "mentions": 7
+  },
+  {
+   "repo": "redis",
+   "id": "src/cluster.c:countKeysInSlot",
+   "mentions": 13
+  },
+  {
+   "repo": "redis",
+   "id": "src/module.c:maskModuleNumericConfigFlags",
+   "mentions": 2
+  },
+  {
+   "repo": "redis",
+   "id": "src/aof.c:getTempAofManifestFileName",
+   "mentions": 2
+  },
+  {
+   "repo": "redis",
+   "id": "src/cluster.c:addShardReplyForClusterShards",
+   "mentions": 2
+  },
+  {
+   "repo": "redis",
+   "id": "src/cluster_legacy.c:clusterDebugCommandExtendedHelp",
+   "mentions": 3
+  },
+  {
+   "repo": "redis",
+   "id": "src/expire.c:expireGenericCommand",
+   "mentions": 5
+  },
+  {
+   "repo": "sqlite",
+   "id": "shell.c:lockName",
+   "mentions": 3
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3FixTriggerStep",
+   "mentions": 3
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3WindowAlloc",
+   "mentions": 5
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3VdbeMemSetText",
+   "mentions": 7
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:walIndexAppend",
+   "mentions": 4
+  },
+  {
+   "repo": "sqlite",
+   "id": "shell.c:qrfEqpStats",
+   "mentions": 2
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3IsIdChar",
+   "mentions": 8
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3_rollback_hook",
+   "mentions": 4
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3PagerIsreadonly",
+   "mentions": 4
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:pragmaVtabRowid",
+   "mentions": 2
+  }
+ ],
+ "fields": [
+  {
+   "repo": "redis",
+   "id": "redisServer.slave_priority",
+   "mentions": 10
+  },
+  {
+   "repo": "redis",
+   "id": "redisServer.stat_current_cow_peak",
+   "mentions": 9
+  },
+  {
+   "repo": "redis",
+   "id": "client.repldbfd",
+   "mentions": 11
+  },
+  {
+   "repo": "redis",
+   "id": "redisServer.stat_total_error_replies",
+   "mentions": 11
+  },
+  {
+   "repo": "redis",
+   "id": "redisServer.backup_incr_filename",
+   "mentions": 6
+  },
+  {
+   "repo": "sqlite",
+   "id": "Parse.nVtabLock",
+   "mentions": 5
+  },
+  {
+   "repo": "sqlite",
+   "id": "Parse.szOpAlloc",
+   "mentions": 4
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.pNextBlocked",
+   "mentions": 9
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.dfltLockMode",
+   "mentions": 4
+  },
+  {
+   "repo": "sqlite",
+   "id": "Parse.aVnbmc",
+   "mentions": 2
+  }
+ ],
+ "skipped": [
+  {
+   "repo": "redis",
+   "id": "src/defrag.c:defragTmplRegistryCb",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "shell.c:dbdataGetVarintU32",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:rtreeNewRowid",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:fts5yy_pop_parser_stack",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:fts5FindRankFunction",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:fts3DoIncrmerge",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:fts5ConfigMakeExprlist",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:markExprListImmutable",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3TreeViewExprList",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:sqlite3TreeViewColumnList",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:fts5MultiIterIsEmpty",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "shell.c:zipfileRollback",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:assertParentIndex",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:cellMargin",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:rtreeCheckTable",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:percentCompute",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:nodeRowidIndex",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.c:simpleNext",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "id": "Parse.nMem",
+   "mentions": 274,
+   "reason": "over 40 mentions"
+  },
+  {
+   "repo": "sqlite",
+   "id": "sqlite3.lookaside",
+   "mentions": 131,
+   "reason": "over 40 mentions"
+  }
+ ]
+}
