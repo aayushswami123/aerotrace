@@ -328,7 +328,7 @@ def cmd_data(args: argparse.Namespace) -> int:
         return 2
     found = data.find_variables(conn, args.name) or data.gone_fields(conn, args.name)
     if len(found) != 1:
-        _err(render_data.candidates_text(args.name, found))
+        _err(render_data.candidates_text(args.name, found, near=data.suggest(conn, args.name)))
         return 1
     writer = None
     if args.writer:

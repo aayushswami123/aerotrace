@@ -151,6 +151,11 @@ class DataUsers:
     upstream: list[Hit] = field(default_factory=list)  # callers of the users, distance 1..depth
     depth: int = 0
     truncated: bool = False
+    struct_fields: list[tuple[str, int, int]] = field(
+        default_factory=list
+    )  # struct global: (field, users, writers)
+    struct_fields_total: int = 0  # fields of its struct type that any function uses
+    writer_writes: bool = True  # value question: the writer writes the variable itself
     same_name: list[Var] = field(default_factory=list)  # other fields/globals with this name, not included
     other_copies: list[Var] = field(default_factory=list)  # same clang ID, defined in another file
     blind_spots: list[str] = field(default_factory=list)
@@ -292,12 +297,39 @@ def gone_fields(conn: sqlite3.Connection, query: str) -> list[Var]:
         )
     ]
     if record:
-        # asked for S::X: answer for S even when the errors name another type (a typedef of S, a base):
-        # those rows are listed as probable
-        records = [record] if records else []
+        # asked for S::X: answer for S when an error names S, or when S is a known struct and errors name
+        # another type (a typedef of S, a base; listed as probable). A typo'd S is "not found".
+        known = record in records or (
+            records
+            and conn.execute("SELECT 1 FROM variables WHERE container = ? LIMIT 1", (record,)).fetchone()
+        )
+        records = [record] if known else []
     return [
         Var("", "", member, f"{r}::{member}", r, "field", "", "", 0, False, exists=False) for r in records
     ]
+
+
+def suggest(conn: sqlite3.Connection, query: str, limit: int = 10) -> list[Var]:
+    """Near matches when nothing is found: every variable with the last part of the name."""
+    last = re.split(r"::|\.", query.strip().rsplit("@", 1)[0])[-1]
+    return [v for v, _ in _by_name(conn, last)][:limit]
+
+
+def _struct_fields(conn: sqlite3.Connection, var: Var) -> tuple[list[tuple[str, int, int]], int]:
+    """For a struct global (server): its struct type's fields that functions use, most used first:
+    (field name, functions using it, functions writing it), and how many fields are used in all."""
+    struct = _struct_name(var.type)
+    if not struct or "*" in var.type:
+        return [], 0
+    rows = conn.execute(
+        """SELECT v.name AS name, COUNT(DISTINCT e.src) AS n,
+                  COUNT(DISTINCT CASE WHEN e.kind = 'writes' THEN e.src END) AS w
+           FROM edges e JOIN variables v ON v.id = e.dst
+           WHERE v.kind = 'field' AND v.container = ? AND e.kind IN ('reads', 'writes')
+           GROUP BY v.id ORDER BY n DESC, v.name""",
+        (struct,),
+    ).fetchall()
+    return [(r["name"], r["n"], r["w"]) for r in rows[:5]], len(rows)
 
 
 # ---------------------------------------------------------------- the answer
@@ -308,8 +340,15 @@ def _rank(u: Use) -> tuple:
 
 
 def _uses(
-    conn: sqlite3.Connection, var: Var, question: str, skip: str | None = None, kinds=("reads", "writes")
+    conn: sqlite3.Connection,
+    var: Var,
+    question: str,
+    skip: str | None = None,
+    kinds=("reads", "writes"),
+    not_values: set[tuple[str, int]] | None = None,
 ) -> list[Use]:
+    """One Use per function. `not_values`: (function id, line) where the variable's address is taken
+    (&x passed on or stored): that is not a read of its value, so those read lines are left out."""
     marks = ",".join("?" * len(kinds))
     rows = conn.execute(
         f"""SELECT src, kind, confidence, line FROM edges WHERE dst = ? AND kind IN ({marks})
@@ -321,6 +360,8 @@ def _uses(
     for r in rows:
         if r["src"] == skip or r["src"] not in fns:
             continue
+        if r["kind"] == "reads" and not_values and (r["src"], r["line"]) in not_values:
+            continue
         reads, writes, levels = per.setdefault(r["src"], (set(), set(), []))
         (writes if r["kind"] == "writes" else reads).add(r["line"])
         levels.append(r["confidence"])
@@ -328,6 +369,10 @@ def _uses(
     for fid, (reads, writes, confs) in per.items():
         worst = "ambiguous" if "ambiguous" in confs else confs[0]
         level, reason = certainty.of_access(worst, var.kind, question)
+        if question == VALUE and var.kind != "field" and "[" in var.type and level == certainty.EXACT:
+            level, reason = certainty.PROBABLE, "reads the same array, maybe another element"
+        if not reads and not writes:
+            continue
         out.append(Use(fns[fid], sorted(reads), sorted(writes), level, reason))
     return out
 
@@ -405,6 +450,16 @@ def _by_position(conn: sqlite3.Connection, var: Var) -> list[Var]:
     names = _container_names(var)
     if not names:
         return []
+    for _ in range(5):  # struct wrap { struct conn c; }: {{1, 2}, 3} sets conn's fields by position too
+        outer = {
+            n
+            for r in conn.execute("SELECT type, container FROM variables WHERE kind = 'field' ORDER BY id")
+            if r["container"] and _struct_name(r["type"]) in names and "*" not in r["type"]
+            for n in _container_names(Var("", "", "", "", r["container"], "field", "", "", 0, False))
+        }
+        if outer <= names:
+            break
+        names |= outer
     out = []
     for r in conn.execute(
         f"SELECT {_VAR_COLS} FROM variables WHERE kind IN ('global', 'static_local') ORDER BY file, line, id"
@@ -467,25 +522,33 @@ def data_users_of(
         depth = FIELD_DEPTH if var.kind == "field" else GLOBAL_DEPTH
     writer = symbols.get(conn, writer_id) if writer_id else None
     res = DataUsers(var, VALUE if writer else DECLARATION, writer, depth=depth)
+    if var.kind == "field" and writer is None:
+        res.by_position = _by_position(conn, var)  # also for a removed field: that is when values shift
     if var.exists:
+        res.escapes = _escapes(conn, var)
         if writer is None:
             res.uses = _uses(conn, var, DECLARATION)
             if var.kind == "field":
                 res.initializers = _initializers(conn, var)
-                res.by_position = _by_position(conn, var)
-            res.escapes = _escapes(conn, var)
+            else:
+                res.struct_fields, res.struct_fields_total = _struct_fields(conn, var)
         else:
+            taken = {(e.fn.id, e.line) for e in res.escapes}
             writes_it = conn.execute(
                 "SELECT 1 FROM edges WHERE src = ? AND dst = ? AND kind = 'writes'", (writer.id, var.id)
             ).fetchone()
+            res.writer_writes = bool(writes_it)
             if writes_it:
-                res.uses = _uses(conn, var, VALUE, skip=writer.id, kinds=("reads",))
+                res.uses = _uses(conn, var, VALUE, skip=writer.id, kinds=("reads",), not_values=taken)
             elif var.kind != "field":
                 # a struct global (server): the writer writes its fields (server.hz = ...), not the global
                 res.via_fields = _struct_fields_written(conn, var, writer)
                 merged: dict[str, Use] = {}
                 for f in res.via_fields:
-                    for u in _uses(conn, f, VALUE, skip=writer.id, kinds=("reads",)):
+                    f_escapes = _escapes(conn, f)
+                    res.escapes += f_escapes
+                    f_taken = {(e.fn.id, e.line) for e in f_escapes}
+                    for u in _uses(conn, f, VALUE, skip=writer.id, kinds=("reads",), not_values=f_taken):
                         u.via_field = f.shown
                         cur = merged.get(u.fn.id)
                         if cur is None:
@@ -494,6 +557,7 @@ def data_users_of(
                             cur.reads = sorted(set(cur.reads) | set(u.reads))
                             cur.via_field = ", ".join(sorted({*cur.via_field.split(", "), u.via_field}))
                 res.uses = list(merged.values())
+                res.escapes.sort(key=lambda e: (e.fn.file, e.line, e.fn.id, e.detail))
         res.uses.sort(key=_rank)
         same_usr = conn.execute(
             f"SELECT {_VAR_COLS} FROM variables WHERE usr = ? AND id != ? ORDER BY file, line, id",
@@ -546,7 +610,7 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
                 "A plain global is one object, so its readers are exact. Whether a reader runs before or after "
                 "the write is not known."
             )
-        if not res.uses and not res.via_fields and res.writer is not None:
+        if not res.writer_writes and not res.via_fields and res.writer is not None:
             notes.append(
                 f"{res.writer.qualified_name} does not write {v.shown} directly (nor a field of it). "
                 f"Ask without a writer to see every user of {v.shown}."
@@ -575,6 +639,11 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
                 f"clang stops after {CLANG_ERROR_LIMIT} errors in a file; {', '.join(full[:3])} reached that, so "
                 "more uses may exist there (#29)."
             )
+    if res.question == VALUE and res.escapes:
+        notes.append(
+            "Places that take its address (&x) are listed as unknown, not as readers: code that reads it later "
+            "through that pointer is not seen."
+        )
     if res.escapes:
         notes.append(
             f"{len(res.escapes)} place{'s pass' if len(res.escapes) != 1 else ' passes'} its address on. Reads and "
@@ -587,7 +656,8 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
     if is_field:
         notes.append(
             "Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct "
-            "type are listed as unknown instead; local variables set that way are not listed. A {.field = x} "
+            "type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared "
+            "with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} "
             "inside a function (a local or a compound literal) is not recorded either (#37)."
         )
     notes.append("Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).")

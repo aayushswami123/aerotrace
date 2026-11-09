@@ -121,7 +121,18 @@ def test_globals_of_the_struct_type_may_set_it_by_position(fx):
     r = users(conn, "conn::count")
     # `pos = {5, 6}` sets count by position; the index can't see that (#26), so every global of the type is
     # listed as unknown
-    assert sorted(g.name for g in r.by_position) == ["conns", "g_main", "gone_init", "pos", "table"]
+    # `wrapped` is a struct wrap, which contains a struct conn: {{1, 2}, 3} sets it by position too
+    assert sorted(g.name for g in r.by_position) == [
+        "conns",
+        "g_main",
+        "gone_init",
+        "pos",
+        "table",
+        "wrapped",
+    ]
+    # a global declared with a typedef name other than the struct's is not matched; the limit says so
+    assert users(conn, "node::v").by_position == []
+    assert any("node_t for struct node" in n for n in users(conn, "node::v").blind_spots)
     assert "unknown" in render_data.data_text(r)
     assert any("by position" in n and "#26" in n for n in r.blind_spots)
 
@@ -176,6 +187,8 @@ def test_a_removed_field_still_used(fx):
         ("bump_twice", 5, "exact"),  # two macro uses on one line: one row
         ("bump_once", 7, "exact"),  # the error is at the macro's use, not its definition
     ]
+    # removing a field is exactly when positional initializers shift: still listed
+    assert "pos" in [g.name for g in r.by_position]
     notes = " ".join(r.blind_spots)
     # `{.gone = 1}` (src/broken.c:9) fails with "field designator ...", which is not recorded (#25)
     assert "field designator" in notes and "#25" in notes
@@ -185,9 +198,20 @@ def test_a_removed_field_still_used(fx):
 def test_compile_errors_naming_another_type_are_probable(fx):
     _, conn = fx
     assert [(b.fn.name, b.certainty) for b in users(conn, "conn::lost").broken] == [("via_typedef", "exact")]
-    # asked under another name (a typedef, a base): still listed, but only probable
-    r = data.data_users_of(conn, data.gone_fields(conn, "conn_t::lost")[0])
+    # asked under another known struct (a typedef, a base): still listed, but only probable
+    r = data.data_users_of(conn, data.gone_fields(conn, "buf::lost")[0])
     assert [(b.fn.name, b.record, b.certainty) for b in r.broken] == [("via_typedef", "conn", "probable")]
+
+
+def test_a_typo_in_the_struct_name_is_not_found(fx, capsys):
+    root, conn = fx
+    assert data.gone_fields(conn, "Typo::lost") == [] and data.gone_fields(conn, "Typo::count") == []
+    assert data.find_variables(conn, "Typo::count") == []
+    assert main(["data", "Typo::count", "--root", str(root)]) == 1
+    err = capsys.readouterr().err
+    assert (
+        "No field or global named 'Typo::count'" in err and "Did you mean: " in err and "conn::count" in err
+    )
 
 
 # ---------------------------------------------------------------- value question (--from)
@@ -196,9 +220,34 @@ def test_compile_errors_naming_another_type_are_probable(fx):
 def test_value_question_on_a_field_is_probable(fx):
     _, conn = fx
     r = data.data_users_of(conn, one(conn, "conn::count"), writer_id=fn(conn, "put").id)
-    assert [(u.fn.name, u.certainty) for u in r.uses] == [("leak_count", "probable"), ("get", "probable")]
+    assert [(u.fn.name, u.certainty) for u in r.uses] == [("get", "probable")]
     assert r.uses[0].reason == "reads the same field, maybe of another object"
     assert "put" not in names(r)
+    # &c->count is not a read of the value; the places that take the address are unknown, never dropped
+    assert [(e.fn.name, e.line, e.certainty) for e in r.escapes] == [
+        ("leak_count", 27, "unknown"),
+        ("leak_count", 30, "unknown"),
+    ]
+
+
+def test_value_question_keeps_the_places_that_take_the_address(fx):
+    _, conn = fx
+    # take() does keep = &counter; peek() reads *keep later. take is not a reader, but must be listed.
+    r = data.data_users_of(conn, one(conn, "counter"), writer_id=fn(conn, "bump").id)
+    assert r.uses == []
+    assert [(e.fn.name, e.detail, e.certainty) for e in r.escapes] == [
+        ("take", "address stored in keep", "unknown")
+    ]
+    assert not any("does not write" in n for n in r.blind_spots)
+    assert "take  src/fields.c:56: address stored in keep" in render_data.data_text(r)
+
+
+def test_value_question_on_an_array_global_is_probable(fx):
+    _, conn = fx
+    r = data.data_users_of(conn, one(conn, "arr"), writer_id=fn(conn, "set_arr").id)
+    assert [(u.fn.name, u.certainty, u.reason) for u in r.uses] == [
+        ("get_arr", "probable", "reads the same array, maybe another element")
+    ]
 
 
 def test_value_question_on_a_global_is_exact(fx):
@@ -211,7 +260,15 @@ def test_value_question_on_a_struct_global_goes_through_its_fields(fx):
     _, conn = fx
     r = data.data_users_of(conn, one(conn, "g_main"), writer_id=fn(conn, "main_fd").id)
     assert [f.shown for f in r.via_fields] == ["conn::fd"]
-    assert [(u.fn.name, u.certainty, u.via_field) for u in r.uses] == [("leak_count", "probable", "conn::fd")]
+    assert [(u.fn.name, u.certainty, u.via_field) for u in r.uses] == [("fd_of", "probable", "conn::fd")]
+    assert [(e.fn.name, e.line) for e in r.escapes] == [("leak_count", 28)]  # &c->fd: kept, as unknown
+
+
+def test_a_struct_global_points_to_its_fields(fx):
+    _, conn = fx
+    r = users(conn, "g_main")
+    assert r.struct_fields == [("count", 7, 5), ("fd", 4, 2)] and r.struct_fields_total == 2
+    assert "ask for g_main.<field>" in render_data.data_text(r)
 
 
 def test_value_question_when_the_function_does_not_write_it(fx):
@@ -277,6 +334,7 @@ def test_cli_data(fx, capsys):
     assert main(["data", "conn::count", "--root", str(root), "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert out["uses_total"] == 7 and out["summary"]["writers"] == 5
+    assert out["target"]["id"] == "c:@S@conn@FI@count" and out["may_set_by_position_omitted"] == 0
     assert out["uses"][0]["function"]["name"] == "touch" and out["uses"][0]["certainty"] == "exact"
     assert [e["detail"] for e in out["escapes"]] == ["passed to fill()", "address returned"]
     assert main(["data", "count", "--root", str(root)]) == 1

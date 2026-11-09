@@ -49,3 +49,19 @@ void main_fd(void) { g_main.fd = 3; }
 int total(void) { return g_total; }
 void caller_of_log(void) { log_num(2); }
 void caller_of_caller(void) { caller_of_log(); }
+int fd_of(struct conn *c) { return c->fd; }
+
+static int counter;
+static int *keep;
+void take(void) { keep = &counter; }
+void bump(void) { counter++; }
+int peek(void) { return *keep; }
+
+typedef struct node { int v; int w; } node_t;
+node_t nodes[2] = {{1, 2}, {3, 4}};
+struct wrap { struct conn c; int n; };
+struct wrap wrapped = {{1, 2}, 3};
+
+int arr[4];
+void set_arr(void) { arr[0] = 1; }
+int get_arr(void) { return arr[1]; }

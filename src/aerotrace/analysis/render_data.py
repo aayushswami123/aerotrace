@@ -132,6 +132,14 @@ def data_text(r: DataUsers, limit: int | None = None, show_all: bool = False, mo
                 f"{_n(len(r.upstream), 'caller')} further up ({r.depth} step{'s' if r.depth != 1 else ''})"
             )
         lines.append(summary + " " + ", ".join(extra)[0].upper() + ", ".join(extra)[1:] + ".")
+        if r.struct_fields:
+            struct = v.type.replace("struct ", "").strip()
+            top = ", ".join(f"{n} ({_n(u, 'function')}, {w} writing)" for n, u, w in r.struct_fields)
+            lines.append(
+                f"{v.shown} is a {v.type}: reads and writes of its fields (x.field = ...) are not counted above. "
+                f"They are listed per field: ask for {v.shown}.<field> (that lists every {struct}'s field, not "
+                f"only {v.shown}'s). {r.struct_fields_total} fields are used; most used: {top}."
+            )
         if len(files) > 1:
             fc = cap(FILES_CAP)
             lines.append(
@@ -260,7 +268,7 @@ def data_json(r: DataUsers, limit: int | None = None, show_all: bool = False) ->
 
     level = Counter(u.certainty for u in r.uses)
     return {
-        "target": r.target.brief(),
+        "target": {"id": r.target.id or None, **r.target.brief()},
         "question": r.question,
         "writer": r.writer.brief() if r.writer else None,
         "via_fields": [f.shown for f in r.via_fields],
@@ -311,6 +319,9 @@ def data_json(r: DataUsers, limit: int | None = None, show_all: bool = False) ->
             for g in head(r.by_position)
         ],
         "may_set_by_position_total": len(r.by_position),
+        "may_set_by_position_omitted": left(r.by_position),
+        "struct_fields": [{"field": n, "functions": u, "writers": w} for n, u, w in r.struct_fields],
+        "struct_fields_total": r.struct_fields_total,
         "escapes": [
             {
                 "function": e.fn.brief(),
@@ -342,9 +353,12 @@ def data_json(r: DataUsers, limit: int | None = None, show_all: bool = False) ->
     }
 
 
-def candidates_text(query: str, found: list[Var], limit: int = 20) -> str:
+def candidates_text(query: str, found: list[Var], limit: int = 20, near: list[Var] | None = None) -> str:
     if not found:
-        return f"No field or global named '{query}' in the index."
+        msg = f"No field or global named '{query}' in the index (and no compile error that still uses it)."
+        if near:
+            msg += " Did you mean: " + ", ".join(v.shown for v in near) + "?"
+        return msg
     names = Counter(v.shown for v in found)
     rows = [
         f"  - {v.shown}{'@' + v.file if names[v.shown] > 1 and v.exists else ''}  "

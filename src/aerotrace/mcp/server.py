@@ -154,7 +154,9 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
         with closing(conn):
             found = data.find_variables(conn, name) or data.gone_fields(conn, name)
             if len(found) != 1:
-                return _with_note(render_data.candidates_text(name, found), note)
+                return _with_note(
+                    render_data.candidates_text(name, found, near=data.suggest(conn, name)), note
+                )
             writer = None
             if from_function:
                 writer, msg = resolve(conn, from_function)
