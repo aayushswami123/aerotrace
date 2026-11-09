@@ -172,3 +172,30 @@ def test_overload_used_as_a_value_in_a_template_is_address_taken(gaps):
     # must not: free_fn(t) in a template is a call, not a use as a value
     sql = "SELECT f.name FROM address_taken a JOIN functions f ON f.id = a.function_id"
     assert "free_fn" not in {r[0] for r in gaps.execute(sql)}
+
+
+# ------------------------------------------------ #21, #39: broken constructor and operator() calls
+
+
+def test_broken_constructor_and_operator_calls_are_calls(gaps):
+    rows = gaps.execute(
+        """SELECT s.name, d.qualified_name || ' ' || d.signature, e.confidence, e.line FROM edges e
+           JOIN functions s ON s.id = e.src JOIN functions d ON d.id = e.dst
+           WHERE e.kind = 'calls' AND s.file = 'src/ctor.cpp'"""
+    )
+    got = {tuple(r) for r in rows}
+    for caller, line in (("b6", 13), ("b7", 14), ("b8", 15)):
+        # no constructor matches: it may be meant for either one
+        assert (caller, "ns::K::K K(int)", "ambiguous", line) in got, caller
+        assert (caller, "ns::K::K K(const char *)", "ambiguous", line) in got, caller
+    assert ("use", "F::operator() int operator()(int)", "exact", 16) in got
+    assert ("ok", "F::operator() int operator()(int)", "exact", 17) in got
+    assert ("good", "ns::K::K K(int)", "exact", 18) in got
+    # must not: good calls K(int) only
+    assert ("good", "ns::K::K K(const char *)", "ambiguous", 18) not in got
+    # G has no constructor in the repo: never silent, the call stays a blind spot
+    sql = """SELECT b.kind, b.detail FROM blind_spots b JOIN functions f ON f.id = b.function_id
+             WHERE f.name = 'none'"""
+    assert [tuple(r) for r in gaps.execute(sql)] == [
+        ("unresolved_call", "G: a call that does not compile; no constructor of G was found in the repo")
+    ]

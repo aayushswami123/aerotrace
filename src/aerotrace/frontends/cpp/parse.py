@@ -142,6 +142,11 @@ _BINARY_SPELLING = {
     14: ">=", 15: "==", 16: "!=", 17: "&", 18: "^", 19: "|", 20: "&&", 21: "||", 22: "=", 23: "*=",
     24: "/=", 25: "%=", 26: "+=", 27: "-=", 28: "<<=", 29: ">>=", 30: "&=", 31: "^=", 32: "|=", 33: ",",
 }  # fmt: skip
+# Calls that do not compile and leave nothing in the tree to link (#21, #39): only the error names the class.
+_NO_CLASS_CALL = (
+    ("constructor", re.compile(r"^no matching constructor for initialization of '([^']+)'")),
+    ("operator()", re.compile(r"^no matching function for call to object of type '([^']+)'")),
+)
 _MISSING_MEMBER = re.compile(r"^no member named '([^']+)' in '(?:struct |union |class )?([^']+)'")
 
 # Standard C functions that write through their first argument (memset(&x, ...), strcpy(buf, ...)).
@@ -527,7 +532,8 @@ class Collector:
         - C++: the expression keeps the return type. The callee is an overload set (`f(1)`, even when only
           one function has that name) or a member (`k.m(1)`, `k->m(1)`).
         Constructor calls (`K k(1, 2)`, `new K(1, 2)`) keep no reference to the class or the constructor,
-        so they are not found here (#21); neither are calls on an object with operator() (#39)."""
+        and calls on an object with operator() none to the operator: they are found from the compile error
+        instead (`_class_calls`, #21, #39)."""
         if c.kind != K.UNEXPOSED_EXPR:
             return None
         first = next(c.get_children(), None)
@@ -1149,6 +1155,31 @@ def without_machine_flags(args: list[str]) -> tuple[list[str], list[str]]:
     return kept, dropped
 
 
+def _class_name(spelled: str) -> str:
+    """'const struct ns::K<int>' -> 'ns::K': the class as the index names it (`container`)."""
+    words = [w for w in spelled.split() if w not in ("const", "volatile", "struct", "class", "union")]
+    name = " ".join(words)
+    if "<" in name:
+        name = name[: name.index("<")]
+    return name.strip()
+
+
+def _class_calls(col: Collector, found: set[tuple]) -> list[list]:
+    """[caller usr, caller file, class, line, column, what] for each broken constructor or operator() call
+    inside a function of the repo: the innermost function whose lines hold the error."""
+    out = []
+    for file, line, column, what, cls in sorted(found):
+        inside = [
+            f
+            for f in col.functions.values()
+            if f["file"] == file and f["line_start"] <= line <= f["line_end"] and not f["is_pure_virtual"]
+        ]
+        if inside and cls:
+            f = min(inside, key=lambda f: (f["line_end"] - f["line_start"], f["usr"]))
+            out.append([f["usr"], f["file"], cls, line, column, what])
+    return out
+
+
 def _collect_unit(
     unit: CompileUnit,
     root: Path,
@@ -1181,6 +1212,7 @@ def _collect_unit(
     ignored: set[str] = set()
     missing: set[str] = set()
     members: set[tuple] = set()
+    class_calls: set[tuple] = set()  # (file, line, column, "constructor" | "operator()", class)
     for d in tu.diagnostics:
         if d.severity < cindex.Diagnostic.Error:
             continue
@@ -1191,6 +1223,14 @@ def _collect_unit(
         h = _MISSING_HEADER.match(d.spelling)
         if h:
             missing.add(h.group(1))
+        for what, rx in _NO_CLASS_CALL:
+            cm = rx.match(d.spelling)
+            if cm and d.location.file is not None:
+                where = rel_to(d.location.file.name, root)
+                if where is not None:
+                    class_calls.add(
+                        (where, d.location.line, d.location.column, what, _class_name(cm.group(1)))
+                    )
         mm = _MISSING_MEMBER.match(d.spelling)
         if mm and d.location.file is not None:
             where = rel_to(d.location.file.name, root)
@@ -1222,6 +1262,7 @@ def _collect_unit(
     result["accesses"] = sorted(list(t) for t in col.accesses)
     result["pointer_calls"] = sorted(list(t) for t in col.pointer_calls)
     result["template_calls"] = sorted(list(t) for t in col.template_calls)
+    result["class_calls"] = _class_calls(col, class_calls)
     result["overrides"] = sorted(list(t) for t in col.overrides)
     result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
     result["call_sites"] = sorted(list(t) for t in col.call_sites)

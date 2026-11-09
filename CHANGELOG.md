@@ -61,8 +61,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
   functions, templates, methods (`k.m(1)`, `p->m(1)`, virtual ones too) and static members. When no overload
   matches, the call is linked to every function of that name, marked `ambiguous`. A bad call through a
   function pointer, a `std::function` or a pointer to member is still a pointer call. A function used as a
-  value where it does not fit (`int x = f;`) is not taken for a call. Not covered yet: C++ constructor calls
-  (`K k(1, 2)`, `new K(1, 2)`, #21) and calls on an object with `operator()` (#39).
+  value where it does not fit (`int x = f;`) is not taken for a call. C++ constructor calls (`K k(1, 2)`,
+  `new K(1, 2)`, #21) and calls on an object with `operator()` (#39) are found from the compile error and
+  linked to every constructor (or `operator()`) of that class in the repo; an inherited one is not seen, and
+  the call is then listed as a blind spot.
 - Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
   clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
   defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace

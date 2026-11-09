@@ -105,8 +105,39 @@ def merge(results: list[dict]) -> Graph:
     initializers: set[tuple] = set()
     missing_members: set[tuple] = set()
 
+    # methods by (class, name), for calls that only name the class (#21, #39)
+    by_class: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for usr, files in sorted(fns.defs.items()):
+        for f, rec in sorted(files.items()):
+            if rec.get("container"):
+                by_class[(rec["container"], rec["name"])].append(fns.id_of(usr, f))
+
     for res in results:
         visible = set(res.get("deps", {}))
+        for caller, cfile, cls, line, col, what in res.get("class_calls", []):
+            if caller not in fns.defs:
+                continue
+            src = fns.id_of(caller, cfile)
+            name = cls.split("::")[-1] if what == "constructor" else what
+            targets = by_class.get((cls, name), [])
+            if not targets:  # the error may spell the class without its namespace
+                targets = sorted(
+                    t for (c, n), ids in by_class.items() if n == name and c.endswith("::" + cls) for t in ids
+                )
+            words = "constructor" if what == "constructor" else "operator()"
+            if not targets:
+                blind.add(
+                    (src, "unresolved_call", line,
+                     f"{name}: a call that does not compile; no {words} of {cls} was found in the repo")
+                )  # fmt: skip
+                continue
+            conf = "exact" if len(targets) == 1 else "ambiguous"
+            detail = f"does not compile: no {words} of {cls} matches the arguments"
+            if len(targets) > 1:
+                detail += f"; it may be meant for any of the {len(targets)}"
+            for dst in targets:
+                edges.add((src, dst, "calls", conf, line))
+                call_sites.add((src, dst, conf, line, col, -1, "used", detail, ""))
         overload_calls: set[tuple] = set()  # (caller, file, callee, line) that may go to another overload
         for caller, cfile, callee, line, dispatch, name, overload in res.get("calls", []):
             if caller not in fns.defs:
