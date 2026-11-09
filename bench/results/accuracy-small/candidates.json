@@ -1,0 +1,1549 @@
+[
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/sentinel.c:populateDict",
+  "hits": [
+   {
+    "at": "src/sentinel.c:3189",
+    "compiled": true,
+    "in": "populateDict",
+    "text": "static void populateDict(dict *options_dict, char **options) {"
+   },
+   {
+    "at": "src/sentinel.c:3226",
+    "compiled": true,
+    "in": "sentinelConfigSetCommand",
+    "text": "populateDict(options_dict, options);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/iothread.c:assignClientToIOThread",
+  "hits": [
+   {
+    "at": "src/iothread.c:334",
+    "compiled": true,
+    "in": "assignClientToIOThread",
+    "text": "void assignClientToIOThread(client *c) {"
+   },
+   {
+    "at": "src/networking.c:1663",
+    "compiled": true,
+    "in": "clientAcceptHandler",
+    "text": "if (server.io_threads_num > 1) assignClientToIOThread(c);"
+   },
+   {
+    "at": "src/networking.c:2987",
+    "compiled": true,
+    "in": "handleClientsWithPendingWrites",
+    "text": "assignClientToIOThread(c);"
+   },
+   {
+    "at": "src/server.h:3461",
+    "compiled": true,
+    "in": null,
+    "text": "void assignClientToIOThread(client *c);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/networking.c:addReplySetLen",
+  "hits": [
+   {
+    "at": "src/debug.c:901",
+    "compiled": true,
+    "in": "debugCommand",
+    "text": "addReplySetLen(c,3);"
+   },
+   {
+    "at": "src/functions.c:484",
+    "compiled": true,
+    "in": "functionListReplyFlags",
+    "text": "addReplySetLen(c, flagcount);"
+   },
+   {
+    "at": "src/module.c:3261",
+    "compiled": true,
+    "in": "moduleReplyWithCollection",
+    "text": "addReplySetLen(c,len);"
+   },
+   {
+    "at": "src/networking.c:1243",
+    "compiled": true,
+    "in": "addReplySetLen",
+    "text": "void addReplySetLen(client *c, long length) {"
+   },
+   {
+    "at": "src/server.c:5343",
+    "compiled": true,
+    "in": "addReplyCommandFlags",
+    "text": "addReplySetLen(c, count);"
+   },
+   {
+    "at": "src/server.c:5532",
+    "compiled": true,
+    "in": "addReplyCommandHistory",
+    "text": "addReplySetLen(c, cmd->num_history);"
+   },
+   {
+    "at": "src/server.c:5541",
+    "compiled": true,
+    "in": "addReplyCommandTips",
+    "text": "addReplySetLen(c, cmd->num_tips);"
+   },
+   {
+    "at": "src/server.c:5548",
+    "compiled": true,
+    "in": "addReplyCommandKeySpecs",
+    "text": "addReplySetLen(c, cmd->key_specs_num);"
+   },
+   {
+    "at": "src/server.c:5646",
+    "compiled": true,
+    "in": "addReplyCommandSubCommands",
+    "text": "addReplySetLen(c, 0);"
+   },
+   {
+    "at": "src/server.h:3378",
+    "compiled": true,
+    "in": null,
+    "text": "void addReplySetLen(client *c, long length);"
+   },
+   {
+    "at": "src/t_set.c:894",
+    "compiled": true,
+    "in": "spopWithCountCommand",
+    "text": "addReplySetLen(c,count);"
+   },
+   {
+    "at": "src/t_set.c:1594",
+    "compiled": true,
+    "in": "smembersCommand",
+    "text": "addReplySetLen(c,length);"
+   },
+   {
+    "at": "src/t_set.c:1910",
+    "compiled": true,
+    "in": "sunionDiffGenericCommand",
+    "text": "addReplySetLen(c,cardinality);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/latency.c:latencyCommand",
+  "hits": [
+   {
+    "at": "src/latency.c:441",
+    "compiled": false,
+    "in": null,
+    "text": "/* latencyCommand() helper to produce a map of time buckets,"
+   },
+   {
+    "at": "src/latency.c:471",
+    "compiled": false,
+    "in": null,
+    "text": "/* latencyCommand() helper to produce for all commands,"
+   },
+   {
+    "at": "src/latency.c:494",
+    "compiled": false,
+    "in": null,
+    "text": "/* latencyCommand() helper to produce for a specific command set,"
+   },
+   {
+    "at": "src/latency.c:531",
+    "compiled": false,
+    "in": null,
+    "text": "/* latencyCommand() helper to produce a time-delay reply for all the samples"
+   },
+   {
+    "at": "src/latency.c:549",
+    "compiled": false,
+    "in": null,
+    "text": "/* latencyCommand() helper to produce the reply for the LATEST subcommand,"
+   },
+   {
+    "at": "src/latency.c:625",
+    "compiled": true,
+    "in": "latencyCommand",
+    "text": "void latencyCommand(client *c) {"
+   },
+   {
+    "at": "src/server.h:4778",
+    "compiled": true,
+    "in": null,
+    "text": "void latencyCommand(client *c);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/networking.c:rewriteClientCommandVector",
+  "hits": [
+   {
+    "at": "src/cluster.c:321",
+    "compiled": true,
+    "in": "restoreCommand",
+    "text": "rewriteClientCommandVector(c, 2, aux, key);"
+   },
+   {
+    "at": "src/db.c:1545",
+    "compiled": true,
+    "in": "delexCommand",
+    "text": "rewriteClientCommandVector(c, 2, shared.del, key);"
+   },
+   {
+    "at": "src/expire.c:816",
+    "compiled": true,
+    "in": "expireGenericCommand",
+    "text": "rewriteClientCommandVector(c,2,aux,key);"
+   },
+   {
+    "at": "src/gcra.c:222",
+    "compiled": false,
+    "in": "gcraCommand",
+    "text": "rewriteClientCommandVector(c, 3, gcrasetvalue, key, newtatstr);"
+   },
+   {
+    "at": "src/networking.c:5097",
+    "compiled": true,
+    "in": "rewriteClientCommandVector",
+    "text": "void rewriteClientCommandVector(client *c, int argc, ...) {"
+   },
+   {
+    "at": "src/server.c:3699",
+    "compiled": false,
+    "in": null,
+    "text": "* rewriteClientCommandVector() in order to set client->cmd pointer"
+   },
+   {
+    "at": "src/server.h:3398",
+    "compiled": true,
+    "in": null,
+    "text": "void rewriteClientCommandVector(client *c, int argc, ...);"
+   },
+   {
+    "at": "src/t_hash.c:4867",
+    "compiled": true,
+    "in": "hincrbyfloatCommand",
+    "text": "rewriteClientCommandVector(c, 7, shared.hsetex, c->argv[1], shared.keepttl,"
+   },
+   {
+    "at": "src/t_list.c:902",
+    "compiled": true,
+    "in": "mpopGenericCommand",
+    "text": "rewriteClientCommandVector(c, 3,"
+   },
+   {
+    "at": "src/t_list.c:1259",
+    "compiled": true,
+    "in": "lmoveGenericCommand",
+    "text": "rewriteClientCommandVector(c,5,shared.lmove,"
+   },
+   {
+    "at": "src/t_list.c:1262",
+    "compiled": true,
+    "in": "lmoveGenericCommand",
+    "text": "rewriteClientCommandVector(c,3,shared.rpoplpush,"
+   },
+   {
+    "at": "src/t_list.c:1336",
+    "compiled": true,
+    "in": "blockingPopGenericCommand",
+    "text": "rewriteClientCommandVector(c, 3,"
+   },
+   {
+    "at": "src/t_list.c:1357",
+    "compiled": true,
+    "in": "blockingPopGenericCommand",
+    "text": "rewriteClientCommandVector(c,2,"
+   },
+   {
+    "at": "src/t_list.c:1690",
+    "compiled": true,
+    "in": "lmovemGenericCommand",
+    "text": "rewriteClientCommandVector(c, 8, shared.lmovem,"
+   },
+   {
+    "at": "src/t_set.c:881",
+    "compiled": true,
+    "in": "spopWithCountCommand",
+    "text": "rewriteClientCommandVector(c, 2, aux, c->argv[1]);"
+   },
+   {
+    "at": "src/t_set.c:1098",
+    "compiled": true,
+    "in": "spopCommand",
+    "text": "rewriteClientCommandVector(c,3,shared.srem,c->argv[1],ele);"
+   },
+   {
+    "at": "src/t_string.c:165",
+    "compiled": true,
+    "in": "setGenericCommand",
+    "text": "rewriteClientCommandVector(c, 2, aux, key);"
+   },
+   {
+    "at": "src/t_string.c:205",
+    "compiled": true,
+    "in": "setGenericCommand",
+    "text": "rewriteClientCommandVector(c, 5, shared.set, key, *valref, shared.pxat, milliseconds_obj);"
+   },
+   {
+    "at": "src/t_string.c:533",
+    "compiled": true,
+    "in": "getexCommand",
+    "text": "rewriteClientCommandVector(c,2,aux,c->argv[1]);"
+   },
+   {
+    "at": "src/t_string.c:542",
+    "compiled": true,
+    "in": "getexCommand",
+    "text": "rewriteClientCommandVector(c,3,shared.pexpireat,c->argv[1],milliseconds_obj);"
+   },
+   {
+    "at": "src/t_string.c:550",
+    "compiled": true,
+    "in": "getexCommand",
+    "text": "rewriteClientCommandVector(c, 2, shared.persist, c->argv[1]);"
+   },
+   {
+    "at": "src/t_string.c:561",
+    "compiled": true,
+    "in": "getdelCommand",
+    "text": "rewriteClientCommandVector(c,2,shared.del,c->argv[1]);"
+   },
+   {
+    "at": "src/t_string.c:1306",
+    "compiled": true,
+    "in": "increxCommand",
+    "text": "rewriteClientCommandVector(c, 2, aux, c->argv[1]);"
+   },
+   {
+    "at": "src/t_string.c:1341",
+    "compiled": true,
+    "in": "increxCommand",
+    "text": "rewriteClientCommandVector(c, 3, shared.set, c->argv[1], new);"
+   },
+   {
+    "at": "src/t_string.c:1346",
+    "compiled": true,
+    "in": "increxCommand",
+    "text": "rewriteClientCommandVector(c, 5, shared.set, c->argv[1], new, shared.pxat, milliseconds_obj);"
+   },
+   {
+    "at": "src/t_string.c:1349",
+    "compiled": true,
+    "in": "increxCommand",
+    "text": "rewriteClientCommandVector(c, 4, shared.set, c->argv[1], new, shared.keepttl);"
+   },
+   {
+    "at": "src/t_string.c:1363",
+    "compiled": false,
+    "in": "increxCommand",
+    "text": "* null them out. The object is not freed though if rewriteClientCommandVector()"
+   },
+   {
+    "at": "src/t_zset.c:4367",
+    "compiled": true,
+    "in": "genericZpopCommand",
+    "text": "rewriteClientCommandVector(c, 3,"
+   },
+   {
+    "at": "src/t_zset.c:4442",
+    "compiled": true,
+    "in": "blockingGenericZpopCommand",
+    "text": "rewriteClientCommandVector(c,2,"
+   },
+   {
+    "at": "src/t_zset.c:4448",
+    "compiled": true,
+    "in": "blockingGenericZpopCommand",
+    "text": "rewriteClientCommandVector(c, 3,"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/bio.c:bioCreateFsyncJob",
+  "hits": [
+   {
+    "at": "src/aof.c:1234",
+    "compiled": true,
+    "in": "aof_background_fsync",
+    "text": "bioCreateFsyncJob(fd, server.master_repl_offset, 1);"
+   },
+   {
+    "at": "src/bio.c:252",
+    "compiled": true,
+    "in": "bioCreateFsyncJob",
+    "text": "void bioCreateFsyncJob(int fd, long long offset, int need_reclaim_cache) {"
+   },
+   {
+    "at": "src/bio.h:42",
+    "compiled": true,
+    "in": null,
+    "text": "void bioCreateFsyncJob(int fd, long long offset, int need_reclaim_cache);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/eval.c:evalCalcFunctionName",
+  "hits": [
+   {
+    "at": "src/eval.c:298",
+    "compiled": true,
+    "in": "evalCalcFunctionName",
+    "text": "static void evalCalcFunctionName(int evalsha, sds script, char *out_funcname) {"
+   },
+   {
+    "at": "src/eval.c:399",
+    "compiled": true,
+    "in": "evalGetCommandFlags",
+    "text": "evalCalcFunctionName(evalsha, c->argv[1]->ptr, funcname);"
+   },
+   {
+    "at": "src/eval.c:573",
+    "compiled": true,
+    "in": "evalGenericCommand",
+    "text": "evalCalcFunctionName(evalsha, c->argv[1]->ptr, funcname);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/cluster_asm.c:asmLogTaskEvent",
+  "hits": [
+   {
+    "at": "src/cluster_asm.c:1076",
+    "compiled": true,
+    "in": "asmLogTaskEvent",
+    "text": "void asmLogTaskEvent(asmTask *task, int event) {"
+   },
+   {
+    "at": "src/cluster_asm.c:1141",
+    "compiled": true,
+    "in": "asmNotifyStateChange",
+    "text": "asmLogTaskEvent(task, event);"
+   },
+   {
+    "at": "src/cluster_asm.c:1291",
+    "compiled": true,
+    "in": "asmImportTakeover",
+    "text": "asmLogTaskEvent(task, ASM_EVENT_TAKEOVER);"
+   },
+   {
+    "at": "src/cluster_asm.c:2162",
+    "compiled": true,
+    "in": "clusterSyncSlotsCommand",
+    "text": "asmLogTaskEvent(task, ASM_EVENT_HANDOFF_PREP);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/util.c:getAbsolutePath",
+  "hits": [
+   {
+    "at": "src/aof.c:808",
+    "compiled": true,
+    "in": "preloadFileIsCurrentAofManifest",
+    "text": "sds current_absolute_path = getAbsolutePath(current_path);"
+   },
+   {
+    "at": "src/aof.c:843",
+    "compiled": true,
+    "in": "aofInstallPreloadFile",
+    "text": "sds target_path = getAbsolutePath(relative_path);"
+   },
+   {
+    "at": "src/aof.c:3782",
+    "compiled": true,
+    "in": "backupMakeAbsolutePath",
+    "text": "sds abspath = getAbsolutePath(path);"
+   },
+   {
+    "at": "src/server.c:8144",
+    "compiled": true,
+    "in": "main",
+    "text": "server.executable = getAbsolutePath(argv[0]);"
+   },
+   {
+    "at": "src/server.c:8198",
+    "compiled": true,
+    "in": "main",
+    "text": "server.configfile = getAbsolutePath(argv[1]);"
+   },
+   {
+    "at": "src/util.c:1038",
+    "compiled": true,
+    "in": "getAbsolutePath",
+    "text": "sds getAbsolutePath(char *filename) {"
+   },
+   {
+    "at": "src/util.h:64",
+    "compiled": true,
+    "in": null,
+    "text": "sds getAbsolutePath(char *filename);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/cluster.c:countKeysInSlot",
+  "hits": [
+   {
+    "at": "src/cluster.c:897",
+    "compiled": true,
+    "in": "countKeysInSlot",
+    "text": "unsigned int countKeysInSlot(unsigned int slot) {"
+   },
+   {
+    "at": "src/cluster.c:1111",
+    "compiled": true,
+    "in": "clusterCommand",
+    "text": "addReplyLongLong(c,countKeysInSlot(slot));"
+   },
+   {
+    "at": "src/cluster.c:1131",
+    "compiled": true,
+    "in": "clusterCommand",
+    "text": "unsigned int keys_in_slot = countKeysInSlot(slot);"
+   },
+   {
+    "at": "src/cluster.c:2051",
+    "compiled": true,
+    "in": "getKeyCountInSlotRangeArray",
+    "text": "key_count += countKeysInSlot(j);"
+   },
+   {
+    "at": "src/cluster.c:2341",
+    "compiled": true,
+    "in": "clusterDeleteKeysInUnownedSlots",
+    "text": "if (!countKeysInSlot(i) ||"
+   },
+   {
+    "at": "src/cluster.h:154",
+    "compiled": true,
+    "in": null,
+    "text": "unsigned int countKeysInSlot(unsigned int slot);"
+   },
+   {
+    "at": "src/cluster_legacy.c:79",
+    "compiled": true,
+    "in": null,
+    "text": "unsigned int countKeysInSlot(unsigned int hashslot);"
+   },
+   {
+    "at": "src/cluster_legacy.c:2449",
+    "compiled": true,
+    "in": "clusterUpdateSlotsConfigWith",
+    "text": "countKeysInSlot(j) &&"
+   },
+   {
+    "at": "src/cluster_legacy.c:5430",
+    "compiled": true,
+    "in": "clusterClaimUnassignedSlots",
+    "text": "if (!countKeysInSlot(i) ||"
+   },
+   {
+    "at": "src/cluster_legacy.c:6320",
+    "compiled": true,
+    "in": "clusterCommandSpecial",
+    "text": "if (countKeysInSlot(slot) != 0) {"
+   },
+   {
+    "at": "src/cluster_legacy.c:6330",
+    "compiled": true,
+    "in": "clusterCommandSpecial",
+    "text": "if (countKeysInSlot(slot) == 0 &&"
+   },
+   {
+    "at": "src/cluster_slot_stats.c:56",
+    "compiled": true,
+    "in": "getSlotStat",
+    "text": "case KEY_COUNT: return countKeysInSlot(slot);"
+   },
+   {
+    "at": "src/cluster_slot_stats.c:111",
+    "compiled": true,
+    "in": "addReplySlotStat",
+    "text": "addReplyLongLong(c, countKeysInSlot(slot));"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/module.c:maskModuleNumericConfigFlags",
+  "hits": [
+   {
+    "at": "src/module.c:14351",
+    "compiled": true,
+    "in": "maskModuleNumericConfigFlags",
+    "text": "unsigned int maskModuleNumericConfigFlags(unsigned int flags) {"
+   },
+   {
+    "at": "src/module.c:14537",
+    "compiled": true,
+    "in": "RM_RegisterNumericConfig",
+    "text": "unsigned int numeric_flags = maskModuleNumericConfigFlags(flags);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/aof.c:getTempAofManifestFileName",
+  "hits": [
+   {
+    "at": "src/aof.c:179",
+    "compiled": true,
+    "in": "getTempAofManifestFileName",
+    "text": "sds getTempAofManifestFileName(void) {"
+   },
+   {
+    "at": "src/aof.c:547",
+    "compiled": true,
+    "in": "writeAofManifestFileToDir",
+    "text": "sds tmp_am_name = getTempAofManifestFileName();"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/cluster.c:addShardReplyForClusterShards",
+  "hits": [
+   {
+    "at": "src/cluster.c:983",
+    "compiled": true,
+    "in": "addShardReplyForClusterShards",
+    "text": "void addShardReplyForClusterShards(client *c, void *shard_handle) {"
+   },
+   {
+    "at": "src/cluster.c:1020",
+    "compiled": true,
+    "in": "clusterCommandShards",
+    "text": "addShardReplyForClusterShards(c, shard_handle);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/cluster_legacy.c:clusterDebugCommandExtendedHelp",
+  "hits": [
+   {
+    "at": "src/cluster.h:109",
+    "compiled": true,
+    "in": null,
+    "text": "const char **clusterDebugCommandExtendedHelp(void);"
+   },
+   {
+    "at": "src/cluster_legacy.c:6118",
+    "compiled": true,
+    "in": "clusterDebugCommandExtendedHelp",
+    "text": "const char **clusterDebugCommandExtendedHelp(void) {"
+   },
+   {
+    "at": "src/debug.c:558",
+    "compiled": true,
+    "in": "debugCommand",
+    "text": "addExtendedReplyHelp(c, help, clusterDebugCommandExtendedHelp());"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "function",
+  "id": "src/expire.c:expireGenericCommand",
+  "hits": [
+   {
+    "at": "src/expire.c:726",
+    "compiled": true,
+    "in": "expireGenericCommand",
+    "text": "void expireGenericCommand(client *c, long long basetime, int unit) {"
+   },
+   {
+    "at": "src/expire.c:847",
+    "compiled": true,
+    "in": "expireCommand",
+    "text": "expireGenericCommand(c,commandTimeSnapshot(),UNIT_SECONDS);"
+   },
+   {
+    "at": "src/expire.c:852",
+    "compiled": true,
+    "in": "expireatCommand",
+    "text": "expireGenericCommand(c,0,UNIT_SECONDS);"
+   },
+   {
+    "at": "src/expire.c:857",
+    "compiled": true,
+    "in": "pexpireCommand",
+    "text": "expireGenericCommand(c,commandTimeSnapshot(),UNIT_MILLISECONDS);"
+   },
+   {
+    "at": "src/expire.c:862",
+    "compiled": true,
+    "in": "pexpireatCommand",
+    "text": "expireGenericCommand(c,0,UNIT_MILLISECONDS);"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "field",
+  "id": "redisServer.slave_priority",
+  "hits": [
+   {
+    "at": "src/config.c:3520",
+    "compiled": true,
+    "in": null,
+    "text": "createIntConfig(\"replica-priority\", \"slave-priority\", MODIFIABLE_CONFIG, 0, INT_MAX, server.slave_priority, 100, INTEGER_CONFIG, NULL, NULL),"
+   },
+   {
+    "at": "src/sentinel.c:1340",
+    "compiled": true,
+    "in": "createSentinelRedisInstance",
+    "text": "ri->slave_priority = SENTINEL_DEFAULT_SLAVE_PRIORITY;"
+   },
+   {
+    "at": "src/sentinel.c:2640",
+    "compiled": true,
+    "in": "sentinelRefreshInstanceInfo",
+    "text": "ri->slave_priority = atoi(l+15);"
+   },
+   {
+    "at": "src/sentinel.c:3580",
+    "compiled": true,
+    "in": "addReplySentinelRedisInstance",
+    "text": "addReplyBulkLongLong(c,ri->slave_priority);"
+   },
+   {
+    "at": "src/sentinel.c:5082",
+    "compiled": true,
+    "in": "compareSlavesForPromotion",
+    "text": "if ((*sa)->slave_priority != (*sb)->slave_priority)"
+   },
+   {
+    "at": "src/sentinel.c:5083",
+    "compiled": true,
+    "in": "compareSlavesForPromotion",
+    "text": "return (*sa)->slave_priority - (*sb)->slave_priority;"
+   },
+   {
+    "at": "src/sentinel.c:5127",
+    "compiled": true,
+    "in": "sentinelSelectSlave",
+    "text": "if (slave->slave_priority == 0) continue;"
+   },
+   {
+    "at": "src/server.c:6904",
+    "compiled": false,
+    "in": "genRedisInfoString",
+    "text": "\"slave_priority:%d\\r\\n\", server.slave_priority,"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "field",
+  "id": "redisServer.stat_current_cow_peak",
+  "hits": [
+   {
+    "at": "src/childinfo.c:103",
+    "compiled": true,
+    "in": "updateChildInfo",
+    "text": "if (cow > server.stat_current_cow_peak) server.stat_current_cow_peak = cow;"
+   },
+   {
+    "at": "src/childinfo.c:111",
+    "compiled": true,
+    "in": "updateChildInfo",
+    "text": "server.stat_aof_cow_bytes = server.stat_current_cow_peak;"
+   },
+   {
+    "at": "src/childinfo.c:113",
+    "compiled": true,
+    "in": "updateChildInfo",
+    "text": "server.stat_rdb_cow_bytes = server.stat_current_cow_peak;"
+   },
+   {
+    "at": "src/childinfo.c:115",
+    "compiled": true,
+    "in": "updateChildInfo",
+    "text": "server.stat_module_cow_bytes = server.stat_current_cow_peak;"
+   },
+   {
+    "at": "src/server.c:854",
+    "compiled": true,
+    "in": "resetChildState",
+    "text": "server.stat_current_cow_peak = 0;"
+   },
+   {
+    "at": "src/server.c:3157",
+    "compiled": true,
+    "in": "initServer",
+    "text": "server.stat_current_cow_peak = 0;"
+   },
+   {
+    "at": "src/server.c:6617",
+    "compiled": false,
+    "in": "genRedisInfoString",
+    "text": "\"current_cow_peak:%zu\\r\\n\", server.stat_current_cow_peak,"
+   },
+   {
+    "at": "src/server.c:7553",
+    "compiled": true,
+    "in": "redisFork",
+    "text": "server.stat_current_cow_peak = 0;"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "field",
+  "id": "client.repldbfd",
+  "hits": [
+   {
+    "at": "src/cluster_asm.c:2087",
+    "compiled": true,
+    "in": "clusterSyncSlotsCommand",
+    "text": "c->repldbfd = -1;"
+   },
+   {
+    "at": "src/networking.c:2337",
+    "compiled": true,
+    "in": "freeClient",
+    "text": "if (c->repldbfd != -1) close(c->repldbfd);"
+   },
+   {
+    "at": "src/replication.c:1344",
+    "compiled": true,
+    "in": "syncCommand",
+    "text": "c->repldbfd = -1;"
+   },
+   {
+    "at": "src/replication.c:1796",
+    "compiled": true,
+    "in": "closeRepldbfd",
+    "text": "bioCreateCloseJob(myself->repldbfd, 0, 1);"
+   },
+   {
+    "at": "src/replication.c:1798",
+    "compiled": true,
+    "in": "closeRepldbfd",
+    "text": "close(myself->repldbfd);"
+   },
+   {
+    "at": "src/replication.c:1800",
+    "compiled": true,
+    "in": "closeRepldbfd",
+    "text": "myself->repldbfd = -1;"
+   },
+   {
+    "at": "src/replication.c:1832",
+    "compiled": true,
+    "in": "sendBulkToSlave",
+    "text": "if (lseek(slave->repldbfd,slave->repldboff,SEEK_SET) == -1) {"
+   },
+   {
+    "at": "src/replication.c:1838",
+    "compiled": true,
+    "in": "sendBulkToSlave",
+    "text": "buflen = read(slave->repldbfd,buf,PROTO_IOBUF_LEN);"
+   },
+   {
+    "at": "src/replication.c:2097",
+    "compiled": true,
+    "in": "updateSlavesWaitingBgsave",
+    "text": "if ((slave->repldbfd = open(server.rdb_filename,O_RDONLY)) == -1 ||"
+   },
+   {
+    "at": "src/replication.c:2098",
+    "compiled": true,
+    "in": "updateSlavesWaitingBgsave",
+    "text": "redis_fstat(slave->repldbfd,&buf) == -1) {"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "field",
+  "id": "redisServer.stat_total_error_replies",
+  "hits": [
+   {
+    "at": "src/blocked.c:781",
+    "compiled": true,
+    "in": "moduleUnblockClientOnKey",
+    "text": "long long prev_error_replies = server.stat_total_error_replies;"
+   },
+   {
+    "at": "src/blocked.c:788",
+    "compiled": true,
+    "in": "moduleUnblockClientOnKey",
+    "text": "updateStatsOnUnblock(c, 0, elapsedUs(replyTimer), server.stat_total_error_replies != prev_error_replies);"
+   },
+   {
+    "at": "src/module.c:8933",
+    "compiled": true,
+    "in": "moduleHandleBlockedClients",
+    "text": "long long prev_error_replies = server.stat_total_error_replies;"
+   },
+   {
+    "at": "src/module.c:8977",
+    "compiled": true,
+    "in": "moduleHandleBlockedClients",
+    "text": "updateStatsOnUnblock(c, bc->background_duration, reply_us, server.stat_total_error_replies != prev_error_replies);"
+   },
+   {
+    "at": "src/module.c:9044",
+    "compiled": true,
+    "in": "moduleBlockedClientTimedOut",
+    "text": "long long prev_error_replies = server.stat_total_error_replies;"
+   },
+   {
+    "at": "src/module.c:9054",
+    "compiled": true,
+    "in": "moduleBlockedClientTimedOut",
+    "text": "updateStatsOnUnblock(c, bc->background_duration, 0, server.stat_total_error_replies != prev_error_replies);"
+   },
+   {
+    "at": "src/networking.c:683",
+    "compiled": true,
+    "in": "afterErrorReply",
+    "text": "server.stat_total_error_replies++;"
+   },
+   {
+    "at": "src/server.c:2970",
+    "compiled": true,
+    "in": "resetServerStats",
+    "text": "server.stat_total_error_replies = 0;"
+   },
+   {
+    "at": "src/server.c:3938",
+    "compiled": true,
+    "in": "incrCommandStatsOnError",
+    "text": "if ((server.stat_total_error_replies - prev_err_count) > 0) {"
+   },
+   {
+    "at": "src/server.c:3948",
+    "compiled": true,
+    "in": "incrCommandStatsOnError",
+    "text": "prev_err_count = server.stat_total_error_replies;"
+   },
+   {
+    "at": "src/server.c:6804",
+    "compiled": false,
+    "in": "genRedisInfoString",
+    "text": "\"total_error_replies:%lld\\r\\n\", server.stat_total_error_replies,"
+   }
+  ]
+ },
+ {
+  "repo": "redis",
+  "kind": "field",
+  "id": "redisServer.backup_incr_filename",
+  "hits": [
+   {
+    "at": "src/aof.c:3431",
+    "compiled": true,
+    "in": "backupClearArtifactFilenames",
+    "text": "sdsfree(server.backup_incr_filename);"
+   },
+   {
+    "at": "src/aof.c:3432",
+    "compiled": true,
+    "in": "backupClearArtifactFilenames",
+    "text": "server.backup_incr_filename = NULL;"
+   },
+   {
+    "at": "src/aof.c:3707",
+    "compiled": true,
+    "in": "backupSealCommand",
+    "text": "server.backup_incr_filename = sdsnew(incr_name);"
+   },
+   {
+    "at": "src/aof.c:3796",
+    "compiled": true,
+    "in": "backupListCommand",
+    "text": "if (server.backup_incr_filename) {"
+   },
+   {
+    "at": "src/aof.c:3797",
+    "compiled": true,
+    "in": "backupListCommand",
+    "text": "incr = backupMakeAbsolutePath(server.backup_incr_filename);"
+   },
+   {
+    "at": "src/server.c:2442",
+    "compiled": true,
+    "in": "initServerConfig",
+    "text": "server.backup_incr_filename = NULL;"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "shell.c:lockName",
+  "hits": [
+   {
+    "at": "shell.c:19054",
+    "compiled": true,
+    "in": "lockName",
+    "text": "static const char *lockName(int eLock){"
+   },
+   {
+    "at": "shell.c:19074",
+    "compiled": true,
+    "in": "vfstraceLock",
+    "text": "lockName(eLock));"
+   },
+   {
+    "at": "shell.c:19089",
+    "compiled": true,
+    "in": "vfstraceUnlock",
+    "text": "lockName(eLock));"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3FixTriggerStep",
+  "hits": [
+   {
+    "at": "sqlite3.c:22581",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_PRIVATE int sqlite3FixTriggerStep(DbFixer*, TriggerStep*);"
+   },
+   {
+    "at": "sqlite3.c:126465",
+    "compiled": true,
+    "in": "sqlite3FixTriggerStep",
+    "text": "SQLITE_PRIVATE int sqlite3FixTriggerStep("
+   },
+   {
+    "at": "sqlite3.c:155353",
+    "compiled": false,
+    "in": "resolveFromTermToCte",
+    "text": "**        zDatabase removed by sqlite3FixTriggerStep()."
+   },
+   {
+    "at": "sqlite3.c:159231",
+    "compiled": true,
+    "in": "sqlite3FinishTrigger",
+    "text": "if( sqlite3FixTriggerStep(&sFix, pTrig->step_list)"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3WindowAlloc",
+  "hits": [
+   {
+    "at": "sqlite3.c:21812",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_PRIVATE Window *sqlite3WindowAlloc(Parse*, int, int, Expr*, int , Expr*, u8);"
+   },
+   {
+    "at": "sqlite3.c:178803",
+    "compiled": true,
+    "in": "sqlite3WindowAlloc",
+    "text": "SQLITE_PRIVATE Window *sqlite3WindowAlloc("
+   },
+   {
+    "at": "sqlite3.c:185993",
+    "compiled": true,
+    "in": "yy_reduce",
+    "text": "yymsp[1].minor.yy211 = sqlite3WindowAlloc(pParse, 0, TK_UNBOUNDED, 0, TK_CURRENT, 0, 0);"
+   },
+   {
+    "at": "sqlite3.c:185998",
+    "compiled": true,
+    "in": "yy_reduce",
+    "text": "yylhsminor.yy211 = sqlite3WindowAlloc(pParse, yymsp[-2].minor.yy144, yymsp[-1].minor.yy509.eType, yymsp[-1].minor.yy509.pExpr, TK_CURRENT, 0, yymsp[0].minor.yy4"
+   },
+   {
+    "at": "sqlite3.c:186004",
+    "compiled": true,
+    "in": "yy_reduce",
+    "text": "yylhsminor.yy211 = sqlite3WindowAlloc(pParse, yymsp[-5].minor.yy144, yymsp[-3].minor.yy509.eType, yymsp[-3].minor.yy509.pExpr, yymsp[-1].minor.yy509.eType, yyms"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3VdbeMemSetText",
+  "hits": [
+   {
+    "at": "sqlite3.c:25202",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_PRIVATE int sqlite3VdbeMemSetText(Mem*, const char*, i64, void(*)(void*));"
+   },
+   {
+    "at": "sqlite3.c:86561",
+    "compiled": true,
+    "in": "sqlite3VdbeMemSetText",
+    "text": "SQLITE_PRIVATE int sqlite3VdbeMemSetText("
+   },
+   {
+    "at": "sqlite3.c:90393",
+    "compiled": true,
+    "in": "sqlite3VdbeSetColName",
+    "text": "rc = sqlite3VdbeMemSetText(pColName, zName, -1, xDel);"
+   },
+   {
+    "at": "sqlite3.c:93650",
+    "compiled": true,
+    "in": "setResultStrOrError",
+    "text": "rc = sqlite3VdbeMemSetText(pOut, z, n, xDel);"
+   },
+   {
+    "at": "sqlite3.c:93660",
+    "compiled": true,
+    "in": "setResultStrOrError",
+    "text": "rc = sqlite3VdbeMemSetText(pOut, z, n, xDel);"
+   },
+   {
+    "at": "sqlite3.c:95036",
+    "compiled": true,
+    "in": "bindText",
+    "text": "rc = sqlite3VdbeMemSetText(pVar, zData, nData, xDel);"
+   },
+   {
+    "at": "sqlite3.c:95046",
+    "compiled": true,
+    "in": "bindText",
+    "text": "rc = sqlite3VdbeMemSetText(pVar, zData, nData, xDel);"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:walIndexAppend",
+  "hits": [
+   {
+    "at": "sqlite3.c:68205",
+    "compiled": true,
+    "in": "walIndexAppend",
+    "text": "static int walIndexAppend(Wal *pWal, u32 iFrame, u32 iPage){"
+   },
+   {
+    "at": "sqlite3.c:68416",
+    "compiled": true,
+    "in": "walIndexRecover",
+    "text": "rc = walIndexAppend(pWal, iFrame, pgno);"
+   },
+   {
+    "at": "sqlite3.c:70507",
+    "compiled": false,
+    "in": "walFindFrame",
+    "text": "** This code might run concurrently to the code in walIndexAppend()"
+   },
+   {
+    "at": "sqlite3.c:71196",
+    "compiled": true,
+    "in": "walFrames",
+    "text": "rc = walIndexAppend(pWal, iFrame, p->pgno);"
+   },
+   {
+    "at": "sqlite3.c:71202",
+    "compiled": true,
+    "in": "walFrames",
+    "text": "rc = walIndexAppend(pWal, iFrame, pLast->pgno);"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "shell.c:qrfEqpStats",
+  "hits": [
+   {
+    "at": "shell.c:1314",
+    "compiled": true,
+    "in": "qrfEqpStats",
+    "text": "static void qrfEqpStats(Qrf *p){"
+   },
+   {
+    "at": "shell.c:4077",
+    "compiled": true,
+    "in": "sqlite3_format_query_result",
+    "text": "qrfEqpStats(&qrf);"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3IsIdChar",
+  "hits": [
+   {
+    "at": "sqlite3.c:21964",
+    "compiled": false,
+    "in": null,
+    "text": "# define sqlite3JsonId1(x)   (sqlite3IsIdChar(x)&&(x)<'0')"
+   },
+   {
+    "at": "sqlite3.c:21965",
+    "compiled": false,
+    "in": null,
+    "text": "# define sqlite3JsonId2(x)   sqlite3IsIdChar(x)"
+   },
+   {
+    "at": "sqlite3.c:21967",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_PRIVATE int sqlite3IsIdChar(u8);"
+   },
+   {
+    "at": "sqlite3.c:122018",
+    "compiled": true,
+    "in": "renameEditSql",
+    "text": "if( bQuote==0 && sqlite3IsIdChar(*(u8*)pBest->t.z) ){"
+   },
+   {
+    "at": "sqlite3.c:187136",
+    "compiled": false,
+    "in": null,
+    "text": "** sqlite3IsIdChar[X] must be 1."
+   },
+   {
+    "at": "sqlite3.c:187169",
+    "compiled": true,
+    "in": "sqlite3IsIdChar",
+    "text": "SQLITE_PRIVATE int sqlite3IsIdChar(u8 c){ return IdChar(c); }"
+   },
+   {
+    "at": "sqlite3.c:187751",
+    "compiled": false,
+    "in": "addSpaceSeparator",
+    "text": "if( pStr->nChar && sqlite3IsIdChar(pStr->zText[pStr->nChar-1]) ){"
+   },
+   {
+    "at": "sqlite3.c:187864",
+    "compiled": false,
+    "in": "sqlite3Normalize",
+    "text": "if( sqlite3IsIdChar(zSql[i]) ) addSpaceSeparator(pStr);"
+   },
+   {
+    "at": "sqlite3.c:193603",
+    "compiled": true,
+    "in": "sqlite3_compileoption_used",
+    "text": "&& sqlite3IsIdChar((unsigned char)azCompileOpt[i][n])==0"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3_rollback_hook",
+  "hits": [
+   {
+    "at": "sqlite3.c:7493",
+    "compiled": false,
+    "in": null,
+    "text": "** ^The sqlite3_rollback_hook() interface registers a callback"
+   },
+   {
+    "at": "sqlite3.c:7495",
+    "compiled": false,
+    "in": null,
+    "text": "** ^Any callback set by a previous call to sqlite3_rollback_hook()"
+   },
+   {
+    "at": "sqlite3.c:7501",
+    "compiled": false,
+    "in": null,
+    "text": "** ^The sqlite3_commit_hook(D,C,P) and sqlite3_rollback_hook(D,C,P) functions"
+   },
+   {
+    "at": "sqlite3.c:7533",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_API void *sqlite3_rollback_hook(sqlite3*, void(*)(void *), void*);"
+   },
+   {
+    "at": "sqlite3.c:7655",
+    "compiled": false,
+    "in": null,
+    "text": "** See also the [sqlite3_commit_hook()], [sqlite3_rollback_hook()],"
+   },
+   {
+    "at": "sqlite3.c:143477",
+    "compiled": false,
+    "in": null,
+    "text": "#define sqlite3_rollback_hook          sqlite3_api->rollback_hook"
+   },
+   {
+    "at": "sqlite3.c:143933",
+    "compiled": true,
+    "in": null,
+    "text": "sqlite3_rollback_hook,"
+   },
+   {
+    "at": "sqlite3.c:190773",
+    "compiled": true,
+    "in": "sqlite3_rollback_hook",
+    "text": "SQLITE_API void *sqlite3_rollback_hook("
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:sqlite3PagerIsreadonly",
+  "hits": [
+   {
+    "at": "sqlite3.c:17182",
+    "compiled": true,
+    "in": null,
+    "text": "SQLITE_PRIVATE u8 sqlite3PagerIsreadonly(Pager*);"
+   },
+   {
+    "at": "sqlite3.c:65839",
+    "compiled": true,
+    "in": "sqlite3PagerIsreadonly",
+    "text": "SQLITE_PRIVATE u8 sqlite3PagerIsreadonly(Pager *pPager){"
+   },
+   {
+    "at": "sqlite3.c:75455",
+    "compiled": true,
+    "in": "sqlite3BtreeOpen",
+    "text": "if( sqlite3PagerIsreadonly(pBt->pPager) ) pBt->btsFlags |= BTS_READ_ONLY;"
+   },
+   {
+    "at": "sqlite3.c:76377",
+    "compiled": true,
+    "in": "btreeBeginTrans",
+    "text": "&& sqlite3PagerIsreadonly(pPager)==0"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "function",
+  "id": "sqlite3.c:pragmaVtabRowid",
+  "hits": [
+   {
+    "at": "sqlite3.c:148375",
+    "compiled": true,
+    "in": "pragmaVtabRowid",
+    "text": "static int pragmaVtabRowid(sqlite3_vtab_cursor *pVtabCursor, sqlite_int64 *p){"
+   },
+   {
+    "at": "sqlite3.c:148395",
+    "compiled": true,
+    "in": null,
+    "text": "pragmaVtabRowid,             /* xRowid - read data */"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "field",
+  "id": "Parse.nVtabLock",
+  "hits": [
+   {
+    "at": "sqlite3.c:127004",
+    "compiled": true,
+    "in": "sqlite3FinishCoding",
+    "text": "for(i=0; i<pParse->nVtabLock; i++){"
+   },
+   {
+    "at": "sqlite3.c:127008",
+    "compiled": true,
+    "in": "sqlite3FinishCoding",
+    "text": "pParse->nVtabLock = 0;"
+   },
+   {
+    "at": "sqlite3.c:163837",
+    "compiled": true,
+    "in": "sqlite3VtabMakeWritable",
+    "text": "for(i=0; i<pToplevel->nVtabLock; i++){"
+   },
+   {
+    "at": "sqlite3.c:163840",
+    "compiled": true,
+    "in": "sqlite3VtabMakeWritable",
+    "text": "n = (pToplevel->nVtabLock+1)*sizeof(pToplevel->apVtabLock[0]);"
+   },
+   {
+    "at": "sqlite3.c:163844",
+    "compiled": true,
+    "in": "sqlite3VtabMakeWritable",
+    "text": "pToplevel->apVtabLock[pToplevel->nVtabLock++] = pTab;"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "field",
+  "id": "Parse.szOpAlloc",
+  "hits": [
+   {
+    "at": "sqlite3.c:87514",
+    "compiled": true,
+    "in": "sqlite3VdbeCreate",
+    "text": "assert( pParse->szOpAlloc==0 );"
+   },
+   {
+    "at": "sqlite3.c:87666",
+    "compiled": true,
+    "in": "growOpArray",
+    "text": "p->szOpAlloc = sqlite3DbMallocSize(p->db, pNew);"
+   },
+   {
+    "at": "sqlite3.c:87667",
+    "compiled": true,
+    "in": "growOpArray",
+    "text": "v->nOpAlloc = p->szOpAlloc/sizeof(Op);"
+   },
+   {
+    "at": "sqlite3.c:90174",
+    "compiled": true,
+    "in": "sqlite3VdbeMakeReady",
+    "text": "x.nFree = ROUNDDOWN8(pParse->szOpAlloc - n);  /* Bytes unused memory */"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "field",
+  "id": "sqlite3.pNextBlocked",
+  "hits": [
+   {
+    "at": "sqlite3.c:193686",
+    "compiled": false,
+    "in": "checkListProperties",
+    "text": "for(p=sqlite3BlockedList; p; p=p->pNextBlocked){"
+   },
+   {
+    "at": "sqlite3.c:193694",
+    "compiled": false,
+    "in": "checkListProperties",
+    "text": "for(p2=sqlite3BlockedList; p2!=p; p2=p2->pNextBlocked){"
+   },
+   {
+    "at": "sqlite3.c:193713",
+    "compiled": false,
+    "in": "removeFromBlockedList",
+    "text": "for(pp=&sqlite3BlockedList; *pp; pp = &(*pp)->pNextBlocked){"
+   },
+   {
+    "at": "sqlite3.c:193715",
+    "compiled": false,
+    "in": "removeFromBlockedList",
+    "text": "*pp = (*pp)->pNextBlocked;"
+   },
+   {
+    "at": "sqlite3.c:193731",
+    "compiled": false,
+    "in": "addToBlockedList",
+    "text": "pp=&(*pp)->pNextBlocked"
+   },
+   {
+    "at": "sqlite3.c:193733",
+    "compiled": false,
+    "in": "addToBlockedList",
+    "text": "db->pNextBlocked = *pp;"
+   },
+   {
+    "at": "sqlite3.c:193937",
+    "compiled": false,
+    "in": "sqlite3ConnectionUnlocked",
+    "text": "*pp = p->pNextBlocked;"
+   },
+   {
+    "at": "sqlite3.c:193938",
+    "compiled": false,
+    "in": "sqlite3ConnectionUnlocked",
+    "text": "p->pNextBlocked = 0;"
+   },
+   {
+    "at": "sqlite3.c:193940",
+    "compiled": false,
+    "in": "sqlite3ConnectionUnlocked",
+    "text": "pp = &p->pNextBlocked;"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "field",
+  "id": "sqlite3.dfltLockMode",
+  "hits": [
+   {
+    "at": "sqlite3.c:126092",
+    "compiled": true,
+    "in": "attachFunc",
+    "text": "sqlite3PagerLockingMode(pPager, db->dfltLockMode);"
+   },
+   {
+    "at": "sqlite3.c:146012",
+    "compiled": true,
+    "in": "sqlite3Pragma",
+    "text": "eMode = db->dfltLockMode;"
+   },
+   {
+    "at": "sqlite3.c:146020",
+    "compiled": false,
+    "in": "sqlite3Pragma",
+    "text": "** Also, the sqlite3.dfltLockMode variable is set so that"
+   },
+   {
+    "at": "sqlite3.c:146030",
+    "compiled": true,
+    "in": "sqlite3Pragma",
+    "text": "db->dfltLockMode = (u8)eMode;"
+   },
+   {
+    "at": "sqlite3.c:192061",
+    "compiled": false,
+    "in": "openDatabase",
+    "text": "db->dfltLockMode = SQLITE_DEFAULT_LOCKING_MODE;"
+   }
+  ]
+ },
+ {
+  "repo": "sqlite",
+  "kind": "field",
+  "id": "Parse.aVnbmc",
+  "hits": [
+   {
+    "at": "sqlite3.c:114245",
+    "compiled": true,
+    "in": "sqlite3ExprAssignVarNumber",
+    "text": "doAdd = (pParse->aVnbmc[x>>6] & MASKBIT64(x&63))==0;"
+   },
+   {
+    "at": "sqlite3.c:114263",
+    "compiled": true,
+    "in": "sqlite3ExprAssignVarNumber",
+    "text": "pParse->aVnbmc[x>>6] |= MASKBIT64(x&63);"
+   }
+  ]
+ }
+]

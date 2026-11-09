@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers pragmaVtabRowid@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "pragmaVtabRowid",
+   "file": "sqlite3.c",
+   "line": 148375,
+   "signature": "int pragmaVtabRowid(sqlite3_vtab_cursor *, sqlite_int64 *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "sqlite3VdbeExec",
+    "file": "sqlite3.c",
+    "line": 97179,
+    "signature": "int sqlite3VdbeExec(Vdbe *)",
+    "distance": 1,
+    "confidence": "via_pointer",
+    "via": "pragmaVtabRowid",
+    "lines": [
+     102601
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

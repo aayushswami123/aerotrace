@@ -1,0 +1,283 @@
+{
+ "how": "Written by an AI agent (not by AeroTrace) from candidates.json: every grep hit was read and kept or dropped by hand. 'callers' = distinct functions with a direct call in compiled code. 'pointer' = address-taken uses (not scored as exact callers). 'not_compiled' = hits dropped because the code is not in this build. Field users: r = read, w = write, rw = both, addr = address taken. pointer_callers were added after the tool run, from a grep for the pointer call (->proc(, ->xRowid(); the tool's via_pointer answers prompted the search.",
+ "functions": {
+  "src/sentinel.c:populateDict": {
+   "callers": [
+    "src/sentinel.c:sentinelConfigSetCommand"
+   ]
+  },
+  "src/iothread.c:assignClientToIOThread": {
+   "callers": [
+    "src/networking.c:clientAcceptHandler",
+    "src/networking.c:handleClientsWithPendingWrites"
+   ]
+  },
+  "src/networking.c:addReplySetLen": {
+   "callers": [
+    "src/debug.c:debugCommand",
+    "src/functions.c:functionListReplyFlags",
+    "src/module.c:moduleReplyWithCollection",
+    "src/server.c:addReplyCommandFlags",
+    "src/server.c:addReplyCommandHistory",
+    "src/server.c:addReplyCommandKeySpecs",
+    "src/server.c:addReplyCommandSubCommands",
+    "src/server.c:addReplyCommandTips",
+    "src/t_set.c:smembersCommand",
+    "src/t_set.c:spopWithCountCommand",
+    "src/t_set.c:sunionDiffGenericCommand"
+   ]
+  },
+  "src/latency.c:latencyCommand": {
+   "callers": [],
+   "pointer": [
+    "command table (src/commands.def, not a .c/.h file; reached through redisCommand.proc)",
+    "called through redisCommand.proc at src/server.c:4058 (call) and src/aof.c:1993 (loadSingleAppendOnlyFile); the only cmd->proc( calls in src/*.c"
+   ],
+   "pointer_callers": [
+    "src/aof.c:loadSingleAppendOnlyFile",
+    "src/server.c:call"
+   ]
+  },
+  "src/networking.c:rewriteClientCommandVector": {
+   "callers": [
+    "src/cluster.c:restoreCommand",
+    "src/db.c:delexCommand",
+    "src/expire.c:expireGenericCommand",
+    "src/t_hash.c:hincrbyfloatCommand",
+    "src/t_list.c:blockingPopGenericCommand",
+    "src/t_list.c:lmoveGenericCommand",
+    "src/t_list.c:lmovemGenericCommand",
+    "src/t_list.c:mpopGenericCommand",
+    "src/t_set.c:spopCommand",
+    "src/t_set.c:spopWithCountCommand",
+    "src/t_string.c:getdelCommand",
+    "src/t_string.c:getexCommand",
+    "src/t_string.c:increxCommand",
+    "src/t_string.c:setGenericCommand",
+    "src/t_zset.c:blockingGenericZpopCommand",
+    "src/t_zset.c:genericZpopCommand"
+   ],
+   "not_compiled": [
+    "src/gcra.c:222 gcraCommand (inside #ifdef ENABLE_GCRA, gcra.c:12)"
+   ]
+  },
+  "src/bio.c:bioCreateFsyncJob": {
+   "callers": [
+    "src/aof.c:aof_background_fsync"
+   ]
+  },
+  "src/eval.c:evalCalcFunctionName": {
+   "callers": [
+    "src/eval.c:evalGenericCommand",
+    "src/eval.c:evalGetCommandFlags"
+   ]
+  },
+  "src/cluster_asm.c:asmLogTaskEvent": {
+   "callers": [
+    "src/cluster_asm.c:asmImportTakeover",
+    "src/cluster_asm.c:asmNotifyStateChange",
+    "src/cluster_asm.c:clusterSyncSlotsCommand"
+   ]
+  },
+  "src/util.c:getAbsolutePath": {
+   "callers": [
+    "src/aof.c:aofInstallPreloadFile",
+    "src/aof.c:backupMakeAbsolutePath",
+    "src/aof.c:preloadFileIsCurrentAofManifest",
+    "src/server.c:main"
+   ]
+  },
+  "src/cluster.c:countKeysInSlot": {
+   "callers": [
+    "src/cluster.c:clusterCommand",
+    "src/cluster.c:clusterDeleteKeysInUnownedSlots",
+    "src/cluster.c:getKeyCountInSlotRangeArray",
+    "src/cluster_legacy.c:clusterClaimUnassignedSlots",
+    "src/cluster_legacy.c:clusterCommandSpecial",
+    "src/cluster_legacy.c:clusterUpdateSlotsConfigWith",
+    "src/cluster_slot_stats.c:addReplySlotStat",
+    "src/cluster_slot_stats.c:getSlotStat"
+   ]
+  },
+  "src/module.c:maskModuleNumericConfigFlags": {
+   "callers": [
+    "src/module.c:RM_RegisterNumericConfig"
+   ]
+  },
+  "src/aof.c:getTempAofManifestFileName": {
+   "callers": [
+    "src/aof.c:writeAofManifestFileToDir"
+   ]
+  },
+  "src/cluster.c:addShardReplyForClusterShards": {
+   "callers": [
+    "src/cluster.c:clusterCommandShards"
+   ]
+  },
+  "src/cluster_legacy.c:clusterDebugCommandExtendedHelp": {
+   "callers": [
+    "src/debug.c:debugCommand"
+   ]
+  },
+  "src/expire.c:expireGenericCommand": {
+   "callers": [
+    "src/expire.c:expireCommand",
+    "src/expire.c:expireatCommand",
+    "src/expire.c:pexpireCommand",
+    "src/expire.c:pexpireatCommand"
+   ]
+  },
+  "shell.c:lockName": {
+   "callers": [
+    "shell.c:vfstraceLock",
+    "shell.c:vfstraceUnlock"
+   ]
+  },
+  "sqlite3.c:sqlite3FixTriggerStep": {
+   "callers": [
+    "sqlite3.c:sqlite3FinishTrigger"
+   ]
+  },
+  "sqlite3.c:sqlite3WindowAlloc": {
+   "callers": [
+    "sqlite3.c:yy_reduce"
+   ]
+  },
+  "sqlite3.c:sqlite3VdbeMemSetText": {
+   "callers": [
+    "sqlite3.c:bindText",
+    "sqlite3.c:setResultStrOrError",
+    "sqlite3.c:sqlite3VdbeSetColName"
+   ]
+  },
+  "sqlite3.c:walIndexAppend": {
+   "callers": [
+    "sqlite3.c:walFrames",
+    "sqlite3.c:walIndexRecover"
+   ]
+  },
+  "shell.c:qrfEqpStats": {
+   "callers": [
+    "shell.c:sqlite3_format_query_result"
+   ]
+  },
+  "sqlite3.c:sqlite3IsIdChar": {
+   "callers": [
+    "sqlite3.c:renameEditSql",
+    "sqlite3.c:sqlite3_compileoption_used"
+   ],
+   "not_compiled": [
+    "sqlite3.c:187751 addSpaceSeparator and :187864 sqlite3Normalize (inside #ifdef SQLITE_ENABLE_NORMALIZE, :187745)",
+    "sqlite3.c:21964-21965 sqlite3JsonId1/2 macros (non-ASCII branch; the ASCII branch at :21953 is used, so json code at :215384 does not call it)"
+   ]
+  },
+  "sqlite3.c:sqlite3_rollback_hook": {
+   "callers": [],
+   "pointer": [
+    "sqlite3.c:143933 in the sqlite3Apis table (loadable extensions call it through sqlite3_api->rollback_hook)",
+    "no call through sqlite3_api->rollback_hook inside sqlite3.c or shell.c"
+   ],
+   "pointer_callers": []
+  },
+  "sqlite3.c:sqlite3PagerIsreadonly": {
+   "callers": [
+    "sqlite3.c:btreeBeginTrans",
+    "sqlite3.c:sqlite3BtreeOpen"
+   ]
+  },
+  "sqlite3.c:pragmaVtabRowid": {
+   "callers": [],
+   "pointer": [
+    "sqlite3.c:148395 xRowid slot of pragmaVtabModule",
+    "called through sqlite3_module.xRowid at sqlite3.c:102601 (sqlite3VdbeExec), the only xRowid( call"
+   ],
+   "pointer_callers": [
+    "sqlite3.c:sqlite3VdbeExec"
+   ]
+  }
+ },
+ "fields": {
+  "redisServer.slave_priority": {
+   "users": {
+    "src/server.c:genRedisInfoString": "r"
+   },
+   "notes": [
+    "src/config.c:3520 address taken in the static_configs table (a global initializer, no function); CONFIG SET writes it through that pointer",
+    "src/sentinel.c hits are sentinelRedisInstance.slave_priority, a different struct: must not count"
+   ]
+  },
+  "redisServer.stat_current_cow_peak": {
+   "users": {
+    "src/childinfo.c:updateChildInfo": "rw",
+    "src/server.c:genRedisInfoString": "r",
+    "src/server.c:initServer": "w",
+    "src/server.c:redisFork": "w",
+    "src/server.c:resetChildState": "w"
+   }
+  },
+  "client.repldbfd": {
+   "users": {
+    "src/cluster_asm.c:clusterSyncSlotsCommand": "w",
+    "src/networking.c:freeClient": "r",
+    "src/replication.c:closeRepldbfd": "rw",
+    "src/replication.c:sendBulkToSlave": "r",
+    "src/replication.c:syncCommand": "w",
+    "src/replication.c:updateSlavesWaitingBgsave": "rw"
+   }
+  },
+  "redisServer.stat_total_error_replies": {
+   "users": {
+    "src/blocked.c:moduleUnblockClientOnKey": "r",
+    "src/module.c:moduleBlockedClientTimedOut": "r",
+    "src/module.c:moduleHandleBlockedClients": "r",
+    "src/networking.c:afterErrorReply": "rw",
+    "src/server.c:genRedisInfoString": "r",
+    "src/server.c:incrCommandStatsOnError": "r",
+    "src/server.c:resetServerStats": "w"
+   }
+  },
+  "redisServer.backup_incr_filename": {
+   "users": {
+    "src/aof.c:backupClearArtifactFilenames": "rw",
+    "src/aof.c:backupListCommand": "r",
+    "src/aof.c:backupSealCommand": "w",
+    "src/server.c:initServerConfig": "w"
+   }
+  },
+  "Parse.nVtabLock": {
+   "users": {
+    "sqlite3.c:sqlite3FinishCoding": "rw",
+    "sqlite3.c:sqlite3VtabMakeWritable": "rw"
+   }
+  },
+  "Parse.szOpAlloc": {
+   "users": {
+    "sqlite3.c:growOpArray": "rw",
+    "sqlite3.c:sqlite3VdbeMakeReady": "r"
+   },
+   "not_compiled": [
+    "sqlite3.c:87514 sqlite3VdbeCreate: inside assert(), and NDEBUG is defined (sqlite3.c:15354) without SQLITE_DEBUG"
+   ]
+  },
+  "sqlite3.pNextBlocked": {
+   "users": {},
+   "not_compiled": [
+    "the field (sqlite3.c:19006) and all 9 uses (193686-193940) are inside #ifdef SQLITE_ENABLE_UNLOCK_NOTIFY"
+   ]
+  },
+  "sqlite3.dfltLockMode": {
+   "users": {
+    "sqlite3.c:attachFunc": "r",
+    "sqlite3.c:sqlite3Pragma": "rw"
+   },
+   "not_compiled": [
+    "sqlite3.c:192061 openDatabase: inside #ifdef SQLITE_DEFAULT_LOCKING_MODE (:192060), not defined"
+   ]
+  },
+  "Parse.aVnbmc": {
+   "users": {
+    "sqlite3.c:sqlite3ExprAssignVarNumber": "rw"
+   }
+  }
+ }
+}

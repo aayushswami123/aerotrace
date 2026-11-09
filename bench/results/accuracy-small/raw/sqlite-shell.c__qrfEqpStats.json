@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers qrfEqpStats@shell.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "qrfEqpStats",
+   "file": "shell.c",
+   "line": 1314,
+   "signature": "void qrfEqpStats(Qrf *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "sqlite3_format_query_result",
+    "file": "shell.c",
+    "line": 4046,
+    "signature": "int sqlite3_format_query_result(sqlite3_stmt *, const sqlite3_qrf_spec *, char **)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "qrfEqpStats",
+    "lines": [
+     4077
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

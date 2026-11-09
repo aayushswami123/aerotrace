@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers populateDict@src/sentinel.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "populateDict",
+   "file": "src/sentinel.c",
+   "line": 3189,
+   "signature": "void populateDict(dict *, char **)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "sentinelConfigSetCommand",
+    "file": "src/sentinel.c",
+    "line": 3209,
+    "signature": "void sentinelConfigSetCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "populateDict",
+    "lines": [
+     3226
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

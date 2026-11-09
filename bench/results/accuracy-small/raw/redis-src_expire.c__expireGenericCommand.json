@@ -1,0 +1,67 @@
+{
+ "cmd": "aerotrace callers expireGenericCommand@src/expire.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "expireGenericCommand",
+   "file": "src/expire.c",
+   "line": 726,
+   "signature": "void expireGenericCommand(client *, long long, int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 4,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "expireCommand",
+    "file": "src/expire.c",
+    "line": 846,
+    "signature": "void expireCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "expireGenericCommand",
+    "lines": [
+     847
+    ]
+   },
+   {
+    "name": "expireatCommand",
+    "file": "src/expire.c",
+    "line": 851,
+    "signature": "void expireatCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "expireGenericCommand",
+    "lines": [
+     852
+    ]
+   },
+   {
+    "name": "pexpireCommand",
+    "file": "src/expire.c",
+    "line": 856,
+    "signature": "void pexpireCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "expireGenericCommand",
+    "lines": [
+     857
+    ]
+   },
+   {
+    "name": "pexpireatCommand",
+    "file": "src/expire.c",
+    "line": 861,
+    "signature": "void pexpireatCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "expireGenericCommand",
+    "lines": [
+     862
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

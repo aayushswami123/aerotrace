@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers addShardReplyForClusterShards@src/cluster.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "addShardReplyForClusterShards",
+   "file": "src/cluster.c",
+   "line": 983,
+   "signature": "void addShardReplyForClusterShards(client *, void *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "clusterCommandShards",
+    "file": "src/cluster.c",
+    "line": 1014,
+    "signature": "void clusterCommandShards(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addShardReplyForClusterShards",
+    "lines": [
+     1020
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

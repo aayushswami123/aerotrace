@@ -1,0 +1,44 @@
+{
+ "cmd": "aerotrace callers walIndexAppend@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "walIndexAppend",
+   "file": "sqlite3.c",
+   "line": 68205,
+   "signature": "int walIndexAppend(Wal *, u32, u32)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "walIndexRecover",
+    "file": "sqlite3.c",
+    "line": 68294,
+    "signature": "int walIndexRecover(Wal *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "walIndexAppend",
+    "lines": [
+     68416
+    ]
+   },
+   {
+    "name": "walFrames",
+    "file": "sqlite3.c",
+    "line": 70996,
+    "signature": "int walFrames(Wal *, int, PgHdr *, Pgno, int, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "walIndexAppend",
+    "lines": [
+     71196,
+     71202
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

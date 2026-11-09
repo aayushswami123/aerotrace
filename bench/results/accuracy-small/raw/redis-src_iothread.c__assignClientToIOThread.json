@@ -1,0 +1,43 @@
+{
+ "cmd": "aerotrace callers assignClientToIOThread@src/iothread.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "assignClientToIOThread",
+   "file": "src/iothread.c",
+   "line": 334,
+   "signature": "void assignClientToIOThread(client *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "clientAcceptHandler",
+    "file": "src/networking.c",
+    "line": 1593,
+    "signature": "void clientAcceptHandler(connection *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "assignClientToIOThread",
+    "lines": [
+     1663
+    ]
+   },
+   {
+    "name": "handleClientsWithPendingWrites",
+    "file": "src/networking.c",
+    "line": 2958,
+    "signature": "int handleClientsWithPendingWrites()",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "assignClientToIOThread",
+    "lines": [
+     2987
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

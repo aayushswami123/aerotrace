@@ -1,0 +1,151 @@
+{
+ "cmd": "aerotrace callers addReplySetLen@src/networking.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "addReplySetLen",
+   "file": "src/networking.c",
+   "line": 1243,
+   "signature": "void addReplySetLen(client *, long)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 11,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "debugCommand",
+    "file": "src/debug.c",
+    "line": 420,
+    "signature": "void debugCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     901
+    ]
+   },
+   {
+    "name": "functionListReplyFlags",
+    "file": "src/functions.c",
+    "line": 475,
+    "signature": "void functionListReplyFlags(client *, functionInfo *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     484
+    ]
+   },
+   {
+    "name": "moduleReplyWithCollection",
+    "file": "src/module.c",
+    "line": 3227,
+    "signature": "int moduleReplyWithCollection(RedisModuleCtx *, long, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     3261
+    ]
+   },
+   {
+    "name": "addReplyCommandFlags",
+    "file": "src/server.c",
+    "line": 5334,
+    "signature": "void addReplyCommandFlags(client *, uint64_t, replyFlagNames *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     5343
+    ]
+   },
+   {
+    "name": "addReplyCommandHistory",
+    "file": "src/server.c",
+    "line": 5531,
+    "signature": "void addReplyCommandHistory(client *, struct redisCommand *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     5532
+    ]
+   },
+   {
+    "name": "addReplyCommandTips",
+    "file": "src/server.c",
+    "line": 5540,
+    "signature": "void addReplyCommandTips(client *, struct redisCommand *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     5541
+    ]
+   },
+   {
+    "name": "addReplyCommandKeySpecs",
+    "file": "src/server.c",
+    "line": 5547,
+    "signature": "void addReplyCommandKeySpecs(client *, struct redisCommand *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     5548
+    ]
+   },
+   {
+    "name": "addReplyCommandSubCommands",
+    "file": "src/server.c",
+    "line": 5644,
+    "signature": "void addReplyCommandSubCommands(client *, struct redisCommand *, void (*)(client *, struct redisCommand *), int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     5646
+    ]
+   },
+   {
+    "name": "spopWithCountCommand",
+    "file": "src/t_set.c",
+    "line": 838,
+    "signature": "void spopWithCountCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     894
+    ]
+   },
+   {
+    "name": "smembersCommand",
+    "file": "src/t_set.c",
+    "line": 1579,
+    "signature": "void smembersCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     1594
+    ]
+   },
+   {
+    "name": "sunionDiffGenericCommand",
+    "file": "src/t_set.c",
+    "line": 1650,
+    "signature": "void sunionDiffGenericCommand(client *, robj **, int, robj *, int, int, int, long)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "addReplySetLen",
+    "lines": [
+     1910
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "cmd": "aerotrace callers sqlite3VdbeMemSetText@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "sqlite3VdbeMemSetText",
+   "file": "sqlite3.c",
+   "line": 86561,
+   "signature": "int sqlite3VdbeMemSetText(Mem *, const char *, i64, void (*)(void *))"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 3,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "sqlite3VdbeSetColName",
+    "file": "sqlite3.c",
+    "line": 90376,
+    "signature": "int sqlite3VdbeSetColName(Vdbe *, int, int, const char *, void (*)(void *))",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3VdbeMemSetText",
+    "lines": [
+     90393
+    ]
+   },
+   {
+    "name": "setResultStrOrError",
+    "file": "sqlite3.c",
+    "line": 93640,
+    "signature": "void setResultStrOrError(sqlite3_context *, const char *, int, u8, void (*)(void *))",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3VdbeMemSetText",
+    "lines": [
+     93650,
+     93660
+    ]
+   },
+   {
+    "name": "bindText",
+    "file": "sqlite3.c",
+    "line": 95018,
+    "signature": "int bindText(sqlite3_stmt *, int, const void *, i64, void (*)(void *), u8)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3VdbeMemSetText",
+    "lines": [
+     95036,
+     95046
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "cmd": "aerotrace callers evalCalcFunctionName@src/eval.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "evalCalcFunctionName",
+   "file": "src/eval.c",
+   "line": 298,
+   "signature": "void evalCalcFunctionName(int, sds, char *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "evalGetCommandFlags",
+    "file": "src/eval.c",
+    "line": 393,
+    "signature": "uint64_t evalGetCommandFlags(client *, uint64_t)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "evalCalcFunctionName",
+    "lines": [
+     399
+    ]
+   },
+   {
+    "name": "evalGenericCommand",
+    "file": "src/eval.c",
+    "line": 552,
+    "signature": "void evalGenericCommand(client *, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "evalCalcFunctionName",
+    "lines": [
+     573
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

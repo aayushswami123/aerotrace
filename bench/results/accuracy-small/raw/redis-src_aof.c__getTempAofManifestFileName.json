@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers getTempAofManifestFileName@src/aof.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "getTempAofManifestFileName",
+   "file": "src/aof.c",
+   "line": 179,
+   "signature": "sds getTempAofManifestFileName()"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "writeAofManifestFileToDir",
+    "file": "src/aof.c",
+    "line": 540,
+    "signature": "int writeAofManifestFileToDir(char *, sds)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "getTempAofManifestFileName",
+    "lines": [
+     547
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

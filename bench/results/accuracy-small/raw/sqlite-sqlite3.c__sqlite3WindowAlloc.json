@@ -1,0 +1,33 @@
+{
+ "cmd": "aerotrace callers sqlite3WindowAlloc@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "sqlite3WindowAlloc",
+   "file": "sqlite3.c",
+   "line": 178803,
+   "signature": "Window * sqlite3WindowAlloc(Parse *, int, int, Expr *, int, Expr *, u8)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "yy_reduce",
+    "file": "sqlite3.c",
+    "line": 184516,
+    "signature": "unsigned short yy_reduce(yyParser *, unsigned int, int, Token, Parse *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3WindowAlloc",
+    "lines": [
+     185993,
+     185998,
+     186004
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "cmd": "aerotrace callers sqlite3_rollback_hook@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "sqlite3_rollback_hook",
+   "file": "sqlite3.c",
+   "line": 190773,
+   "signature": "void * sqlite3_rollback_hook(sqlite3 *, void (*)(void *), void *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 0,
+  "truncated_at_depth": false,
+  "results": [],
+  "omitted": 0
+ }
+}

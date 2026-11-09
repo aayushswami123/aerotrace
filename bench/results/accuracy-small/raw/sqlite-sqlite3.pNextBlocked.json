@@ -1,0 +1,7 @@
+{
+ "cmd": "aerotrace data sqlite3::pNextBlocked --json --all",
+ "exit": 1,
+ "answer": null,
+ "stdout": "",
+ "stderr": "No field or global named 'sqlite3::pNextBlocked' in the index (and no compile error that still uses it).\n"
+}

@@ -1,0 +1,220 @@
+{
+ "cmd": "aerotrace callers rewriteClientCommandVector@src/networking.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "rewriteClientCommandVector",
+   "file": "src/networking.c",
+   "line": 5097,
+   "signature": "void rewriteClientCommandVector(client *, int, ...)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 16,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "restoreCommand",
+    "file": "src/cluster.c",
+    "line": 212,
+    "signature": "void restoreCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     321
+    ]
+   },
+   {
+    "name": "delexCommand",
+    "file": "src/db.c",
+    "line": 1469,
+    "signature": "void delexCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1545
+    ]
+   },
+   {
+    "name": "expireGenericCommand",
+    "file": "src/expire.c",
+    "line": 726,
+    "signature": "void expireGenericCommand(client *, long long, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     816
+    ]
+   },
+   {
+    "name": "hincrbyfloatCommand",
+    "file": "src/t_hash.c",
+    "line": 4798,
+    "signature": "void hincrbyfloatCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     4867
+    ]
+   },
+   {
+    "name": "mpopGenericCommand",
+    "file": "src/t_list.c",
+    "line": 879,
+    "signature": "void mpopGenericCommand(client *, robj **, int, int, long)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     902
+    ]
+   },
+   {
+    "name": "lmoveGenericCommand",
+    "file": "src/t_list.c",
+    "line": 1223,
+    "signature": "void lmoveGenericCommand(client *, int, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1259,
+     1262
+    ]
+   },
+   {
+    "name": "blockingPopGenericCommand",
+    "file": "src/t_list.c",
+    "line": 1306,
+    "signature": "void blockingPopGenericCommand(client *, robj **, int, int, int, long)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1336,
+     1357
+    ]
+   },
+   {
+    "name": "lmovemGenericCommand",
+    "file": "src/t_list.c",
+    "line": 1649,
+    "signature": "void lmovemGenericCommand(client *, int, int, int, long, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1690
+    ]
+   },
+   {
+    "name": "spopWithCountCommand",
+    "file": "src/t_set.c",
+    "line": 838,
+    "signature": "void spopWithCountCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     881
+    ]
+   },
+   {
+    "name": "spopCommand",
+    "file": "src/t_set.c",
+    "line": 1065,
+    "signature": "void spopCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1098
+    ]
+   },
+   {
+    "name": "setGenericCommand",
+    "file": "src/t_string.c",
+    "line": 87,
+    "signature": "void setGenericCommand(client *, int, robj *, robj **, robj *, int, robj *, robj *, robj *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     165,
+     205
+    ]
+   },
+   {
+    "name": "getexCommand",
+    "file": "src/t_string.c",
+    "line": 499,
+    "signature": "void getexCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     533,
+     542,
+     550
+    ]
+   },
+   {
+    "name": "getdelCommand",
+    "file": "src/t_string.c",
+    "line": 557,
+    "signature": "void getdelCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     561
+    ]
+   },
+   {
+    "name": "increxCommand",
+    "file": "src/t_string.c",
+    "line": 1196,
+    "signature": "void increxCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     1306,
+     1341,
+     1346,
+     1349
+    ]
+   },
+   {
+    "name": "genericZpopCommand",
+    "file": "src/t_zset.c",
+    "line": 4227,
+    "signature": "void genericZpopCommand(client *, robj **, int, int, int, long, int, int, int *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     4367
+    ]
+   },
+   {
+    "name": "blockingGenericZpopCommand",
+    "file": "src/t_zset.c",
+    "line": 4415,
+    "signature": "void blockingGenericZpopCommand(client *, robj **, int, int, int, long, int, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "rewriteClientCommandVector",
+    "lines": [
+     4442,
+     4448
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

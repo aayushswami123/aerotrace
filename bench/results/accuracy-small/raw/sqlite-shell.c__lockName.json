@@ -1,0 +1,43 @@
+{
+ "cmd": "aerotrace callers lockName@shell.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "lockName",
+   "file": "shell.c",
+   "line": 19054,
+   "signature": "const char * lockName(int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "vfstraceLock",
+    "file": "shell.c",
+    "line": 19068,
+    "signature": "int vfstraceLock(sqlite3_file *, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "lockName",
+    "lines": [
+     19074
+    ]
+   },
+   {
+    "name": "vfstraceUnlock",
+    "file": "shell.c",
+    "line": 19083,
+    "signature": "int vfstraceUnlock(sqlite3_file *, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "lockName",
+    "lines": [
+     19089
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

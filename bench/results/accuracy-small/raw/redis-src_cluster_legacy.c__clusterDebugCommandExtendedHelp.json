@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers clusterDebugCommandExtendedHelp@src/cluster_legacy.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "clusterDebugCommandExtendedHelp",
+   "file": "src/cluster_legacy.c",
+   "line": 6118,
+   "signature": "const char ** clusterDebugCommandExtendedHelp()"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "debugCommand",
+    "file": "src/debug.c",
+    "line": 420,
+    "signature": "void debugCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "clusterDebugCommandExtendedHelp",
+    "lines": [
+     558
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

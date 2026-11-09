@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers bioCreateFsyncJob@src/bio.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "bioCreateFsyncJob",
+   "file": "src/bio.c",
+   "line": 252,
+   "signature": "void bioCreateFsyncJob(int, long long, int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "aof_background_fsync",
+    "file": "src/aof.c",
+    "line": 1233,
+    "signature": "void aof_background_fsync(int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "bioCreateFsyncJob",
+    "lines": [
+     1234
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "cmd": "aerotrace callers latencyCommand@src/latency.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "latencyCommand",
+   "file": "src/latency.c",
+   "line": 625,
+   "signature": "void latencyCommand(client *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "loadSingleAppendOnlyFile",
+    "file": "src/aof.c",
+    "line": 1810,
+    "signature": "int loadSingleAppendOnlyFile(char *)",
+    "distance": 1,
+    "confidence": "via_pointer",
+    "via": "latencyCommand",
+    "lines": [
+     1993
+    ]
+   },
+   {
+    "name": "call",
+    "file": "src/server.c",
+    "line": 3992,
+    "signature": "void call(client *, int)",
+    "distance": 1,
+    "confidence": "via_pointer",
+    "via": "latencyCommand",
+    "lines": [
+     4058
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}
