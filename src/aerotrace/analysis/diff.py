@@ -337,6 +337,14 @@ class _Collect:
         # Added lines (patch mode) belong to the patched version: map them onto its outline (#13).
         if mode == "patch" and new is not None and other:
             other -= self.explain(new, set(other), fd.new_path or path, path, old=False)
+        if mode == "patch" and new is not None and new.functions:
+            # A touched function the patched version no longer defines is removed, even when the patch
+            # splits its deletion across a neighbour (#44).
+            have = {f["usr"] for f in new.functions} | {f["qualified_name"] for f in new.functions}
+            for r in conn.execute("SELECT id, usr, qualified_name FROM functions WHERE file = ?", (path,)):
+                cur = self.changed.get(r["id"])
+                if cur is not None and r["usr"] not in have and r["qualified_name"] not in have:
+                    cur[1], cur[2] = False, True
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:
             res.outside.append(Outside(path, out_lines, sorted(other)))

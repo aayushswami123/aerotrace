@@ -332,6 +332,13 @@ def test_patch_removing_a_whole_function_says_so(repo):
     assert [(c.fn.qualified_name, c.state) for c in res.changed] == [("bump", "removed")]
 
 
+def test_patch_replacing_a_function_head_labels_the_old_one_removed(repo):
+    # #44: the old function is gone from the patched version, so it is removed, not changed
+    text = patch_of(repo, "lib/shared.c", "int likely_positive(int x) {", "int unused(int x) {")
+    res = run_patch_mode(repo, text)
+    assert [(c.fn.qualified_name, c.state) for c in res.changed] == [("likely_positive", "removed")]
+
+
 def test_stale_patch_is_skipped_not_mapped_to_wrong_lines(repo):
     text = patch_of(repo, "prog_a/util.c", "    count++;\n", "    count += 5;\n")
     edit(repo, "prog_a/util.c", "static int count;\n", "static int count;\n\n\n")  # lines move
