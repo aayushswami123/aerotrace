@@ -51,4 +51,4 @@ breaks a fact that passed, CI is red.
 2. Write the proof lines. Copy the text from the file, don't retype it.
 3. Run the suite. If AeroTrace disagrees, go back to the source before you decide who is wrong. In the
    first draft of this suite, 5 of 8 disagreements were mistakes in the facts, not in the tool.
-4. If the tool is wrong, add `known_bug="..."` and open an issue. Don't weaken the fact.
+4. If the tool is wrong, open a GitHub issue and add `known_bug="#<issue>: ..."`. Don't weaken the fact.

@@ -21,6 +21,13 @@ class Graph:
     edges: list[tuple] = field(default_factory=list)  # (src, dst, kind, confidence, line)
     blind_spots: list[tuple] = field(default_factory=list)  # (function_id, kind, line, detail)
     address_taken: list[tuple[str, str]] = field(default_factory=list)  # (function id, function type)
+    # (caller, callee or None, confidence, line, column, n_args, use, detail, pointer type or "")
+    call_sites: list[tuple] = field(default_factory=list)
+    # (function id, in function id or None, in variable id or None, file, line, how)
+    address_sites: list[tuple] = field(default_factory=list)
+    escapes: list[tuple] = field(default_factory=list)  # (function id, variable id, line, detail)
+    initializers: list[tuple] = field(default_factory=list)  # (global id, field id, file, line)
+    missing_members: list[tuple] = field(default_factory=list)  # (file, line, member, record)
     class_bases: dict[str, list[str]] = field(default_factory=dict)
 
 
@@ -89,6 +96,11 @@ def merge(results: list[dict]) -> Graph:
     overrides: set[tuple[str, str]] = set()
     taken: dict[str, str] = {}  # function id -> type
     pointer_sites: set[tuple] = set()  # (src, line, called type)
+    call_sites: set[tuple] = set()
+    address_sites: set[tuple] = set()
+    escapes: set[tuple] = set()
+    initializers: set[tuple] = set()
+    missing_members: set[tuple] = set()
 
     for res in results:
         visible = set(res.get("deps", {}))
@@ -125,6 +137,33 @@ def merge(results: list[dict]) -> Graph:
         for fn, ffile, n in res.get("external_calls", []):
             if fn in fns.defs:
                 external[fns.id_of(fn, ffile)] += n
+        for caller, cfile, callee, _name, line, col, n_args, use, detail, ptype in res.get("call_sites", []):
+            if caller not in fns.defs:
+                continue
+            src = fns.id_of(caller, cfile)
+            if not callee:
+                call_sites.add((src, None, "via_pointer", line, col, n_args, use, detail, ptype))
+                continue
+            for dst, conf in fns.resolve(callee, visible):
+                call_sites.add((src, dst, conf, line, col, n_args, use, detail, ""))
+        for fn, in_fn, in_file, in_var, file, line, how in res.get("address_sites", []):
+            in_fn_id = fns.id_of(in_fn, in_file) if in_fn and in_fn in fns.defs else None
+            in_var_ids = [v for v, _ in vars_.resolve(in_var, visible)] if in_var else []
+            for dst, _conf in fns.resolve(fn, visible):
+                for v in in_var_ids or [None]:
+                    address_sites.add((dst, in_fn_id, v, file, line, how))
+        for fn, ffile, var, line, detail in res.get("escapes", []):
+            if fn not in fns.defs:
+                continue
+            for dst, _conf in vars_.resolve(var, visible):
+                escapes.add((fns.id_of(fn, ffile), dst, line, detail))
+        for gvar, gfile, fld, file, line in res.get("initializers", []):
+            if gvar not in vars_.defs or gfile not in vars_.defs[gvar]:
+                continue
+            for dst, _conf in vars_.resolve(fld, visible):
+                initializers.add((vars_.id_of(gvar, gfile), dst, file, line))
+        for row in res.get("missing_members", []):
+            missing_members.add(tuple(row))
 
     for a, b in overrides:
         edges.add((a, b, "overrides", "exact", 0))
@@ -151,6 +190,10 @@ def merge(results: list[dict]) -> Graph:
         blind.add((src, "pointer_call", line, detail))
 
     # A virtual call through a pointer or reference may land on any override of the method it names.
+    sites_at: dict[tuple, list[tuple]] = defaultdict(list)
+    for row in call_sites:
+        if row[1] is not None:
+            sites_at[(row[0], row[1], row[3])].append(row)
     overridden_by: dict[str, set[str]] = defaultdict(set)
     for a, b in overrides:
         overridden_by[b].add(a)
@@ -164,6 +207,8 @@ def merge(results: list[dict]) -> Graph:
         for o in sorted(seen):
             if o != src:
                 edges.add((src, o, "calls", "virtual", line))
+                for row in sites_at.get((src, dst, line), []):
+                    call_sites.add((src, o, "virtual", *row[3:]))
 
     graph = Graph(class_bases=dict(sorted(class_bases.items())))
     for usr, files in sorted(fns.defs.items()):
@@ -178,4 +223,10 @@ def merge(results: list[dict]) -> Graph:
     graph.edges = sorted(edges)
     graph.blind_spots = sorted(blind)
     graph.address_taken = sorted(taken.items())
+    key = lambda t: tuple("" if x is None else x for x in t)  # noqa: E731 (sort rows that hold None)
+    graph.call_sites = sorted(call_sites, key=key)
+    graph.address_sites = sorted(address_sites, key=key)
+    graph.escapes = sorted(escapes)
+    graph.initializers = sorted(initializers)
+    graph.missing_members = sorted(missing_members)
     return graph

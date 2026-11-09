@@ -15,7 +15,7 @@ from pathlib import Path
 from mcp.server import MCPServer
 
 from aerotrace import __version__
-from aerotrace.analysis import diff, graph, render, symbols
+from aerotrace.analysis import diff, graph, render, signature, symbols
 from aerotrace.index import store
 from aerotrace.index.build import fresh_index
 from aerotrace.index.history import Outliner
@@ -32,6 +32,8 @@ Use it BEFORE you edit C or C++ code:
 - Before changing a function, call `impact` on it. Read the affected callers and the "Limits of this answer".
 - After editing, or before applying a patch, call `diff_impact` to check the whole change: changed and
   deleted functions, changed globals and fields, and everything upstream of them.
+- Before changing a function's parameters or return type, call `signature_impact`: it lists every call
+  site and how each one uses the return value.
 - Use `callers` / `callees` to follow the code, and `find` when you are not sure of a name.
 - Labels: no label = a direct call; [virtual] = may land on this override; [via_pointer] = matched by
   function-pointer type; [ambiguous] = several functions share this name; [data] = reads data the changed
@@ -103,6 +105,19 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
                 conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now
             )
             return _with_note(render.diff_text(res, limit), note)
+
+    @server.tool()
+    def signature_impact(symbol: str, depth: int = 2, limit: int = 40) -> str:
+        """Before changing a function's parameters (add, remove, reorder, retype) or its return type: every
+        call site with its argument count and how it uses the return value (stored, compared, passed on,
+        ignored, ...), every place that stores the function's address (tables, callbacks), pointer calls that
+        may reach it, and callers further up. Each result says exact / probable and why."""
+        conn, note = state.open()
+        with closing(conn):
+            fn, msg = resolve(conn, symbol)
+            if fn is None:
+                return _with_note(msg, note)
+            return _with_note(render.signature_text(signature.signature_impact(conn, fn, depth), limit), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:

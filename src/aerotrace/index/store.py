@@ -13,7 +13,7 @@ from pathlib import Path
 
 from aerotrace.index.merge import Graph
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 DIR_NAME = ".aerotrace"
 DB_NAME = "index.db"
 
@@ -73,6 +73,43 @@ CREATE TABLE blind_spots (
 );
 CREATE TABLE address_taken (function_id TEXT PRIMARY KEY, type TEXT NOT NULL);
 CREATE TABLE class_bases (class TEXT NOT NULL, base TEXT NOT NULL);
+CREATE TABLE call_sites (           -- one row per call (and per possible target), see ADR 0007
+    caller TEXT NOT NULL,
+    callee TEXT,                    -- NULL for a call through a pointer (then via_type is set)
+    confidence TEXT NOT NULL,       -- exact | ambiguous | via_pointer
+    line INTEGER NOT NULL,
+    col INTEGER NOT NULL,
+    n_args INTEGER NOT NULL,        -- arguments passed (-1 when libclang can't tell)
+    use TEXT NOT NULL,              -- ignored | discarded | stored | compared | checked | passed | returned | called | used
+    detail TEXT NOT NULL,           -- where it is stored, which function gets it, ...
+    via_type TEXT NOT NULL          -- function type called through a pointer ('' for direct calls)
+);
+CREATE TABLE address_sites (        -- where a function is named as a value (tables, callbacks)
+    function_id TEXT NOT NULL,
+    in_function TEXT,               -- the function that does it, or NULL at file scope
+    in_variable TEXT,               -- the global whose initializer names it, or NULL
+    file TEXT NOT NULL,
+    line INTEGER NOT NULL,
+    how TEXT NOT NULL               -- stored in ..., passed to ...(), compared, ...
+);
+CREATE TABLE escapes (              -- the address of a global or field goes where we can't follow it
+    function_id TEXT NOT NULL,
+    variable_id TEXT NOT NULL,
+    line INTEGER NOT NULL,
+    detail TEXT NOT NULL            -- passed to foo(), address stored in p, address returned
+);
+CREATE TABLE initializers (         -- a global's initializer sets a field: {.proc = f}
+    variable_id TEXT NOT NULL,
+    field_id TEXT NOT NULL,
+    file TEXT NOT NULL,
+    line INTEGER NOT NULL
+);
+CREATE TABLE missing_members (      -- compile errors "no member named X in S": code using a field that is gone
+    file TEXT NOT NULL,
+    line INTEGER NOT NULL,
+    member TEXT NOT NULL,
+    record TEXT NOT NULL
+);
 CREATE INDEX edges_src ON edges (src, kind);
 CREATE INDEX edges_dst ON edges (dst, kind);
 CREATE INDEX functions_name ON functions (name);
@@ -80,6 +117,11 @@ CREATE INDEX functions_qname ON functions (qualified_name);
 CREATE INDEX functions_file ON functions (file, line_start);
 CREATE INDEX variables_name ON variables (name);
 CREATE INDEX blind_fn ON blind_spots (function_id);
+CREATE INDEX call_sites_callee ON call_sites (callee);
+CREATE INDEX call_sites_type ON call_sites (via_type);
+CREATE INDEX address_sites_fn ON address_sites (function_id);
+CREATE INDEX escapes_var ON escapes (variable_id);
+CREATE INDEX initializers_field ON initializers (field_id);
 """
 
 
@@ -130,6 +172,11 @@ def write_index(root: Path, graph: Graph, files: list[dict], meta: dict[str, str
         conn.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?)", graph.edges)
         conn.executemany("INSERT INTO blind_spots VALUES (?, ?, ?, ?)", graph.blind_spots)
         conn.executemany("INSERT INTO address_taken VALUES (?, ?)", graph.address_taken)
+        conn.executemany("INSERT INTO call_sites VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", graph.call_sites)
+        conn.executemany("INSERT INTO address_sites VALUES (?, ?, ?, ?, ?, ?)", graph.address_sites)
+        conn.executemany("INSERT INTO escapes VALUES (?, ?, ?, ?)", graph.escapes)
+        conn.executemany("INSERT INTO initializers VALUES (?, ?, ?, ?)", graph.initializers)
+        conn.executemany("INSERT INTO missing_members VALUES (?, ?, ?, ?)", graph.missing_members)
         conn.executemany(
             "INSERT INTO class_bases VALUES (?, ?)",
             [(c, b) for c, bs in graph.class_bases.items() for b in bs],
@@ -141,20 +188,57 @@ def write_index(root: Path, graph: Graph, files: list[dict], meta: dict[str, str
     return final
 
 
+class IndexVersionError(FileNotFoundError):
+    """The index was made by another AeroTrace version (another index format), or can't be read at all.
+    It is a local cache, so the answer is always to rebuild it."""
+
+    def __init__(self, root: Path, found: str | None):
+        self.found = found
+        if found is None:
+            what = "can't be read (it is damaged or from a very old AeroTrace)"
+        elif found.isdigit() and int(found) < int(SCHEMA_VERSION):
+            what = (
+                f"was made by an older AeroTrace (index format {found}; this version uses {SCHEMA_VERSION})"
+            )
+        else:
+            what = f"was made by a newer AeroTrace (index format {found}; this version uses {SCHEMA_VERSION})"
+        self.reason = f"the index in {root} {what}"
+        super().__init__(f"{self.reason}. Rebuild it with `aerotrace index`.")
+
+
 def connect(root: Path) -> sqlite3.Connection:
-    """Open the index read-only. Raises FileNotFoundError when there is none."""
+    """Open the index read-only. Raises FileNotFoundError when there is none, and IndexVersionError (a
+    FileNotFoundError) when it has another format or can't be read."""
     path = db_path(root)
     if not path.is_file():
         raise FileNotFoundError(f"no AeroTrace index in {root}. Run `aerotrace index` first.")
     conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-    version = conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()
+    try:
+        version = conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()
+    except sqlite3.DatabaseError:
+        conn.close()
+        raise IndexVersionError(root, None) from None
     if version is None or version[0] != SCHEMA_VERSION:
         conn.close()
-        raise FileNotFoundError(
-            f"the index in {root} is from another AeroTrace version. Run `aerotrace index`."
-        )
+        raise IndexVersionError(root, version[0] if version else None)
     return conn
+
+
+def peek_meta(root: Path) -> dict[str, str]:
+    """The meta table of whatever index is there, any version; {} when it can't be read. Used to rebuild an
+    old index with the settings it was made with."""
+    path = db_path(root)
+    if not path.is_file():
+        return {}
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            return {k: v for k, v in conn.execute("SELECT key, value FROM meta")}
+        finally:
+            conn.close()
+    except sqlite3.DatabaseError:
+        return {}
 
 
 def read_meta(conn: sqlite3.Connection) -> dict[str, str]:
@@ -217,6 +301,32 @@ def dump_canonical(conn: sqlite3.Connection) -> str:
     lines += sorted(
         f"address_taken {name.get(r[0], r[0])} {r[1]}"
         for r in conn.execute("SELECT function_id, type FROM address_taken")
+    )
+    lines += sorted(
+        f"call_site {name.get(r['caller'], r['caller'])} -> "
+        f"{name.get(r['callee'], r['callee']) if r['callee'] else 'pointer ' + repr(r['via_type'])} "
+        f":{r['line']}:{r['col']} args={r['n_args']} {r['confidence']} {r['use']}"
+        + (f" ({r['detail']})" if r["detail"] else "")
+        for r in conn.execute("SELECT * FROM call_sites")
+    )
+    lines += sorted(
+        f"address_site {name.get(r['function_id'], r['function_id'])} {r['file']}:{r['line']} "
+        f"in {name.get(r['in_function'] or r['in_variable'] or '', 'file scope')} {r['how']}"
+        for r in conn.execute("SELECT * FROM address_sites")
+    )
+    lines += sorted(
+        f"escape {name.get(r['function_id'], r['function_id'])} {name.get(r['variable_id'], r['variable_id'])} "
+        f":{r['line']} {r['detail']}"
+        for r in conn.execute("SELECT * FROM escapes")
+    )
+    lines += sorted(
+        f"initializer {name.get(r['variable_id'], r['variable_id'])} sets {name.get(r['field_id'], r['field_id'])} "
+        f"{r['file']}:{r['line']}"
+        for r in conn.execute("SELECT * FROM initializers")
+    )
+    lines += sorted(
+        f"missing_member {r['file']}:{r['line']} {r['record']}::{r['member']}"
+        for r in conn.execute("SELECT * FROM missing_members")
     )
     return "\n".join(lines) + "\n"
 

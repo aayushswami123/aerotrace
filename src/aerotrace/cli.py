@@ -154,10 +154,8 @@ def cmd_status(args: argparse.Namespace) -> int:
     from aerotrace.index import store
 
     root = find_root(args.root)
-    try:
-        conn = store.connect(root)
-    except FileNotFoundError as e:
-        _err(str(e))
+    conn = _open(args)
+    if conn is None:
         return 2
     meta = store.read_meta(conn)
     counts = {
@@ -180,11 +178,18 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def _open(args: argparse.Namespace):
+    """The index, rebuilt first when it was made by another AeroTrace version (it is only a cache)."""
     from aerotrace.index import store
+    from aerotrace.index.build import fresh_index
 
     root = find_root(args.root)
     try:
         return store.connect(root)
+    except store.IndexVersionError as e:
+        _err(f"note: {e.reason}; rebuilding it now.")
+        conn, note = fresh_index(root)
+        _err(note)
+        return conn
     except FileNotFoundError as e:
         _err(str(e))
         return None
@@ -287,6 +292,24 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_signature(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import render, signature
+
+    conn = _open(args)
+    if conn is None:
+        return 2
+    fn = _resolve_one(conn, args.symbol)
+    if fn is None:
+        return 1
+    res = signature.signature_impact(conn, fn, args.depth)
+    print(
+        json.dumps(render.signature_json(res, args.limit), indent=2)
+        if args.json
+        else render.signature_text(res, args.limit)
+    )
+    return 0
+
+
 def cmd_mcp(args: argparse.Namespace) -> int:
     from aerotrace.mcp.server import run
 
@@ -361,6 +384,16 @@ def build_parser() -> argparse.ArgumentParser:
     query("callers", "who calls this function, directly or through others", cmd_walk)
     query("callees", "what this function calls, directly or through others", cmd_walk)
     query("impact", "what could break if this function changes (callers + data readers)", cmd_impact)
+    sig = with_root(
+        sub.add_parser("signature", help="what a change to this function's parameters or return type affects")
+    )
+    sig.add_argument("symbol", help="function name, ns::Class::method, name@file, or file.c:LINE")
+    sig.add_argument(
+        "--depth", type=int, default=2, help="how far up to list callers of the callers (default 2)"
+    )
+    sig.add_argument("--limit", type=int, default=50, help="most results per list (default 50)")
+    sig.add_argument("--json", action="store_true")
+    sig.set_defaults(func=cmd_signature)
 
     df = with_root(
         sub.add_parser(

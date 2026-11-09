@@ -93,6 +93,20 @@ BINARY_ASSIGN_KINDS = set(range(22, 33))  # CXBinaryOperator_Assign .. CXBinaryO
 UNARY_INC_DEC_KINDS = {1, 2, 3, 4}  # CXUnaryOperator_PostInc, PostDec, PreInc, PreDec
 UNARY_DEREF = 6  # CXUnaryOperator_Deref
 UNARY_ADDR_OF = 5  # CXUnaryOperator_AddrOf
+UNARY_LNOT = 10  # CXUnaryOperator_LNot
+UNARY_EXTENSION = 13  # CXUnaryOperator_Extension (__extension__)
+BINARY_COMPARE_KINDS = set(range(10, 17))  # Cmp (<=>), LT, GT, LE, GE, EQ, NE
+BINARY_LOGICAL_KINDS = {20, 21}  # LAnd, LOr
+BINARY_ASSIGN = 22
+BINARY_COMMA = 33
+_COMPARE_OPS = {"<=>", "<", ">", "<=", ">=", "==", "!="}
+# CXBinaryOperatorKind -> spelling, so the operator never has to be read from tokens (slow on big macros)
+_BINARY_SPELLING = {
+    3: "*", 4: "/", 5: "%", 6: "+", 7: "-", 8: "<<", 9: ">>", 10: "<=>", 11: "<", 12: ">", 13: "<=",
+    14: ">=", 15: "==", 16: "!=", 17: "&", 18: "^", 19: "|", 20: "&&", 21: "||", 22: "=", 23: "*=",
+    24: "/=", 25: "%=", 26: "+=", 27: "-=", 28: "<<=", 29: ">>=", 30: "&=", 31: "^=", 32: "|=", 33: ",",
+}  # fmt: skip
+_MISSING_MEMBER = re.compile(r"^no member named '([^']+)' in '(?:struct |union |class )?([^']+)'")
 
 # Standard C functions that write through their first argument (memset(&x, ...), strcpy(buf, ...)).
 # Matched by name, also as __builtin_NAME and the fortified __builtin___NAME_chk forms.
@@ -206,6 +220,13 @@ class Collector:
         self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line, function type called or "")
         self.overrides: set[tuple] = set()  # (usr, base_usr)
         self.address_taken: dict[str, str] = {}  # function usr -> its type, for functions used as a value
+        # (caller_usr, caller_file, callee_usr or "" for a pointer call, callee_name, line, column, n_args,
+        #  use of the result, detail, pointer type called or "")
+        self.call_sites: set[tuple] = set()
+        # (function_usr, in_function_usr or "", in_function_file, in_variable_usr or "", file, line, how)
+        self.address_sites: set[tuple] = set()
+        self.escapes: set[tuple] = set()  # (fn_usr, fn_file, var_usr, line, detail)
+        self.initializers: set[tuple] = set()  # (global_usr, global_file, field_usr, file, line)
         self.external_calls: dict[tuple[str, str], int] = {}
 
     # -- repo membership
@@ -340,18 +361,41 @@ class Collector:
     def visit_expr(self, c: Cursor, stack: list[list], idx: int, usr: str, rel: str) -> None:
         k = c.kind
         if k == K.CALL_EXPR:
-            self.on_call(c, usr, rel)
+            self.on_call(c, usr, rel, stack, idx)
         elif k in (K.MEMBER_REF_EXPR, K.DECL_REF_EXPR):
             ref = c.referenced
             if ref is not None and ref.kind in FUNC_KINDS:
                 if k == K.DECL_REF_EXPR and not self.is_callee(stack, idx):
-                    self.mark_address_taken(ref)
+                    if self.is_broken_callee(stack, idx):
+                        # Known bug, reported and fixed separately: a call that does not compile still counts
+                        # as "address taken" and gets no call link. Only the call_sites table records it.
+                        self.mark_address_taken(ref)
+                    else:
+                        self.mark_address_taken(ref, (usr, rel, ""), c, self.address_use(stack, idx))
                 return
             self.on_ref(c, stack, idx, usr, rel)
         elif k == K.MEMBER_REF and len(stack) == 1:
             self.on_ref(c, stack, idx, usr, rel, force_write=True)  # constructor initializer: `: x_(0)`
+        elif k == K.UNEXPOSED_EXPR and self.broken_call_target(c) is not None:
+            self.on_broken_call(c, usr, rel, stack, idx)
+        elif k == K.MEMBER_REF and stack[-1][0].kind == K.INIT_LIST_EXPR:
+            self.on_ref(c, stack, idx, usr, rel, force_write=True)  # designated initializer: {.count = 1}
         elif k == K.VAR_DECL and _variable_kind(c) == "static_local":
             self.record_variable(c, rel, "static_local")
+
+    @staticmethod
+    def is_broken_callee(stack: list[list], idx: int) -> bool:
+        """True when the DECL_REF_EXPR at child `idx` of stack[-1] is the function named first in a call
+        that does not compile."""
+        j, pos = len(stack) - 1, idx
+        while j >= 0 and stack[j][0].kind in WRAPPER_KINDS:
+            if pos != 0:
+                return False
+            if Collector.broken_call_target(stack[j][0]) is not None:
+                return True
+            pos = stack[j - 1][1] - 1 if j > 0 else 0
+            j -= 1
+        return False
 
     @staticmethod
     def is_callee(stack: list[list], idx: int) -> bool:
@@ -365,20 +409,65 @@ class Collector:
             j -= 1
         return j >= 0 and stack[j][0].kind == K.CALL_EXPR and pos == 0
 
-    def mark_address_taken(self, ref: Cursor) -> None:
+    @staticmethod
+    def broken_call_target(c: Cursor) -> Cursor | None:
+        """The function named by a call that does not compile (wrong number or type of arguments). libclang
+        keeps such a call as an unnamed expression of dependent type: the function first, then the
+        arguments. These are exactly the calls a signature change breaks, so they must not be lost."""
+        if c.kind != K.UNEXPOSED_EXPR or c.type.spelling != "<dependent type>":
+            return None
+        first = next(c.get_children(), None)
+        while first is not None and first.kind in WRAPPER_KINDS and len(list(first.get_children())) == 1:
+            first = next(first.get_children(), None)
+        if first is None or first.kind != K.DECL_REF_EXPR:
+            return None
+        ref = first.referenced
+        return ref if ref is not None and ref.kind in FUNC_KINDS else None
+
+    def on_broken_call(self, c: Cursor, usr: str, rel: str, stack: list[list], idx: int) -> None:
+        ref = self.canonical(self.broken_call_target(c))  # type: ignore[arg-type]
+        target = ref.get_usr()
+        if not target or self.is_builtin(ref) or self.cursor_rel(ref) is None:
+            return
+        line = c.location.line
+        use, detail = self.result_use(stack, idx)
+        n_args = len(list(c.get_children())) - 1
+        detail = "does not compile: the arguments do not match" + (f"; {detail}" if detail else "")
+        self.call_sites.add(
+            (usr, rel, target, ref.spelling, line, c.location.column, n_args, use, detail, "")
+        )
+
+    def mark_address_taken(
+        self, ref: Cursor, where: tuple[str, str, str] | None = None, at: Cursor | None = None, how: str = ""
+    ) -> None:
+        """`where` = (function usr, its file, global usr): the code that names the function as a value."""
         if ref.spelling.startswith("operator"):
             return  # overloaded operator calls show up as a bare reference
         ref = self.canonical(ref)
-        if ref.get_usr():
-            self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
+        if not ref.get_usr():
+            return
+        self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
+        if where is not None and at is not None and self.cursor_rel(ref) is not None:
+            frel = self.rel(at.location.file)
+            if frel is not None:
+                fn_usr, fn_file, var_usr = where
+                self.address_sites.add((ref.get_usr(), fn_usr, fn_file, var_usr, frel, at.location.line, how))
 
     def scan_initializer(self, var: Cursor) -> None:
-        """Functions named in a global's initializer (handler tables) have their address taken."""
+        """Functions named in a global's initializer (handler tables) have their address taken. Designated
+        initializers ({.field = value}) set fields."""
+        var_rel = self.cursor_rel(var) or ""
         todo = list(var.get_children())
         while todo:
             c = todo.pop()
             if c.kind == K.DECL_REF_EXPR and c.referenced is not None and c.referenced.kind in FUNC_KINDS:
-                self.mark_address_taken(c.referenced)
+                self.mark_address_taken(c.referenced, ("", "", var.get_usr()), c, "stored in an initializer")
+            elif c.kind == K.MEMBER_REF and c.referenced is not None and c.referenced.kind == K.FIELD_DECL:
+                frel = self.rel(c.location.file)
+                if frel is not None and self.cursor_rel(c.referenced) is not None and c.referenced.get_usr():
+                    self.initializers.add(
+                        (var.get_usr(), var_rel, c.referenced.get_usr(), frel, c.location.line)
+                    )
             todo.extend(c.get_children())
 
     def canonical(self, ref: Cursor) -> Cursor:
@@ -389,17 +478,30 @@ class Collector:
             ref = t
         return ref
 
-    def on_call(self, c: Cursor, usr: str, rel: str) -> None:
+    def on_call(self, c: Cursor, usr: str, rel: str, stack: list[list] | None = None, idx: int = 0) -> None:
         ref = c.referenced
         line = c.location.line
+        site = None
+        if stack is not None:
+            use, detail = self.result_use(stack, idx)
+            try:
+                n_args = len(list(c.get_arguments()))
+            except Exception:
+                n_args = -1
+            site = (line, c.location.column, n_args, use, detail)
         if ref is None or ref.kind not in FUNC_KINDS or self.is_std_function(ref):
             # through a pointer, std::function or a dependent name: remember the type that is called
-            self.pointer_calls.add((usr, rel, line, self.called_type(c)))
+            ptype = self.called_type(c)
+            self.pointer_calls.add((usr, rel, line, ptype))
+            if site:
+                self.call_sites.add((usr, rel, "", "", *site, ptype))
             return
         ref = self.canonical(ref)
         target = ref.get_usr()
         if not target:
             self.pointer_calls.add((usr, rel, line, ""))
+            if site:
+                self.call_sites.add((usr, rel, "", "", *site, ""))
             return
         if self.is_builtin(ref) or (self.cursor_rel(ref) is None and not self.might_be_defined_here(ref)):
             key = (usr, rel)
@@ -407,6 +509,127 @@ class Collector:
             return
         dispatch = ref.kind in (K.CXX_METHOD, K.DESTRUCTOR) and ref.is_virtual_method() and self.dispatches(c)
         self.calls.add((usr, rel, target, line, dispatch, ref.spelling))
+        if site:
+            self.call_sites.add((usr, rel, target, ref.spelling, *site, ""))
+
+    # -- how a value is used (the result of a call, or a function named as a value)
+    @staticmethod
+    def _up(stack: list[list], j: int, pos: int) -> tuple[Cursor | None, int, int]:
+        """The first real parent at or above stack[j] (child position `pos`), skipping parentheses, implicit
+        conversions and non-void casts. Returns (parent, position of the value in it, its stack index)."""
+        while j >= 0:
+            p = stack[j][0]
+            wrapper = p.kind == K.PAREN_EXPR or (
+                p.kind == K.UNEXPOSED_EXPR and len(list(p.get_children())) == 1
+            )
+            if p.kind == K.CSTYLE_CAST_EXPR and p.type.kind != TypeKind.VOID:
+                wrapper = True
+            if p.kind == K.UNARY_OPERATOR and unary_kind(p) == UNARY_EXTENSION:
+                wrapper = True
+            if not wrapper:
+                return p, pos, j
+            pos = stack[j - 1][1] - 1 if j > 0 else 0
+            j -= 1
+        return None, 0, -1
+
+    @staticmethod
+    def _describe(target: Cursor | None) -> str:
+        """A short name for where a value is stored: `x`, `field n`, `an array element`."""
+        while target is not None and target.kind in WRAPPER_KINDS:
+            target = next(target.get_children(), None)
+        if target is None:
+            return "an expression"
+        if target.kind == K.DECL_REF_EXPR:
+            return target.spelling
+        if target.kind == K.MEMBER_REF_EXPR:
+            return f"field {target.spelling}"
+        if target.kind == K.ARRAY_SUBSCRIPT_EXPR:
+            return "an array element"
+        if target.kind == K.UNARY_OPERATOR:
+            return "*pointer"
+        return "an expression"
+
+    def result_use(self, stack: list[list], idx: int) -> tuple[str, str]:
+        """How the value of the call at child `idx` of stack[-1] is used:
+        ignored | discarded (cast to void) | stored | compared | checked (true/false) | passed | returned |
+        called | used. With a short detail (where it is stored, which function gets it, ...)."""
+        j, pos = len(stack) - 1, idx
+        while True:
+            p, pos, j = self._up(stack, j, pos)
+            if p is None:
+                return "ignored", ""
+            k = p.kind
+            if k in (K.COMPOUND_STMT, K.LABEL_STMT, K.DEFAULT_STMT) or (k == K.CASE_STMT and pos > 0):
+                return "ignored", ""
+            if k == K.CSTYLE_CAST_EXPR:
+                return "discarded", "cast to (void)"
+            if k == K.RETURN_STMT:
+                return "returned", ""
+            if k == K.VAR_DECL:
+                return "stored", f"in {p.spelling}"
+            if k == K.CALL_EXPR:
+                if pos == 0:
+                    return "called", "the result is called as a function"
+                callee = p.referenced.spelling if p.referenced is not None else "a function pointer"
+                return "passed", f"to {callee}() as argument {pos}"
+            if k in (K.IF_STMT, K.WHILE_STMT, K.SWITCH_STMT):
+                return ("checked", "") if pos == 0 else ("ignored", "")
+            if k == K.DO_STMT:
+                return ("checked", "") if pos == 1 else ("ignored", "")
+            if k == K.FOR_STMT:
+                return "used", "in a for loop header"
+            if k == K.CONDITIONAL_OPERATOR:
+                if pos == 0:
+                    return "checked", ""
+                j, pos = j - 1, (stack[j - 1][1] - 1 if j > 0 else 0)  # the chosen value flows on
+                continue
+            if k == K.BINARY_OPERATOR:
+                kind = binary_kind(p)
+                op = _BINARY_SPELLING.get(kind, "") if kind is not None else (self.binary_op(p) or "")
+                if kind == BINARY_ASSIGN or (kind is None and op == "="):
+                    lhs = next(p.get_children(), None)
+                    stored = f"in {self._describe(lhs)}"
+                    # `(o = lookup(...)) == NULL`: the assignment's own value is used too
+                    then, then_detail = self.result_use(stack[:j], stack[j - 1][1] - 1 if j > 0 else 0)
+                    if then in ("compared", "checked"):
+                        return "stored", f"{stored}, then {then}" + (f" {then_detail}" if then_detail else "")
+                    return "stored", stored
+                if kind in BINARY_COMPARE_KINDS or (kind is None and op in _COMPARE_OPS):
+                    return "compared", f"with {op}" if op else ""
+                if kind in BINARY_LOGICAL_KINDS or (kind is None and op in ("&&", "||")):
+                    return "checked", ""
+                if kind == BINARY_COMMA or (kind is None and op == ","):
+                    if pos == 0:
+                        return "ignored", ""
+                    j, pos = j - 1, (stack[j - 1][1] - 1 if j > 0 else 0)
+                    continue
+                return "used", f"in arithmetic ({op})" if op else "in arithmetic"
+            if k == K.COMPOUND_ASSIGNMENT_OPERATOR:
+                lhs = next(p.get_children(), None)
+                kind = binary_kind(p)
+                op = _BINARY_SPELLING.get(kind, "") if kind is not None else self.binary_op(p)
+                return "stored", f"in {self._describe(lhs)} ({op or 'op='})"
+            if k == K.UNARY_OPERATOR:
+                kind = unary_kind(p)
+                if kind == UNARY_LNOT:
+                    return "checked", "negated with !"
+                if kind == UNARY_DEREF:
+                    return "used", "dereferenced"
+                return "used", "in arithmetic"
+            if k == K.INIT_LIST_EXPR:
+                return "stored", "in an initializer"
+            if k in (K.MEMBER_REF_EXPR, K.ARRAY_SUBSCRIPT_EXPR):
+                return "used", "dereferenced"
+            return "used", ""
+
+    def address_use(self, stack: list[list], idx: int) -> str:
+        """Where a function named as a value goes: stored, passed to a function, compared, ..."""
+        use, detail = self.result_use(stack, idx)
+        if use == "stored":
+            return f"stored {detail}"
+        if use == "passed":
+            return f"passed {detail}"
+        return use
 
     def might_be_defined_here(self, ref: Cursor) -> bool:
         """A function declared in a system header can still be defined in the repo (own strlcpy)."""
@@ -489,6 +712,55 @@ class Collector:
             return
         write = force_write or self.is_write(stack, idx, ref)
         self.accesses.add((usr, rel, target, "writes" if write else "reads", c.location.line))
+        if not write:
+            where = self.escape_of(stack, idx, ref)
+            if where:
+                self.escapes.add((usr, rel, target, c.location.line, where))
+
+    def escape_of(self, stack: list[list], idx: int, ref: Cursor) -> str | None:
+        """Where the address of a global or field goes when we can't see what happens to it there:
+        `foo(&x)` -> 'passed to foo()', `p = &x` -> 'stored in a pointer', `return &x`, or an array passed
+        to a function. None when the address does not leave (no '&', a comparison, an atomic, ...)."""
+        is_array = ref.type.get_canonical().kind in ARRAY_TYPES
+        j, pos = len(stack) - 1, idx
+        while j >= 0:
+            pc = stack[j][0]
+            if (pc.kind in WRAPPER_KINDS and len(list(pc.get_children())) == 1) or (
+                pc.kind == K.ARRAY_SUBSCRIPT_EXPR and is_array and pos == 0
+            ):
+                pos = stack[j - 1][1] - 1 if j > 0 else 0
+                j -= 1
+                continue
+            break
+        if j < 0:
+            return None
+        pc = stack[j][0]
+        if pc.kind == K.UNARY_OPERATOR and pos == 0 and self.is_addr_of(pc):
+            use, detail = self.result_use(stack[:j], stack[j - 1][1] - 1 if j > 0 else 0)
+        elif is_array and pc.kind == K.CALL_EXPR and pos >= 1:
+            use, detail = (
+                "passed",
+                f"to {pc.referenced.spelling if pc.referenced is not None else 'a function pointer'}()",
+            )
+        else:
+            return None
+        if use == "passed":
+            if detail.startswith(("to __builtin_", "to __sync_", "to __atomic_")):
+                return None  # a compiler builtin (object size, prefetch, ...) does not keep the address
+            if self.writes_first_arg_of(stack, j, pc):
+                return None  # memset-style: recorded as a write
+            return f"passed {detail.split(' as argument')[0]}"
+        if use in ("stored", "returned"):
+            return f"address {use}" + (f" {detail}" if detail else "")
+        return None
+
+    def writes_first_arg_of(self, stack: list[list], j: int, pc: Cursor) -> bool:
+        """Whether the call that receives the value at stack[j] is a known writer (memset, atomics), which
+        is recorded as a write, not an escape."""
+        k = j
+        while k >= 0 and stack[k][0].kind != K.CALL_EXPR:
+            k -= 1
+        return k >= 0 and self.writes_first_arg(stack[k][0])
 
     # -- read or write?
     def is_write(self, stack: list[list], idx: int, ref: Cursor) -> bool:
@@ -654,6 +926,7 @@ def _collect_unit(
 
     ignored: set[str] = set()
     missing: set[str] = set()
+    members: set[tuple] = set()
     for d in tu.diagnostics:
         if d.severity < cindex.Diagnostic.Error:
             continue
@@ -664,6 +937,11 @@ def _collect_unit(
         h = _MISSING_HEADER.match(d.spelling)
         if h:
             missing.add(h.group(1))
+        mm = _MISSING_MEMBER.match(d.spelling)
+        if mm and d.location.file is not None:
+            where = rel_to(d.location.file.name, root)
+            if where is not None:
+                members.add((where, d.location.line, mm.group(1), mm.group(2)))
         result["error_count"] += 1
         if len(result["errors"]) < MAX_ERRORS_KEPT:
             loc = d.location
@@ -671,6 +949,7 @@ def _collect_unit(
             result["errors"].append(f"{where}:{loc.line}: {d.spelling}")
     result["ignored_flags"] = sorted(ignored)
     result["missing_headers"] = sorted(missing)
+    result["missing_members"] = sorted(list(t) for t in members)
 
     col = Collector(root, excludes)
     col.collect(tu.cursor)
@@ -689,6 +968,10 @@ def _collect_unit(
     result["pointer_calls"] = sorted(list(t) for t in col.pointer_calls)
     result["overrides"] = sorted(list(t) for t in col.overrides)
     result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
+    result["call_sites"] = sorted(list(t) for t in col.call_sites)
+    result["address_sites"] = sorted(list(t) for t in col.address_sites)
+    result["escapes"] = sorted(list(t) for t in col.escapes)
+    result["initializers"] = sorted(list(t) for t in col.initializers)
     result["external_calls"] = sorted([u, f, n] for (u, f), n in col.external_calls.items())
     return result
 
