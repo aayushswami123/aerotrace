@@ -320,9 +320,6 @@ def cmd_signature(args: argparse.Namespace) -> int:
 def cmd_data(args: argparse.Namespace) -> int:
     from aerotrace.analysis import data, render_data
 
-    if args.limit is not None and args.limit < 1:
-        _err("--limit must be 1 or more")
-        return 2
     conn = _open(args)
     if conn is None:
         return 2
@@ -457,7 +454,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     dcaps = dt.add_mutually_exclusive_group()
     dcaps.add_argument(
-        "--limit", type=int, default=None, help="most results per list (default: about 15; 50 with --json)"
+        "--limit",
+        type=_positive,
+        default=None,
+        help="most results per list (default: about 15; 50 with --json)",
     )
     dcaps.add_argument("--all", action="store_true", help="show every result, no caps")
     dt.add_argument("--json", action="store_true")

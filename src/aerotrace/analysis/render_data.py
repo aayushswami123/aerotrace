@@ -8,6 +8,7 @@ from collections import Counter
 from aerotrace.analysis import certainty
 from aerotrace.analysis.data import VALUE, DataUsers, Use, Var
 from aerotrace.analysis.graph import CONFIDENCE_MEANING, CONFIDENCE_ORDER, Hit
+from aerotrace.analysis.render import CLI_MORE, MCP_MORE  # noqa: F401 (MCP_MORE is used by the MCP layer)
 
 USE_CAP = 15
 LINES_PER_USE = 5
@@ -18,8 +19,6 @@ UPSTREAM_CAP = 15
 FILES_CAP = 5
 SAME_NAME_CAP = 5
 JSON_CAP = 50
-CLI_MORE = "use --all to see every one, or --limit N"
-MCP_MORE = "call again with show_all=true, or a bigger limit"
 
 
 def _n(n: int, word: str, plural: str | None = None) -> str:

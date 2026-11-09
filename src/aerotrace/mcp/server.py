@@ -149,7 +149,9 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
         are probable: fields are tracked per struct type, not per object). A summary comes first; lists are
         short by default (about 15) and say how many were left out: pass `limit`, or `show_all=true`."""
         if limit is not None and limit < 1:
-            return "limit must be 1 or more."
+            raise ToolError("limit must be 1 or more.")
+        if limit is not None and show_all:
+            raise ToolError("Pass either limit or show_all, not both.")
         conn, note = state.open()
         with closing(conn):
             found = data.find_variables(conn, name) or data.gone_fields(conn, name)
