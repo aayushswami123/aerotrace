@@ -514,7 +514,8 @@ class Collector:
         """True when the DECL_REF_EXPR at child position `idx` of stack[-1] is the function being called."""
         j = len(stack) - 1
         pos = idx
-        while j >= 0 and stack[j][0].kind in WRAPPER_KINDS:
+        # `(*f)(x)` and `(&f)(x)` call f directly, like `f(x)` (#22)
+        while j >= 0 and (stack[j][0].kind in WRAPPER_KINDS or _is_deref_or_addr(stack[j][0])):
             if pos != 0:
                 return False
             pos = stack[j - 1][1] - 1 if j > 0 else 0
@@ -642,7 +643,9 @@ class Collector:
         ref = self.canonical(ref)
         if not ref.get_usr():
             return
-        self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
+        if how not in ("compared", "checked"):
+            # `proc == f`, `if (f)`: the address is only looked at, so no pointer call reaches f here (#12)
+            self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
         if where is not None and at is not None and self.cursor_rel(ref) is not None:
             frel = self.rel(at.location.file)
             if frel is not None:
@@ -688,8 +691,25 @@ class Collector:
             p = p.semantic_parent
         return True
 
+    @staticmethod
+    def named_through_deref(call: Cursor) -> Cursor | None:
+        """The function in `(*f)(x)` or `(&f)(x)`: a direct call (#22). None for anything else."""
+        callee = next(call.get_children(), None)
+        seen_op = False
+        while callee is not None and (callee.kind in WRAPPER_KINDS or _is_deref_or_addr(callee)):
+            seen_op = seen_op or callee.kind == K.UNARY_OPERATOR
+            kids = list(callee.get_children())
+            callee = kids[0] if len(kids) == 1 else None
+        if seen_op and callee is not None and callee.kind == K.DECL_REF_EXPR:
+            r = callee.referenced
+            if r is not None and r.kind in (K.FUNCTION_DECL, K.CXX_METHOD):
+                return r
+        return None
+
     def on_call(self, c: Cursor, usr: str, rel: str, stack: list[list] | None = None, idx: int = 0) -> None:
         ref = c.referenced
+        if ref is None or ref.kind not in FUNC_KINDS:
+            ref = self.named_through_deref(c) or ref
         line = c.location.line
         site = None
         if stack is not None:

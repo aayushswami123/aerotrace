@@ -219,3 +219,31 @@ def test_header_function_compiled_as_c_and_cpp_gives_both_copies(gaps):
     assert callers == {"C": {"c_push"}, "C++": {"cpp_push"}}
     # must not: a plain function on a line still gives one answer
     assert [f.name for f in symbols.find(gaps, "src/ring.c:3")] == ["c_push"]
+
+
+# ------------------------------------------------ #12: a comparison; #22: (*f)(x)
+
+
+def test_comparing_a_function_does_not_take_its_address(gaps):
+    taken = {
+        r[0]
+        for r in gaps.execute("SELECT f.name FROM address_taken a JOIN functions f ON f.id = a.function_id")
+    }
+    assert "stored" in taken and "only_compared" not in taken
+    reached = {h.fn.name for h in graph.walk(gaps, one(gaps, "run"), "callees", 1).hits}
+    # must not: p(1) can't reach only_compared, which is never stored anywhere
+    assert "stored" in reached and "only_compared" not in reached
+    # where it is named is still recorded
+    sql = """SELECT a.line, a.how FROM address_sites a JOIN functions f ON f.id = a.function_id
+             WHERE f.name = 'only_compared' ORDER BY 1"""
+    assert [tuple(r) for r in gaps.execute(sql)] == [(10, "compared"), (11, "checked")]
+
+
+def test_call_through_star_or_amp_of_a_function_is_direct(gaps):
+    hits = {(h.fn.name, h.confidence) for h in graph.walk(gaps, one(gaps, "two"), "callers", 1).hits}
+    assert hits == {("good_deref", "exact"), ("good_addr", "exact")}
+    taken = {
+        r[0]
+        for r in gaps.execute("SELECT f.name FROM address_taken a JOIN functions f ON f.id = a.function_id")
+    }
+    assert "two" not in taken
