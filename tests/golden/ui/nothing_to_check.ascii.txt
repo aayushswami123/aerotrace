@@ -1,0 +1,2 @@
+[i] No C or C++ changes to check (compared with HEAD).
+    2 other files in the diff are not C or C++. AeroTrace does not follow build files, scripts or docs.

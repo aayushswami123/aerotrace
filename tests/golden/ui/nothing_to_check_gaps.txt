@@ -1,0 +1,5 @@
+ℹ️  No change AeroTrace could check (compared with HEAD), but 2 parts of it could not be followed.
+
+Changes AeroTrace could not follow (2)
+  ? src/t_string.c: the patch does not match the file on disk, so it was skipped. Make the patch against the current file.
+  ? src/extra.c is not in the index (not in compile_commands.json, excluded, or a header no indexed file includes).

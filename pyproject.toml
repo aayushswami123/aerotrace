@@ -31,9 +31,10 @@ packages = ["src/aerotrace"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m 'not realrepo' --strict-markers"
+addopts = "-m 'not realrepo and not browser' --strict-markers"
 markers = [
     "realrepo: slow tests on real open-source repos (run with -m realrepo)",
+    "browser: the HTML report in a headless browser (run with: uv run --with playwright pytest -m browser)",
 ]
 
 [tool.ruff]

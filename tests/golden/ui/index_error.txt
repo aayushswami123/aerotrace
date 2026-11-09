@@ -1,0 +1,2 @@
+⚠️  AeroTrace could not read its index, so it checked nothing.
+    The index file .aerotrace/index.db is damaged. Run `aerotrace index` to rebuild it.
