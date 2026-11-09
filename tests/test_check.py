@@ -238,6 +238,41 @@ def test_patch_that_does_not_match_is_counted(repo):
     assert c["change"]["not_followed"]["mismatched"] == [A] and c["summary"]["not_followed"] > 0
 
 
+def test_comment_on_a_declaration_line_changes_nothing(repo):
+    _, c = run_patch(repo, {A: [("int max_clients = 1000;", "int max_clients = 1000; /* max */")]})
+    assert [n["status"] for n in c["nodes"]] == ["changed"]
+    assert c["summary"]["not_followed"] == 0
+
+
+def test_cli_check_json_and_exit_code(repo, capsys):
+    from aerotrace.cli import main
+
+    (repo / "p.diff").write_text(patch(repo, ADD_PARAM))
+    code = main(["check", "--patch", str(repo / "p.diff"), "--root", str(repo), "--json"])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 1 and data["format"] == "aerotrace-check" and data["summary"]["breaks_exact"] >= 1
+    code = main(["check", "--root", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0 and "No C or C++ changes to check" in out  # p.diff itself is not code
+
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.mark.anyio
+async def test_mcp_check_tool(repo):
+    from mcp import Client
+
+    from aerotrace.mcp.server import create_server
+
+    async with Client(create_server(repo)) as client:
+        result = await client.call_tool("check", {"patch": patch(repo, ADD_PARAM)})
+    text = "\n".join(c.text for c in result.content if getattr(c, "text", None))
+    assert "use_parse" in text and "BREAKS" in text
+
+
 def test_output_is_deterministic_and_follows_the_contract(repo):
     _, c1 = run_patch(repo, ADD_PARAM)
     _, c2 = run_patch(repo, ADD_PARAM)

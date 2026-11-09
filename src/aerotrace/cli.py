@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -309,6 +310,41 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    from aerotrace import ui
+    from aerotrace.analysis import check
+    from aerotrace.index.build import fresh_index
+    from aerotrace.toolchain.git import GitError
+
+    root = find_root(args.root)
+    build_dir = Path(args.build_dir).resolve() if args.build_dir else None
+    try:
+        text = None
+        if args.patch:
+            text = sys.stdin.read() if args.patch == "-" else Path(args.patch).read_text(encoding="utf-8")
+        data, note = check.check_change(
+            root,
+            lambda want: fresh_index(root, build_dir=build_dir, want=want),
+            base=args.base,
+            patch_text=text,
+            build_dir=build_dir,
+            depth=args.depth,
+        )
+    except (GitError, ValueError, OSError) as e:
+        _err(f"error: {e}")
+        return 2
+    if note:
+        _err(note)
+    if args.html:
+        _err(ui.write_html(data, Path(args.html), root))
+    if args.json:
+        print(json.dumps(data, indent=2))
+    else:
+        color, uni = ui.style_for(sys.stdout, os.environ)
+        print(ui.render_text(data, color=color, unicode=uni, limit=args.limit))
+    return check.exit_code(data)
+
+
 def cmd_signature(args: argparse.Namespace) -> int:
     from aerotrace.analysis import render, signature
 
@@ -537,6 +573,22 @@ def build_parser() -> argparse.ArgumentParser:
     df.add_argument("--limit", type=int, default=50, help="most results per list (default 50)")
     df.add_argument("--json", action="store_true")
     df.set_defaults(func=cmd_diff)
+
+    ck = with_root(
+        sub.add_parser(
+            "check",
+            help="what a change will break (does not build), may affect, and could not follow; exit code 1 "
+            "when something breaks (sure or probable), 2 when it could not check",
+        )
+    )
+    ck.add_argument("base", nargs="?", default="HEAD", help="commit or branch to compare with (default HEAD)")
+    ck.add_argument("--patch", metavar="FILE", help="a unified diff that is not applied yet ('-' = stdin)")
+    ck.add_argument("--build-dir", help="folder holding compile_commands.json")
+    ck.add_argument("--depth", type=int, default=5, help="how many call steps to follow (default 5)")
+    ck.add_argument("--limit", type=int, default=8, help="most lines per list in the text answer (default 8)")
+    ck.add_argument("--json", action="store_true", help="print the aerotrace-check JSON (version 1)")
+    ck.add_argument("--html", metavar="OUT.html", help="also write an offline HTML report")
+    ck.set_defaults(func=cmd_check)
 
     ts = with_root(
         sub.add_parser(

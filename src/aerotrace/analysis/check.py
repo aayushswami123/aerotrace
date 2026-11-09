@@ -460,19 +460,22 @@ class _Run:
         okeys = {_var_key(v): v for v in old.variables}
         nkeys = {_var_key(v): v for v in new.variables}
         changes: list[DeclChange] = []
+        same: set[str] = set()  # declarations whose text is the same on both sides
         for k in sorted(okeys.keys() & nkeys.keys()):
             o, n = okeys[k], nkeys[k]
             if o["type"] != n["type"]:
-                same = o["canonical"] == n["canonical"]
+                same_type = o["canonical"] == n["canonical"]
                 changes.append(DeclChange("retyped", o, n, None, file,
                                           f"type is now '{n['type']}' (was '{o['type']}')",
-                                          same_underlying=same))  # fmt: skip
+                                          same_underlying=same_type))  # fmt: skip
             elif o["decl"] != n["decl"]:
                 changes.append(DeclChange("text", o, n, None, file,
                                           "its declaration text changed (bit-field width, attributes, array "
                                           "size or qualifiers?), but its type looks the same"))  # fmt: skip
             elif o["kind"] == "global" and o["init"] != n["init"]:
                 changes.append(DeclChange("initial_value", o, n, None, file, "its initial value changed"))
+            else:
+                same.add(o["qualified_name"])
         gone = [okeys[k] for k in sorted(okeys.keys() - nkeys.keys())]
         came = [nkeys[k] for k in sorted(nkeys.keys() - okeys.keys())]
         for o in gone:
@@ -502,6 +505,13 @@ class _Run:
                     c.var = data.data_users(self.conn, row["id"], depth=0).target
             self.res.decls.append(c)
             self._decl_effects(c)
+        # A changed line on a declaration that reads the same (a comment or spacing): no effect on users.
+        for v in self.res.diff.changed_vars:
+            if v.name in same and v.file == (index_file or file) and v.name not in self.decl_handled:
+                self.decl_handled.add(v.name)
+                node = self.res.nodes.get(v.id)
+                if node is not None:
+                    node.why = "only comments or spacing changed on its line"
         # field order or set changed: code that sets fields by position, or depends on the layout
         oorder, norder = _record_order(old), _record_order(new)
         for rec in sorted(set(oorder) & set(norder)):
@@ -908,8 +918,9 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
         "nodes": out_nodes,
         "edges": edges,
         "sections": {
-            "functions": [n["id"] for n in out_nodes if n["kind"] == "function"],
-            "data": [n["id"] for n in out_nodes if n["kind"] != "function"],
+            # nodes of the change itself are listed under "What changed", not in a section
+            "functions": [n["id"] for n in out_nodes if n["kind"] == "function" and n["distance"]],
+            "data": [n["id"] for n in out_nodes if n["kind"] != "function" and n["distance"]],
             "tests_to_run": None,
             "untested_changes": None,
             "blind_spots": blind_list,
@@ -930,3 +941,73 @@ def exit_code(contract: dict) -> int:
         return 2
     s = contract.get("summary") or {}
     return 1 if s.get("breaks_exact") or s.get("breaks_probable") else 0
+
+
+@dataclass
+class Change:
+    """A change read from git or from a patch, ready to check."""
+
+    mode: str
+    base: str | None
+    diffs: list[FileDiff]
+    old: dict[str, Outline | None]
+
+    @property
+    def want(self) -> list[str]:
+        return diff.wanted(self.diffs, self.mode)
+
+
+def load_change(
+    root: Path, outliner: Outliner, *, base: str = "HEAD", patch_text: str | None = None
+) -> Change:
+    """Read the change: git mode (the working tree against `base`), or `patch_text` in patch mode.
+    Raises ValueError or GitError when it can't be read."""
+    if patch_text is not None:
+        return Change("patch", None, diff.load_patch(root, patch_text), {})
+    diffs, desc, old = diff.load_git(root, base, outliner, every=True)
+    return Change("git", desc, diffs, old)
+
+
+def _tool() -> str:
+    from aerotrace import __version__
+
+    return f"aerotrace {__version__}"
+
+
+def check_loaded(
+    conn: sqlite3.Connection, root: Path, change: Change, outliner: Outliner, depth: int = 5
+) -> dict:
+    """The aerotrace-check JSON for a change, with an open index."""
+    res = run(conn, root, change.diffs, mode=change.mode, outliner=outliner, base=change.base, depth=depth,
+              old=change.old)  # fmt: skip
+    return to_contract(conn, res, _tool())
+
+
+def check_change(
+    root: Path,
+    open_index,
+    *,
+    base: str = "HEAD",
+    patch_text: str | None = None,
+    build_dir: Path | None = None,
+    depth: int = 5,
+) -> tuple[dict, str]:
+    """Read the change, open the index with `open_index(want) -> (conn, note)`, and return (the
+    aerotrace-check JSON, note about the index). Raises ValueError or GitError when the change can't be
+    read.
+
+    Patch mode is for a change that is NOT applied yet (the hook checks a proposed edit before it is
+    written): the index is built from the files on disk only, never from the patched text."""
+    outliner = Outliner(root, build_dir)
+    change = load_change(root, outliner, base=base, patch_text=patch_text)
+    try:
+        conn, note = open_index(change.want)
+    except FileNotFoundError as e:
+        msg = f"AeroTrace has no index for this repo and could not build one: {e}"
+        return empty_contract("no_index", _tool(), msg), ""
+    except Exception as e:  # noqa: BLE001 - any index failure is reported, never a crash or a silent pass
+        return empty_contract("index_error", _tool(), f"The index could not be opened: {e}"), ""
+    try:
+        return check_loaded(conn, root, change, outliner, depth), note
+    finally:
+        conn.close()
