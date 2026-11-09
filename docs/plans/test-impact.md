@@ -418,3 +418,55 @@ User-side cost of `tests record` (measured here, 8 cores):
 5. **No MCP record tool** (proposed). Confirm.
 6. Later, not in this item: a `probable` link from Redis Tcl tests to command handlers by command name
    (`r psetex` -> `psetexCommand` via `commands.def`), useful without coverage. Worth doing?
+
+## 15. Review (independent reviewer, verdict "go with changes"; all findings adopted)
+
+These override anything above that disagrees.
+
+1. **Only fresh coverage can put code under "No test reaches".** Static-only evidence always gives
+   "Not known: no C/C++ test calls it". The claim is also skipped when the walk was cut at the depth limit.
+2. **"No test reaches" is never `exact`.** SIGKILL, `abort()`, `_exit()`, crashes, timeouts and flaky paths
+   drop counts, so it is at most `probable`, worded "none of the recorded runs executed it".
+3. **Staleness covers inputs too**: every recorded source file is hashed, plus the test inputs (globs
+   listed in the config, and the output of `list`). Any mismatch downgrades every "no test reaches".
+   gcov's "source file is newer than notes file" check is stored per file.
+4. **Changes outside functions** (macros, struct/type edits in headers, global initializers) go under
+   "Not known", never dropped. For changed globals, tests that ran the readers count (same seeds as
+   `diff._seeds`: `uses_changed`, `data`, `calls_removed`).
+5. **gcov -> index mapping**: sum header/static-inline functions across translation units and files linked
+   into several binaries (Redis `anet.c`, `zmalloc.c`); strip GCC clone suffixes (`.constprop.N`,
+   `.isra.N`, `.part.N`, `.cold`); C++ template instantiations and lambdas fold into one function;
+   same-name statics by file + line range + name; say which config when a file has several; an `-O2`
+   fixture with a fully inlined static; pick the gcov flavour from the `.gcno` magic/version, not
+   `gcov --version` (clang on Linux needs `llvm-cov gcov`); match post-change line numbers when the hash
+   matched that side.
+6. **Unity `RUN_TEST` and CMocka arrays pass the test as a pointer**: found through `address_sites`, not
+   call edges. GoogleTest `TEST_F` fixtures' `SetUp`/`TearDown` are entry points too.
+7. **CTest**: read the generated `<build>/CTestTestfile.cmake` (and `gtest_discover_tests` `*_tests.cmake`)
+   instead of parsing `CMakeLists.txt`; "unknown" when there is no build folder. Later PR.
+8. **Determinism**: `tests.json` stores the run template (no scheduling-dependent ports); byte-identical
+   files are promised only for deterministic suites; failed/flaky status is recorded, not timing.
+9. **`--only` and Ctrl-C never overwrite a complete `tests.json` with a partial one**: results are merged
+   per test when the recorded hashes match; otherwise they go to `.aerotrace/tests.partial.json` and the
+   complete file is kept.
+10. **Security**: `shlex.quote` test ids everywhere; configs are untrusted (they may come from a clone):
+    the confirm prompt shows the config path and its SHA-256; `--yes` still prints the full plan; any
+    `GCOV_PREFIX` / `GCOV_PREFIX_STRIP` in the user's environment is unset, and that is logged.
+11. **Golden proofs** also grep the harness files (Redis `tests/test_helper.tcl`, `tests/support/*.tcl`,
+    `tests/helpers`; SQLite `tester.tcl`). Redis is built with `make MALLOC=libc gcov` to match the
+    index flags. Must-not: no `.gcda` anywhere in the unpacked repo after a run.
+12. **Time**: plan for 16-20 h.
+13. The ban test also checks that "No tests to list" always comes with the "does not mean" sentence, and
+    that no "0 tests" summary appears while "Not known" has entries.
+14. **Exit codes**: `aerotrace tests` exits 0 whenever it answered (2 for bad input, like `diff`); the
+    JSON has a `coverage.state` field (`fresh | outdated | partial | not_recorded`).
+
+Coordinator decisions on section 14: (1) yes, marker `realrepo_coverage`, separate non-blocking CI job,
+README updated to explain the exception; (2) yes, pin `sqlite-src-3540100.zip`; (3) `.aerotrace/tests.toml`
+plus `--config PATH`, treated as untrusted; (4) no diff output change, proposed in the PR only; (5) no MCP
+record tool; (6) Tcl command-name links go to the backlog as an issue (probable only, never feeding
+"no test reaches").
+
+PR split: PR1 = the `aerotrace tests` query, the not-recorded / "Not known" path, and Unity, CMocka,
+GoogleTest and test-file `main` detection (no CMake). PR2 = recorder, `tests.json`, coverage linking.
+PR3 (if time) = CTest via `CTestTestfile.cmake`.
