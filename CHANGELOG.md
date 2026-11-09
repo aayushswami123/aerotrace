@@ -18,6 +18,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
+  clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
+  defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace
+  now leaves out another compiler's builtin headers when libclang has its own.
 - Writes through an address are now recorded: C11 atomics (`atomic_fetch_add_explicit(&x, ...)`,
   `atomic_store_explicit`), `__atomic_*` and `__sync_*` builtins, and standard C calls that write their first
   argument (`memset`, `memcpy`, `strcpy`, `snprintf`, ...). Atomic loads stay reads. Before, a function that

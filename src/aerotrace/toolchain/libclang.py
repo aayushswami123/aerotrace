@@ -105,3 +105,34 @@ def clang_version() -> str:
     lib.clang_getClangVersion.restype = cindex._CXString
     lib.clang_getClangVersion.errcheck = cindex._CXString.from_result
     return str(lib.clang_getClangVersion())
+
+
+_builtin_dir: list[str | None] = []  # cached result of builtin_include_dir()
+
+
+def builtin_include_dir() -> str | None:
+    """The folder of libclang's own compiler headers (stddef.h, stdatomic.h, ...), or None when it has none
+    (then the system compiler's copy is needed). Found by asking libclang where <stddef.h> comes from."""
+    if _builtin_dir:
+        return _builtin_dir[0]
+    import os
+    import tempfile
+
+    from clang import cindex
+
+    configure()
+    found = None
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "probe.c")
+        try:
+            tu = cindex.Index.create().parse(
+                src, args=["-x", "c", "-nostdlibinc"], unsaved_files=[(src, "#include <stddef.h>\n")]
+            )
+            for inc in tu.get_includes():
+                if os.path.basename(inc.include.name) == "stddef.h":
+                    found = os.path.dirname(os.path.realpath(inc.include.name))
+                    break
+        except cindex.TranslationUnitLoadError:
+            found = None
+    _builtin_dir.append(found)
+    return found
