@@ -1,0 +1,17 @@
+fn Square::area shapes.cpp:3-3 external ['is_virtual']
+fn Circle::area shapes.cpp:5-5 external ['is_virtual']
+fn total shapes.cpp:7-9 external []
+fn fixed shapes.cpp:11-13 external []
+fn Shape::~Shape shapes.hpp:4-4 external ['is_virtual']
+fn Shape::area shapes.hpp:5-5 external ['is_virtual', 'is_pure_virtual']
+fn Square::Square shapes.hpp:10-10 external []
+var field Shape::calls_ shapes.hpp:6
+var field Square::side_ shapes.hpp:12
+edge Circle::area@shapes.cpp -overrides/exact-> Shape::area@shapes.hpp :0
+edge Square::Square@shapes.hpp -writes/exact-> Square::side_@shapes.hpp :10
+edge Square::area@shapes.cpp -overrides/exact-> Shape::area@shapes.hpp :0
+edge Square::area@shapes.cpp -reads/exact-> Square::side_@shapes.hpp :3
+edge fixed@shapes.cpp -calls/exact-> Square::area@shapes.cpp :12
+edge total@shapes.cpp -calls/exact-> Shape::area@shapes.hpp :8
+edge total@shapes.cpp -calls/virtual-> Circle::area@shapes.cpp :8
+edge total@shapes.cpp -calls/virtual-> Square::area@shapes.cpp :8
