@@ -1,0 +1,38 @@
+name: Wrong analysis result
+description: AeroTrace missed a caller, write or test, or reported one that isn't real.
+title: "[wrong result] "
+labels: ["accuracy", "priority:high"]
+body:
+  - type: markdown
+    attributes:
+      value: "Wrong answers are our most important bugs. A small code sample helps most."
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What was wrong?
+      options:
+        - Missed something (a caller, callee, write, read or test)
+        - Reported something that isn't real
+        - Wrong confidence label
+        - Crash or no answer
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Smallest code that shows it
+      description: A few lines of C/C++ if you can share them. Never paste private code.
+      render: c
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what you got
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Output of `aerotrace doctor`
+      render: text
+    validations:
+      required: true
