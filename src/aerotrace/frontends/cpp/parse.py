@@ -307,6 +307,9 @@ class Collector:
         self.calls: set[tuple] = set()
         self.accesses: set[tuple] = set()  # (fn_usr, fn_file, var_usr, "reads"/"writes", line)
         self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line, function type called or "")
+        # (fn_usr, fn_file, line, name called): a call in a template whose target depends on the template
+        # parameters (`t.run(5)`, `T::f()`, `f(t)`). libclang shows no instantiation, so it is not linked (#33).
+        self.template_calls: set[tuple] = set()
         self.overrides: set[tuple] = set()  # (usr, base_usr)
         self.address_taken: dict[str, str] = {}  # function usr -> its type, for functions used as a value
         # (caller_usr, caller_file, callee_usr or "" for a pointer call, callee_name, line, column, n_args,
@@ -681,6 +684,10 @@ class Collector:
                 detail = "does not compile: an argument does not match" + (f"; {detail}" if detail else "")
             site = (line, c.location.column, n_args, use, detail)
         if ref is None or ref.kind not in FUNC_KINDS or self.is_std_function(ref):
+            if ref is None and stack is not None and self.in_template(stack):
+                name = self.dependent_name(c)
+                if name:
+                    self.template_calls.add((usr, rel, line, name))
             # through a pointer, std::function or a dependent name: remember the type that is called
             ptype = self.called_type(c)
             self.pointer_calls.add((usr, rel, line, ptype))
@@ -702,6 +709,33 @@ class Collector:
         self.calls.add((usr, rel, target, line, dispatch, ref.spelling, False))
         if site:
             self.call_sites.add((usr, rel, target, ref.spelling, *site, ""))
+
+    @staticmethod
+    def dependent_name(call: Cursor) -> str:
+        """The name a call in a template calls when it depends on the template parameters (`t.run(5)` ->
+        'run', `T::sm(1)` -> 'sm', `f(t)` -> 'f'), or '' for a call through an object or a pointer."""
+        callee = next(call.get_children(), None)
+        while callee is not None and callee.kind in WRAPPER_KINDS:
+            kids = list(callee.get_children())
+            callee = kids[0] if len(kids) == 1 else None
+        if callee is None or callee.kind not in (K.DECL_REF_EXPR, K.MEMBER_REF_EXPR):
+            return ""
+        r = callee.referenced
+        if r is not None:
+            return r.spelling if r.kind == K.OVERLOADED_DECL_REF else ""
+        if callee.spelling:
+            return callee.spelling
+        name, depth = "", 0  # the last name outside template arguments: `t.template get<int>` -> get
+        for t in callee.get_tokens():
+            if t.spelling == "<":
+                depth += 1
+            elif t.spelling == ">":
+                depth = max(0, depth - 1)
+            elif t.spelling == ">>":
+                depth = max(0, depth - 2)
+            elif depth == 0 and t.kind == TokenKind.IDENTIFIER:
+                name = t.spelling
+        return "" if name.startswith("operator") else name
 
     # -- how a value is used (the result of a call, or a function named as a value)
     @staticmethod
@@ -1174,6 +1208,7 @@ def _collect_unit(
     result["calls"] = sorted(list(t) for t in col.calls)
     result["accesses"] = sorted(list(t) for t in col.accesses)
     result["pointer_calls"] = sorted(list(t) for t in col.pointer_calls)
+    result["template_calls"] = sorted(list(t) for t in col.template_calls)
     result["overrides"] = sorted(list(t) for t in col.overrides)
     result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
     result["call_sites"] = sorted(list(t) for t in col.call_sites)

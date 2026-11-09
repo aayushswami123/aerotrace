@@ -67,7 +67,7 @@ CREATE TABLE edges (
 );
 CREATE TABLE blind_spots (
     function_id TEXT NOT NULL,
-    kind TEXT NOT NULL,             -- pointer_call | unresolved_call
+    kind TEXT NOT NULL,             -- pointer_call | unresolved_call | template_call
     line INTEGER NOT NULL,
     detail TEXT NOT NULL
 );

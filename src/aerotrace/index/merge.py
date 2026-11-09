@@ -59,6 +59,9 @@ class _Symbols:
         return [(f"{usr}@{f}", "ambiguous") for f in (seen or sorted(files))]
 
 
+TEMPLATE_CALL = "a call in a template that depends on the template type; its target is not known (#33)"
+
+
 def merge(results: list[dict]) -> Graph:
     """`results` are parse_unit() outputs. They must be in a fixed order (sorted by file) for determinism."""
     fns = _Symbols()
@@ -131,6 +134,9 @@ def merge(results: list[dict]) -> Graph:
         for fn, ffile, line, ftype in res.get("pointer_calls", []):
             if fn in fns.defs:
                 pointer_sites.add((fns.id_of(fn, ffile), line, ftype))
+        for fn, ffile, line, name in res.get("template_calls", []):
+            if fn in fns.defs:
+                blind.add((fns.id_of(fn, ffile), "template_call", line, f"{name}: {TEMPLATE_CALL}"))
         for usr, base in res.get("overrides", []):
             for a in fns.ids(usr):
                 for b in fns.ids(base):

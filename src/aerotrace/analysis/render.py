@@ -56,6 +56,9 @@ def walk_text(w: Walk, limit: int = 50) -> str:
     if w.truncated_at_depth:
         lines.append(f"More exist beyond depth {w.depth}.")
     lines += _legend(shown)
+    if w.unknown:
+        lines.append("Not followed:")
+        lines += [f"  - {n}" for n in w.unknown]
     return "\n".join(lines)
 
 
@@ -119,6 +122,7 @@ def walk_json(w: Walk, limit: int = 50) -> dict:
         "truncated_at_depth": w.truncated_at_depth,
         "results": [hit_json(h) for h in w.hits[:limit]],
         "omitted": max(0, len(w.hits) - limit),
+        "unknown": w.unknown,
     }
 
 

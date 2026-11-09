@@ -531,6 +531,7 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
             f"{clashes} changed function(s) share a clang ID with another function; "
             "callers that could not tell them apart are marked 'ambiguous'."
         )
+    notes += graph.template_notes(conn, [c.fn for c in res.changed] + [h.fn for h in res.affected])
     if res.truncated:
         notes.append(f"Stopped at depth {res.depth}; more callers exist further up.")
     return notes + graph.index_limits(conn)
