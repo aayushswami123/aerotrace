@@ -429,7 +429,11 @@ class Collector:
             return True
         if e.kind == K.UNARY_OPERATOR:
             kind = unary_kind(e)
-            return kind == UNARY_DEREF if kind is not None else next((t.spelling for t in e.get_tokens()), "") == "*"
+            return (
+                kind == UNARY_DEREF
+                if kind is not None
+                else next((t.spelling for t in e.get_tokens()), "") == "*"
+            )
         return False
 
     def on_ref(

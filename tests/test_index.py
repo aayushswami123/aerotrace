@@ -183,4 +183,7 @@ def test_constructor_initializer_writes_the_field(cpp_conn):
 def test_compiler_builtins_are_external_not_unresolved(c_conn):
     row = c_conn.execute("SELECT id, external_calls FROM functions WHERE name = 'likely_positive'").fetchone()
     assert row["external_calls"] == 1
-    assert c_conn.execute("SELECT COUNT(*) FROM blind_spots WHERE function_id = ?", (row["id"],)).fetchone()[0] == 0
+    assert (
+        c_conn.execute("SELECT COUNT(*) FROM blind_spots WHERE function_id = ?", (row["id"],)).fetchone()[0]
+        == 0
+    )
