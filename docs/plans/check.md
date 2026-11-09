@@ -338,3 +338,41 @@ Decided (coordinator, 2026-11-09):
   bug, not fixed silently).
 - O5: yes, `affected`.
 - O6: yes, exit code 1 for probable breaks too, documented in the help text and README.
+
+## 12. Review (coordinator, 2026-11-09) and what the build does with it
+
+1. **Declaration text changed, outline the same** (bitfield width, `alignas` / packed attributes,
+   `volatile` / `_Atomic` placement, array size behind a macro): the outline records a hash of each
+   declaration's text (from its extent, initializer excluded). Text changed but type and position equal:
+   a change-scope blind spot names it, and its users are listed as **unknown**. Fixtures: bitfield, packed.
+2. **Initial value of a global changed** (`int maxclients = 1000` -> `10`, a static const table): the outline
+   records a hash of the initializer text; on a change, readers are affected / probable, "its initial value
+   changed".
+3. **No prototype** (`int f();`, K&R definitions in C): the outline records `has_prototype`. Without one,
+   any argument count compiles: callers are affected / probable, never breaks. Fixture.
+4. **Prototype and definition no longer match**: each changed file is parsed on both sides anyway, so the
+   compile errors of the two parses are compared; a new error ("conflicting types for f") in a function
+   is a break of that function (or, for the changed function itself, a change-scope blind spot with the
+   error text, so the headline is never an all-clear). C++: a definition whose new signature matches no
+   prototype of that name in its translation unit makes its callers breaks / probable ("may not link").
+5. **The hook is PreToolUse**: it checks a proposed edit before it is written, so disk is the old side.
+   `check --patch` indexes only what is on disk (`fresh_index(want=...)`) and never the patched text. A
+   post-edit mode is out of scope.
+6. **Patch apply**: exact only (as `_matches_disk` today); line endings kept (CRLF); fixtures for CRLF,
+   several hunks, several files. Moving a hunk by its context is not done in this build (such a patch is
+   `mismatched`, counted, never mapped wrong); listed as not done.
+7. **New files in a patch**: outlined in memory; a new global or function whose name an indexed one already
+   has is a break / probable (clash); otherwise the file stays in `not_followed.new_files`.
+8. **Fixed limit on every signature or field change**: "Uses in code not compiled with these flags (#if)
+   are not checked."
+9. **Rename hint may miss**: removed + added stays correct. Tests: file rename + edit in both modes; the
+   old path's compile entry is used for both sides.
+10. **Speed**: measured first; an outline cache under `.aerotrace/` keyed by file hash is added only if the
+   numbers need it (called out as extra stored data); `SKIP_FUNCTION_BODIES` tried for the new side.
+11. "static added" breaks callers in other files; `int -> pointer` return compared with `!= C_OK` stays
+   affected in C; C++ default argument removed; O5 by language: address sites are breaks / probable in
+   C++, affected in C.
+12. Must-not facts: bitfield width change -> unknown, never an all-clear; a call to a `()` function -> no
+   break.
+
+Coordinator: build locally on `feat/check`; no push, no PR (the owner pushes).
