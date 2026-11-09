@@ -23,7 +23,8 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 6. **Never write into the user's source tree** except `.aerotrace/` (the index) and files the user asked
    `aerotrace install` to change. Never run the user's build (`cmake`, `make`) on our own.
 7. **Out of scope for now:** dashboards or web UI, languages other than C/C++ (Ada comes later),
-   cloud or team features.
+   cloud or team features. One exception, approved by the owner: a static, fully offline, self-contained
+   HTML report file (`aerotrace check --html`) is allowed: no network, no server, no external assets.
 
 ## Code layout
 
