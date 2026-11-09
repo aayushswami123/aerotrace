@@ -1,0 +1,38 @@
+Tests for set_mode (src/calc.c:17): 1 function changed in 1 C/C++ file.
+Coverage: not recorded.
+Test entry points in the index: 3 GoogleTest, 1 Unity, 2 CMocka, 3 test programs with main.
+
+Run these tests (4, most certain first):
+  - exact     CalcFixture.AppliesSub          reaches set_mode (its setup calls it: CalcFixture::SetUp -> set_mode)
+  - exact     CalcFixture.KnowsMode           reaches set_mode (its setup calls it: CalcFixture::SetUp -> set_mode)
+  - exact     tests/cmocka_calc.c:name_works  reaches set_mode (its setup calls it: fast_mode -> set_mode)
+  - probable  tests/test_scale.c              reaches set_mode (reads data it writes: main -> mode_name -> set_mode)
+How to run them:
+  - GoogleTest, in the binary built from tests/calc_test.cpp: --gtest_filter=CalcFixture.AppliesSub:CalcFixture.KnowsMode
+  - the CMocka program built from tests/cmocka_calc.c
+  - the test program built from tests/test_scale.c
+
+Limits of this answer:
+  - Static links only: a listed test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are not listed.
+  - Coverage: not recorded, so tests written as scripts (Tcl, Python, shell) are not seen.
+  - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
+  - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).
+  - Only one build configuration was analysed; code under other #ifdef settings is not seen.
+  - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.
+----
+Tests for divide (src/calc.c:12): 1 function changed in 1 C/C++ file.
+Coverage: not recorded.
+Test entry points in the index: 3 GoogleTest, 1 Unity, 2 CMocka, 3 test programs with main.
+
+Not known which tests reach this code (1):
+  - divide  src/calc.c:12  (no C/C++ test calls it)
+
+No tests to list. This does not mean no test runs this code: no C/C++ test that AeroTrace can see calls it, and tests written as scripts (Tcl, Python, shell) are not seen without coverage.
+
+Limits of this answer:
+  - Static links only: a listed test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are not listed.
+  - Coverage: not recorded, so tests written as scripts (Tcl, Python, shell) are not seen.
+  - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
+  - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).
+  - Only one build configuration was analysed; code under other #ifdef settings is not seen.
+  - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.

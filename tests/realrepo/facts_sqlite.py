@@ -489,4 +489,20 @@ FACTS = [
         calls=(Call("shellFakeSchema", SH, 26438, "ignored", n_args=3),),
         must_not=(Fn("sqlite3_create_filename", C),),
     ),
+    # ------------------------------------------------------------ test impact (static links only)
+    Fact(
+        id="sqlite-tests-sqlite3Select-not-known",
+        why="The amalgamation has no tests (SQLite's tests are Tcl scripts in the full source tree), and "
+        "shell.c's main is the sqlite3 command-line program, not a test. So a change to sqlite3Select "
+        "must be 'Not known', with no test listed and no 'no test reaches it' claim.",
+        kind="tests",
+        query=f"sqlite3Select@{C}",
+        proof=(
+            Line(C, 157288, "SQLITE_PRIVATE int sqlite3Select("),
+            Line(SH, 39030, "int SQLITE_CDECL main(int argc, char **argv){"),
+        ),
+        not_known=("sqlite3Select",),
+        exact=True,
+        must_not=(Fn("main", SH),),
+    ),
 ]

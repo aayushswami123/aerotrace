@@ -94,6 +94,10 @@ class Fact:
     changed_state: dict[str, str] = field(default_factory=dict)  # name@file -> new | removed | changed
     changed_decls: tuple[str, ...] = ()
     no_outside: bool = False  # every changed line must be placed (no "could not follow")
+    # test-impact facts (kind "tests"): test ids that must be listed (all of them when `exact`), and
+    # changed functions that must be under "Not known". `must_not` functions must not be test entry points.
+    tests: tuple[str, ...] = ()
+    not_known: tuple[str, ...] = ()
     # a fact AeroTrace gets wrong today. The test still runs; it must keep failing (strict xfail), so a fix
     # shows up as "unexpectedly passed" and the mark gets removed.
     known_bug: str | None = None

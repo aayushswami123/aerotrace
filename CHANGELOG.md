@@ -7,6 +7,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace tests [BASE | --patch FILE | --symbol FN]` and the `tests_for_change` MCP tool: which tests
+  to run for a change, from test entry points in the index (GoogleTest, Unity, CMocka, test programs with
+  `main`) linked through callers. Each test is exact or probable, with the reason. Changed code no test is
+  known to reach is listed as "Not known", never as untested. Read-only; it never runs tests.
 - `aerotrace signature <function>` and the `signature_impact` MCP tool: what a change to a function's
   parameters or return type affects. Every call site with its argument count and how it uses the return
   value (stored, compared, checked, passed on, returned, ignored, discarded), every place that uses the

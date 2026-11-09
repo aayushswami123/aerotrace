@@ -35,7 +35,21 @@ async def test_server_lists_its_tools(repo_factory):
         "impact",
         "index_status",
         "signature_impact",
+        "tests_for_change",
     ]
+
+
+@pytest.mark.anyio
+async def test_tests_for_change_tool(repo_factory):
+    root = repo_factory("testimpact")
+    async with Client(create_server(root)) as client:
+        out = text_of(await client.call_tool("tests_for_change", {"symbol": "add"}))
+        unknown = text_of(await client.call_tool("tests_for_change", {"symbol": "divide"}))
+        outside = text_of(await client.call_tool("tests_for_change", {}))
+    assert "exact     Calc.Adds" in out
+    assert "Not known which tests reach this code (1):" in unknown
+    assert "This does not mean no test runs this code" in unknown
+    assert "Could not read the change" in outside  # not a git repo: says so, runs nothing
 
 
 @pytest.mark.anyio

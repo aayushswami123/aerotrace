@@ -22,7 +22,7 @@ from facts import Fact, Fn
 from facts_redis import FACTS as REDIS_FACTS
 from facts_sqlite import FACTS as SQLITE_FACTS
 
-from aerotrace.analysis import diff, graph, signature, symbols
+from aerotrace.analysis import diff, graph, render, signature, symbols, testimpact
 from aerotrace.index import store
 from aerotrace.index.build import build_index
 from aerotrace.index.history import Outliner
@@ -238,11 +238,38 @@ def _check_signature(conn: sqlite3.Connection, fact: Fact) -> list[str]:
     return problems
 
 
+def _check_tests(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
+    res = testimpact.for_function(conn, root, _one(conn, fact.query))
+    problems = []
+    got = {t.test for t in res.tests}
+    missing = sorted(set(fact.tests) - got)
+    if missing:
+        problems.append(f"tests that should be listed are missing: {missing}")
+    if fact.exact and got - set(fact.tests):
+        problems.append(f"tests listed that the source does not link: {sorted(got - set(fact.tests))[:10]}")
+    unknown = {n.what for n in res.not_known}
+    problems += [f"{n} should be under 'Not known'" for n in fact.not_known if n not in unknown]
+    if res.no_test_reaches:
+        problems.append(f"'No test reaches' from static links alone: {[n.what for n in res.no_test_reaches]}")
+    entries = testimpact.find_entries(conn, root)
+    names = symbols.get_many(conn, list(entries))
+    as_entry = {(names[i].qualified_name, names[i].file) for i in entries if i in names}
+    problems += [f"false claim: {m} is a test entry point" for m in fact.must_not if _key(m) in as_entry]
+    text = render.tests_text(res)
+    if re.search(r"no tests? (are |is )?affected|\b0 tests\b", text, re.I):
+        problems.append("the answer claims there are no tests")
+    if "No tests to list" in text and "This does not mean no test runs this code" not in text:
+        problems.append("'No tests to list' without saying it does not mean the code is untested")
+    return problems
+
+
 def answer_problems(root: Path, fact: Fact) -> list[str]:
     conn = store.connect(root)
     try:
         if fact.kind == "diff":
             return _check_diff(conn, root, fact)
+        if fact.kind == "tests":
+            return _check_tests(conn, root, fact)
         if fact.kind == "signature":
             return _check_signature(conn, fact)
         if fact.kind == "find":
