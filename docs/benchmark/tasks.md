@@ -7,6 +7,24 @@ How the tasks are run and judged is in [protocol.md](protocol.md).
 Every task was checked against the pinned sources (`tests/realrepo/repos.py`: Redis 8.10.3 tarball,
 SQLite 3.54.1 amalgamation). All `file:line` references are to the unpacked, unchanged sources.
 
+## How the tasks were chosen (disclosure)
+
+The tasks were picked by hand by the tool's side: an AI agent (Claude) working for AeroTrace's author,
+while AeroTrace was being built. They were not drawn at random. Most tasks were picked because their risk
+is the kind of thing AeroTrace is built to find (callers through pointers, a second binary, callers spread
+over many files), so they favour the tool. To balance that:
+
+- Some tasks have a risk that AeroTrace **can't see**, so we expect it **not** to help there:
+  R06 (the caller sits in `tls.c`, which is not compiled), R14 (the name lives in a generated table and
+  its JSON source), R15 (the Makefile), B01 (positional initializers, issue #26), B02 (a function stored
+  in a table through a cast and called through casting macros).
+- C02 is a plain control: a text search finds everything.
+- Review of the first draft (PR #30) replaced the two easiest controls (renaming a `static` function in
+  `t_string.c` and in `shell.c`, where both sides would almost surely score 3/3) with B01 and B02. The
+  count stays at 20. This was done before any run.
+
+The report lists, task by task, whether we expected AeroTrace to help, next to what happened.
+
 ## Mix
 
 | Id | Repo | Kind | Main risk | Size |
@@ -17,39 +35,39 @@ SQLite 3.54.1 amalgamation). All `file:line` references are to the unpacked, unc
 | R04 | Redis | remove parameter from a callback type | callbacks reached only through pointers | M |
 | R05 | Redis | remove parameter | caller in a second binary's file | S |
 | R06 | Redis | remove parameter | a caller inside `#if USE_OPENSSL` | S |
-| R07 | Redis | change return type | 114 uses, 2 binaries | M |
+| R07 | Redis | change return type | 114 uses in 3 binaries, 1 uses the result | M |
 | R08 | Redis | rename struct field (bitfield) | macros, other `lru` names | M |
 | R09 | Redis | change struct field type | config table takes its address, compiler only warns | S |
 | R10 | Redis | remove struct field | INFO output must stay | S |
 | R11 | Redis | move a global into a struct | stray `extern` lines in .c files | S |
 | R12 | Redis | remove globals | RDB loading of inf/nan | S |
-| R13 | Redis | remove a function | 51 call sites, 14 files | L |
+| R13 | Redis | remove a function | 50 call sites, 14 files | L |
 | R14 | Redis | rename a function | generated `commands.def` and its JSON source | S |
 | R15 | Redis | move functions to a new file | build file must list it | M |
 | S01 | SQLite | rename struct field | 7 other structs have a field of the same name, 2 of them compiled out | L |
 | S02 | SQLite | reorder parameters | literal `0` arguments hide mistakes | M |
-| C01 | Redis | control: rename a `static` function | low | S |
+| B01 | Redis | reorder struct fields | positional initializers through a macro (AeroTrace blind spot) | S |
+| B02 | SQLite | change a function called through a cast table | casts and macros hide the mismatch (AeroTrace blind spot) | S |
 | C02 | Redis | control: remove a dead struct field | low | S |
-| C03 | SQLite | control: rename a `static` function | low | S |
 
 Size: **S** = under 20 changed lines in at most 3 files; **M** = 20 to 150 lines or 4 to 10 files;
 **L** = more than 150 lines or more than 10 files.
 
-The three control tasks (C01 to C03) are there to keep us honest: a plain text search finds everything
-they touch, so AeroTrace should not change the outcome much. If it does (good or bad), the report says so.
-
 ## What every task shares
 
 **Prompt.** The text given to the agent is the task's *Prompt* block followed by the suffix for its repo,
-exactly as written here, on both sides (with and without AeroTrace).
+exactly as written here, on both sides (with and without AeroTrace). The suffix names environment
+variables instead of numbers, so the text is byte-identical in every run; the harness sets them per slot
+(protocol.md, "Slots").
 
 Redis suffix:
 
 ```text
-You are in the root of the Redis 8.10.3 source tree. Build with `make -C src -j8 MALLOC=libc`. Tests run
-with `./runtest --single <unit>`, for example `./runtest --single unit/type/string`. When you are done, the
-build must succeed with no compiler warnings and the existing tests must still pass. Do not edit the Tcl
-tests under tests/. Do not commit.
+You are in the root of the Redis 8.10.3 source tree. Build with `make -C src -j$BENCH_JOBS MALLOC=libc`.
+Tests run with `./runtest --clients $BENCH_JOBS --baseport $BENCH_BASEPORT --portcount 500 --single <unit>`,
+for example `--single unit/type/string`. If you start a redis-server yourself, use port $BENCH_PORT and
+stop it when you are done. When you are done, the build must succeed with no compiler warnings and the
+existing tests must still pass. Do not edit the Tcl tests under tests/. Do not commit.
 ```
 
 SQLite suffix:
@@ -60,22 +78,30 @@ You are in a folder with the SQLite 3.54.1 amalgamation (sqlite3.c, sqlite3.h, s
 and behave exactly as before. Do not commit.
 ```
 
-**Judging.** After the agent stops, the judge runs these in order on the agent's final tree (details and
-the exact scripts are in [protocol.md](protocol.md#judging-a-run)):
+**Judging.** The judge never uses the agent's tree. It unpacks a **fresh pristine copy**, applies only the
+agent's `git diff`, and runs everything there (protocol.md, "Judging a run"):
 
-1. **Build.** Redis: `make -C src clean && make -C src -j8 MALLOC=libc`. SQLite:
+0. **Diff gate.** The run fails if the diff does not apply, or touches a protected path (`tests/`,
+   `runtest*`, `deps/`, `utils/`, `src/Makefile` except R15's one line, `src/cli_commands.*`), or adds a
+   line with `-w`, `-Wno-`, `#pragma ... diagnostic` or `#pragma GCC system_header`.
+1. **Build.** Redis: `make -C src -j2 MALLOC=libc` from scratch. SQLite:
    `cc -O1 -Wall -o sqlite3 shell.c sqlite3.c`. Passes when the exit code is 0 and the log has no line
-   containing `warning:`. (Both unchanged sources build with 0 warnings here; see protocol.md.)
-2. **Tests.** Redis: the task's `./runtest` line; passes on exit code 0. SQLite: the smoke script
-   (protocol.md, "SQLite smoke test") gives byte-for-byte the same output as the unchanged build.
-3. **Checks.** The task's check commands. Each one says what it must print.
+   containing `warning:`. (Both unchanged sources build with 0 warnings here.)
+2. **Tests.** Redis: `./runtest $RT` with the task's units, where `$RT` is
+   `--clients 2 --baseport <judge slot port> --portcount 500 --timeout 1200`; passes on exit code 0.
+   SQLite: the smoke script (protocol.md) gives byte-for-byte the same output as the unchanged build.
+3. **Checks.** The task's check commands, run from the judged copy's root. Each one says what it must print.
 
-A task is **solved** only when all three pass. `argcount.py` is the small script in
-[protocol.md](protocol.md#argcountpy); it prints every use of a function with the wrong number of
-arguments and exits 1 if there is one. All commands run from the repo root.
+A task is **solved** only when all of these pass. The judge's scripts live in `$JUDGE`, a folder outside
+every checkout (their full text is in protocol.md): `argcount.py` prints every use of a function with the
+wrong number of arguments; `idents.py` prints every use of a name outside comments and strings. `$RUN_TMP`
+is the run's own temp folder; `<pristine>` is an unchanged unpack.
+
+**Validation.** Every task's checks were run on the unchanged sources (the "empty diff"); at least one
+check fails for every task (protocol.md, "Check validation"). Reference patches and plausible wrong
+patches were run for R02, R09 and B02 so far; the others are a gate before the first run.
 
 ---
-
 ## R01: reorder `stringmatchlen` parameters
 
 - **Repo:** Redis. **Kind:** signature change, reorder. **Size:** M (1 definition, 1 prototype, 15 calls in 8 files).
@@ -102,10 +128,13 @@ in ACL checks, KEYS/SCAN, pub/sub patterns, FUNCTION LIST and COMMAND LIST. `str
 in `util.c` also call it. Comments mention `stringmatchlen()` in `cluster.c:34` and `debug.c:522` (not calls).
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/keyspace --single unit/scan --single unit/pubsub --single unit/acl --single unit/functions --single unit/introspection-2 --single unit/type/array`
+- Tests: `./runtest $RT --single unit/keyspace --single unit/scan --single unit/pubsub --single unit/acl --single unit/functions --single unit/introspection-2 --single unit/type/array`
 - Check 1, new definition: `tr -s ' \t\n' ' ' < src/util.c | grep -c 'int stringmatchlen(const char \*string, int stringLen, const char \*pattern, int patternLen, int nocase) {'` prints `1`.
 - Check 2, new prototype: `tr -s ' \t\n' ' ' < src/util.h | grep -c 'int stringmatchlen(const char \*string, int stringLen, const char \*pattern, int patternLen, int nocase);'` prints `1`.
-- Check 3, nothing dropped: `python3 -I argcount.py src stringmatchlen 5` exits 0.
+- Check 3, nothing dropped: `python3 -I $JUDGE/argcount.py src stringmatchlen 5` exits 0.
+- The order inside each call can only be judged by the tests. Before the first run, each of the 15 calls is
+  left in the old order on its own (on top of the reference patch) and we record which ones the tests
+  catch; calls no test catches are listed as "not covered by tests" in the report.
 
 ## R02: `string2ll` returns `C_OK` / `C_ERR`
 
@@ -132,11 +161,20 @@ are only compiled with `-DREDIS_TEST`. `deps/hiredis/read.c:162` has its own `st
 different contract that must stay as it is.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/incr --single unit/type/string --single unit/type/list --single unit/type/hash --single unit/type/set --single unit/type/zset --single unit/protocol --single unit/expire --single unit/keyspace --single unit/scan --single unit/scripting`
-- Check 1, C unit tests (runs last, it rebuilds): `make -C src clean && make -C src -j8 MALLOC=libc REDIS_CFLAGS=-DREDIS_TEST && ./src/redis-server test util` exits 0 (unchanged sources: exit 0, about 27 s to build).
-  The tests in `util.c` assert the return values, so they only pass if they were updated to the new
-  contract and the function follows it.
-- Check 2, hiredis copy untouched: `cmp deps/hiredis/read.c <pristine>/deps/hiredis/read.c` exits 0.
+- Tests: `./runtest $RT --single unit/type/incr --single unit/type/string --single unit/type/list --single unit/type/hash --single unit/type/set --single unit/type/zset --single unit/protocol --single unit/expire --single unit/keyspace --single unit/scan --single unit/scripting`
+- Check 1, the new contract (judge-owned, the agent never sees it): `sh $JUDGE/r02_contract.sh . $RUN_TMP/r02`
+  compiles the judged `src/util.c` on its own and links it with `$JUDGE/r02_contract.c`, which asserts
+  `string2ll("123") == 0` with value 123, the `LLONG_MIN` string parses, and `"x"`, `""`, `"12a"`,
+  `"9223372036854775808"`, `"01"` give `-1`. Exits 0. **On the unchanged sources it aborts on the first
+  assert (exit 134)**; with only `string2ll`'s own returns switched to 0/-1 it prints `R02 contract OK`.
+- Check 2, the C unit tests still build and pass (runs last, it rebuilds):
+  `make -C src clean && make -C src -j2 MALLOC=libc REDIS_CFLAGS=-DREDIS_TEST && ./src/redis-server test util`
+  exits 0 (unchanged sources: exit 0, about 27 s to build).
+- Check 3, the unit tests were not deleted: `grep -c 'assert(string2ll' src/util.c` prints at least `13`
+  (13 in the unchanged file).
+- Check 4, hiredis copy untouched: covered by the diff gate (`deps/` is protected).
+- Not yet done (gate before the first run): flip each caller back on its own, one at a time, and record
+  which flips the tests above catch; callers no test catches are listed as "not covered by tests".
 
 ## R03: `notifyKeyspaceEvent` takes `redisDb *` instead of a db id
 
@@ -160,9 +198,15 @@ and need the right `redisDb` pointer. The module notification path takes an `int
 is. The compiler catches an int passed where a pointer is expected, but not a wrong pointer.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/pubsub --single unit/keyspace --single unit/expire --single unit/type/hash --single unit/type/hash-field-expire --single unit/moduleapi/keyspace_events --single unit/moduleapi/postnotifications`
-- Check 1: `tr -s ' \t\n' ' ' < src/server.h | grep -c 'void notifyKeyspaceEvent(int type, const char \*event, robj \*key, redisDb \*db);'` prints `1`.
-- Check 2: `python3 -I argcount.py src notifyKeyspaceEvent 4` exits 0.
+- Tests: `./runtest $RT --single unit/pubsub --single unit/keyspace --single unit/expire --single unit/type/hash --single unit/type/hash-field-expire --single unit/moduleapi/keyspace_events --single unit/moduleapi/postnotifications`
+- Check 1, both prototypes: `tr -s ' \t\n' ' ' < src/server.h | grep -c 'void notifyKeyspaceEvent(int type, const char \*event, robj \*key, redisDb \*db);'` prints `1`, and
+  `tr -s ' \t\n' ' ' < src/server.h | grep -c 'void notifyKeyspaceEventWithSubkeys(int type, const char \*event, robj \*key, redisDb \*db, robj \*\*subkeys, int count);'` prints `1`.
+- Check 2: `python3 -I $JUDGE/argcount.py src notifyKeyspaceEvent 4` and
+  `python3 -I $JUDGE/argcount.py src notifyKeyspaceEventWithSubkeys 6` exit 0.
+- A wrong `redisDb *` (for example at `src/cluster.c:1781` or `src/t_stream.c:3505`) is only caught if the
+  tests reach that call. Before the first run, each such call is flipped on its own and the result is
+  recorded; calls the tests don't reach are listed as "not covered by tests". Flipping a call back to an
+  `int` is expected to be a build error (int passed as a pointer is an error in this clang); to verify.
 - Check 3, module API unchanged: `grep -c 'void moduleNotifyKeyspaceEvent(int type, const char \*event, robj \*key, int dbid, robj \*\*subkeys, int count);' src/server.h` prints `1` (as in the unchanged file, `src/server.h:3256`).
 
 ## R04: drop the `id` parameter from `aeTimeProc`
@@ -194,9 +238,9 @@ a different binary. A mismatched handler is an error in this clang (incompatible
 but only if it is found and compiled.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/expire --single unit/other --single unit/info --single unit/maxmemory --single unit/moduleapi/timer --single integration/redis-benchmark`
+- Tests: `./runtest $RT --single unit/expire --single unit/other --single unit/info --single unit/maxmemory --single unit/moduleapi/timer --single integration/redis-benchmark`
 - Check 1: `tr -s ' \t\n' ' ' < src/ae.h | grep -c 'typedef int aeTimeProc(struct aeEventLoop \*eventLoop, void \*clientData);'` prints `1`.
-- Check 2: for each of `serverCron activeDefragTimeProc evictionTimeProc IOThreadCron moduleTimerHandler showThroughput timeProc`: `python3 -I argcount.py src <name> 2` exits 0.
+- Check 2: for each of `serverCron activeDefragTimeProc evictionTimeProc IOThreadCron moduleTimerHandler showThroughput timeProc`: `python3 -I $JUDGE/argcount.py src <name> 2` exits 0.
 
 ## R05: drop the unused `ver` parameter of `rdbFunctionLoad`
 
@@ -215,8 +259,8 @@ and its prototype, and update every caller.
 Some callers pass `rdbver` from a local; it has to be removed only from this call.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/functions --single integration/rdb`
-- Check 1: `python3 -I argcount.py src rdbFunctionLoad 4` exits 0.
+- Tests: `./runtest $RT --single unit/functions --single integration/rdb`
+- Check 1: `python3 -I $JUDGE/argcount.py src rdbFunctionLoad 4` exits 0.
 
 ## R06: drop the unused `ip` parameter of `acceptCommonHandler`
 
@@ -236,8 +280,8 @@ and its prototype and update every caller, including code that is only compiled 
 is missed and the TLS build breaks later. Tools that only see compiled code miss it too.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/networking --single unit/introspection --single unit/auth`
-- Check 1 (includes `tls.c`): `python3 -I argcount.py src acceptCommonHandler 2` exits 0.
+- Tests: `./runtest $RT --single unit/networking --single unit/introspection --single unit/auth`
+- Check 1 (includes `tls.c`): `python3 -I $JUDGE/argcount.py src acceptCommonHandler 2` exits 0.
 
 ## R07: `listAddNodeHead` / `listAddNodeTail` return `void`
 
@@ -259,7 +303,7 @@ uses their return value.
 (`listDup`'s error path) and not churn the other 113. Uses span three binaries (server, cli, benchmark).
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/list --single unit/pubsub --single unit/multi --single unit/acl --single unit/tracking --single integration/redis-cli`
+- Tests: `./runtest $RT --single unit/type/list --single unit/pubsub --single unit/multi --single unit/acl --single unit/tracking --single integration/redis-cli`
 - Check 1: `grep -nE '^(list \*|void )listAddNode(Head|Tail)\(' src/adlist.c src/adlist.h` shows only `void` lines (4 lines).
 
 ## R08: rename the `lru` field of `struct redisObject`
@@ -282,13 +326,13 @@ and other structs keep their names).
 names. A blind search and replace breaks or renames the wrong ones; a careful one has to look at types.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/maxmemory --single unit/introspection-2 --single unit/dump --single unit/moduleapi/misc`
+- Tests: `./runtest $RT --single unit/maxmemory --single unit/introspection-2 --single unit/dump --single unit/moduleapi/misc`
 - Leftover uses of `lru` in compiled code are build errors, so the build step covers them. Two comments
   also say `->lru` (`src/evict.c:54`, `src/object.h:93`); updating them is allowed, not required.
 - Check 1: `cat src/*.c src/*.h | grep -oE '(->|\.)lru_or_lfu\b' | wc -l` prints at least `21` (21 uses on
   19 lines in the unchanged code).
-- Check 2, nothing else renamed: `git diff --stat -- deps utils tests` prints nothing, and
-  `grep -c 'unsigned lru_or_lfu:LRU_BITS;' src/object.h` prints `1`.
+- Check 2: `grep -c 'unsigned lru_or_lfu:LRU_BITS;' src/object.h` prints `1`. (`deps/`, `utils/` and
+  `tests/` can't be renamed by mistake: the diff gate rejects any change there.)
 
 ## R09: `maxmemory_samples` becomes `long long`
 
@@ -301,19 +345,28 @@ Prompt:
 ```text
 Change the type of the maxmemory_samples field of struct redisServer (src/server.h) from int to
 long long. The maxmemory-samples config must keep working exactly as before (same default, same allowed
-range 1 to 64, same CONFIG GET/SET behaviour).
+range 1 to 64, same CONFIG GET/SET behaviour), and must be declared in the config table with the helper
+that matches the field's new type.
 ```
 
 **Why it is risky.** The config table stores the field's address as an `int *`. Changing only the field
 **still builds**, with one warning (checked on this machine:
 `config.c:3522:5: warning: incompatible pointer types initializing 'int *' with an expression of type 'long long *'`),
-and config writes then fill only half of the field. Tests may still pass by luck on little-endian machines,
-which is why a warning fails the build step.
+and config writes then fill only half of the field. Tests may still pass by luck on little-endian machines.
+Silencing the warning with a cast (`*(int *)&server.maxmemory_samples` in the `createIntConfig` line) is
+worse: **checked on this machine, it builds with exit 0 and 0 warnings** and passes the live probe, because
+the upper 4 bytes stay zero. A runtime probe can't tell the difference (the allowed range is 1 to 64, so no
+value above `INT_MAX` can be set), so the check is static.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/maxmemory --single unit/introspection`
-- Check 1: `grep -cE '^\s+long long maxmemory_samples;' src/server.h` prints `1`.
-- Check 2, live config (probe script `probe-r09.sh` in protocol.md): `CONFIG SET maxmemory-samples 64` then
+- Tests: `./runtest $RT --single unit/maxmemory --single unit/introspection`
+- Check 1, static (`sh $JUDGE/r09_check.sh src`, text in protocol.md): exits 0 only if the field is
+  `long long`, the `"maxmemory-samples"` line uses `createLongLongConfig`, no `createIntConfig` line for it
+  remains, and no line mentioning `maxmemory_samples` contains an `(int *)` cast or `*)&`. Verified:
+  unchanged sources fail 3 of 4 tests; the cast trick fails 3 of 4 (`not createLongLongConfig`,
+  `still createIntConfig`, `pointer cast`); the reference patch (field type plus `createLongLongConfig`)
+  passes, and builds with exit 0 and 0 warnings.
+- Check 2, live config (probe `probe-r09.sh` in protocol.md): `CONFIG SET maxmemory-samples 64` then
   `CONFIG GET` returns `64`; `CONFIG SET ... 65` and `... 0` are refused; default after start is `5`.
 
 ## R10: remove the `arch_bits` field
@@ -335,9 +388,9 @@ field was used. INFO output must not change.
 does not change INFO.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/info --single unit/info-command`
+- Tests: `./runtest $RT --single unit/info --single unit/info-command`
 - Check 1: `grep -cE '^\s+int arch_bits;' src/server.h` prints `0` (unchanged file: `1`), and
-  `grep -rn 'server\.arch_bits' src` prints nothing.
+  `grep -rnI 'server\.arch_bits' src` prints nothing.
 - Check 2 (probe): `redis-cli INFO server` contains `arch_bits:64`.
 
 ## R11: move the global `ProcessingEventsWhileBlocked` into `server`
@@ -359,8 +412,8 @@ server.processing_events_while_blocked everywhere. Remove the old global and eve
 header, so a header-based search does not show them, and leftover `extern` lines compile fine on their own.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/scripting --single unit/functions --single integration/rdb --single unit/multi`
-- Check 1: `grep -rn 'ProcessingEventsWhileBlocked' src` prints nothing.
+- Tests: `./runtest $RT --single unit/scripting --single unit/functions --single integration/rdb --single unit/multi`
+- Check 1: `grep -rnI 'ProcessingEventsWhileBlocked' src` prints nothing.
 - Check 2: `grep -c 'processing_events_while_blocked' src/server.h` prints at least `1`.
 
 ## R12: remove the `R_Zero`, `R_PosInf`, `R_NegInf`, `R_Nan` globals
@@ -380,16 +433,18 @@ Remove the global doubles R_Zero, R_PosInf, R_NegInf and R_Nan. Use INFINITY, -I
 globals are defined, and the comment at `src/server.c:77` warns about compiler optimisations.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/zset --single integration/rdb --single unit/dump`
-- Check 1: `grep -rnE '\bR_(Zero|PosInf|NegInf|Nan)\b' src` prints nothing.
+- Tests: `./runtest $RT --single unit/type/zset --single integration/rdb --single unit/dump`
+- Check 1: `grep -rnIE '\bR_(Zero|PosInf|NegInf|Nan)\b' src` prints nothing.
 
 ## R13: remove `lookupKeyRead`
 
-- **Repo:** Redis. **Kind:** function removal. **Size:** L (51 calls in 14 files).
+- **Repo:** Redis. **Kind:** function removal. **Size:** L (50 calls in 14 files).
 - **Source:** definition `src/db.c:356` (body: `return lookupKeyReadWithFlags(db,key,LOOKUP_NONE);`),
   prototype `src/server.h:4262`. Calls in `bitops.c` (6), `cluster.c` (2), `db.c` (4), `expire.c` (1),
   `geo.c` (3), `hyperloglog.c` (3), `sort.c` (2), `t_array.c` (9), `t_hash.c` (2), `t_list.c` (1),
-  `t_set.c` (4), `t_stream.c` (7), `t_string.c` (4), `t_zset.c` (3).
+  `t_set.c` (4), `t_stream.c` (7), `t_string.c` (4), `t_zset.c` (3). (`db.c` has the definition and 3
+  calls.) Three comments also name it: `src/db.c:250`, `src/hyperloglog.c:1738`, `:1740`; the prompt
+  doesn't ask to change them.
 
 Prompt:
 
@@ -402,8 +457,10 @@ lookupKeyReadWithFlags(db, key, LOOKUP_NONE), which is exactly what it did.
 tokens, and in near-miss names (`lookupKeyReadOrReply`, `lookupKeyReadWithFlags`) that must stay.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/string --single unit/type/hash --single unit/type/set --single unit/type/zset --single unit/type/list --single unit/type/stream --single unit/type/array --single unit/bitops --single unit/geo --single unit/hyperloglog --single unit/sort --single unit/expire`
-- Check 1: `grep -rnw 'lookupKeyRead' src` prints nothing.
+- Tests: `./runtest $RT --single unit/type/string --single unit/type/hash --single unit/type/set --single unit/type/zset --single unit/type/list --single unit/type/stream --single unit/type/array --single unit/bitops --single unit/geo --single unit/hyperloglog --single unit/sort --single unit/expire`
+- Check 1: `python3 -I $JUDGE/idents.py src lookupKeyRead` prints nothing and exits 0 (comments and
+  strings are ignored; on the unchanged sources it lists 52 places: definition, prototype, 50 calls).
+  A macro `#define lookupKeyRead(...)` left behind is a use and fails this check.
 - Check 2: `grep -c 'lookupKeyReadOrReply(client' src/server.h` prints `1` (unchanged).
 
 ## R14: rename `lindexCommand`
@@ -424,9 +481,9 @@ consistent with its JSON source.
 Editing only `commands.def` builds, but the next regeneration from the JSON brings the old name back.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/list --single unit/introspection-2`
-- Check 1: `grep -rnw 'lindexCommand' src` prints nothing.
-- Check 2, table matches its source: `cp src/commands.def /tmp/agent.def && python3 utils/generate-command-code.py && cmp src/commands.def /tmp/agent.def`
+- Tests: `./runtest $RT --single unit/type/list --single unit/introspection-2`
+- Check 1: `grep -rnwI 'lindexCommand' src` prints nothing.
+- Check 2, table matches its source: `cp src/commands.def $RUN_TMP/agent.def && python3 utils/generate-command-code.py && cmp src/commands.def $RUN_TMP/agent.def`
   exits 0 (unchanged sources regenerate byte-identical; checked).
 
 ## R15: move the `get*FromObjectOrReply` functions to a new file
@@ -453,7 +510,7 @@ right includes. The functions call helpers in `object.c` (`getDoubleFromObject`,
 ...) that must stay visible.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/incr --single unit/type/list --single unit/type/zset --single unit/expire --single unit/geo`
+- Tests: `./runtest $RT --single unit/type/incr --single unit/type/list --single unit/type/zset --single unit/expire --single unit/geo`
 - Check 1: `grep -cE '^int get(Double|LongDouble|LongLong|Long|RangeLong|PositiveLong|Int)FromObjectOrReply\(' src/object_reply.c` prints `7`.
 - Check 2: the same grep on `src/object.c` prints `0`.
 - Check 3: `grep '^REDIS_SERVER_OBJ=' src/Makefile | grep -c 'object_reply.o'` prints `1`.
@@ -483,7 +540,7 @@ renames fields in code that is compiled out (R-Tree, Geopoly) without any error.
 - Check 1: `grep -cE '^\s+int nParseErr;' sqlite3.c` prints `1`.
 - Check 2, other fields kept: `grep -cE '^\s+(int|u8)\s+nErr;' sqlite3.c` prints `5` (6 in the unchanged file)
   and the same grep on `shell.c` prints `2`.
-- Check 3, compiled-out code still builds: `cc -O0 -Wall -c -o /tmp/ext.o -DSQLITE_DEBUG -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_SESSION -DSQLITE_ENABLE_PREUPDATE_HOOK -DSQLITE_ENABLE_STAT4 -DSQLITE_ENABLE_DBSTAT_VTAB sqlite3.c`
+- Check 3, compiled-out code still builds: `cc -O0 -Wall -c -o $RUN_TMP/ext.o -DSQLITE_DEBUG -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_SESSION -DSQLITE_ENABLE_PREUPDATE_HOOK -DSQLITE_ENABLE_STAT4 -DSQLITE_ENABLE_DBSTAT_VTAB sqlite3.c`
   exits 0 with no `warning:` (unchanged file: 0 warnings, 3 s).
 
 ## S02: swap the last two parameters of `sqlite3ExprAlloc`
@@ -515,25 +572,7 @@ has already done. Two callers are inside the generated parser.
   `grep -A4 '^SQLITE_PRIVATE Expr \*sqlite3ExprAlloc($' sqlite3.c | grep -oE '(sqlite3 \*db|int op|int dequote|const Token \*pToken)' | tr '\n' ,`
   printing `sqlite3 *db,int op,int dequote,const Token *pToken,` (the unchanged file prints
   `sqlite3 *db,int op,const Token *pToken,int dequote,`).
-- Check 2: `python3 -I argcount.py . sqlite3ExprAlloc 4 sqlite3.c` exits 0.
-
-## C01 (control): rename `checkStringLength`
-
-- **Repo:** Redis. **Kind:** rename a `static` function. **Size:** S.
-- **Source:** `src/t_string.c:26` (`static int checkStringLength(...)`); calls `src/t_string.c:604`, `:623`,
-  `:1391`.
-
-Prompt:
-
-```text
-Rename the static function checkStringLength() in src/t_string.c to stringLengthAllowedOrReply().
-```
-
-**Why it is low risk.** One file, three calls, `static`: a text search finds everything.
-
-**Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/type/string`
-- Check 1: `grep -rnw 'checkStringLength' src` prints nothing; `grep -c 'stringLengthAllowedOrReply(' src/t_string.c` prints `4`.
+- Check 2: `python3 -I $JUDGE/argcount.py . sqlite3ExprAlloc 4 sqlite3.c` exits 0.
 
 ## C02 (control): remove the dead field `clients_pending_read`
 
@@ -551,23 +590,82 @@ and its initialisation.
 **Why it is low risk.** One write, no reads, two files.
 
 **Judging.**
-- Tests: `./runtest --clients 8 --timeout 1200 --single unit/networking --single unit/info`
-- Check 1: `grep -rn 'clients_pending_read' src` prints nothing.
+- Tests: `./runtest $RT --single unit/networking --single unit/info`
+- Check 1: `grep -rnI 'clients_pending_read' src` prints nothing.
 
-## C03 (control): rename `resolve_backslashes`
+## B01 (blind spot): move the `since` field of `struct redisCommand`
 
-- **Repo:** SQLite. **Kind:** rename a `static` function. **Size:** S.
-- **Source:** `shell.c:30345` (`static void resolve_backslashes(char *z)`); calls `shell.c:34917`,
-  `shell.c:38351`.
+- **Repo:** Redis. **Kind:** reorder struct fields. **Size:** S.
+- **Source:** `struct redisCommand` at `src/server.h:3058`: `declared_name` (`:3060`), `summary` (`:3062`),
+  `complexity` (`:3063`), `since` (`:3064`), all `const char *`. The command table is filled **by position**:
+  `src/commands.c:4` defines `MAKE_CMD(...)` to expand to
+  `name,summary,complexity,since,doc_flags,...`, and `src/commands.c:12` includes the generated
+  `commands.def` (rows like `src/commands.def:12924`) into `struct redisCommand` arrays. `src/cli_commands.c:8`
+  includes the same `commands.def` for redis-cli, into a **different** struct (`commandDocs`) with its own
+  `MAKE_CMD`; it must not change. Module commands set the fields by name (`src/module.c`).
 
 Prompt:
 
 ```text
-In shell.c, rename the static function resolve_backslashes() to shellResolveBackslashes().
+In struct redisCommand (src/server.h), move the `since` field so that it comes directly after
+`declared_name`, before `summary`. Commands must behave, and be documented by COMMAND DOCS, exactly as
+before.
 ```
 
-**Why it is low risk.** One file, two calls, `static`.
+**Why it is risky.** Every command entry is a positional initializer produced by a macro, and the four
+fields involved have the same type, so moving the field without changing `MAKE_CMD`'s expansion builds
+with no warning and silently swaps `summary`, `complexity` and `since` for every command. AeroTrace does
+not record positional initializers (issue #26), so we expect it **not** to help. Changing the
+redis-cli copy (`cli_commands.c`) would break redis-cli's own table.
 
 **Judging.**
-- Tests: SQLite smoke test.
-- Check 1: `grep -c 'resolve_backslashes' shell.c` prints `0`; `grep -c 'shellResolveBackslashes(' shell.c` prints `3`.
+- Tests: `./runtest $RT --single unit/introspection-2 --single unit/introspection --single integration/redis-cli`
+- Check 1, field order: `sed -n '/^struct redisCommand {/,/^};/p' src/server.h | grep -oE '\*(declared_name|summary|complexity|since);' | head -4 | tr '\n' ' '`
+  prints `*declared_name; *since; *summary; *complexity; ` (unchanged: `*declared_name; *summary; *complexity; *since; `).
+- Check 2, the macro follows the struct: `grep -c '^#define MAKE_CMD(.*) name,since,summary,complexity,' src/commands.c` prints `1` (unchanged: `0`).
+- Check 3, live docs (probe `probe-b01.sh`, protocol.md): `COMMAND DOCS get set lindex xadd zadd` on the
+  judged server is byte-identical to the same command on the unchanged server.
+- `src/cli_commands.*` is protected by the diff gate.
+
+## B02 (blind spot): `openDirectory` returns the descriptor
+
+- **Repo:** SQLite. **Kind:** signature change of a function called only through a cast table. **Size:** S.
+- **Source:** forward declaration `sqlite3.c:41068`, definition `sqlite3.c:44528`
+  (`static int openDirectory(const char *zFilename, int *pFd)`, returns `SQLITE_OK` or
+  `SQLITE_CANTOPEN` and writes the descriptor to `*pFd`). It is stored in the system-call table through a
+  cast, `{ "openDirectory", (sqlite3_syscall_ptr)openDirectory, 0 }` (`sqlite3.c:41171`), and called only
+  through the macro `osOpenDirectory`, which casts the table entry back:
+  `#define osOpenDirectory ((int(*)(const char*,int*))aSyscall[17].pCurrent)` (`sqlite3.c:41172`).
+  Calls: `sqlite3.c:44599` (`unixSync`, directory sync), `sqlite3.c:47513` (`unixDelete`).
+
+Prompt:
+
+```text
+In sqlite3.c, change the static function openDirectory() so that it takes only the file name and returns
+the open directory descriptor, or -1 if the directory could not be opened (still logging the error as it
+does now). Its new signature must be:
+
+static int openDirectory(const char *zFilename)
+
+Update everything that uses it so that SQLite behaves exactly as before.
+```
+
+**Why it is risky.** Nothing calls `openDirectory` by name. The table entry is cast to a generic pointer
+and the macro casts it back, so if the macro's cast or a caller is not updated, the code **still builds
+with 0 warnings** (checked: the function changed but the macro and callers not). The callers then treat a
+descriptor as an error code. In a normal build that goes unnoticed (errors are ignored on purpose there);
+in an `SQLITE_DEBUG` build the `assert( rc==SQLITE_CANTOPEN )` in `unixSync` fires. We expect AeroTrace
+**not** to help much: the link goes through a cast in a file-scope initializer and a macro.
+
+**Judging.**
+- Tests: the SQLite smoke test, plus the file smoke test (`smoke_file.sh`, protocol.md) on the normal
+  build and on a debug build `cc -O0 -Wall -DSQLITE_DEBUG -o $RUN_TMP/sqlite3-debug shell.c sqlite3.c` (no
+  `warning:` allowed in either build).
+- Check 1, the macro matches the new type:
+  `grep -c '#define osOpenDirectory ((int(\*)(const char\*))aSyscall\[17\].pCurrent)' sqlite3.c` prints `1`.
+- Check 2: `grep -c '^static int openDirectory(const char \*zFilename){' sqlite3.c` prints `1` and
+  `grep -cE '^static int openDirectory\(const char ?\*[A-Za-z]*\);' sqlite3.c` prints `1`.
+- Verified on this machine: unchanged sources fail checks 1 and 2. The wrong patch above (function and
+  forward declaration changed, macro and callers not) builds with exit 0 and 0 warnings, and the debug
+  file smoke test aborts on the assert at `unixSync`. A reference patch (function, declaration, macro and
+  both callers) builds with 0 warnings and passes both file smoke runs.
