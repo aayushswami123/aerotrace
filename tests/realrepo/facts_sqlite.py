@@ -300,6 +300,32 @@ FACTS = [
         must=("Sqlite3Config::isInit",),
         must_not=("MemPage::isInit", "PCacheGlobal::isInit", "WalIndexHdr::isInit", "Decimal::isInit"),
     ),
+    Fact(
+        id="sqlite-writes-memset-global",
+        why="memset(&mem0, 0, ...) clears the whole allocator state; mem0 is a macro for the global mem0 "
+        "(GLOBAL(t, v) is just v without SQLITE_OMIT_WSD).",
+        kind="writes",
+        query=f"sqlite3MallocEnd@{C}",
+        proof=(
+            Line(C, 31881, "} mem0 = { 0, SQLITE_MAX_MEMORY, SQLITE_MAX_MEMORY, 0 };"),
+            Line(C, 32013, "SQLITE_PRIVATE void sqlite3MallocEnd(void){"),
+            Line(C, 32017, "memset(&mem0, 0, sizeof(mem0));"),
+        ),
+        must=("mem0",),
+    ),
+    Fact(
+        id="sqlite-writes-memset-through-macro",
+        why="pcache1 is a macro for the global pcache1_g, so memset(&pcache1, ...) writes pcache1_g.",
+        kind="writes",
+        query=f"pcache1Shutdown@{C}",
+        proof=(
+            Line(C, 57232, "} pcache1_g;"),
+            Line(C, 57239, "#define pcache1 (GLOBAL(struct PCacheGlobal, pcache1_g))"),
+            Line(C, 57748, "static void pcache1Shutdown(void *NotUsed){"),
+            Line(C, 57751, "memset(&pcache1, 0, sizeof(pcache1));"),
+        ),
+        must=("pcache1_g",),
+    ),
     # ------------------------------------------------------------ diff impact (patches not applied)
     Fact(
         id="sqlite-diff-edit-busy_timeout",

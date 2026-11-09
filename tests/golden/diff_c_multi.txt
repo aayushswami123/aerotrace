@@ -18,3 +18,4 @@ Changes AeroTrace could not follow:
 Limits of this answer:
   - Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.
   - Only one build configuration was analysed; code under other #ifdef settings is not seen.
+  - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.

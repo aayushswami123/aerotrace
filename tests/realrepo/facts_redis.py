@@ -327,7 +327,48 @@ FACTS = [
             ),
         ),
         must=("redisServer::stat_net_output_bytes",),
-        known_bug="Writes made by passing &var to a function or builtin (atomics) are not recorded.",
+    ),
+    Fact(
+        id="redis-writes-through-atomicSet",
+        why="atomicSet(var, v) expands to atomic_store_explicit(&var, v, ...): the bio thread stores the "
+        "fsynced offset.",
+        kind="writes",
+        query="bioProcessBackgroundJobs@src/bio.c",
+        proof=(
+            Line("src/bio.c", 261, "void *bioProcessBackgroundJobs(void *arg) {"),
+            Line("src/bio.c", 333, "atomicSet(server.fsynced_reploff_pending, job->fd_args.offset);"),
+            Line(
+                "src/atomicvar.h",
+                110,
+                "#define atomicSet(var,value) atomic_store_explicit(&var,value,memory_order_relaxed)",
+            ),
+        ),
+        must=("redisServer::fsynced_reploff_pending",),
+    ),
+    Fact(
+        id="redis-atomicGet-is-a-read-not-a-write",
+        why="atomicGet(var, dst) expands to dst = atomic_load_explicit(&var, ...): it reads var. "
+        "backgroundRewriteDoneHandler (lines 3847-4027) only loads fsynced_reploff_pending; grep finds no "
+        "atomicSet of it in that range.",
+        kind="reads",
+        query="backgroundRewriteDoneHandler@src/aof.c",
+        proof=(
+            Line("src/aof.c", 3847, "void backgroundRewriteDoneHandler(int exitcode, int bysignal) {"),
+            Line("src/aof.c", 3973, "atomicGet(server.fsynced_reploff_pending, fsynced_reploff_pending);"),
+            Line("src/aof.c", 4027, "}"),
+            Line("src/atomicvar.h", 108, "dstvar = atomic_load_explicit(&var,memory_order_relaxed);"),
+        ),
+        must=("redisServer::fsynced_reploff_pending",),
+    ),
+    Fact(
+        id="redis-atomicGet-does-not-write",
+        why="The same load must not be reported as a write (that would be a false alarm).",
+        kind="writes",
+        query="backgroundRewriteDoneHandler@src/aof.c",
+        proof=(
+            Line("src/aof.c", 3973, "atomicGet(server.fsynced_reploff_pending, fsynced_reploff_pending);"),
+        ),
+        must_not=("redisServer::fsynced_reploff_pending",),
     ),
     # ------------------------------------------------------------ code the build does not compile
     Fact(
