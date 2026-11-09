@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass, field
 
 from aerotrace.analysis import symbols
@@ -263,6 +264,27 @@ def _names(items: list[str], n: int = 3) -> str:
     return ", ".join(items[:n]) + (", ..." if len(items) > n else "")
 
 
+def outside_build(files: list[str]) -> str:
+    """One sentence about repo sources compile_commands.json does not list, grouped by top folder, so a
+    repo with many bundled tests and examples gets one short line instead of a wall of paths."""
+    n = len(files)
+    head = f"{n:,} C/C++ source file{'s are' if n != 1 else ' is'} not in compile_commands.json, so "
+    head += f"{'they were' if n != 1 else 'it was'} not analysed"
+    if n <= 3:
+        return f"{head} ({', '.join(files)})."
+    by_top = Counter(f.split("/", 1)[0] + "/" if "/" in f else "(top folder)" for f in files)
+    top = sorted(by_top.items(), key=lambda kv: (-kv[1], kv[0]))
+    shown = ", ".join(
+        f"{c:,} under {d}" if d != "(top folder)" else f"{c:,} in the top folder" for d, c in top[:3]
+    )
+    if len(top) > 3:
+        shown += f", {n - sum(c for _, c in top[:3]):,} in {len(top) - 3} other folder{'s' if len(top) > 4 else ''}"
+    return (
+        f"{head} ({shown}; e.g. {_names(sorted(files), 2)}). These are often bundled libraries, tests or "
+        "examples the build does not compile; if your build does compile some of them, their links are missing."
+    )
+
+
 def flag_limits(meta: dict[str, str]) -> list[str]:
     """Plain-English limits that come from the compile flags (see `aerotrace doctor` for details)."""
     notes: list[str] = []
@@ -274,10 +296,7 @@ def flag_limits(meta: dict[str, str]) -> list[str]:
         )
     outside = json.loads(meta.get("not_in_compdb") or "[]")
     if outside:
-        notes.append(
-            f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
-            f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
-        )
+        notes.append(outside_build(outside))
     missing = json.loads(meta.get("missing_headers") or "[]")
     if missing:
         shown = ", ".join(f"{h} ({n} file{'s' if n != 1 else ''})" for h, n in missing[:3])

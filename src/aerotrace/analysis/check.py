@@ -473,8 +473,9 @@ class _Run:
                 if row is not None:
                     self.add(Node(row["id"], a.in_variable, row["kind"], a.file, row["line"], status, level,
                                   "exact", why, 1, fn.id, fn.qualified_name, [a.line], "reads"))  # fmt: skip
+        up = {h.fn.id: h for h in si.upstream}
         for h in si.upstream:
-            self._hit(h, f"calls {{via}}, which calls {fn.name}")
+            self._hit(h, f"calls {{via}}, which calls {fn.name}", up, (fn.id, fn.qualified_name))
         for b in si.blind_spots:
             if not b.startswith("Stopped at depth"):  # one depth line for the whole answer (the diff's)
                 self.blind(b, fn.id)
@@ -717,13 +718,14 @@ class _Run:
 
     def walk_hits(self) -> None:
         d = self.res.diff
+        by_id = {h.fn.id: h for h in d.affected}
         for h in d.affected:
             cur = self.res.nodes.get(h.fn.id)
             if cur is not None and h.confidence != "calls_removed":
                 cur.others += 1  # a signature or data effect above already says more about this one
                 continue
             if h.distance > 1:
-                self._hit(h, "calls {via}")  # further up: `via` is the closer caller, whatever the first link
+                self._hit(h, "calls {via}", by_id)  # further up: `via` is the closer caller
             elif h.confidence == "calls_removed":
                 self.fn_node(h.fn, "breaks", EXACT, h.confidence, f"still calls {h.via}, which this change "
                              "removes", h.distance, None, h.via, h.lines)  # fmt: skip
@@ -736,15 +738,47 @@ class _Run:
                 self.fn_node(h.fn, "affected", PROBABLE, h.confidence, f"reads data that {h.via} writes",
                              h.distance, None, h.via, h.lines, "reads")  # fmt: skip
             else:
-                self._hit(h, "calls {via}")
+                self._hit(h, "calls {via}", by_id)
         self.res.stopped_early |= d.truncated
 
-    def _hit(self, h: graph.Hit, words: str) -> None:
+    def _hit(
+        self, h: graph.Hit, words: str, by_id: dict[str, graph.Hit], end: tuple[str, str] | None = None
+    ) -> None:
         level = LINK_LEVEL.get(h.confidence, PROBABLE)
         why = words.format(via=h.via or "?")
         if level != EXACT:
-            why += f" ({graph.CONFIDENCE_MEANING.get(h.confidence, h.confidence)})"
+            meaning = graph.CONFIDENCE_MEANING.get(h.confidence, h.confidence)
+            weak = self._weak_link(h, by_id, end)
+            why += f" (the link {weak[0]} -> {weak[1]} is {meaning})" if weak else f" ({meaning})"
         self.fn_node(h.fn, "affected", level, h.confidence, why, h.distance, None, h.via, h.lines)
+
+    def _weak_link(
+        self, h: graph.Hit, by_id: dict[str, graph.Hit], end: tuple[str, str] | None
+    ) -> tuple[str, str] | None:
+        """(caller, callee) of the first link on the path from `h` down that carries the path's weak label,
+        so the answer names that exact link. `end` is the walk's start when the hits closest to it are not
+        in `by_id`. None when the link is not a call edge (data, a seed, a label)."""
+        steps: list[tuple[str, str, str, str]] = []  # (caller id, caller, callee id, callee)
+        cur: graph.Hit | None = h
+        seen: set[str] = set()
+        while cur is not None and cur.via_id and cur.via and cur.fn.id not in seen:
+            seen.add(cur.fn.id)
+            steps.append((cur.fn.id, cur.fn.qualified_name, cur.via_id, cur.via))
+            nxt = by_id.get(cur.via_id)
+            if nxt is None and end is not None and cur.via_id != end[0]:
+                steps.append((cur.via_id, cur.via, end[0], end[1]))
+            cur = nxt
+        for src, src_name, dst, dst_name in steps:
+            rows = self.conn.execute(
+                "SELECT DISTINCT confidence FROM edges WHERE kind = 'calls' AND src = ? AND dst = ?",
+                (src, dst),
+            ).fetchall()
+            labels = sorted((r[0] for r in rows), key=graph.CONFIDENCE_ORDER.index)
+            if not labels:
+                return None
+            if labels[0] == h.confidence:  # the strongest link between the two is the weak one
+                return src_name, dst_name
+        return None
 
 
 def _file_pairs(

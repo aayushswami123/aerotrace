@@ -18,6 +18,10 @@ extern int max_clients;
 extern struct conn g_conn;
 
 typedef int (*handler_fn)(int);
+typedef long (*cmd_fn)(long);
+long cmd_check_len(long n);
+long cmd_append(long v);
+long run_cmd(int i, long v);
 
 struct msg {
     union {
