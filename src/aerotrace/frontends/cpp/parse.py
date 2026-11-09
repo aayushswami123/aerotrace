@@ -1187,14 +1187,103 @@ def _collect_unit(
 # ---------------------------------------------------------------- outline of one file version
 
 
+def _norm(text: str) -> str:
+    return " ".join(text.split())
+
+
+def _digest(text: str) -> str:
+    return hashlib.sha256(_norm(text).encode("utf-8", "surrogateescape")).hexdigest()[:16]
+
+
+def _outline_function(c: Cursor, data: bytes) -> dict:
+    """What a definition or prototype looks like: its signature, parameters and head text."""
+    sig = c.displayname
+    if c.kind not in (K.CONSTRUCTOR, K.DESTRUCTOR, K.CONVERSION_FUNCTION):
+        sig = f"{c.result_type.spelling} {sig}"
+    if c.kind in (K.CXX_METHOD, K.CONVERSION_FUNCTION) and c.is_const_method():
+        sig += " const"
+    params = [
+        {
+            "name": a.spelling,
+            "type": _norm(a.type.spelling),
+            "canonical": _norm(a.type.get_canonical().spelling),
+            "has_default": any(ch.kind.is_expression() for ch in a.get_children()),
+        }
+        for a in (c.get_arguments() or [])
+    ]
+    proto = c.type.kind == TypeKind.FUNCTIONPROTO
+    start = c.extent.start.offset
+    body = next((ch for ch in c.get_children() if ch.kind == K.COMPOUND_STMT), None)
+    end = body.extent.start.offset if body is not None else c.extent.end.offset
+    head = data[start:end].decode("utf-8", "surrogateescape") if 0 <= start <= end <= len(data) else ""
+    for i, prm in enumerate(params):
+        if prm["name"]:
+            head = re.sub(rf"\b{re.escape(prm['name'])}\b", f"${i}", head)
+    return {
+        "usr": c.get_usr(),
+        "name": c.spelling,
+        "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
+        "line_start": c.extent.start.line,
+        "line_end": c.extent.end.line,
+        "head_end": body.extent.start.line if body is not None else c.extent.end.line,
+        "signature": sig,
+        "returns": _norm(c.result_type.spelling),
+        "returns_canonical": _norm(c.result_type.get_canonical().spelling),
+        "params": params,
+        "variadic": bool(proto and c.type.is_function_variadic()),
+        "has_prototype": proto or c.kind != K.FUNCTION_DECL,
+        "static": c.storage_class == StorageClass.STATIC,
+        "head": _digest(head),
+    }
+
+
+def _outline_variable(c: Cursor, kind: str, position: int, data: bytes) -> dict:
+    """A field or global: its type, and hashes of its declaration text and of its initializer."""
+    start, end = c.extent.start.offset, c.extent.end.offset
+    init_at = None
+    if c.kind == K.VAR_DECL:
+        exprs = [ch for ch in c.get_children() if ch.kind.is_expression()]
+        if exprs:
+            at = exprs[-1].extent.start.offset
+            name_at = c.location.offset
+            if start <= name_at <= at <= end and b"=" in data[name_at:at]:
+                init_at = at
+    ok = 0 <= start <= end <= len(data)
+    decl = data[start : init_at if init_at is not None else end] if ok else b""
+    init = data[init_at:end] if ok and init_at is not None else b""
+    return {
+        "usr": c.get_usr(),
+        "name": c.spelling,
+        "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
+        "container": _enclosing_class(c),
+        "kind": kind,
+        "type": _norm(c.type.spelling),
+        "canonical": _norm(c.type.get_canonical().spelling),
+        "line": c.location.line,
+        "line_end": c.extent.end.line,
+        "position": position,
+        "decl": _digest(decl.decode("utf-8", "surrogateescape")),
+        "init": _digest(init.decode("utf-8", "surrogateescape")) if init_at is not None else "",
+    }
+
+
 def function_outline(path: str, content: str, args: list[str], directory: str) -> dict | None:
-    """What one file declares, as `content` gives it (an older version from git, or the file on disk).
-    Returns {"functions": definitions [{usr, name, qualified_name, line_start, line_end}],
-    "declarations": prototypes, same fields, "variables": globals (extern too) and fields
-    [{qualified_name, line}], "errors": count}, or None when libclang could not load it.
-    `path` is the file's absolute path."""
+    """What one file declares, as `content` gives it (an older version, the file on disk, or a patched
+    version in memory). Nothing is stored. Returns:
+
+    - "functions": definitions, "declarations": prototypes. Each {usr, name, qualified_name, line_start,
+      line_end, head_end, signature, returns, params [{name, type, canonical, has_default}], variadic,
+      has_prototype, static, head (hash of the head text, parameter names left out)}.
+    - "variables": globals (extern too) and fields: {usr, name, qualified_name, container, kind, type,
+      canonical, line, line_end, position (in its record), decl (hash of the declaration text), init
+      (hash of the initializer, "" when there is none)}.
+    - "errors": count; "diagnostics": errors in this file [{line, text}]; "protos": prototypes seen in
+      other files of the translation unit, {qualified_name: [signature, ...]}.
+
+    None when libclang could not load it. `path` is the file's absolute path."""
     old_cwd = os.getcwd()
     os.chdir(directory if os.path.isdir(directory) else os.path.dirname(path) or ".")
+    data = content.encode("utf-8", "surrogateescape")
     try:
         try:
             tu = _get_index().parse(
@@ -1207,26 +1296,37 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
             return None
         target = os.path.realpath(path)
         out: dict = {"functions": [], "declarations": [], "variables": []}
+        protos: dict[str, set[str]] = {}
+        real: dict[str, bool] = {}
+
+        def is_target(name: str) -> bool:
+            if name not in real:
+                real[name] = os.path.realpath(name) == target
+            return real[name]
 
         def visit(cursor: Cursor) -> None:
+            position = 0
             for c in cursor.get_children():
                 f = c.location.file
-                if f is None or os.path.realpath(f.name) != target:
+                if f is None:
+                    continue
+                if c.kind == K.FIELD_DECL:
+                    position += 1
+                if not is_target(f.name):
+                    if c.kind in FUNC_KINDS and not c.is_definition() and c.spelling:
+                        qn = "::".join([*_scope_parts(c), c.spelling])
+                        protos.setdefault(qn, set()).add(_outline_function(c, b"")["signature"])
+                    elif c.kind in DESCEND_KINDS:
+                        visit(c)
                     continue
                 if c.kind in FUNC_KINDS:
                     out["functions" if c.is_definition() else "declarations"].append(
-                        {
-                            "usr": c.get_usr(),
-                            "name": c.spelling,
-                            "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
-                            "line_start": c.extent.start.line,
-                            "line_end": c.extent.end.line,
-                        }
+                        _outline_function(c, data)
                     )
                 elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):
                     if c.spelling:
-                        names = [*_scope_parts(c), c.spelling]
-                        out["variables"].append({"qualified_name": "::".join(names), "line": c.location.line})
+                        kind = "field" if c.kind == K.FIELD_DECL else "global"
+                        out["variables"].append(_outline_variable(c, kind, position - 1, data))
                 elif c.kind in DESCEND_KINDS:
                     visit(c)
 
@@ -1234,7 +1334,17 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
         for key in ("functions", "declarations"):
             out[key].sort(key=lambda d: (d["line_start"], d["usr"]))
         out["variables"].sort(key=lambda d: (d["line"], d["qualified_name"]))
-        out["errors"] = sum(1 for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error)
+        errors = [d for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error]
+        out["errors"] = len(errors)
+        mine = sorted(
+            {
+                (d.location.line, d.spelling)
+                for d in errors
+                if d.location.file and is_target(d.location.file.name)
+            }
+        )
+        out["diagnostics"] = [{"line": n, "text": t} for n, t in mine]
+        out["protos"] = {k: sorted(v) for k, v in sorted(protos.items())}
         return out
     finally:
         os.chdir(old_cwd)
