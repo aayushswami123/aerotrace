@@ -7,6 +7,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Claude Code edit check: `aerotrace install --client claude` now also adds a `PreToolUse` hook (in the
+  repo's `.claude/settings.json`, other settings kept). Before Claude edits a C/C++ file, the edit is
+  checked as a patch: exact breaks give the full list (functions, data, tests to run), probable breaks or
+  10+ affected give a short warning, anything else is silent. It warns only, unless
+  `.aerotrace/rules.toml` has a `block` rule. It never blocks on its own failure (missing or stale index,
+  errors, over 5 s). `aerotrace hook on|off|status`.
 - MCP server: while it builds or rebuilds the index it sends progress (files done out of total). A build
   that takes more than 20 s keeps going in the background and the agent is told "still building: N of M
   files done, ask again shortly". A failed build says why (no compile_commands.json in `--build-dir`,
