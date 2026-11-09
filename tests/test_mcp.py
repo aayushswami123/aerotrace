@@ -30,6 +30,7 @@ async def test_server_lists_its_tools(repo_factory):
     assert sorted(t.name for t in tools.tools) == [
         "callees",
         "callers",
+        "data_users",
         "diff_impact",
         "find",
         "impact",
@@ -209,3 +210,16 @@ async def test_signature_impact_is_short_by_default_and_can_show_all(repo_factor
     assert "more call sites" not in full and full.count("  - many  src/a_first.c:") == 20
     assert zero.is_error and "limit must be 1 or more." in text_of(zero)
     assert both.is_error and "not both" in text_of(both)
+
+
+@pytest.mark.anyio
+async def test_data_users_tool(repo_factory):
+    async with Client(create_server(repo_factory("c_fields"))) as client:
+        out = text_of(await client.call_tool("data_users", {"name": "conn::count", "limit": 2}))
+        many = text_of(await client.call_tool("data_users", {"name": "count"}))
+        value = text_of(await client.call_tool("data_users", {"name": "conn::count", "from_function": "put"}))
+    assert "Summary: 7 functions use it in 1 file: 5 write it, 2 only read it (7 exact)." in out
+    assert "... and 5 more functions (call again with show_all=true, or a bigger limit)." in out
+    assert "Limits of this answer:" in out
+    assert "matches 5 variables" in many
+    assert "[probable]" in value and "maybe of another object" in value

@@ -16,7 +16,7 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from aerotrace import __version__
-from aerotrace.analysis import diff, graph, render, signature, symbols
+from aerotrace.analysis import data, diff, graph, render, render_data, signature, symbols
 from aerotrace.index import store
 from aerotrace.index.build import fresh_index
 from aerotrace.index.history import Outliner
@@ -35,6 +35,9 @@ Use it BEFORE you edit C or C++ code:
   deleted functions, changed globals and fields, and everything upstream of them.
 - Before changing a function's parameters or return type, call `signature_impact`: it lists every call
   site and how each one uses the return value.
+- Before renaming, removing or retyping a struct field or a global, call `data_users`: every function that
+  reads or writes it, initializers that set it, code that still uses a removed field, and where its address
+  goes. Fields are tracked per struct type, not per object.
 - Use `callers` / `callees` to follow the code, and `find` when you are not sure of a name.
 - Labels: no label = a direct call; [virtual] = may land on this override; [via_pointer] = matched by
   function-pointer type; [ambiguous] = several functions share this name; [data] = reads data the changed
@@ -129,6 +132,36 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
                 return _with_note(msg, note)
             res = signature.signature_impact(conn, fn, depth)
             return _with_note(render.signature_text(res, limit, show_all, render.MCP_MORE), note)
+
+    @server.tool()
+    def data_users(
+        name: str,
+        depth: int | None = None,
+        from_function: str = "",
+        limit: int | None = None,
+        show_all: bool = False,
+    ) -> str:
+        """Before renaming, removing or retyping a struct field or a global: every function that reads or
+        writes it (with lines), initializers that set it ({.f = x}), code that still uses a removed field,
+        globals of its type that may set it by position, and where its address goes (unknown). For a global,
+        also its users' callers (depth, default 2; fields 0). `name` is Struct::field, global, name@file or
+        global.field. With `from_function`, only what reads the value that function writes (a field's readers
+        are probable: fields are tracked per struct type, not per object). A summary comes first; lists are
+        short by default (about 15) and say how many were left out: pass `limit`, or `show_all=true`."""
+        if limit is not None and limit < 1:
+            return "limit must be 1 or more."
+        conn, note = state.open()
+        with closing(conn):
+            found = data.find_variables(conn, name) or data.gone_fields(conn, name)
+            if len(found) != 1:
+                return _with_note(render_data.candidates_text(name, found), note)
+            writer = None
+            if from_function:
+                writer, msg = resolve(conn, from_function)
+                if writer is None:
+                    return _with_note(msg, note)
+            res = data.data_users_of(conn, found[0], depth, writer.id if writer else None)
+            return _with_note(render_data.data_text(res, limit, show_all, render_data.MCP_MORE), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:
