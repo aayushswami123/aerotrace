@@ -7,6 +7,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- MCP server (`aerotrace mcp`) with `impact`, `callers`, `callees`, `find` and `index_status` tools.
+  It builds the index on the first question and re-indexes changed files before each answer.
+- `aerotrace install --client claude|cursor|codex` adds the server to Claude Code (`.mcp.json`),
+  Cursor (`.cursor/mcp.json`) or Codex (`~/.codex/config.toml`, or `$CODEX_HOME`), keeping other settings.
+
 - `aerotrace callers`, `callees` and `impact` (blast radius): transitive, with a depth limit, nearest first,
   capped output, and a confidence label on every result. Impact also lists functions that read data the
   changed function writes, and ends with the limits of the answer.
