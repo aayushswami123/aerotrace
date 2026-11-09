@@ -77,6 +77,27 @@ def _overridden(cursor: Cursor) -> list[Cursor]:
     return out
 
 
+def _overloaded_decls(cursor: Cursor) -> list[Cursor]:
+    """The functions an overload set (an OVERLOADED_DECL_REF) names (clang_getOverloadedDecl)."""
+    lib = cindex.conf.lib
+    lib.clang_getNumOverloadedDecls.argtypes = [Cursor]
+    lib.clang_getNumOverloadedDecls.restype = ctypes.c_uint
+    lib.clang_getOverloadedDecl.argtypes = [Cursor, ctypes.c_uint]
+    lib.clang_getOverloadedDecl.restype = Cursor
+    out = []
+    for i in range(lib.clang_getNumOverloadedDecls(cursor)):
+        d = lib.clang_getOverloadedDecl(cursor, i)
+        d._tu = cursor._tu
+        out.append(d)
+    return out
+
+
+def _starts_together(a: Cursor, b: Cursor) -> bool:
+    """True when `b` (a child of `a`) starts where `a` starts: a call starts with the function it calls,
+    while `T(f)` or `T x(f, 1)` in a template starts with the type."""
+    return a.extent.start == b.extent.start
+
+
 def _template_of(cursor: Cursor) -> Cursor | None:
     try:
         t = cindex.conf.lib.clang_getSpecializedCursorTemplate(cursor)
@@ -195,6 +216,16 @@ def _variable_kind(cursor: Cursor) -> str | None:
     return None
 
 
+def _is_deref_or_addr(c: Cursor) -> bool:
+    """`*e` or `&e`."""
+    if c.kind != K.UNARY_OPERATOR:
+        return False
+    kind = unary_kind(c)
+    if kind is not None:
+        return kind in (UNARY_DEREF, UNARY_ADDR_OF)
+    return next((t.spelling for t in c.get_tokens()), "") in ("*", "&")
+
+
 def _strip_wrappers(stack: list[list], j: int) -> int:
     """Index of the first real parent above position j, skipping implicit casts and parentheses."""
     while j >= 0 and stack[j][0].kind in WRAPPER_KINDS:
@@ -215,7 +246,9 @@ class Collector:
         self.functions: dict[tuple[str, str], dict] = {}  # (usr, file) -> function record
         self.variables: dict[tuple[str, str], dict] = {}  # (usr, file) -> variable record
         self.class_bases: dict[str, list[str]] = {}
-        self.calls: set[tuple] = set()  # (caller_usr, caller_file, callee_usr, line, dispatch, callee_name)
+        # (caller_usr, caller_file, callee_usr, line, dispatch, callee_name, overload): overload = one of several
+        # functions with that name, because no overload matches a call that does not compile
+        self.calls: set[tuple] = set()
         self.accesses: set[tuple] = set()  # (fn_usr, fn_file, var_usr, "reads"/"writes", line)
         self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line, function type called or "")
         self.overrides: set[tuple] = set()  # (usr, base_usr)
@@ -378,7 +411,7 @@ class Collector:
             self.on_ref(c, stack, idx, usr, rel)
         elif k == K.MEMBER_REF and len(stack) == 1:
             self.on_ref(c, stack, idx, usr, rel, force_write=True)  # constructor initializer: `: x_(0)`
-        elif k == K.UNEXPOSED_EXPR and self.broken_call_target(c) is not None:
+        elif k == K.UNEXPOSED_EXPR and self.broken_callee(c) is not None:
             self.on_broken_call(c, usr, rel, stack, idx)
         elif k == K.MEMBER_REF and stack[-1][0].kind == K.INIT_LIST_EXPR:
             self.on_ref(c, stack, idx, usr, rel, force_write=True)  # designated initializer: {.count = 1}
@@ -390,10 +423,10 @@ class Collector:
         """True when the DECL_REF_EXPR at child `idx` of stack[-1] is the function named first in a call
         that does not compile."""
         j, pos = len(stack) - 1, idx
-        while j >= 0 and stack[j][0].kind in WRAPPER_KINDS:
+        while j >= 0 and (stack[j][0].kind in WRAPPER_KINDS or _is_deref_or_addr(stack[j][0])):
             if pos != 0:
                 return False
-            if Collector.broken_call_target(stack[j][0]) is not None:
+            if stack[j][0].kind == K.UNEXPOSED_EXPR and Collector.broken_callee(stack[j][0]) is not None:
                 return True
             pos = stack[j - 1][1] - 1 if j > 0 else 0
             j -= 1
@@ -412,34 +445,106 @@ class Collector:
         return j >= 0 and stack[j][0].kind == K.CALL_EXPR and pos == 0
 
     @staticmethod
-    def broken_call_target(c: Cursor) -> Cursor | None:
-        """The function named by a call that does not compile (wrong number or type of arguments). libclang
-        keeps such a call as an unnamed expression of dependent type: the function first, then the
-        arguments. These are exactly the calls a signature change breaks, so they must not be lost."""
-        if c.kind != K.UNEXPOSED_EXPR or c.type.spelling != "<dependent type>":
+    def broken_callee(c: Cursor) -> Cursor | None:
+        """The callee expression of a call that does not compile (wrong number or type of arguments), or None
+        when `c` is not such a call. These are exactly the calls a signature change breaks, so they must not
+        be lost. libclang keeps such a call as an unnamed expression: the callee first, then the arguments.
+        - C, and C++ qualified names (`ns::f`, `K::sm`): the expression has dependent type and the callee is
+          the function itself, `(f)`, `(*f)`, `&f`, or a function pointer (`p`, `(c ? f : g)`).
+        - C++: the expression keeps the return type. The callee is an overload set (`f(1)`, even when only
+          one function has that name) or a member (`k.m(1)`, `k->m(1)`).
+        Constructor calls (`K k(1, 2)`, `new K(1, 2)`) keep no reference to the class or the constructor,
+        so they are not found here (#21)."""
+        if c.kind != K.UNEXPOSED_EXPR:
             return None
         first = next(c.get_children(), None)
-        while first is not None and first.kind in WRAPPER_KINDS and len(list(first.get_children())) == 1:
-            first = next(first.get_children(), None)
-        if first is None or first.kind != K.DECL_REF_EXPR:
+        if first is None:
             return None
-        ref = first.referenced
-        return ref if ref is not None and ref.kind in FUNC_KINDS else None
+        callee = first
+        # skip (f), *f, &f and the implicit function-to-pointer conversion, but never step into another call
+        while (
+            callee.kind == K.PAREN_EXPR
+            or _is_deref_or_addr(callee)
+            or (callee.kind == K.UNEXPOSED_EXPR and function_type(callee.type))
+        ):
+            kids = list(callee.get_children())
+            if len(kids) != 1:
+                break
+            callee = kids[0]
+        ctype = callee.type.spelling
+        if callee.kind == K.DECL_REF_EXPR and ctype == "<overloaded function type>":
+            pass  # C++: no function of that name matches the arguments
+        elif callee.kind == K.MEMBER_REF_EXPR and ctype == "<bound member function type>":
+            pass  # C++: a method, `k.m(1)`
+        elif c.type.spelling != "<dependent type>":
+            return None
+        elif (
+            callee.kind == K.DECL_REF_EXPR
+            and callee.referenced is not None
+            and callee.referenced.kind in FUNC_KINDS
+        ):
+            pass
+        elif not function_type(callee.type):
+            return None  # not a call: the first part is no function and no function pointer
+        # `T(f)` and `T x(f, 1)` in a template start with the type, a call starts with what it calls
+        return callee if _starts_together(c, first) else None
+
+    @staticmethod
+    def callee_functions(callee: Cursor) -> list[Cursor] | None:
+        """The functions a callee expression names (several for an overload set), or None when it is a
+        function pointer."""
+        if callee.kind not in (K.DECL_REF_EXPR, K.MEMBER_REF_EXPR):
+            return None
+        ref = callee.referenced
+        if ref is None:
+            return None
+        if ref.kind in FUNC_KINDS:
+            return [ref]
+        if ref.kind == K.OVERLOADED_DECL_REF:
+            return [d for d in _overloaded_decls(ref) if d.kind in FUNC_KINDS]
+        return None
 
     def on_broken_call(self, c: Cursor, usr: str, rel: str, stack: list[list], idx: int) -> None:
-        ref = self.canonical(self.broken_call_target(c))  # type: ignore[arg-type]
-        target = ref.get_usr()
-        if not target or self.is_builtin(ref) or self.cursor_rel(ref) is None:
+        callee = self.broken_callee(c)
+        if callee is None:
             return
-        line = c.location.line
+        line, col = c.location.line, c.location.column
         use, detail = self.result_use(stack, idx)
         n_args = len(list(c.get_children())) - 1
-        detail = "does not compile: the arguments do not match" + (f"; {detail}" if detail else "")
-        # a real call link, so callers/impact/diff still list it after a signature change (#14)
-        self.calls.add((usr, rel, target, line, False, ref.spelling))
-        self.call_sites.add(
-            (usr, rel, target, ref.spelling, line, c.location.column, n_args, use, detail, "")
-        )
+        why = "the arguments do not match"
+        refs = self.callee_functions(callee)
+        if refs is None:
+            # a call through a function pointer: still a pointer call, so it is not lost when the type changes
+            ptype = function_type(callee.type)
+            detail = f"does not compile: {why}" + (f"; {detail}" if detail else "")
+            self.pointer_calls.add((usr, rel, line, ptype))
+            self.call_sites.add((usr, rel, "", "", line, col, n_args, use, detail, ptype))
+            return
+        by_usr: dict[str, Cursor] = {}
+        for r in refs:
+            r = self.canonical(r)
+            if r.get_usr():
+                by_usr.setdefault(r.get_usr(), r)
+        if not by_usr:
+            return
+        overload = len(by_usr) > 1
+        if overload:
+            name = next(iter(by_usr.values())).spelling
+            why = f"no overload matches the arguments; it may be meant for any of the {len(by_usr)} functions named {name}"
+        detail = f"does not compile: {why}" + (f"; {detail}" if detail else "")
+        for target, ref in sorted(by_usr.items()):
+            if self.is_builtin(ref) or (self.cursor_rel(ref) is None and not self.might_be_defined_here(ref)):
+                key = (usr, rel)
+                self.external_calls[key] = self.external_calls.get(key, 0) + 1
+                continue
+            dispatch = (
+                ref.kind in (K.CXX_METHOD, K.DESTRUCTOR)
+                and bool(ref.is_virtual_method())
+                and self.dispatches_through(callee)
+            )
+            # a real call link, so callers/impact/diff still list it after a signature change (#14)
+            self.calls.add((usr, rel, target, line, dispatch, ref.spelling, overload))
+            self.call_sites.add((usr, rel, target, ref.spelling, line, col, n_args, use, detail, ""))
 
     def mark_address_taken(
         self, ref: Cursor, where: tuple[str, str, str] | None = None, at: Cursor | None = None, how: str = ""
@@ -482,6 +587,20 @@ class Collector:
             ref = t
         return ref
 
+    @staticmethod
+    def in_template(stack: list[list]) -> bool:
+        """True inside a template or a lambda (which may be generic), where dependent types are normal."""
+        if any(e[0].kind == K.LAMBDA_EXPR for e in stack):
+            return True
+        p: Cursor | None = stack[0][0]
+        for _ in range(50):
+            if p is None or p.kind == K.TRANSLATION_UNIT:
+                return False
+            if p.kind in (K.FUNCTION_TEMPLATE, K.CLASS_TEMPLATE, K.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION):
+                return True
+            p = p.semantic_parent
+        return True
+
     def on_call(self, c: Cursor, usr: str, rel: str, stack: list[list] | None = None, idx: int = 0) -> None:
         ref = c.referenced
         line = c.location.line
@@ -492,6 +611,9 @@ class Collector:
                 n_args = len(list(c.get_arguments()))
             except Exception:
                 n_args = -1
+            if c.type.spelling == "<dependent type>" and not self.in_template(stack):
+                # outside a template, only an error gives a call a dependent type: two(two(1), 2, 3)
+                detail = "does not compile: an argument does not match" + (f"; {detail}" if detail else "")
             site = (line, c.location.column, n_args, use, detail)
         if ref is None or ref.kind not in FUNC_KINDS or self.is_std_function(ref):
             # through a pointer, std::function or a dependent name: remember the type that is called
@@ -512,7 +634,7 @@ class Collector:
             self.external_calls[key] = self.external_calls.get(key, 0) + 1
             return
         dispatch = ref.kind in (K.CXX_METHOD, K.DESTRUCTOR) and ref.is_virtual_method() and self.dispatches(c)
-        self.calls.add((usr, rel, target, line, dispatch, ref.spelling))
+        self.calls.add((usr, rel, target, line, dispatch, ref.spelling, False))
         if site:
             self.call_sites.add((usr, rel, target, ref.spelling, *site, ""))
 
@@ -576,6 +698,12 @@ class Collector:
                     return "called", "the result is called as a function"
                 callee = p.referenced.spelling if p.referenced is not None else "a function pointer"
                 return "passed", f"to {callee}() as argument {pos}"
+            if k == K.UNEXPOSED_EXPR and pos > 0:
+                broken = self.broken_callee(p)  # an argument of a call that does not compile
+                if broken is not None:
+                    fns = self.callee_functions(broken)
+                    callee = fns[0].spelling if fns else "a function pointer"
+                    return "passed", f"to {callee}() as argument {pos}"
             if k in (K.IF_STMT, K.WHILE_STMT, K.SWITCH_STMT):
                 return ("checked", "") if pos == 0 else ("ignored", "")
             if k == K.DO_STMT:
@@ -662,7 +790,10 @@ class Collector:
 
     def dispatches(self, call: Cursor) -> bool:
         """True when a virtual method is called through a pointer or reference (not `Base::f()`)."""
-        callee = next(call.get_children(), None)
+        return self.dispatches_through(next(call.get_children(), None))
+
+    def dispatches_through(self, callee: Cursor | None) -> bool:
+        """`dispatches`, given the callee expression (`b->area`)."""
         if callee is None or callee.kind != K.MEMBER_REF_EXPR:
             return False
         toks = [t.spelling for t in callee.get_tokens()]
