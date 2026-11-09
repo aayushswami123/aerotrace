@@ -55,6 +55,16 @@ class RemovedFn:
 
 
 @dataclass
+class AddedFn:
+    """A function only the patched version defines (patch mode): it is not in the index yet."""
+
+    name: str  # qualified name
+    file: str
+    line_start: int  # in the patched version
+    line_end: int
+
+
+@dataclass
 class ChangedVar:
     id: str
     name: str
@@ -81,6 +91,7 @@ class DiffImpact:
     files: int = 0  # code files the diff touches
     changed: list[ChangedFn] | None = None
     removed: list[RemovedFn] | None = None
+    added: list[AddedFn] | None = None  # patch mode: functions the patch adds
     changed_vars: list[ChangedVar] | None = None
     affected: list[Hit] | None = None
     truncated: bool = False
@@ -95,7 +106,7 @@ class DiffImpact:
 
     def __post_init__(self) -> None:
         for name in (
-            "changed", "removed", "changed_vars", "affected", "outside", "not_indexed", "deleted",
+            "changed", "removed", "added", "changed_vars", "affected", "outside", "not_indexed", "deleted",
             "new_files", "mismatched", "unreadable", "blind_spots",
         ):  # fmt: skip
             if getattr(self, name) is None:
@@ -231,12 +242,20 @@ class _Collect:
         return found[0] if len(found) == 1 else None
 
     def explain(
-        self, outline: Outline, lines: set[int], file: str, index_file: str | None, old: bool
+        self,
+        outline: Outline,
+        lines: set[int],
+        file: str,
+        index_file: str | None,
+        old: bool,
+        patched: bool = False,
     ) -> set[int]:
         """Map lines onto an outline of one version of `file`; returns the lines that landed on something.
 
         `old` = the outline is of the old version (git mode), so a function that is not in the index any
-        more was removed. `index_file` is the file's path in the index (None when it was deleted)."""
+        more was removed. `patched` = the outline is of the patched version (patch mode), so a function that
+        is not in the index yet is new. `index_file` is the file's path in the index (None when it was
+        deleted)."""
         used: set[int] = set()
         for f in outline.functions:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
@@ -258,6 +277,8 @@ class _Collect:
                         sorted(callers.values(), key=lambda c: (c.file, c.line_start, c.id)),
                     )
                 )
+            elif patched:
+                used |= inside  # a function the patch adds; listed by `added_in`
         for f in outline.declarations:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
             ids = self._fns_declared(f) if inside else []
@@ -336,7 +357,7 @@ class _Collect:
                 other -= self.explain(old, removed_old, fd.old_path or path, path, old=True)
         # Added lines (patch mode) belong to the patched version: map them onto its outline (#13).
         if mode == "patch" and new is not None and other:
-            other -= self.explain(new, set(other), fd.new_path or path, path, old=False)
+            other -= self.explain(new, set(other), fd.new_path or path, path, old=False, patched=True)
         if mode == "patch" and new is not None and new.functions:
             # A touched function the patched version no longer defines is removed, even when the patch
             # splits its deletion across a neighbour (#44).
@@ -345,6 +366,15 @@ class _Collect:
                 cur = self.changed.get(r["id"])
                 if cur is not None and r["usr"] not in have and r["qualified_name"] not in have:
                     cur[1], cur[2] = False, True
+            # A function only the patched version defines is new (#45).
+            added_lines = {n for n, _ in fd.added}
+            for f in new.functions:
+                if self._fn_in_file(f, path) is None and any(
+                    f["line_start"] <= n <= f["line_end"] for n in added_lines
+                ):
+                    res.added.append(
+                        AddedFn(f["qualified_name"], fd.new_path or path, f["line_start"], f["line_end"])
+                    )
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:
             res.outside.append(Outside(path, out_lines, sorted(other)))
@@ -414,6 +444,7 @@ def analyse(
         key=lambda c: (c.fn.file, c.fn.line_start, c.fn.id),
     )
     res.removed.sort(key=lambda r: (r.file, r.line_start, r.name))
+    res.added.sort(key=lambda a: (a.file, a.line_start, a.name))
     res.changed_vars = sorted(col.vars.values(), key=lambda v: (v.file, v.line, v.id))
 
     starts = [c.fn for c in res.changed]

@@ -337,6 +337,9 @@ def test_patch_replacing_a_function_head_labels_the_old_one_removed(repo):
     text = patch_of(repo, "lib/shared.c", "int likely_positive(int x) {", "int unused(int x) {")
     res = run_patch_mode(repo, text)
     assert [(c.fn.qualified_name, c.state) for c in res.changed] == [("likely_positive", "removed")]
+    # #45: the function the patch adds is listed as new, not as code AeroTrace could not follow
+    assert [(a.name, a.file) for a in res.added] == [("unused", "lib/shared.c")]
+    assert res.outside == []
 
 
 def test_stale_patch_is_skipped_not_mapped_to_wrong_lines(repo):
