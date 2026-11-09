@@ -34,3 +34,40 @@ def test_index_then_status(repo_factory, capsys):
 def test_status_without_index_explains_what_to_do(tmp_path, capsys):
     assert main(["status", "--root", str(tmp_path)]) == 2
     assert "aerotrace index" in capsys.readouterr().err
+
+
+@pytest.fixture
+def indexed(repo_factory):
+    root = repo_factory("c_multi")
+    assert main(["index", "--root", str(root), "--jobs", "1"]) == 0
+    return root
+
+
+def test_impact_prints_callers_data_and_limits(indexed, capsys):
+    capsys.readouterr()
+    assert main(["impact", "add", "--root", str(indexed)]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("Changing add (lib/shared.c:5) may affect")
+    assert "get reads g_total" in out
+    assert "Limits of this answer:" in out
+
+
+def test_callers_json(indexed, capsys):
+    capsys.readouterr()
+    assert main(["callers", "add", "--root", str(indexed), "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["total"] == 5
+    assert data["results"][0]["confidence"] == "exact"
+
+
+def test_ambiguous_name_lists_choices_and_fails(indexed, capsys):
+    capsys.readouterr()
+    assert main(["callees", "main", "--root", str(indexed)]) == 1
+    err = capsys.readouterr().err
+    assert "main@prog_a/main.c" in err and "main@prog_b/main.c" in err
+
+
+def test_find_by_file_and_line(indexed, capsys):
+    capsys.readouterr()
+    assert main(["find", "lib/table.c:11", "--root", str(indexed)]) == 0
+    assert capsys.readouterr().out.startswith("dispatch@lib/table.c")
