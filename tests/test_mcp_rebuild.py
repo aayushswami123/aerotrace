@@ -3,6 +3,7 @@
 import errno
 import json
 import os
+import signal
 import sqlite3
 import subprocess
 import sys
@@ -179,6 +180,32 @@ async def test_cancelled_call_does_not_stop_the_build(repo_factory):
         out = await until_answered(client, "impact", {"symbol": "add"})
     assert "get reads g_total" in out
     assert slow.calls == 1
+
+
+@pytest.mark.anyio
+async def test_note_of_a_finished_build_is_kept_when_the_next_build_runs_long(repo_factory):
+    root = repo_factory("c_multi")
+    second = threading.Event()
+    calls = []
+
+    def build(root, **kw):
+        calls.append(1)
+        if len(calls) == 2:  # the rebuild for the edit below runs long
+            kw["progress"](Progress("parse", 0, 6, 5))
+            assert second.wait(30)
+        report = build_index(root, **{**kw, "isolate": False, "jobs": 1})
+        if len(calls) == 1:  # the user saves an edit while the first build runs
+            shared = root / "lib" / "shared.c"
+            shared.write_text(shared.read_text() + "\nvoid twice(void) {\n    add(2);\n}\n")
+        return report
+
+    async with Client(create_server(root, wait=1.0, build=build)) as client:
+        out = text_of(await client.call_tool("impact", {"symbol": "add"}))
+        second.set()
+    assert out.startswith("(Built the index: ")
+    assert (
+        "\nAeroTrace is still building the index (1 changed file(s): lib/shared.c): 0 of 6 files done." in out
+    )
 
 
 # ---------------------------------------------------------------- never a stale or half-written index
@@ -367,7 +394,7 @@ def _alive(pid: int) -> bool:
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="uses pgrep")
-@pytest.mark.parametrize("how", ["close stdin", "SIGTERM"])
+@pytest.mark.parametrize("how", ["close stdin", "SIGTERM", "Ctrl-C"])
 def test_server_exits_promptly_when_the_client_quits_mid_build(tmp_path, how):
     root = tmp_path / "slow"
     _slow_repo(root)
@@ -376,6 +403,7 @@ def test_server_exits_promptly_when_the_client_quits_mid_build(tmp_path, how):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        start_new_session=True,  # its own process group, like a server started from a terminal
     )
 
     def send(msg: dict) -> None:
@@ -415,6 +443,8 @@ def test_server_exits_promptly_when_the_client_quits_mid_build(tmp_path, how):
         t = time.monotonic()
         if how == "SIGTERM":
             proc.terminate()
+        elif how == "Ctrl-C":  # a terminal sends SIGINT to the whole group, parsers included
+            os.killpg(proc.pid, signal.SIGINT)
         else:
             proc.stdin.close()  # the client quits
         proc.wait(timeout=15)
@@ -423,6 +453,9 @@ def test_server_exits_promptly_when_the_client_quits_mid_build(tmp_path, how):
         if proc.poll() is None:
             proc.kill()
     assert took < 3, f"took {took:.1f} s to exit"
+    err = proc.stderr.read()
+    assert b"KeyboardInterrupt" not in err  # the parsers ignore Ctrl-C
+    assert b"leaked semaphore" not in err
     time.sleep(0.5)
     assert not [p for p in workers if _alive(p)], "parser processes were left running"
     assert not (root / ".aerotrace" / "index.db").exists()  # nothing half-done was written

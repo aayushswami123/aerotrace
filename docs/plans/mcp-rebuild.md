@@ -128,8 +128,11 @@ with `os.replace`; `store.connect` only ever opens `index.db`; cache entries are
 Two processes building at once (say the CLI and the MCP server) each write their own temp file and the last
 complete one wins. A test pins this (see Tests).
 
-**Files edited during a build.** The next call runs `index_plan` again; if a file changed after the parser
-read it, its hash no longer matches and a new build starts. Nothing new is needed.
+**Files edited during a build.** The next call runs `index_plan` again, and a file that changed after the
+parser read it must look changed. (This plan first said "nothing new is needed". That was wrong: the build
+took the hash at parse time but the size and mtime at save time, so an edit in between looked fresh
+forever, issue #43. Fixed in this PR: the parser records size and mtime together with the hash, checked
+against the bytes libclang actually parsed; see "Changes after the PR review".)
 
 ### 3. The threshold: 20 s
 
@@ -347,3 +350,22 @@ server.h = `src/server.h` changed (included by most files).
 - A CLI build (1 parser, no pool, no cache) and an MCP build (8 parsers) of Redis give the same
   `dump_canonical` (126,971 lines, identical).
 - Quitting mid-build (stdin closed or SIGTERM): the server exits in 0.1-0.3 s, parser processes gone.
+
+## Changes after the PR review
+
+- **#43 (bug in earlier code, fixed here as its own commit):** a file edited between parse and save was
+  recorded with its old hash but its new size and mtime, so `changed_files` (which trusts an unchanged size
+  and mtime) never looked at it again: a wrong "safe" answer. Now `parse.file_stamp` takes size, mtime and
+  hash together (stat, hash, stat), and compares the hash with the bytes libclang parsed
+  (`clang_getFileContents`). If they differ, or the file changes while being hashed, it records hash ""
+  and mtime -1, which never match, so the next check re-indexes it. A cache hit takes fresh stamps the same
+  way. A file deleted during the build no longer fails the build. `PARSER_VERSION` is 8 (old cache entries
+  are parsed again once); the index format is unchanged.
+- Parser processes ignore SIGINT (Ctrl-C in a terminal reaches the whole process group; the server ends
+  them itself), and the server releases the pool's semaphores before it exits on a signal: no tracebacks,
+  no "leaked semaphore" warning. Tested with SIGINT to the process group.
+- A note is no longer lost: if a call finishes one build and the next build runs past the wait, the answer
+  is the first build's note followed by the "still building" text. Whether a note was shown is read and
+  written under the lock.
+- Left as is: the save phase (merge and write, about 1 s on Redis) does not check the stop request. Exit
+  waits for it (at most 5 s after a signal); only a temp file can be left behind (#36).

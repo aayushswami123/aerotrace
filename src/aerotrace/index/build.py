@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import signal
 import sqlite3
 import threading
 from collections import Counter
@@ -138,6 +139,9 @@ def _cache_save(path: Path, key: str, result: dict) -> None:
 
 
 def _init_worker(choice: libclang.LibclangChoice) -> None:
+    # Ctrl-C in a terminal reaches the whole process group; the parent ends the parsers itself, so they
+    # ignore it (no tracebacks from every parser).
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     libclang.configure(choice)
 
 

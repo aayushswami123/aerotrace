@@ -237,7 +237,6 @@ class IndexState:
                 stop=self.stop,
             )
             b.note = b.plan.note(report)
-            self._last = b
             log.warning("index built in %.0f s", time.monotonic() - started)
         except BaseException as e:  # every failure must reach the waiting calls
             b.error = e
@@ -250,7 +249,17 @@ class IndexState:
             with self._lock:
                 self._current = None
                 self._generation += 1
+                if b.error is None:
+                    self._last = b
             b.finished.set()
+
+    def _take_note(self, b: Build | None) -> str:
+        """The build's note, the first time any answer asks for it ("" after that)."""
+        with self._lock:
+            if b is None or b.shown:
+                return ""
+            b.shown = True
+            return b.note
 
     def shutdown(self, timeout: float = 10.0) -> None:
         """Stop a running build (its parser processes end at once) and wait a little for it."""
@@ -286,10 +295,10 @@ class IndexState:
                 except Exception as e:
                     raise ToolError(failure_text(e, self.root)) from e
                 if plan is None or _covered(plan, last):
-                    done = last or self._last
-                    if done is not None and not done.shown:  # every call that waited timed out
-                        done.shown = True
-                        note = note or done.note
+                    if last is None:  # a build nobody saw finish (every waiting call timed out)
+                        with self._lock:
+                            unseen = self._last
+                        note = self._take_note(unseen)
                     return None, note
                 if builds >= MAX_BUILDS_PER_CALL:
                     return None, (
@@ -314,8 +323,7 @@ class IndexState:
                 await anyio.sleep(min(POLL_SECONDS, deadline - now))
             if b.error is not None:
                 raise ToolError(b.failure) from None
-            note, last, builds = b.note or note, b, builds + 1
-            b.shown = True
+            note, last, builds = self._take_note(b) or note, b, builds + 1
 
 
 def _covered(plan: RefreshPlan, last: Build | None) -> bool:
@@ -365,8 +373,8 @@ def _create(
         wait_if_busy: bool = True,
     ) -> str:
         busy, note = await state.ready(ctx, want, wait_if_busy=wait_if_busy)
-        if busy is not None:
-            return busy
+        if busy is not None:  # keep the note of a build that did finish during this call
+            return _with_note(busy, note)
 
         def run() -> str:  # open, query and close in one thread
             with closing(store.connect(root)) as conn:
@@ -603,6 +611,12 @@ def run(root: Path, build_dir: Path | None = None, jobs: int | None = None) -> N
         # Exit at once. A normal unwind would wait for the thread blocked reading stdin, which only ends
         # when the client closes it, so Ctrl-C or SIGTERM would hang.
         state.shutdown(timeout=5)  # end a running build and its parser processes first
+        try:  # what a normal exit does for multiprocessing: release the pool's semaphores
+            import multiprocessing.util
+
+            multiprocessing.util._exit_function()
+        except Exception:
+            pass
         os._exit(128 + signum)
 
     signal.signal(signal.SIGTERM, quit_now)
