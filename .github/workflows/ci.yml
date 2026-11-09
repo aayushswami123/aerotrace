@@ -35,6 +35,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: uv sync --locked
+      - run: uv run python tests/realrepo/_diag_tmp.py  # TEMPORARY diagnostic, will be reverted
       - run: uv run pytest
 
   # Golden facts on pinned Redis and SQLite (tests/realrepo). Slow-ish (~1 min), but it runs on every PR.
