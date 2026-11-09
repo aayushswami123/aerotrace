@@ -19,4 +19,13 @@ extern struct conn g_conn;
 
 typedef int (*handler_fn)(int);
 
+struct msg {
+    union {
+        int i;
+        long l;
+    } v;
+};
+typedef struct conn conn_t;
+int touch(conn_t *c);
+
 #endif

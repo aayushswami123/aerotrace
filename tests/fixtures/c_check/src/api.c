@@ -27,6 +27,10 @@ int log_msg(const char *fmt, ...) {
     return 0;
 }
 
+int touch(struct conn *c) {
+    return c->fd;
+}
+
 static handler_fn handlers[] = {parse};
 
 int dispatch(int i, int v) {

@@ -44,3 +44,14 @@ prototype in a header could not be placed.
   the patched version in memory would fix the label; we will do that if the guardrail hook needs it.
 - Macro and type uses are still not followed. That needs new facts in the index (a schema change, so a
   separate decision).
+
+## Addendum (2026-11-09, item 5 part C)
+
+- Patch mode now parses the patched version in memory (`unidiff.apply`, exact only, line endings kept) and
+  maps added lines onto it. This fixed the false "could not follow" note on a changed declaration (#13),
+  the "changed" label of a function the patch deletes (#44), and lists functions the patch adds (#45).
+- `aerotrace check` outlines both versions of every changed file (signatures, parameter and field types,
+  hashes of declaration and initializer text, compile errors) and compares them. Still nothing is stored.
+- Measured on Redis 8.10.3 (index built, one-file patch, in process): signature change in
+  `src/t_string.c` 0.7 s, field retype in `src/server.h` 1.2 s, body edit in `src/server.c` 0.9 s, bit-field
+  change in `src/object.h` 0.3 s. Under the hook's 2 s budget without an outline cache.

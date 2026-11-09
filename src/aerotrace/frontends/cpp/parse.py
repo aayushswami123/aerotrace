@@ -1187,8 +1187,13 @@ def _collect_unit(
 # ---------------------------------------------------------------- outline of one file version
 
 
+_UNNAMED_AT = re.compile(r"\((unnamed|anonymous)( struct| union| enum| class)? at [^)]*\)")
+
+
 def _norm(text: str) -> str:
-    return " ".join(text.split())
+    """Spaces collapsed, and the place of unnamed structs and unions left out ("(unnamed union at
+    /abs/f.c:12:3)" -> "(unnamed union)"): it moves when lines are added above, and holds a machine path."""
+    return _UNNAMED_AT.sub(lambda m: f"({m.group(1)}{m.group(2) or ''})", " ".join(text.split()))
 
 
 def _digest(text: str) -> str:
@@ -1253,11 +1258,12 @@ def _outline_variable(c: Cursor, kind: str, position: int, data: bytes) -> dict:
     ok = 0 <= start <= end <= len(data)
     decl = data[start : init_at if init_at is not None else end] if ok else b""
     init = data[init_at:end] if ok and init_at is not None else b""
+    container = _enclosing_class(c)
     return {
         "usr": c.get_usr(),
         "name": c.spelling,
-        "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
-        "container": _enclosing_class(c),
+        "qualified_name": "::".join([*_scope_parts(c), c.spelling]),  # matches the index
+        "container": _norm(container) if container else container,
         "kind": kind,
         "type": _norm(c.type.spelling),
         "canonical": _norm(c.type.get_canonical().spelling),

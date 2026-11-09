@@ -772,4 +772,76 @@ FACTS = [
         exact=True,  # no tests listed
         must_not=(Fn("sdsTest", "src/sds.c"), Fn("main", S)),
     ),
+    # ------------------------------------------------------------ check (build item 5, part C)
+    Fact(
+        id="redis-check-parameter-added-breaks-calls",
+        why="A 4th parameter is added to the static checkStringLength. Its three calls pass 3 arguments, so "
+        "setrangeCommand (two calls) and appendCommand will not compile. It is static, so nothing outside "
+        "t_string.c can call it.",
+        kind="check",
+        proof=(
+            Line(T, 26, "static int checkStringLength(client *c, long long size, long long append) {"),
+            Line(T, 580, "void setrangeCommand(client *c) {"),
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 623, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1369, "void appendCommand(client *c) {"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        edits=(
+            Edit(
+                T,
+                "static int checkStringLength(client *c, long long size, long long append) {",
+                "static int checkStringLength(client *c, long long size, long long append, int strict) {",
+            ),
+        ),
+        breaks=(Fn("setrangeCommand", T, "exact"), Fn("appendCommand", T, "exact")),
+        exact=True,
+        must_not=(Fn("getrangeCommand", T),),
+    ),
+    Fact(
+        id="redis-check-return-void-breaks-comparisons",
+        why="checkStringLength now returns void. All three calls compare its result with != C_OK, which does "
+        "not compile with a void value.",
+        kind="check",
+        proof=(
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        edits=(
+            Edit(T, "static int checkStringLength(client *c,", "static void checkStringLength(client *c,"),
+        ),
+        breaks=(Fn("setrangeCommand", T, "exact"), Fn("appendCommand", T, "exact")),
+    ),
+    Fact(
+        id="redis-check-field-retype-affects-users-no-break",
+        why="stat_numcommands becomes unsigned long long. Every use still compiles, so its users are affected, "
+        "not broken, and the changed line is fully understood (#13).",
+        kind="check",
+        proof=(
+            Line("src/server.h", 2171, "long long stat_numcommands;     /* Number of processed commands */"),
+            Line(S, 4228, "server.stat_numcommands++;"),
+            Line(S, 2916, "server.stat_numcommands = 0;"),
+        ),
+        edits=(
+            Edit(
+                "src/server.h",
+                "    long long stat_numcommands;     /* Number of processed commands */\n",
+                "    unsigned long long stat_numcommands;     /* Number of processed commands */\n",
+            ),
+        ),
+        affected_only=(Fn("call", S), Fn("resetServerStats", S), Fn("serverCron", S)),
+        no_breaks=True,
+        no_outside=True,
+        must_not=(Fn("crc16", "src/crc16.c"),),
+    ),
+    Fact(
+        id="redis-check-bitfield-width-is-never-all-clear",
+        why="The width of the bit-field redisObject.encoding changes from 4 to 5 bits. Its type looks the same, "
+        "so AeroTrace can't tell what the change does; the answer must not be an all-clear and builds nothing.",
+        kind="check",
+        proof=(Line("src/object.h", 104, "unsigned encoding:4;"),),
+        edits=(Edit("src/object.h", "unsigned encoding:4;", "unsigned encoding:5;"),),
+        no_breaks=True,
+        not_clear=True,
+    ),
 ]

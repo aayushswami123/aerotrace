@@ -115,7 +115,9 @@ class Edit:
 class Fact:
     id: str
     why: str  # plain English: what is true, and how the proof lines show it
-    kind: str  # callers | callees | impact | writes | reads | find | diff | git_diff | signature | data
+    kind: (
+        str  # callers | callees | impact | writes | reads | find | diff | git_diff | signature | data | check
+    )
     query: str = ""  # the function asked about, as name@file (kinds other than diff)
     proof: tuple[Line, ...] = ()
     must: tuple = ()  # Fn for function kinds, variable qualified names for writes/reads
@@ -161,4 +163,11 @@ class Fact:
     not_known: tuple[str, ...] = ()
     # a fact AeroTrace gets wrong today. The test still runs; it must keep failing (strict xfail), so a fix
     # shows up as "unexpectedly passed" and the mark gets removed.
+    # check facts (`aerotrace check --patch` with `edits`): functions that will not build (Fn.confidence =
+    # the expected certainty), functions that are affected but must NOT be called breaks, and whether the
+    # answer must not be an all-clear. `must_not`: functions that must not be listed as breaks.
+    breaks: tuple[Fn, ...] = ()
+    affected_only: tuple[Fn, ...] = ()
+    no_breaks: bool = False
+    not_clear: bool = False
     known_bug: str | None = None

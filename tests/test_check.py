@@ -238,6 +238,17 @@ def test_patch_that_does_not_match_is_counted(repo):
     assert c["change"]["not_followed"]["mismatched"] == [A] and c["summary"]["not_followed"] > 0
 
 
+def test_moving_lines_changes_no_signature_or_declaration(repo):
+    # unnamed unions carry their line in their name, and a prototype may spell a type another way
+    # (conn_t * vs struct conn *): neither is a change
+    res, c = run_patch(
+        repo,
+        {H: [("#define API_H\n", "#define API_H\n/* moved */\n")], A: [("#include", "/* x */\n#include")]},
+    )
+    assert res.signatures == [] and res.decls == []
+    assert not nodes(c, "breaks") and not nodes(c, "affected")
+
+
 def test_comment_on_a_declaration_line_changes_nothing(repo):
     _, c = run_patch(repo, {A: [("int max_clients = 1000;", "int max_clients = 1000; /* max */")]})
     assert [n["status"] for n in c["nodes"]] == ["changed"]

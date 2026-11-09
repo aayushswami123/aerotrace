@@ -119,12 +119,15 @@ def _empty() -> Outline:
 def _pairs(old: list[dict], new: list[dict]) -> tuple[list[tuple[dict, dict]], list[dict], list[dict]]:
     """Match functions of two outlines: same clang ID, else the only one with that qualified name (a C++
     overload whose parameter types changed has a new ID). Returns (pairs, only old, only new)."""
-    by_usr = {f["usr"]: f for f in new}
+    by_usr: dict[str, list[dict]] = {}
+    for g in new:
+        by_usr.setdefault(g["usr"], []).append(g)  # a prototype may appear several times: pair in order
     pairs, left = [], []
     used: set[int] = set()
     for f in old:
-        g = by_usr.get(f["usr"])
-        if g is not None and id(g) not in used:
+        same = by_usr.get(f["usr"])
+        if same:
+            g = same.pop(0)
             pairs.append((f, g))
             used.add(id(g))
         else:
@@ -332,13 +335,13 @@ class _Run:
     # -- signatures
 
     def signatures(self, file: str, old: Outline, new: Outline) -> None:
-        olist, nlist = old.functions + old.declarations, new.functions + new.declarations
-        pairs, _, _ = _pairs(olist, nlist)
+        # definitions with definitions, prototypes with prototypes (they may be spelled differently)
+        pairs = _pairs(old.functions, new.functions)[0] + _pairs(old.declarations, new.declarations)[0]
         seen = self.sig_seen
         for o, n in pairs:
             kinds, words, same = compare_signatures(o, n)
             index_side = n if self.mode == "git" else o
-            if o in old.functions:
+            if any(o is f for f in old.functions):
                 fid = self.lookup._fn_in_file(index_side, file)
                 ids = [fid] if fid else []
             else:
@@ -692,7 +695,9 @@ class _Run:
             if cur is not None and h.confidence != "calls_removed":
                 cur.others += 1  # a signature or data effect above already says more about this one
                 continue
-            if h.confidence == "calls_removed":
+            if h.distance > 1:
+                self._hit(h, "calls {via}")  # further up: `via` is the closer caller, whatever the first link
+            elif h.confidence == "calls_removed":
                 self.fn_node(h.fn, "breaks", EXACT, h.confidence, f"still calls {h.via}, which this change "
                              "removes", h.distance, None, h.via, h.lines)  # fmt: skip
             elif h.confidence == "uses_changed" and h.via in self.decl_handled:
@@ -700,7 +705,7 @@ class _Run:
             elif h.confidence == "uses_changed":
                 self.fn_node(h.fn, "affected", EXACT, h.confidence, f"uses {h.via}, whose declaration changed",
                              h.distance, None, h.via, h.lines, "reads")  # fmt: skip
-            elif h.confidence == "data" and h.distance == 1:
+            elif h.confidence == "data":
                 self.fn_node(h.fn, "affected", PROBABLE, h.confidence, f"reads data that {h.via} writes",
                              h.distance, None, h.via, h.lines, "reads")  # fmt: skip
             else:
