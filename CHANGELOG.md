@@ -53,6 +53,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `aerotrace data` and `aerotrace check` see more uses of fields and globals: `&x` stored in a file-scope
+  table (#27), fields set by position (`{1, 2}`, #26), `x++` and `x += n` as a read and a write (#52),
+  `{.f = 1}` inside functions (#37), `offsetof` (#24), removed fields in `{.f = ...}` and removed globals
+  (#25), all compile errors in a file instead of the first 20 (#29). An array element passed by value is no
+  longer an escape (#18). Unnamed structs and unions no longer have a machine path in their names (#19).
+  The index is rebuilt once after the upgrade.
 - A file saved while the index was being built is re-indexed next time. Before, it could look unchanged
   forever and answers missed its new callers (#43). Parse caches are rebuilt once after the upgrade.
 - A call that doesn't compile (wrong number or type of arguments) is a call again: its caller shows up in
