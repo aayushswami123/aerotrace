@@ -7,7 +7,9 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "Aayush Swami" }]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "libclang>=18.1.1",
+]
 
 [project.scripts]
 aerotrace = "aerotrace.cli:main"
@@ -40,3 +42,4 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]  # ruff format owns line length; long SQL and messages are fine
