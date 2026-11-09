@@ -14,10 +14,18 @@ CI runs this on every PR, on Linux and macOS.
 |---|---|---|---|
 | Redis | 8.10.3 | `download.redis.io` release tarball | SHA-256 from `redis/redis-hashes` |
 | SQLite | 3.54.1 | official amalgamation (`sqlite3.c`, `shell.c`) | SHA3-256 from sqlite.org, plus our SHA-256 |
+| SQLite source | 3.54.1 | `sqlite-src-3540100.zip` (full tree with Tcl tests; coverage goldens only) | SHA3-256 from sqlite.org, plus our SHA-256 |
 
 `repos.py` pins them. Archives are cached in `~/.cache/aerotrace-realrepo` (or `$AEROTRACE_REALREPO_CACHE`)
-and unpacked fresh for every run. We never run a repo's build. The compile flags are written in
-`repos.py`, copied from each project's own build files (Redis: `src/Makefile` with `MALLOC=libc`).
+and unpacked fresh for every run. The golden facts never run a repo's build. The compile flags are written
+in `repos.py`, copied from each project's own build files (Redis: `src/Makefile` with `MALLOC=libc`).
+
+**One exception, opt-in:** `uv run pytest -m realrepo_coverage -rs` (`test_coverage_golden.py`) checks
+`aerotrace tests record` on the real test suites. It builds Redis (`make -C src MALLOC=libc gcov`) and
+SQLite's `testfixture` with `--coverage` in temp folders, and runs `unit/expire`, `unit/type/string` and
+`test/select1.test`. This is test infrastructure only; AeroTrace itself never builds anything unless a user
+runs `tests record`. It needs make, cc, gcov, tclsh and (for SQLite) Tcl headers, takes about 2 minutes, and
+runs in its own CI job that does not block merging yet. Its proofs grep the test harness files too.
 
 ## What a fact is
 

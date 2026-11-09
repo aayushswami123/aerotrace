@@ -1,5 +1,5 @@
 Tests for set_mode (src/calc.c:17): 1 function changed in 1 C/C++ file.
-Coverage: not recorded.
+Coverage: not recorded. Run `aerotrace tests record` to learn which tests run this code.
 Test entry points in the index: 3 GoogleTest, 1 Unity, 2 CMocka, 3 test programs with main.
 
 Run these tests (4, most certain first):
@@ -13,7 +13,7 @@ How to run them:
   - the test program built from tests/test_scale.c
 
 Limits of this answer:
-  - Static links only: a listed test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are not listed.
+  - Static links: a listed C/C++ test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are found only through recorded coverage.
   - Coverage: not recorded, so tests written as scripts (Tcl, Python, shell) are not seen.
   - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
   - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).
@@ -21,7 +21,7 @@ Limits of this answer:
   - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.
 ----
 Tests for divide (src/calc.c:12): 1 function changed in 1 C/C++ file.
-Coverage: not recorded.
+Coverage: not recorded. Run `aerotrace tests record` to learn which tests run this code.
 Test entry points in the index: 3 GoogleTest, 1 Unity, 2 CMocka, 3 test programs with main.
 
 Not known which tests reach this code (1):
@@ -30,7 +30,7 @@ Not known which tests reach this code (1):
 No tests to list. This does not mean no test runs this code: no C/C++ test that AeroTrace can see calls it, and tests written as scripts (Tcl, Python, shell) are not seen without coverage.
 
 Limits of this answer:
-  - Static links only: a listed test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are not listed.
+  - Static links: a listed C/C++ test calls the changed code on some path, but may not run the changed lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from outside the index) are found only through recorded coverage.
   - Coverage: not recorded, so tests written as scripts (Tcl, Python, shell) are not seen.
   - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
   - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).

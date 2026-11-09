@@ -48,6 +48,22 @@ through callers. Each test is `exact` (only direct calls) or `probable` (a point
 with the reason. Changed code no C/C++ test calls is listed as "Not known", never as untested: tests
 written as scripts (such as Redis's and SQLite's Tcl tests) are not seen by static links.
 
+To see those, record coverage once:
+
+```bash
+aerotrace tests record           # runs your tests with gcov, as .aerotrace/tests.toml says; asks first
+aerotrace tests status           # what was recorded and what changed since
+```
+
+`tests record` never guesses what to run. With no `.aerotrace/tests.toml` it prints an example and stops.
+It shows the config's path and SHA-256 and every command before it asks (configs can come with a clone,
+so read them). Each test runs with its own `GCOV_PREFIX` folder outside the repo, so no `.gcda` files land
+in your tree. The result goes to `.aerotrace/tests.json`, a separate file (the index is not changed). After
+that, `aerotrace tests` lists the recorded tests that ran the changed code, with a ready-to-run command.
+Code that was built with coverage and ran in none of the recorded tests is listed under "No test reaches",
+but only as `probable`: a test killed by a signal, `abort()` or a timeout writes no counts. If a changed file
+or a test file changed since recording, the answer says so and does not make that claim.
+
 `diff` maps changed lines to functions, globals and fields, then lists everything upstream of them.
 To see which functions a diff *removed*, it reads the old version of each changed file from git, so a
 deleted function and the code that still calls it are reported. Changes it can't follow (macros, types,

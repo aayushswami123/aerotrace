@@ -452,10 +452,11 @@ def _no_tests_sentence(r: TestImpact) -> str:
         if r.entries
         else "AeroTrace found no C/C++ test entry points"
     )
-    return (
-        f"No tests to list. This does not mean no test runs this code: {seen}, and tests written as "
-        "scripts (Tcl, Python, shell) are not seen without coverage."
-    )
+    if r.coverage == "not_recorded":
+        rest = "tests written as scripts (Tcl, Python, shell) are not seen without coverage"
+    else:
+        rest = "recorded coverage can miss runs (see the limits below)"
+    return f"No tests to list. This does not mean no test runs this code: {seen}, and {rest}."
 
 
 def tests_text(r: TestImpact, limit: int = 50) -> str:
@@ -464,7 +465,7 @@ def tests_text(r: TestImpact, limit: int = 50) -> str:
         lines.append(
             f"({_n(r.ignored, 'other file')} in the change {'is' if r.ignored == 1 else 'are'} not C or C++.)"
         )
-    lines.append("Coverage: not recorded." if r.coverage == "not_recorded" else f"Coverage: {r.coverage}.")
+    lines.append(r.coverage_line or "Coverage: not recorded.")
     lines.append(_entries_line(r))
     if r.no_test_reaches:
         lines += ["", f"No test reaches this code ({len(r.no_test_reaches)}):"]
@@ -488,6 +489,11 @@ def tests_text(r: TestImpact, limit: int = 50) -> str:
         ]
         if len(r.tests) > limit:
             lines.append(f"  ... and {len(r.tests) - limit} more (raise `limit` to see them).")
+        if r.run_commands:
+            lines.append("Ready to run:")
+            lines += [f"  {c}" for c in r.run_commands[:limit]]
+            if len(r.run_commands) > limit:
+                lines.append(f"  ... and {len(r.run_commands) - limit} more.")
         cmds = test_commands(r)
         if cmds:
             lines.append("How to run them:")
@@ -511,7 +517,7 @@ def tests_json(r: TestImpact, limit: int = 50) -> dict:
         "changed_functions": r.changed_fns,
         "changed_declarations": r.changed_decls,
         "files": r.files,
-        "coverage": {"state": r.coverage},
+        "coverage": {"state": r.coverage, "summary": r.coverage_line},
         "entry_points": {k: r.entries[k] for k in KINDS if r.entries[k]},
         "no_test_reaches": nk(r.no_test_reaches),
         "not_known": nk(r.not_known),
@@ -524,11 +530,12 @@ def tests_json(r: TestImpact, limit: int = 50) -> dict:
                 "level": t.level,
                 "reason": t.reason,
                 "reaches": t.reaches,
-                "source": "static",
+                "source": "coverage" if t.kind == "coverage" else "static",
             }
             for t in r.tests[:limit]
         ],
         "tests_total": len(r.tests),
+        "ready_to_run": r.run_commands[:limit],
         "commands": test_commands(r),
         "unindexed_test_files": r.unindexed_tests[:limit],
         "truncated_at_depth": r.truncated,

@@ -61,6 +61,35 @@ jobs:
       - name: Golden facts
         run: uv run pytest -m realrepo -rxX
 
+  # Coverage golden facts: builds pinned Redis and SQLite with --coverage and runs a few of their Tcl tests
+  # through `aerotrace tests record`. Opt-in test infrastructure (see tests/realrepo/README.md); not blocking
+  # yet, and not part of ci-ok.
+  realrepo-coverage:
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - name: Tcl (tclsh for the test suites, headers for SQLite's testfixture)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y tcl tcl-dev
+      - run: uv sync --locked
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/aerotrace-realrepo
+          key: realrepo-coverage-${{ hashFiles('tests/realrepo/repos.py') }}
+      - name: Download and check the pinned sources (SHA-256)
+        run: uv run python tests/realrepo/repos.py --coverage
+      - name: Coverage golden facts
+        run: uv run pytest -m realrepo_coverage -rs
+
   # One stable check name for branch protection (matrix job names change).
   ci-ok:
     if: always()

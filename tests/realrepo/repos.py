@@ -49,6 +49,19 @@ SQLITE = Pinned(
 
 ALL = (REDIS, SQLITE)
 
+# The full SQLite source tree, with its Tcl tests. Used only by the opt-in coverage goldens
+# (test_coverage_golden.py, marker realrepo_coverage), which build it: see the README.
+SQLITE_SRC = Pinned(
+    name="sqlite-src",
+    version="3.54.1",
+    url="https://www.sqlite.org/2026/sqlite-src-3540100.zip",
+    sha256="387e7f6cad4797b17848c07d453dc6606917bb356a6cfe5a3abafd38c240c71b",
+    folder="sqlite-src-3540100",
+    # sqlite.org publishes SHA3-256: 877c6f4996ce7adb368686bce21638de9e3d91534832ad3d9d119037d1bc22ad
+    where_hash_comes_from="https://www.sqlite.org/download.html (SHA3-256 matches; SHA-256 computed from it)",
+)
+COVERAGE = (REDIS, SQLITE, SQLITE_SRC)
+
 
 def cache_dir() -> Path:
     return Path(os.environ.get("AEROTRACE_REALREPO_CACHE", Path.home() / ".cache" / "aerotrace-realrepo"))
@@ -85,16 +98,22 @@ def fetch(p: Pinned) -> Path:
 
 
 def unpack(p: Pinned, dest: Path) -> Path:
-    """Unpack the checked archive into `dest`; returns the repo root."""
+    """Unpack the checked archive into `dest`; returns the repo root (with a compile_commands.json for the
+    repos we index; the SQLite source tree is only built, never indexed)."""
     path = fetch(p)
     if path.suffix == ".zip":
         with zipfile.ZipFile(path) as z:
             z.extractall(dest)
+            for info in z.infolist():  # zipfile drops the executable bit; scripts like ./configure need it
+                mode = (info.external_attr >> 16) & 0o777
+                if mode & 0o111 and not info.is_dir():
+                    (dest / info.filename).chmod(mode)
     else:
         with tarfile.open(path) as t:
             t.extractall(dest, filter="data")
     root = dest / p.folder
-    write_compdb(p, root)
+    if p is not SQLITE_SRC:
+        write_compdb(p, root)
     return root
 
 
@@ -129,5 +148,7 @@ def write_compdb(p: Pinned, root: Path) -> None:
 
 
 if __name__ == "__main__":  # used by CI: download everything into the cache before the tests run
-    for pinned in ALL:
+    import sys
+
+    for pinned in COVERAGE if "--coverage" in sys.argv else ALL:
         print(f"{pinned.name} {pinned.version}: {fetch(pinned)}")

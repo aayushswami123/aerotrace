@@ -470,3 +470,24 @@ record tool; (6) Tcl command-name links go to the backlog as an issue (probable 
 PR split: PR1 = the `aerotrace tests` query, the not-recorded / "Not known" path, and Unity, CMocka,
 GoogleTest and test-file `main` detection (no CMake). PR2 = recorder, `tests.json`, coverage linking.
 PR3 (if time) = CTest via `CTestTestfile.cmake`.
+
+## 16. As built (PR2), where it differs from the sections above
+
+- No `{port}` placeholder (finding 8). The run template may use `{job}` (the parallel slot, 0..N-1); the
+  stored template is never expanded with it.
+- The `list` command is part of the plan and runs only after the user says yes, so `--dry-run` shows
+  the list command, not the test ids.
+- gcov is chosen by trying `gcov`, then `llvm-cov gcov` (or `gcov =` in the config); the output format
+  follows the tool (`gcov --version` says LLVM or not). Matching the tool to the compiler is left to
+  gcov's own version check, whose error is shown. Reading the `.gcno` header is not done: clang writes
+  GCC-style versions, so the header does not tell which tool can read it.
+- gcov functions are mapped to the index at record time by file + the innermost function whose lines
+  contain gcov's line (lambdas and blocks fold into it), and stored by qualified name. C++ overloads with
+  the same qualified name in one file share one entry (a test that ran any of them is listed: safe side).
+- `tests.json` is compact JSON (one line); `aerotrace tests status` is the readable view.
+- Test inputs: only the config's `inputs` globs are hashed. The `list` command's output is not re-run at
+  query time (that would run the user's command); when `inputs` is empty the answer says test edits are
+  not noticed.
+- Partial runs (`--only`, Ctrl-C, timeouts are recorded as "timeout"): merged into a complete
+  `tests.json` when the config, every recorded source file and every input file are unchanged; otherwise
+  written to `tests.partial.json`, which is read only when no complete file exists.

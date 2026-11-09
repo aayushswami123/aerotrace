@@ -11,6 +11,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
   to run for a change, from test entry points in the index (GoogleTest, Unity, CMocka, test programs with
   `main`) linked through callers. Each test is exact or probable, with the reason. Changed code no test is
   known to reach is listed as "Not known", never as untested. Read-only; it never runs tests.
+- `aerotrace tests record` and `aerotrace tests status`: run the project's tests once, when the user
+  asks, with gcov, as `.aerotrace/tests.toml` says (shown in full, confirmed first), and save which test
+  ran which function in `.aerotrace/tests.json` (a separate, versioned file; the index is unchanged).
+  `aerotrace tests` then lists the recorded tests too, flags coverage recorded for other file contents or
+  before test files changed, and lists code no recorded run executed (only as `probable`). Works with GNU
+  gcov and LLVM gcov (`gcov` on macOS).
 - `aerotrace signature <function>` and the `signature_impact` MCP tool: what a change to a function's
   parameters or return type affects. Every call site with its argument count and how it uses the return
   value (stored, compared, checked, passed on, returned, ignored, discarded), every place that uses the

@@ -346,13 +346,102 @@ def cmd_tests(args: argparse.Namespace) -> int:
         if note:
             _err(note)
         d = diff.analyse(conn, root, diffs, mode=mode, base=base, depth=args.depth, old=old, now=outliner.now)
-        res = testimpact.for_diff(conn, root, d, args.depth)
+        base_text = testimpact.git_base_text(root, args.base_opt or args.base) if mode == "git" else None
+        res = testimpact.for_diff(conn, root, d, args.depth, base_text)
     print(
         json.dumps(render.tests_json(res, args.limit), indent=2)
         if args.json
         else render.tests_text(res, args.limit)
     )
     return 0
+
+
+def cmd_tests_record(args: argparse.Namespace) -> int:
+    from aerotrace.toolchain import testrun
+
+    root = find_root(args.root)
+    path = Path(args.config).resolve() if args.config else testrun.default_config_path(root)
+    if not path.is_file():
+        _err(f"No test config at {path}. AeroTrace never guesses what to run. Write one, for example:\n")
+        _err(testrun.EXAMPLE)
+        return 2
+    try:
+        plan = testrun.make_plan(testrun.load_config(path), args.only)
+    except testrun.ConfigError as e:
+        _err(f"error: {e}")
+        return 2
+    text = testrun.plan_text(root, plan, args.jobs)
+    if args.dry_run:
+        print(text)
+        return 0
+    if not testrun.confirm(text, args.yes):
+        return 1
+    try:
+        out, data = testrun.record(root, plan, args.jobs, not args.only, _err, __version__)
+    except testrun.ConfigError as e:
+        _err(f"error: {e}")
+        return 2
+    failed = [t.id for t in data.tests if t.exit != "0"]
+    print(
+        f"Recorded {len(data.tests)} test(s) into {out}" + (f"; {len(failed)} did not pass" if failed else "")
+    )
+    if out.name != "tests.json":
+        print(
+            "This run was partial and did not fit the complete recording, so tests.json was kept as it was."
+        )
+    for why, n in sorted(data.dropped.items()):
+        print(f"note: {n} gcov function record(s) not kept: {why}.")
+    return 0
+
+
+def cmd_tests_status(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import coverage
+
+    root = find_root(args.root)
+    data, note = coverage.load(root)
+    if data is None:
+        print(note or "No coverage recorded. Run `aerotrace tests record`.")
+        return 0
+    changed = [p for p, fc in sorted(data.files.items()) if coverage.sha256_file(root / p) != fc.sha256]
+    inputs = coverage.changed_inputs(root, data)
+    failed = sorted(t.id for t in data.tests if t.exit != "0")
+    print(
+        f"{len(data.tests)} test(s) recorded"
+        + (f" at {data.commit[:12]}" if data.commit else "")
+        + ("" if data.complete else " (partial)")
+        + f", {len(data.files)} source file(s) with coverage."
+    )
+    print(
+        f"Changed since recording: {len(changed)} source file(s)"
+        + (f": {', '.join(changed[:5])}" if changed else ".")
+    )
+    if inputs:
+        print(f"Test files changed since recording: {', '.join(inputs[:5])}")
+    if failed:
+        print(f"Did not pass when recorded: {', '.join(failed[:10])}" + (" ..." if len(failed) > 10 else ""))
+    return 0
+
+
+def _tests_sub_parser(name: str) -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog=f"aerotrace tests {name}")
+    p.add_argument("--root", help="repo folder (default: the git top level of the current folder)")
+    if name == "status":
+        p.description = "What .aerotrace/tests.json holds and what changed since it was recorded."
+        p.set_defaults(func=cmd_tests_status)
+        return p
+    p.description = (
+        "Run the project's tests once, with coverage, and save which test ran which function in "
+        ".aerotrace/tests.json. Needs .aerotrace/tests.toml (or --config); shows every command first."
+    )
+    p.add_argument("--config", metavar="FILE", help="the test config (default .aerotrace/tests.toml)")
+    p.add_argument(
+        "--only", action="append", default=[], metavar="ID", help="record only this test (repeatable)"
+    )
+    p.add_argument("--jobs", type=int, default=1, help="tests to run at the same time (default 1)")
+    p.add_argument("--dry-run", action="store_true", help="show what would run, run nothing")
+    p.add_argument("--yes", action="store_true", help="do not ask (the plan is still printed)")
+    p.set_defaults(func=cmd_tests_record)
+    return p
 
 
 def cmd_mcp(args: argparse.Namespace) -> int:
@@ -462,7 +551,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     ts = with_root(
         sub.add_parser(
-            "tests", help="which tests to run for a change, why, and what no test is known to reach"
+            "tests",
+            help="which tests to run for a change, why, and what no test is known to reach "
+            "(also: `aerotrace tests record` to record coverage, `aerotrace tests status`)",
         )
     )
     ts.add_argument("base", nargs="?", default="HEAD", help="commit or branch to compare with (default HEAD)")
@@ -491,6 +582,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if len(argv) >= 2 and argv[0] == "tests" and argv[1] in ("record", "status"):
+        sub_args = _tests_sub_parser(argv[1]).parse_args(argv[2:])
+        return sub_args.func(sub_args)
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "func", None):

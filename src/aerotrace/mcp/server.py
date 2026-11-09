@@ -126,7 +126,8 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
     ) -> str:
         """Which tests to run for a change, why, and how sure (exact / probable), plus the changed code no
         known test reaches. Same inputs as `diff_impact` (no arguments = your uncommitted edits), or
-        `symbol` for one function. It never runs tests. "Not known" means AeroTrace can't tell, not that
+        `symbol` for one function. Uses recorded coverage (.aerotrace/tests.json) when the user recorded it
+        with `aerotrace tests record`. It never runs tests. "Not known" means AeroTrace can't tell, not that
         the code is untested."""
         if symbol:
             conn, note = state.open()
@@ -148,7 +149,9 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
         conn, note = state.open(diff.wanted(diffs, mode))
         with closing(conn):
             d = diff.analyse(conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now)
-            return _with_note(render.tests_text(testimpact.for_diff(conn, root, d, depth), limit), note)
+            base_text = testimpact.git_base_text(root, base) if mode == "git" else None
+            res = testimpact.for_diff(conn, root, d, depth, base_text)
+            return _with_note(render.tests_text(res, limit), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:

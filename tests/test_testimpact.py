@@ -193,7 +193,7 @@ def test_git_mode_through_the_cli(root, capsys):
     p.write_text(p.read_text().replace("return a * b;", "return b * a;"))
     assert main(["tests", "--root", str(root), "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
-    assert out["coverage"] == {"state": "not_recorded"}
+    assert out["coverage"]["state"] == "not_recorded"
     assert out["changed_functions"] == 1
     assert {t["id"]: t["level"] for t in out["tests"]} == {
         "tests/cmocka_calc.c:mul_works": "exact",

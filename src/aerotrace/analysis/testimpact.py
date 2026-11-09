@@ -14,6 +14,10 @@ function is not a test: it never runs.
 Static links only say "this test calls the changed code". They can't prove that no test runs it (tests
 written as scripts, calls from outside the index), so code no test calls is reported as "not known",
 never as untested.
+
+Recorded coverage (`.aerotrace/tests.json`, see coverage.py) adds the tests that ran the code. Only
+coverage that is fresh (same file content), complete, with unchanged test inputs, can move code to
+"No test reaches", and then only as `probable`.
 """
 
 from __future__ import annotations
@@ -23,10 +27,11 @@ import re
 import shlex
 import sqlite3
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from aerotrace.analysis import certainty, diff, graph
+from aerotrace.analysis import certainty, coverage, diff, graph
 from aerotrace.analysis.graph import CONFIDENCE_ORDER, Hit
 from aerotrace.analysis.symbols import Fn
 
@@ -94,6 +99,8 @@ class TestImpact:
     entries: Counter = field(default_factory=Counter)  # test entry points in the index, by kind
     unindexed_tests: list[str] = field(default_factory=list)  # test-like source files not in the index
     coverage: str = "not_recorded"  # not_recorded | fresh | outdated | partial
+    coverage_line: str = ""  # one plain sentence about the recorded coverage
+    run_commands: list[str] = field(default_factory=list)  # ready-to-run commands for coverage tests
     depth: int = 8
     truncated: bool = False
     limits: list[str] = field(default_factory=list)
@@ -232,6 +239,86 @@ class _Item:
     starts: list[Fn]
     seeds: dict[str, tuple[str, str, list[int]]]
     labels: dict[str, str]
+    # functions to look up in recorded coverage: (file, qualified name, "self" | "user")
+    cov_keys: list[tuple[str, str, str]] = field(default_factory=list)
+    new: bool = False  # a function the change adds: no coverage can exist yet
+
+
+class _CovContext:
+    """Recorded coverage, and how far it can be trusted for this change."""
+
+    def __init__(self, root: Path, data: coverage.Coverage, base_text: Callable[[str], bytes | None] | None):
+        self.root = root
+        self.data = data
+        self.base_text = base_text
+        self.failed = coverage.failed(data)
+        self.inputs_changed = coverage.changed_inputs(root, data)
+        self.states: dict[str, str] = {}
+
+    def state(self, file: str) -> str:
+        if file not in self.states:
+            base = self.base_text(file) if self.base_text else None
+            self.states[file] = coverage.file_state(self.root, self.data, file, base)
+        return self.states[file]
+
+    @property
+    def trusted(self) -> bool:
+        """Can an empty result mean "none of the recorded runs executed it"?"""
+        return self.data.complete and not self.inputs_changed
+
+    def where(self) -> str:
+        at = f" at {self.data.commit[:12]}" if self.data.commit else ""
+        return f"recorded{at}"
+
+
+def _cov_links(ctx: _CovContext, it: _Item) -> tuple[dict[str, tuple[str, str]], str | None, bool]:
+    """({test: (level, reason)}, why coverage can't answer (or None), whether every changed function was
+    seen built with coverage, in a fresh file, and run by no recorded test)."""
+    ran: dict[str, tuple[str, str]] = {}
+    problem: str | None = None
+    zero = bool(it.cov_keys) and any(r == "self" for _, _, r in it.cov_keys)
+    for file, q, role in it.cov_keys:
+        st = ctx.state(file)
+        fc = ctx.data.files.get(file)
+        if role == "self" and it.new:
+            problem, zero = "new; no coverage was recorded for it yet", False
+            continue
+        if st == "missing" or fc is None:
+            if role == "self":
+                problem = (
+                    problem
+                    or f"no coverage data for {file} (not built with coverage, or in no recorded test)"
+                )
+                zero = False
+            continue
+        key = coverage.find_fn(fc, q, 0)
+        if key is None:
+            if role == "self":
+                problem = (
+                    problem or "not in the coverage data (not built with coverage, or new since recording)"
+                )
+                zero = False
+            continue
+        tests = fc.functions[key]
+        if role == "self" and (st != "fresh" or tests):
+            zero = False
+        if role == "self" and st != "fresh":
+            problem = problem or f"{file} changed since coverage was {ctx.where()}"
+        for t in sorted(tests):
+            level = certainty.EXACT if (st == "fresh" and role == "self") else certainty.PROBABLE
+            why = (
+                "ran it when coverage was recorded"
+                if role == "self"
+                else f"ran {q}, which uses it, when recorded"
+            )
+            if st != "fresh":
+                why += f"; {file} changed since"
+            if t in ctx.failed:
+                why += " (failed when recorded)"
+            cur = ran.get(t)
+            if cur is None or (cur[0] != certainty.EXACT and level == certainty.EXACT):
+                ran[t] = (level, why)
+    return ran, problem, zero
 
 
 def _path(hit_by_name: dict[str, Hit], h: Hit) -> list[str]:
@@ -261,7 +348,12 @@ def _reason(conf: str, path: list[str]) -> str:
 
 
 def _link(
-    conn: sqlite3.Connection, res: TestImpact, items: list[_Item], entries: dict[str, list[Entry]], depth: int
+    conn: sqlite3.Connection,
+    res: TestImpact,
+    items: list[_Item],
+    entries: dict[str, list[Entry]],
+    depth: int,
+    ctx: _CovContext | None = None,
 ) -> None:
     rank = CONFIDENCE_ORDER.index
     links: dict[tuple[str, str], tuple[TestLink, str]] = {}  # (kind, test) -> (link, confidence)
@@ -297,11 +389,52 @@ def _link(
                     if rank(conf) < rank(best):
                         link.level, link.reason = level, why
                         links[key] = (link, conf)
-        if not found:
-            why = "no C/C++ test calls it"
-            if truncated:
-                why += f" within {depth} call steps; more callers exist further up"
-            res.not_known.append(NotKnown(it.name, it.where, why))
+        cov_problem, zero = None, False
+        if ctx is not None:
+            ran, cov_problem, zero = _cov_links(ctx, it)
+            for t, (level, why) in ran.items():
+                found = True
+                key = ("coverage", t)
+                conf = "exact" if level == certainty.EXACT else "via_pointer"  # for ranking only
+                cur = links.get(key)
+                if cur is None:
+                    links[key] = (TestLink(t, "coverage", "", level, why, [it.name]), conf)
+                else:
+                    link, best = cur
+                    if it.name not in link.reaches:
+                        link.reaches.append(it.name)
+                    if rank(conf) < rank(best):
+                        link.level, link.reason = level, why
+                        links[key] = (link, conf)
+        if found:
+            continue
+        if ctx is not None and zero and ctx.trusted and not truncated and cov_problem is None:
+            # Only fresh coverage can say this, and never with certainty (see coverage.py).
+            n = len(ctx.data.tests)
+            res.no_test_reaches.append(
+                NotKnown(
+                    it.name,
+                    it.where,
+                    f"probable: built with coverage, none of the {n} recorded runs executed it",
+                )
+            )
+            continue
+        why = "no C/C++ test calls it"
+        if truncated:
+            why += f" within {depth} call steps; more callers exist further up"
+        if ctx is None:
+            pass
+        elif cov_problem:
+            why += f"; {cov_problem}"
+        elif zero and not ctx.data.complete:
+            why += "; no recorded run executed it, but the recording is partial"
+        elif zero and ctx.inputs_changed:
+            why += "; no recorded run executed it, but test files changed since recording"
+        elif zero:
+            why += "; no recorded run executed it"
+        else:
+            why += "; coverage does not cover it"
+        res.not_known.append(NotKnown(it.name, it.where, why))
     order = {certainty.EXACT: 0, certainty.PROBABLE: 1, certainty.UNKNOWN: 2}
     res.tests = sorted(
         (link for link, _ in links.values()),
@@ -309,22 +442,89 @@ def _link(
     )
     for t in res.tests:
         t.reaches.sort()
+    res.no_test_reaches.sort(key=lambda n: (n.where.split(":")[0], _line(n.where), n.what))
+    if ctx is not None:
+        ids = [t.test for t in res.tests if t.kind == "coverage"]
+        if ids:
+            from aerotrace.toolchain.testrun import ready_command
+
+            d = ctx.data
+            res.run_commands = ready_command(d.run, d.run_many, d.each, ids)
 
 
-def _fn_item(conn: sqlite3.Connection, fn: Fn) -> _Item:
+def _fn_item(conn: sqlite3.Connection, fn: Fn, new: bool = False) -> _Item:
     _, readers = graph.data_coupling(conn, fn.id)
     seeds = {rid: ("data", fn.id, lines) for rid, (_, lines) in sorted(readers.items()) if rid != fn.id}
-    return _Item(fn.qualified_name, f"{fn.file}:{fn.line_start}", [fn], seeds, {})
+    return _Item(
+        fn.qualified_name,
+        f"{fn.file}:{fn.line_start}",
+        [fn],
+        seeds,
+        {},
+        [(fn.file, fn.qualified_name, "self")],
+        new,
+    )
 
 
-def _base_limits(res: TestImpact) -> list[str]:
+def _coverage(
+    root: Path, res: TestImpact, files: list[str], base_text: Callable[[str], bytes | None] | None
+) -> _CovContext | None:
+    data, note = coverage.load(root)
+    if data is None:
+        res.coverage = "not_recorded"
+        res.coverage_line = note or (
+            "Coverage: not recorded. Run `aerotrace tests record` to learn which tests run this code."
+        )
+        return None
+    ctx = _CovContext(root, data, base_text)
+    n = len(data.tests)
+    ran = sum(1 for t in data.tests if t.exit != "not run")
+    head = f"{n} tests {ctx.where()} (.aerotrace/{coverage.path(root, not data.complete).name})"
+    if not data.complete:
+        head = f"partial, {ran} of {n} tests {ctx.where()}"
+    files = sorted(set(files))
+    outdated = [f for f in files if ctx.state(f) == "outdated"]
+    missing = [f for f in files if ctx.state(f) == "missing"]
+    bits = []
+    if outdated:
+        bits.append(f"outdated for {len(outdated)} changed file(s) ({', '.join(outdated[:3])} changed since)")
+    if missing:
+        bits.append(f"no data for {len(missing)} changed file(s) ({', '.join(missing[:3])})")
+    if ctx.inputs_changed:
+        bits.append(f"test files changed since: {', '.join(ctx.inputs_changed[:3])}")
+    if not bits and files:
+        bits.append("fresh for every changed file")
+    res.coverage_line = f"Coverage: {head}" + (f"; {'; '.join(bits)}." if bits else ".")
+    res.coverage = (
+        "partial" if not data.complete else "outdated" if (outdated or ctx.inputs_changed) else "fresh"
+    )
+    return ctx
+
+
+def _base_limits(res: TestImpact, ctx: _CovContext | None) -> list[str]:
     out = [
-        "Static links only: a listed test calls the changed code on some path, but may not run the changed "
+        "Static links: a listed C/C++ test calls the changed code on some path, but may not run the changed "
         "lines. Tests that reach it through code AeroTrace can't see (scripts, other languages, calls from "
-        "outside the index) are not listed."
+        "outside the index) are found only through recorded coverage."
     ]
     if res.coverage == "not_recorded":
         out.append("Coverage: not recorded, so tests written as scripts (Tcl, Python, shell) are not seen.")
+    if ctx is not None:
+        out.append("Coverage is per recorded test (as the config lists them), not per test case.")
+        out.append(
+            "Coverage misses code that ran in a process killed by a signal, ended by _exit() or abort(), that "
+            "crashed or timed out, and paths that vary between runs. So 'No test reaches' is never certain."
+        )
+        if ctx.failed:
+            out.append(
+                f"{len(ctx.failed)} recorded test(s) did not pass or did not finish ({_names(sorted(ctx.failed))}); "
+                "their coverage may be partial."
+            )
+        if not ctx.data.config.get("inputs"):
+            out.append(
+                "Test files are not hashed (no `inputs` in the config), so edits to tests since recording are "
+                "not noticed."
+            )
     if res.unindexed_tests:
         shown = ", ".join(res.unindexed_tests[:3]) + (
             f" and {len(res.unindexed_tests) - 3} more" if len(res.unindexed_tests) > 3 else ""
@@ -339,8 +539,15 @@ def _base_limits(res: TestImpact) -> list[str]:
     return out
 
 
-def for_diff(conn: sqlite3.Connection, root: Path, d: diff.DiffImpact, depth: int = 8) -> TestImpact:
-    """Tests for a change already mapped by `diff.analyse`."""
+def for_diff(
+    conn: sqlite3.Connection,
+    root: Path,
+    d: diff.DiffImpact,
+    depth: int = 8,
+    base_text: Callable[[str], bytes | None] | None = None,
+) -> TestImpact:
+    """Tests for a change already mapped by `diff.analyse`. `base_text(path)` gives a file's content on
+    the base side of the change (git mode), so coverage recorded before the edit still counts as fresh."""
     title = f"compared with {d.base}" if d.mode == "git" else "for a patch that is not applied yet"
     res = TestImpact(title, depth=depth, files=d.files, ignored=d.ignored)
     res.changed_fns = len(d.changed)
@@ -348,24 +555,39 @@ def for_diff(conn: sqlite3.Connection, root: Path, d: diff.DiffImpact, depth: in
     entries = find_entries(conn, root)
     res.entries = _count(entries)
     res.unindexed_tests = unindexed_test_files(conn, root)
+    files = [c.fn.file for c in d.changed] + [r.file for r in d.removed]
+    ctx = _coverage(root, res, files, base_text)
 
-    items = [_fn_item(conn, c.fn) for c in d.changed]
+    items = [_fn_item(conn, c.fn, new=c.state == "new") for c in d.changed]
     for v in d.changed_vars:
         users = conn.execute(
-            "SELECT src, line FROM edges WHERE dst = ? AND kind IN ('reads', 'writes') ORDER BY src, line",
+            """SELECT e.src, e.line, f.file, f.qualified_name FROM edges e JOIN functions f ON f.id = e.src
+               WHERE e.dst = ? AND e.kind IN ('reads', 'writes') ORDER BY e.src, e.line""",
             (v.id,),
         ).fetchall()
         seeds: dict[str, tuple[str, str, list[int]]] = {}
         for u in users:
-            seeds.setdefault(u["src"], ("uses_changed", v.id, []))[2].append(u["line"])
-        items.append(_Item(f"{v.name} ({v.kind})", f"{v.file}:{v.line}", [], seeds, {v.id: v.name}))
+            seeds.setdefault(u[0], ("uses_changed", v.id, []))[2].append(u[1])
+        keys = sorted({(u[2], u[3], "user") for u in users})
+        items.append(_Item(f"{v.name} ({v.kind})", f"{v.file}:{v.line}", [], seeds, {v.id: v.name}, keys))
     for r in d.removed:
         key = f"removed:{r.file}:{r.line_start}:{r.name}"
         seeds = {c.id: ("calls_removed", key, []) for c in r.still_called_by}
+        keys = [
+            (r.file, r.name, "self"),
+            *sorted({(c.file, c.qualified_name, "user") for c in r.still_called_by}),
+        ]
         items.append(
-            _Item(f"{r.name} (removed)", f"{r.file}:{r.line_start}", [], seeds, {key: f"{r.name} (removed)"})
+            _Item(
+                f"{r.name} (removed)",
+                f"{r.file}:{r.line_start}",
+                [],
+                seeds,
+                {key: f"{r.name} (removed)"},
+                keys,
+            )
         )
-    _link(conn, res, items, entries, depth)
+    _link(conn, res, items, entries, depth, ctx)
 
     for o in d.outside:
         bits = []
@@ -394,7 +616,7 @@ def for_diff(conn: sqlite3.Connection, root: Path, d: diff.DiffImpact, depth: in
         if f not in d.unreadable:
             res.not_known.append(NotKnown(f, f, "deleted; tests that used it are not followed"))
     res.not_known.sort(key=lambda n: (n.where.split(":")[0], _line(n.where), n.what))
-    res.limits = _base_limits(res) + [n for n in d.blind_spots if not n.startswith("Stopped at depth")]
+    res.limits = _base_limits(res, ctx) + [n for n in d.blind_spots if not n.startswith("Stopped at depth")]
     return res
 
 
@@ -404,9 +626,30 @@ def for_function(conn: sqlite3.Connection, root: Path, fn: Fn, depth: int = 8) -
     entries = find_entries(conn, root)
     res.entries = _count(entries)
     res.unindexed_tests = unindexed_test_files(conn, root)
-    _link(conn, res, [_fn_item(conn, fn)], entries, depth)
-    res.limits = _base_limits(res) + graph.index_limits(conn)
+    ctx = _coverage(root, res, [fn.file], None)
+    _link(conn, res, [_fn_item(conn, fn)], entries, depth, ctx)
+    res.limits = _base_limits(res, ctx) + graph.index_limits(conn)
     return res
+
+
+def _names(items: list[str], n: int = 3) -> str:
+    return ", ".join(items[:n]) + (f" and {len(items) - n} more" if len(items) > n else "")
+
+
+def git_base_text(root: Path, ref: str) -> Callable[[str], bytes | None]:
+    """A file's content at the base of a git-mode change (where HEAD left `ref`), read-only."""
+    from aerotrace.toolchain import git
+
+    try:
+        sha = git.resolve_base(root, ref).sha
+    except git.GitError:
+        return lambda _path: None
+
+    def text(path: str) -> bytes | None:
+        t = git.show(root, sha, path)
+        return t.encode("utf-8", "surrogateescape") if t is not None else None
+
+    return text
 
 
 def _count(entries: dict[str, list[Entry]]) -> Counter:

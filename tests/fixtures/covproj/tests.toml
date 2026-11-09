@@ -1,0 +1,8 @@
+# Copied to .aerotrace/tests.toml by the tests.
+version = 1
+build = "sh build.sh"
+objects = ["build"]
+list = "cat tests/cases.txt"
+run = "./build/prog {test}"
+inputs = ["tests/*.txt"]
+timeout = 60
