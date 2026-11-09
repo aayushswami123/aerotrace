@@ -108,15 +108,21 @@ def _cache_file(cache_dir: Path, unit: CompileUnit) -> Path:
 
 
 def _cache_load(path: Path, key: str, root: Path) -> dict | None:
-    """A cached result counts only if the key matches and every file it read is unchanged."""
+    """A cached result counts only if the key matches and every file it read is unchanged. The files'
+    size and mtime are taken again now, so the index records when they were last checked."""
     try:
         entry = json.loads(path.read_text(encoding="utf-8"))
         if entry["key"] != key:
             return None
-        for dep, h in entry["result"]["deps"].items():
-            if parse_mod.file_hash(str(root / dep)) != h:
+        result = entry["result"]
+        stats = {}
+        for dep, h in result["deps"].items():
+            now = parse_mod.file_stamp(str(root / dep), h)
+            if not h or now[0] != h:
                 return None
-        return entry["result"]
+            stats[dep] = [now[1], now[2]]
+        result["stats"] = stats
+        return result
     except (OSError, ValueError, KeyError):
         return None
 
@@ -267,12 +273,14 @@ def build_index(
         for dep, h in res["deps"].items():
             if dep in files:
                 continue
-            st = (root / dep).stat()
+            # size and mtime as they were when the file was hashed, not now: a file edited since the
+            # parse must not look unchanged (#43)
+            size, mtime = res.get("stats", {}).get(dep, (-1, -1))
             files[dep] = {
                 "path": dep,
                 "hash": h,
-                "size": st.st_size,
-                "mtime_ns": st.st_mtime_ns,
+                "size": size,
+                "mtime_ns": mtime,
                 "is_unit": 0,
                 "error_count": 0,
                 "errors_json": "[]",
