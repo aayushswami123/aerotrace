@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# AeroTrace's own index (when run on this repo)
+.aerotrace/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets
+.env
