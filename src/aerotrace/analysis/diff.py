@@ -496,10 +496,49 @@ def _seeds(
         for u in users:
             add(u["src"], "uses_changed", v.id, [u["line"]])
     for c in res.changed:
+        for base_id, base_name, callers in _lost_dispatch(conn, c.fn.id):
+            key = f"overrode:{base_id}:{c.fn.id}"
+            labels[key] = f"{base_name} (which {c.fn.qualified_name} may no longer override)"
+            for caller, lines in callers:
+                add(caller, "virtual", key, lines)
+    for c in res.changed:
         _, readers = graph.data_coupling(conn, c.fn.id)
         for rid, (_, lines) in sorted(readers.items()):
             add(rid, "data", c.fn.id, lines)
     return seeds, labels
+
+
+def _lost_dispatch(conn: sqlite3.Connection, fid: str) -> list[tuple[str, str, list[tuple[str, list[int]]]]]:
+    """A changed method that overrides nothing (now), while a base class has a virtual method of the same
+    name: the change (new parameters, say) may have stopped it overriding, so calls that dispatched to it
+    through the base no longer do (#32). Returns [(base method id, its name, [(caller id, lines)])]; callers are
+    probable, as we can't tell which of them reached this override before."""
+    me = conn.execute("SELECT name, container FROM functions WHERE id = ?", (fid,)).fetchone()
+    if me is None or not me["container"]:
+        return []
+    if conn.execute("SELECT 1 FROM edges WHERE src = ? AND kind = 'overrides'", (fid,)).fetchone():
+        return []
+    bases, todo = set(), [me["container"]]
+    while todo:
+        for (b,) in conn.execute("SELECT base FROM class_bases WHERE class = ? ORDER BY base", (todo.pop(),)):
+            if b not in bases and len(bases) < 100:
+                bases.add(b)
+                todo.append(b)
+    out = []
+    for b in sorted(bases):
+        for bid, bname in conn.execute(
+            "SELECT id, qualified_name FROM functions WHERE container = ? AND name = ? AND is_virtual = 1 ORDER BY id",
+            (b, me["name"]),
+        ):
+            callers: dict[str, list[int]] = {}
+            for r in conn.execute(
+                """SELECT src, line FROM edges WHERE dst = ? AND kind = 'calls' AND src != ?
+                   ORDER BY src, line""",
+                (bid, fid),
+            ):
+                callers.setdefault(r["src"], []).append(r["line"])
+            out.append((bid, bname, sorted(callers.items())))
+    return out
 
 
 def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
