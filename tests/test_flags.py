@@ -221,3 +221,52 @@ def test_doctor_reports_target_and_left_out_files(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "target    arm-none-eabi" in out
     assert "1 source files are not in it: legacy/old_driver.c" in out
+
+
+@pytest.mark.parametrize(
+    "path, builtin",
+    [
+        ("/usr/lib/llvm-21/lib/clang/21/include", True),
+        ("/usr/include/clang/22.1.2/include", True),
+        ("/Library/Developer/CommandLineTools/usr/lib/clang/21/include", True),
+        ("/usr/lib/gcc/x86_64-linux-gnu/13/include", True),
+        ("/usr/lib/gcc/x86_64-linux-gnu/13/include-fixed", True),
+        ("/usr/include", False),
+        ("/usr/local/include", False),
+        ("/usr/include/x86_64-linux-gnu", False),
+        ("/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include", False),
+    ],
+)
+def test_compiler_builtin_dirs_are_recognised(path, builtin):
+    from aerotrace.toolchain.compdb import is_compiler_builtin_dir
+
+    assert is_compiler_builtin_dir(path) is builtin
+
+
+def test_another_compilers_builtin_headers_are_dropped():
+    # Seen on GitHub's Ubuntu runner: clang 21 on PATH, libclang 22 loaded. clang 21's stdatomic.h handed over
+    # to libclang 22's, whose include guard was already set, so atomic_fetch_add_explicit was undeclared.
+    from aerotrace.toolchain.compdb import without_other_builtins
+
+    clang21 = [
+        "-isystem/usr/lib/llvm-21/lib/clang/21/include",
+        "-isystem/usr/local/include",
+        "-isystem/usr/include/x86_64-linux-gnu",
+        "-isystem/usr/include",
+    ]
+    assert without_other_builtins(clang21, "/usr/include/clang/22.1.2/include") == clang21[1:]
+    # a libclang without its own builtin headers still needs the compiler's
+    assert without_other_builtins(clang21, None) == clang21
+
+
+def test_c11_atomics_parse_without_errors(tmp_path):
+    from aerotrace.toolchain.compdb import system_include_args
+
+    src = tmp_path / "a.c"
+    src.write_text(
+        "#include <stdatomic.h>\nstruct S { _Atomic long long n; } s;\n"
+        "void f(void) { atomic_fetch_add_explicit(&s.n, 1, memory_order_relaxed); }\n"
+    )
+    unit = CompileUnit(str(src), str(tmp_path), ["-x", "c", "-std=gnu11"])
+    res = parse_unit(unit, tmp_path, [], system_include_args("c"))
+    assert res["errors"] == [] and res["error_count"] == 0

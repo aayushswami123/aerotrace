@@ -92,6 +92,18 @@ def _template_of(cursor: Cursor) -> Cursor | None:
 BINARY_ASSIGN_KINDS = set(range(22, 33))  # CXBinaryOperator_Assign .. CXBinaryOperator_OrAssign
 UNARY_INC_DEC_KINDS = {1, 2, 3, 4}  # CXUnaryOperator_PostInc, PostDec, PreInc, PreDec
 UNARY_DEREF = 6  # CXUnaryOperator_Deref
+UNARY_ADDR_OF = 5  # CXUnaryOperator_AddrOf
+
+# Standard C functions that write through their first argument (memset(&x, ...), strcpy(buf, ...)).
+# Matched by name, also as __builtin_NAME and the fortified __builtin___NAME_chk forms.
+WRITES_FIRST_ARG = {
+    "memset", "memcpy", "memmove", "memccpy", "bzero", "explicit_bzero",
+    "strcpy", "strncpy", "stpcpy", "stpncpy", "strcat", "strncat", "strlcpy", "strlcat",
+    "sprintf", "snprintf", "vsprintf", "vsnprintf",
+    "wmemset", "wmemcpy", "wmemmove", "wcscpy", "wcsncpy", "wcscat", "wcsncat",
+}  # fmt: skip
+# Atomic builtins that only read the object their first argument points to.
+_ATOMIC_READS = ("load", "lock_free", "thread_fence", "signal_fence", "synchronize")
 _op_api: bool | None = None
 
 
@@ -494,11 +506,15 @@ class Collector:
             return False
         pc = stack[j][0]
         if pc.kind == K.CALL_EXPR:
+            if pos == 1 and is_array and self.writes_first_arg(pc):
+                return True  # memset(arr, 0, sizeof arr): the array decays to a pointer
             # libclang lists the object an overloaded operator acts on first
             r = pc.referenced
             return pos == 0 and r is not None and r.spelling in OVERLOADED_WRITE_OPS
         if pos != 0:
             return False
+        if pc.kind == K.UNARY_OPERATOR and self.is_addr_of(pc):
+            return self.address_written(stack, j)
         if pc.kind == K.COMPOUND_ASSIGNMENT_OPERATOR:
             return True
         if pc.kind == K.BINARY_OPERATOR:
@@ -511,6 +527,51 @@ class Collector:
             toks = [t.spelling for t in pc.get_tokens()]
             return bool(toks) and (toks[0] in ("++", "--") or toks[-1] in ("++", "--"))
         return False
+
+    @staticmethod
+    def is_addr_of(c: Cursor) -> bool:
+        kind = unary_kind(c)
+        if kind is not None:
+            return kind == UNARY_ADDR_OF
+        return next((t.spelling for t in c.get_tokens()), "") == "&"
+
+    @staticmethod
+    def writes_first_arg(call: Cursor) -> bool:
+        """Whether a call writes through its first argument: an atomic or __sync builtin that changes the
+        object, or a standard C function such as memset or strcpy."""
+        r = call.referenced
+        name = (r.spelling if r is not None else call.spelling) or ""
+        if name.startswith(("__sync_", "__atomic_", "__c11_atomic_")):
+            return not any(w in name for w in _ATOMIC_READS)
+        if name.startswith("__builtin___") and name.endswith("_chk"):
+            name = name[len("__builtin___") : -len("_chk")]
+        elif name.startswith("__builtin_"):
+            name = name[len("__builtin_") :]
+        return name in WRITES_FIRST_ARG
+
+    def address_written(self, stack: list[list], j: int) -> bool:
+        """`&x` sits at stack[j]. Is x written by what receives the address?
+
+        - an atomic expression (C11 atomic_*, __atomic_*): libclang does not name them, but a load has two
+          operands (object, order) and every operation that changes the object has more;
+        - a builtin or standard C function that writes through its first argument (see writes_first_arg).
+        A pointer passed to any other function is not counted: what the callee does is not known here.
+        """
+        k = j - 1
+        pos = stack[j - 1][1] - 1 if j > 0 else 0
+        while k >= 0:
+            pc = stack[k][0]
+            if pc.kind == K.PAREN_EXPR or (pc.kind == K.UNEXPOSED_EXPR and len(list(pc.get_children())) == 1):
+                pos = stack[k - 1][1] - 1 if k > 0 else 0  # an implicit cast, e.g. to void *
+                k -= 1
+                continue
+            break
+        if k < 0:
+            return False
+        pc = stack[k][0]
+        if pc.kind == K.UNEXPOSED_EXPR and pos == 0:
+            return len(list(pc.get_children())) > 2  # an atomic expression
+        return pc.kind == K.CALL_EXPR and pos == 1 and self.writes_first_arg(pc)
 
     @staticmethod
     def binary_op(c: Cursor) -> str | None:

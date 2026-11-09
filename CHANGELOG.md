@@ -18,6 +18,15 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
+  clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
+  defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace
+  now leaves out another compiler's builtin headers when libclang has its own.
+- Writes through an address are now recorded: C11 atomics (`atomic_fetch_add_explicit(&x, ...)`,
+  `atomic_store_explicit`), `__atomic_*` and `__sync_*` builtins, and standard C calls that write their first
+  argument (`memset`, `memcpy`, `strcpy`, `snprintf`, ...). Atomic loads stay reads. Before, a function that
+  only changed a counter atomically looked like it wrote nothing, so its readers were missing from impact.
+  A pointer passed to any other function (`foo(&x)`) is still not counted, and every answer says so.
 - Re-indexing (by the MCP server or `aerotrace index`) now keeps the `--build-dir` and `--exclude` the
   index was built with. Before, it fell back to guessed flags when the database was outside the repo.
 - The index is rebuilt when `compile_commands.json` changes, not only when source files change.

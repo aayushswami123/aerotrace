@@ -28,7 +28,7 @@ from aerotrace.toolchain.compdb import (
     unit_language,
 )
 
-PARSER_VERSION = "4"  # bump when parse output changes, so old cache entries are ignored
+PARSER_VERSION = "5"  # bump when parse output changes, so old cache entries are ignored
 
 
 @dataclass

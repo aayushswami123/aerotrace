@@ -251,6 +251,10 @@ def index_limits(conn: sqlite3.Connection) -> list[str]:
         )
     notes += flag_limits(meta)
     notes.append("Only one build configuration was analysed; code under other #ifdef settings is not seen.")
+    notes.append(
+        "Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and "
+        "memset/memcpy-style calls are."
+    )
     return notes
 
 

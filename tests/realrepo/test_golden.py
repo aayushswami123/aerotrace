@@ -235,6 +235,27 @@ def answer_problems(root: Path, fact: Fact) -> list[str]:
         conn.close()
 
 
+# Files allowed to have parse errors, checked by hand. Anything else means the flags or headers broke,
+# which silently drops links (on Linux, a clang/libclang version mismatch once hid every C11 atomic).
+EXPECTED_PARSE_ERRORS = {
+    # release.c includes "release.h", which Redis generates during its build (src/mkreleasehdr.sh);
+    # the release tarball does not contain it.
+    "redis": {"src/release.c"},
+    "sqlite": set(),
+}
+
+
+@pytest.mark.parametrize("pinned", repos.ALL, ids=[p.name for p in repos.ALL])
+def test_only_expected_files_have_parse_errors(indexed, pinned):
+    conn = store.connect(indexed(pinned))
+    try:
+        bad = {r[0]: r[1] for r in conn.execute("SELECT path, errors_json FROM files WHERE error_count > 0")}
+    finally:
+        conn.close()
+    unexpected = {f: e for f, e in bad.items() if f not in EXPECTED_PARSE_ERRORS[pinned.name]}
+    assert not unexpected, f"parse errors in files that should parse cleanly: {unexpected}"
+
+
 @pytest.mark.parametrize("pinned, fact", [_param(p, f, check_bugs=True) for p, f in CASES])
 def test_fact(indexed, pinned, fact):
     problems = answer_problems(indexed(pinned), fact)

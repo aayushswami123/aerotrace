@@ -341,10 +341,38 @@ def unit_language(unit: CompileUnit) -> str:
     return "c" if Path(unit.file).suffix.lower() in C_EXTS else "c++"
 
 
+_COMPILER_BUILTIN_DIR = re.compile(
+    r"/lib(?:64)?/clang/[^/]+/include$"  # clang's resource dir: /usr/lib/llvm-21/lib/clang/21/include
+    r"|/include/clang/[^/]+/include$"  # Debian's copy: /usr/include/clang/22.1.2/include
+    r"|/lib(?:64)?/gcc(?:-cross)?/[^/]+/[^/]+/include(?:-fixed)?$"  # gcc's: /usr/lib/gcc/x86_64-linux-gnu/13/include
+)
+
+
+def is_compiler_builtin_dir(path: str) -> bool:
+    """Whether a folder holds one compiler's own headers (stddef.h, stdatomic.h, intrinsics)."""
+    return bool(_COMPILER_BUILTIN_DIR.search(path.replace("\\", "/").rstrip("/")))
+
+
+def without_other_builtins(args: list[str], own: str | None) -> list[str]:
+    """Drop another compiler's builtin-header folder when libclang has its own (`own`).
+
+    Those headers belong to one compiler version. Given to a different libclang they break: clang 21's
+    stdatomic.h hands over to libclang 22's, whose include guard is already set, so atomic_* vanish."""
+    if own is None:
+        return list(args)
+    return [
+        a for a in args if not (a.startswith("-isystem") and is_compiler_builtin_dir(a[len("-isystem") :]))
+    ]
+
+
 def system_include_args(lang: str) -> list[str]:
-    """Ask the system compiler where its headers live (for "c" or "c++"), so libclang finds them."""
+    """Ask the system compiler where its headers live (for "c" or "c++"), so libclang finds them.
+    The compiler's own builtin headers are left out when libclang brings its own."""
     if lang in _system_args:
         return _system_args[lang]
+    from aerotrace.toolchain import libclang
+
+    own = libclang.builtin_include_dir()
     compilers = ("clang", "gcc", "cc") if lang == "c" else ("clang++", "g++", "c++")
     args: list[str] = []
     for cc in compilers:
@@ -356,7 +384,7 @@ def system_include_args(lang: str) -> list[str]:
             )
         except (OSError, subprocess.SubprocessError):
             continue
-        args = parse_search_list(r.stderr)
+        args = without_other_builtins(parse_search_list(r.stderr), own)
         if args:
             break
     _system_args[lang] = args
