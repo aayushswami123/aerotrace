@@ -48,6 +48,8 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A file saved while the index was being built is re-indexed next time. Before, it could look unchanged
+  forever and answers missed its new callers (#43). Parse caches are rebuilt once after the upgrade.
 - A call that doesn't compile (wrong number or type of arguments) is a call again: its caller shows up in
   `callers`, `impact` and `diff`, and the function no longer counts as "address taken" (#14). Right after a
   parameter is added in the working tree, every old caller is such a call. This covers C, and in C++ calls to
