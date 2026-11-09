@@ -1,0 +1,43 @@
+{
+ "cmd": "aerotrace callers sqlite3PagerIsreadonly@sqlite3.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "sqlite3PagerIsreadonly",
+   "file": "sqlite3.c",
+   "line": 65839,
+   "signature": "u8 sqlite3PagerIsreadonly(Pager *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 2,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "sqlite3BtreeOpen",
+    "file": "sqlite3.c",
+    "line": 75289,
+    "signature": "int sqlite3BtreeOpen(sqlite3_vfs *, const char *, sqlite3 *, Btree **, int, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3PagerIsreadonly",
+    "lines": [
+     75455
+    ]
+   },
+   {
+    "name": "btreeBeginTrans",
+    "file": "sqlite3.c",
+    "line": 76355,
+    "signature": "int btreeBeginTrans(Btree *, int, int *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "sqlite3PagerIsreadonly",
+    "lines": [
+     76377
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

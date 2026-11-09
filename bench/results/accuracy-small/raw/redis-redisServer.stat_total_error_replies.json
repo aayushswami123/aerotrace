@@ -1,0 +1,205 @@
+{
+ "cmd": "aerotrace data redisServer::stat_total_error_replies --json --all",
+ "exit": 0,
+ "answer": {
+  "target": {
+   "id": "c:@S@redisServer@FI@stat_total_error_replies",
+   "name": "redisServer::stat_total_error_replies",
+   "kind": "field",
+   "type": "long long",
+   "file": "src/server.h",
+   "line": 2236,
+   "exists": true
+  },
+  "question": "declaration",
+  "writer": null,
+  "via_fields": [],
+  "summary": {
+   "functions": 7,
+   "writers": 2,
+   "files": 4,
+   "by_certainty": {
+    "exact": 7,
+    "probable": 0,
+    "unknown": 0
+   },
+   "initializers": 0,
+   "may_set_by_position": 1,
+   "escapes": 0,
+   "not_compiling": 0,
+   "upstream": 0,
+   "functions_per_file": [
+    {
+     "file": "src/server.c",
+     "count": 3
+    },
+    {
+     "file": "src/module.c",
+     "count": 2
+    },
+    {
+     "file": "src/blocked.c",
+     "count": 1
+    },
+    {
+     "file": "src/networking.c",
+     "count": 1
+    }
+   ]
+  },
+  "not_compiling": [],
+  "uses": [
+   {
+    "function": {
+     "name": "afterErrorReply",
+     "file": "src/networking.c",
+     "line": 668,
+     "signature": "void afterErrorReply(client *, const char *, size_t, int)"
+    },
+    "first_use": 683,
+    "writes": [
+     683
+    ],
+    "reads": [],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "resetServerStats",
+     "file": "src/server.c",
+     "line": 2913,
+     "signature": "void resetServerStats()"
+    },
+    "first_use": 2970,
+    "writes": [
+     2970
+    ],
+    "reads": [],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "moduleUnblockClientOnKey",
+     "file": "src/blocked.c",
+     "line": 780,
+     "signature": "void moduleUnblockClientOnKey(client *, robj *)"
+    },
+    "first_use": 781,
+    "writes": [],
+    "reads": [
+     781,
+     788
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "moduleHandleBlockedClients",
+     "file": "src/module.c",
+     "line": 8913,
+     "signature": "void moduleHandleBlockedClients()"
+    },
+    "first_use": 8933,
+    "writes": [],
+    "reads": [
+     8933,
+     8977
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "moduleBlockedClientTimedOut",
+     "file": "src/module.c",
+     "line": 9035,
+     "signature": "void moduleBlockedClientTimedOut(client *)"
+    },
+    "first_use": 9044,
+    "writes": [],
+    "reads": [
+     9044,
+     9054
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "incrCommandStatsOnError",
+     "file": "src/server.c",
+     "line": 3933,
+     "signature": "int incrCommandStatsOnError(struct redisCommand *, int)"
+    },
+    "first_use": 3938,
+    "writes": [],
+    "reads": [
+     3938,
+     3948
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "genRedisInfoString",
+     "file": "src/server.c",
+     "line": 6403,
+     "signature": "sds genRedisInfoString(dict *, int, int)"
+    },
+    "first_use": 6757,
+    "writes": [],
+    "reads": [
+     6757
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   }
+  ],
+  "uses_total": 7,
+  "uses_omitted": 0,
+  "initializers": [],
+  "initializers_total": 0,
+  "initializers_omitted": 0,
+  "may_set_by_position": [
+   {
+    "name": "server",
+    "kind": "global",
+    "type": "struct redisServer",
+    "file": "src/server.c",
+    "line": 85,
+    "exists": true,
+    "certainty": "unknown",
+    "reason": "a global of this struct type; an initializer that lists values in order sets it"
+   }
+  ],
+  "may_set_by_position_total": 1,
+  "may_set_by_position_omitted": 0,
+  "struct_fields": [],
+  "struct_fields_total": 0,
+  "escapes": [],
+  "escapes_total": 0,
+  "escapes_omitted": 0,
+  "upstream": [],
+  "upstream_total": 0,
+  "upstream_omitted": 0,
+  "truncated_at_depth": false,
+  "same_name": [],
+  "other_copies": [],
+  "blind_spots": [
+   "Fields are tracked per struct type, not per object: every redisServer's stat_total_error_replies is listed.",
+   "Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).",
+   "Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} inside a function (a local or a compound literal) is not recorded either (#37).",
+   "Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).",
+   "Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.",
+   "1 source file had parse errors; links in them may be missing.",
+   "1696 C/C++ source files are not in compile_commands.json and were not analysed (deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c, ...).",
+   "Some headers were not found: release.h (1 file). Code that needs them may be missing links.",
+   "Only one build configuration was analysed; code under other #ifdef settings is not seen.",
+   "Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are."
+  ]
+ }
+}

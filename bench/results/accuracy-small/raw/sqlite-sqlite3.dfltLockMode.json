@@ -1,0 +1,102 @@
+{
+ "cmd": "aerotrace data sqlite3::dfltLockMode --json --all",
+ "exit": 0,
+ "answer": {
+  "target": {
+   "id": "c:@S@sqlite3@FI@dfltLockMode",
+   "name": "sqlite3::dfltLockMode",
+   "kind": "field",
+   "type": "u8",
+   "file": "sqlite3.c",
+   "line": 18887,
+   "exists": true
+  },
+  "question": "declaration",
+  "writer": null,
+  "via_fields": [],
+  "summary": {
+   "functions": 2,
+   "writers": 1,
+   "files": 1,
+   "by_certainty": {
+    "exact": 2,
+    "probable": 0,
+    "unknown": 0
+   },
+   "initializers": 0,
+   "may_set_by_position": 0,
+   "escapes": 0,
+   "not_compiling": 0,
+   "upstream": 0,
+   "functions_per_file": [
+    {
+     "file": "sqlite3.c",
+     "count": 2
+    }
+   ]
+  },
+  "not_compiling": [],
+  "uses": [
+   {
+    "function": {
+     "name": "sqlite3Pragma",
+     "file": "sqlite3.c",
+     "line": 145741,
+     "signature": "void sqlite3Pragma(Parse *, Token *, Token *, Token *, int)"
+    },
+    "first_use": 146012,
+    "writes": [
+     146030
+    ],
+    "reads": [
+     146012
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "attachFunc",
+     "file": "sqlite3.c",
+     "line": 125944,
+     "signature": "void attachFunc(sqlite3_context *, int, sqlite3_value **)"
+    },
+    "first_use": 126092,
+    "writes": [],
+    "reads": [
+     126092
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   }
+  ],
+  "uses_total": 2,
+  "uses_omitted": 0,
+  "initializers": [],
+  "initializers_total": 0,
+  "initializers_omitted": 0,
+  "may_set_by_position": [],
+  "may_set_by_position_total": 0,
+  "may_set_by_position_omitted": 0,
+  "struct_fields": [],
+  "struct_fields_total": 0,
+  "escapes": [],
+  "escapes_total": 0,
+  "escapes_omitted": 0,
+  "upstream": [],
+  "upstream_total": 0,
+  "upstream_omitted": 0,
+  "truncated_at_depth": false,
+  "same_name": [],
+  "other_copies": [],
+  "blind_spots": [
+   "Fields are tracked per struct type, not per object: every sqlite3's dfltLockMode is listed.",
+   "Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).",
+   "Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} inside a function (a local or a compound literal) is not recorded either (#37).",
+   "Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).",
+   "Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.",
+   "Only one build configuration was analysed; code under other #ifdef settings is not seen.",
+   "Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are."
+  ]
+ }
+}

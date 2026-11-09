@@ -1,0 +1,55 @@
+{
+ "cmd": "aerotrace callers asmLogTaskEvent@src/cluster_asm.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "asmLogTaskEvent",
+   "file": "src/cluster_asm.c",
+   "line": 1076,
+   "signature": "void asmLogTaskEvent(asmTask *, int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 3,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "asmNotifyStateChange",
+    "file": "src/cluster_asm.c",
+    "line": 1116,
+    "signature": "void asmNotifyStateChange(asmTask *, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "asmLogTaskEvent",
+    "lines": [
+     1141
+    ]
+   },
+   {
+    "name": "asmImportTakeover",
+    "file": "src/cluster_asm.c",
+    "line": 1273,
+    "signature": "void asmImportTakeover(asmTask *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "asmLogTaskEvent",
+    "lines": [
+     1291
+    ]
+   },
+   {
+    "name": "clusterSyncSlotsCommand",
+    "file": "src/cluster_asm.c",
+    "line": 1894,
+    "signature": "void clusterSyncSlotsCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "asmLogTaskEvent",
+    "lines": [
+     2162
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

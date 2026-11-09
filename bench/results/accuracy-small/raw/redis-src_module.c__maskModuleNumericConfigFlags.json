@@ -1,0 +1,31 @@
+{
+ "cmd": "aerotrace callers maskModuleNumericConfigFlags@src/module.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "maskModuleNumericConfigFlags",
+   "file": "src/module.c",
+   "line": 14351,
+   "signature": "unsigned int maskModuleNumericConfigFlags(unsigned int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 1,
+  "truncated_at_depth": false,
+  "results": [
+   {
+    "name": "RM_RegisterNumericConfig",
+    "file": "src/module.c",
+    "line": 14528,
+    "signature": "int RM_RegisterNumericConfig(RedisModuleCtx *, const char *, long long, unsigned int, long long, long long, RedisModuleConfigGetNumericFunc, RedisModuleConfigSetNumericFunc, RedisModuleConfigApplyFunc, void *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "maskModuleNumericConfigFlags",
+    "lines": [
+     14537
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

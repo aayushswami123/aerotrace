@@ -1,0 +1,117 @@
+{
+ "cmd": "aerotrace callers countKeysInSlot@src/cluster.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "countKeysInSlot",
+   "file": "src/cluster.c",
+   "line": 897,
+   "signature": "unsigned int countKeysInSlot(unsigned int)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 8,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "clusterCommand",
+    "file": "src/cluster.c",
+    "line": 1057,
+    "signature": "void clusterCommand(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     1111,
+     1131
+    ]
+   },
+   {
+    "name": "getKeyCountInSlotRangeArray",
+    "file": "src/cluster.c",
+    "line": 2045,
+    "signature": "unsigned long long getKeyCountInSlotRangeArray(slotRangeArray *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     2051
+    ]
+   },
+   {
+    "name": "clusterDeleteKeysInUnownedSlots",
+    "file": "src/cluster.c",
+    "line": 2334,
+    "signature": "void clusterDeleteKeysInUnownedSlots()",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     2341
+    ]
+   },
+   {
+    "name": "clusterUpdateSlotsConfigWith",
+    "file": "src/cluster_legacy.c",
+    "line": 2386,
+    "signature": "void clusterUpdateSlotsConfigWith(clusterNode *, uint64_t, unsigned char *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     2449
+    ]
+   },
+   {
+    "name": "clusterClaimUnassignedSlots",
+    "file": "src/cluster_legacy.c",
+    "line": 5424,
+    "signature": "void clusterClaimUnassignedSlots()",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     5430
+    ]
+   },
+   {
+    "name": "clusterCommandSpecial",
+    "file": "src/cluster_legacy.c",
+    "line": 6132,
+    "signature": "int clusterCommandSpecial(client *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     6320,
+     6330
+    ]
+   },
+   {
+    "name": "getSlotStat",
+    "file": "src/cluster_slot_stats.c",
+    "line": 53,
+    "signature": "uint64_t getSlotStat(int, slotStatType)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     56
+    ]
+   },
+   {
+    "name": "addReplySlotStat",
+    "file": "src/cluster_slot_stats.c",
+    "line": 97,
+    "signature": "void addReplySlotStat(client *, int)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "countKeysInSlot",
+    "lines": [
+     111
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}

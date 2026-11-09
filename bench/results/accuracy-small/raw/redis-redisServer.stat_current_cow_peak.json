@@ -1,0 +1,168 @@
+{
+ "cmd": "aerotrace data redisServer::stat_current_cow_peak --json --all",
+ "exit": 0,
+ "answer": {
+  "target": {
+   "id": "c:@S@redisServer@FI@stat_current_cow_peak",
+   "name": "redisServer::stat_current_cow_peak",
+   "kind": "field",
+   "type": "size_t",
+   "file": "src/server.h",
+   "line": 2224,
+   "exists": true
+  },
+  "question": "declaration",
+  "writer": null,
+  "via_fields": [],
+  "summary": {
+   "functions": 5,
+   "writers": 4,
+   "files": 2,
+   "by_certainty": {
+    "exact": 5,
+    "probable": 0,
+    "unknown": 0
+   },
+   "initializers": 0,
+   "may_set_by_position": 1,
+   "escapes": 0,
+   "not_compiling": 0,
+   "upstream": 0,
+   "functions_per_file": [
+    {
+     "file": "src/server.c",
+     "count": 4
+    },
+    {
+     "file": "src/childinfo.c",
+     "count": 1
+    }
+   ]
+  },
+  "not_compiling": [],
+  "uses": [
+   {
+    "function": {
+     "name": "updateChildInfo",
+     "file": "src/childinfo.c",
+     "line": 102,
+     "signature": "void updateChildInfo(childInfoType, size_t, monotime, size_t, double)"
+    },
+    "first_use": 103,
+    "writes": [
+     103
+    ],
+    "reads": [
+     103,
+     111,
+     113,
+     115
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "resetChildState",
+     "file": "src/server.c",
+     "line": 851,
+     "signature": "void resetChildState()"
+    },
+    "first_use": 854,
+    "writes": [
+     854
+    ],
+    "reads": [],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "initServer",
+     "file": "src/server.c",
+     "line": 2999,
+     "signature": "void initServer()"
+    },
+    "first_use": 3157,
+    "writes": [
+     3157
+    ],
+    "reads": [],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "redisFork",
+     "file": "src/server.c",
+     "line": 7497,
+     "signature": "int redisFork(int)"
+    },
+    "first_use": 7553,
+    "writes": [
+     7553
+    ],
+    "reads": [],
+    "certainty": "exact",
+    "reason": "names this field"
+   },
+   {
+    "function": {
+     "name": "genRedisInfoString",
+     "file": "src/server.c",
+     "line": 6403,
+     "signature": "sds genRedisInfoString(dict *, int, int)"
+    },
+    "first_use": 6614,
+    "writes": [],
+    "reads": [
+     6614
+    ],
+    "certainty": "exact",
+    "reason": "names this field"
+   }
+  ],
+  "uses_total": 5,
+  "uses_omitted": 0,
+  "initializers": [],
+  "initializers_total": 0,
+  "initializers_omitted": 0,
+  "may_set_by_position": [
+   {
+    "name": "server",
+    "kind": "global",
+    "type": "struct redisServer",
+    "file": "src/server.c",
+    "line": 85,
+    "exists": true,
+    "certainty": "unknown",
+    "reason": "a global of this struct type; an initializer that lists values in order sets it"
+   }
+  ],
+  "may_set_by_position_total": 1,
+  "may_set_by_position_omitted": 0,
+  "struct_fields": [],
+  "struct_fields_total": 0,
+  "escapes": [],
+  "escapes_total": 0,
+  "escapes_omitted": 0,
+  "upstream": [],
+  "upstream_total": 0,
+  "upstream_omitted": 0,
+  "truncated_at_depth": false,
+  "same_name": [],
+  "other_copies": [],
+  "blind_spots": [
+   "Fields are tracked per struct type, not per object: every redisServer's stat_current_cow_peak is listed.",
+   "Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).",
+   "Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} inside a function (a local or a compound literal) is not recorded either (#37).",
+   "Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).",
+   "Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.",
+   "1 source file had parse errors; links in them may be missing.",
+   "1696 C/C++ source files are not in compile_commands.json and were not analysed (deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c, ...).",
+   "Some headers were not found: release.h (1 file). Code that needs them may be missing links.",
+   "Only one build configuration was analysed; code under other #ifdef settings is not seen.",
+   "Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are."
+  ]
+ }
+}

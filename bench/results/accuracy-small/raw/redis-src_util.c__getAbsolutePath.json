@@ -1,0 +1,68 @@
+{
+ "cmd": "aerotrace callers getAbsolutePath@src/util.c --depth 1 --limit 1000 --json",
+ "exit": 0,
+ "answer": {
+  "start": {
+   "name": "getAbsolutePath",
+   "file": "src/util.c",
+   "line": 1038,
+   "signature": "sds getAbsolutePath(char *)"
+  },
+  "direction": "callers",
+  "depth": 1,
+  "total": 4,
+  "truncated_at_depth": true,
+  "results": [
+   {
+    "name": "preloadFileIsCurrentAofManifest",
+    "file": "src/aof.c",
+    "line": 793,
+    "signature": "int preloadFileIsCurrentAofManifest()",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "getAbsolutePath",
+    "lines": [
+     808
+    ]
+   },
+   {
+    "name": "aofInstallPreloadFile",
+    "file": "src/aof.c",
+    "line": 840,
+    "signature": "int aofInstallPreloadFile(char *, char *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "getAbsolutePath",
+    "lines": [
+     843
+    ]
+   },
+   {
+    "name": "backupMakeAbsolutePath",
+    "file": "src/aof.c",
+    "line": 3780,
+    "signature": "sds backupMakeAbsolutePath(char *)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "getAbsolutePath",
+    "lines": [
+     3782
+    ]
+   },
+   {
+    "name": "main",
+    "file": "src/server.c",
+    "line": 8051,
+    "signature": "int main(int, char **)",
+    "distance": 1,
+    "confidence": "exact",
+    "via": "getAbsolutePath",
+    "lines": [
+     8144,
+     8198
+    ]
+   }
+  ],
+  "omitted": 0
+ }
+}
