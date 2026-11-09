@@ -25,7 +25,7 @@ from facts import Fact, Fn
 from facts_redis import FACTS as REDIS_FACTS
 from facts_sqlite import FACTS as SQLITE_FACTS
 
-from aerotrace.analysis import diff, graph, signature, symbols
+from aerotrace.analysis import diff, graph, render, signature, symbols
 from aerotrace.index import store
 from aerotrace.index.build import build_index, fresh_index
 from aerotrace.index.history import Outliner
@@ -280,6 +280,58 @@ def _check_signature(conn: sqlite3.Connection, fact: Fact) -> list[str]:
         problems.append(f"returns_void is {r.returns_void}, expected {fact.returns_void}")
     callers = {(s.caller.qualified_name, s.caller.file) for s in r.sites + r.pointer_sites}
     problems += [f"false claim: {m} is listed as a call site" for m in fact.must_not if _key(m) in callers]
+    if fact.ranked or fact.groups or fact.max_lines or fact.text_must_not:
+        problems += _check_ranking(conn, fact)
+    return problems
+
+
+def _check_ranking(conn: sqlite3.Connection, fact: Fact) -> list[str]:
+    """The ranked text answer, asked the way the CLI asks (default caps, `fact.depth` steps further up)."""
+    r = signature.signature_impact(conn, _one(conn, fact.query), depth=fact.depth)
+    text = render.signature_text(r)
+    problems = []
+    rows = text.splitlines()
+    pos = []
+    for caller, file, line in fact.ranked:
+        at = [i for i, row in enumerate(rows) if row.startswith(f"  - {caller}  {file}:{line}")]
+        if not at:
+            problems.append(f"ranked call site {caller}@{file}:{line} is not in the default answer")
+        pos.append(at[0] if at else -1)
+    if -1 not in pos and pos != sorted(pos):
+        problems.append(f"call sites are not in the expected order: {list(fact.ranked)}")
+    for g in fact.groups:
+        name, file = g.entry.split("@")
+        found = [
+            x
+            for x in r.groups
+            if x.kind == "pointer" and x.entry.qualified_name == name and x.entry.file == file
+        ]
+        if not found or g.line not in found[0].lines:
+            problems.append(f"no group for the pointer call in {g.entry} at line {g.line}")
+            continue
+        members = {(h.fn.qualified_name, h.fn.file): h for h in found[0].members}
+        for m in g.members:
+            h = members.get(_key(m))
+            if h is None:
+                problems.append(f"{m} is not in the group of {g.entry}")
+            elif m.confidence and h.confidence != m.confidence:
+                problems.append(f"{m} is '{h.confidence}' in the group of {g.entry}")
+    in_groups = {(h.fn.qualified_name, h.fn.file) for x in r.groups for h in x.members}
+    problems += [f"false claim: {m} is a caller further up" for m in fact.must_not if _key(m) in in_groups]
+    if fact.max_lines is not None and len(rows) > fact.max_lines:
+        problems.append(f"the default answer has {len(rows)} lines, more than {fact.max_lines}")
+    head = text.split("Limits of this answer")[0]
+    problems += [f"the answer says '{w}'" for w in fact.text_must_not if w in head]
+    if r.sites:
+        start = next(i for i, row in enumerate(rows) if row.startswith("Call sites ("))
+        listed = 0
+        for row in rows[start + 1 :]:
+            if not row.startswith("  - "):
+                break
+            listed += 1
+        m = re.search(r"\.\.\. and (\d+) more call sites", text)
+        if listed + (int(m.group(1)) if m else 0) != len(r.sites):
+            problems.append(f"{listed} call sites shown + 'N more' is not {len(r.sites)}")
     return problems
 
 

@@ -107,17 +107,25 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
             return _with_note(render.diff_text(res, limit), note)
 
     @server.tool()
-    def signature_impact(symbol: str, depth: int = 2, limit: int = 40) -> str:
+    def signature_impact(
+        symbol: str, depth: int = 2, limit: int | None = None, show_all: bool = False
+    ) -> str:
         """Before changing a function's parameters (add, remove, reorder, retype) or its return type: every
         call site with its argument count and how it uses the return value (stored, compared, passed on,
         ignored, ...), every place that stores the function's address (tables, callbacks), pointer calls that
-        may reach it, and callers further up. Each result says exact / probable and why."""
+        may reach it, and callers further up, grouped by the caller they come through. Each result says
+        exact / probable and why. A summary comes first; call sites that do not compile come first and are
+        never cut. Lists are short by default (about 15) and say how many were left out: pass `limit` for
+        more per list, or `show_all=true` for everything."""
+        if limit is not None and limit < 1:
+            return "limit must be 1 or more."
         conn, note = state.open()
         with closing(conn):
             fn, msg = resolve(conn, symbol)
             if fn is None:
                 return _with_note(msg, note)
-            return _with_note(render.signature_text(signature.signature_impact(conn, fn, depth), limit), note)
+            res = signature.signature_impact(conn, fn, depth)
+            return _with_note(render.signature_text(res, limit, show_all, render.MCP_MORE), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:

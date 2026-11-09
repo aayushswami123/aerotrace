@@ -62,6 +62,16 @@ class Addr:
 
 
 @dataclass(frozen=True)
+class Group:
+    """Callers further up that come in through one pointer call: `entry` is the function with the pointer
+    call (name@file), `line` one of its pointer-call lines, `members` callers that must be in that group."""
+
+    entry: str
+    line: int
+    members: tuple[Fn, ...]
+
+
+@dataclass(frozen=True)
 class Edit:
     """Replace `old` (must appear exactly once) with `new` in `file`, as a patch that is not applied."""
 
@@ -90,6 +100,11 @@ class Fact:
     returns_void: bool | None = None
     # git_diff facts: the edits are made in the working tree of a fresh git copy, then `aerotrace diff`
     only_files: tuple[str, ...] = ()  # compile only these files (keeps the test fast); () = all
+    # ranked signature answers: these call sites (caller, file, line) appear in this order in the text
+    ranked: tuple[tuple[str, str, int], ...] = ()
+    groups: tuple[Group, ...] = ()  # pointer groups of callers further up (needs depth >= 1)
+    max_lines: int | None = None  # the default text answer has at most this many lines
+    text_must_not: tuple[str, ...] = ()  # words the default text must not use before "Limits of this answer"
     # diff facts
     edits: tuple[Edit, ...] = ()
     changed: tuple[str, ...] = ()  # name@file of functions the diff changes

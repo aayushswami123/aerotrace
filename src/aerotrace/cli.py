@@ -177,6 +177,13 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _positive(text: str) -> int:
+    n = int(text)
+    if n < 1:
+        raise argparse.ArgumentTypeError("must be 1 or more")
+    return n
+
+
 def _open(args: argparse.Namespace):
     """The index, rebuilt first when it was made by another AeroTrace version (it is only a cache)."""
     from aerotrace.index import store
@@ -303,9 +310,9 @@ def cmd_signature(args: argparse.Namespace) -> int:
         return 1
     res = signature.signature_impact(conn, fn, args.depth)
     print(
-        json.dumps(render.signature_json(res, args.limit), indent=2)
+        json.dumps(render.signature_json(res, args.limit, args.all), indent=2)
         if args.json
-        else render.signature_text(res, args.limit)
+        else render.signature_text(res, args.limit, args.all)
     )
     return 0
 
@@ -391,7 +398,14 @@ def build_parser() -> argparse.ArgumentParser:
     sig.add_argument(
         "--depth", type=int, default=2, help="how far up to list callers of the callers (default 2)"
     )
-    sig.add_argument("--limit", type=int, default=50, help="most results per list (default 50)")
+    caps = sig.add_mutually_exclusive_group()
+    caps.add_argument(
+        "--limit",
+        type=_positive,
+        default=None,
+        help="most results per list (default: a short answer, about 15 per list; 50 with --json)",
+    )
+    caps.add_argument("--all", action="store_true", help="show every result, no caps")
     sig.add_argument("--json", action="store_true")
     sig.set_defaults(func=cmd_signature)
 
