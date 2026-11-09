@@ -23,8 +23,8 @@ aerotrace install --client codex    # adds it to ~/.codex/config.toml (Codex, ev
 
 Add `--dry-run` to see the change first. Only the `aerotrace` entry is added or replaced; other servers are kept.
 
-The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `callers`, `callees`, `find` and
-`index_status`. The first question
+The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_users`, `callers`, `callees`,
+`find` and `index_status`. The first question
 builds the index. After that, files you edit are re-indexed before each answer.
 
 ## Use it from the terminal
@@ -36,6 +36,7 @@ aerotrace impact setCommand    # what could break if this function changes
 aerotrace callers dictAdd --depth 2
 aerotrace signature lookupKeyReadOrReply   # every call site, and how each uses the return value
 aerotrace signature addReply --all         # a summary and the top call sites by default; --all for every one
+aerotrace data redisServer::hz   # every function that reads or writes a struct field or global
 aerotrace find src/server.c:4221
 aerotrace diff                 # what your uncommitted edits could break (new files included)
 aerotrace diff main            # everything on this branch, compared with where it left main

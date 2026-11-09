@@ -7,6 +7,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace data <Struct::field | global | name@file | global.field>` and the `data_users` MCP tool:
+  before renaming, removing or retyping a field or global, every function that reads or writes it (with
+  lines), initializers that set it, code that still uses a removed field, globals of its type that may set
+  it by position, and where its address goes (unknown). For a global, also the callers of its users.
+  `--from FUNCTION` asks who reads what that function writes (a field's readers are probable: fields are
+  tracked per struct type, not per object). Every answer states its limits.
 - `aerotrace signature <function>` and the `signature_impact` MCP tool: what a change to a function's
   parameters or return type affects. Every call site with its argument count and how it uses the return
   value (stored, compared, checked, passed on, returned, ignored, discarded), every place that uses the

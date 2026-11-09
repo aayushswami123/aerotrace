@@ -72,6 +72,37 @@ class Group:
 
 
 @dataclass(frozen=True)
+class Use:
+    """A function that reads or writes the variable a data fact asks about. `kind` is reads | writes (None:
+    either); `line` must be among its lines for that kind."""
+
+    fn: str
+    file: str
+    kind: str | None = None
+    line: int | None = None
+    certainty: str | None = None
+
+
+@dataclass(frozen=True)
+class Init:
+    """A global's initializer sets the field at `file`:`line`."""
+
+    variable: str
+    file: str
+    line: int
+
+
+@dataclass(frozen=True)
+class Broke:
+    """A place that does not compile after the fact's edits: still uses the removed field (inside `fn`)."""
+
+    fn: str
+    file: str
+    line: int
+    certainty: str | None = None
+
+
+@dataclass(frozen=True)
 class Edit:
     """Replace `old` (must appear exactly once) with `new` in `file`, as a patch that is not applied."""
 
@@ -84,7 +115,7 @@ class Edit:
 class Fact:
     id: str
     why: str  # plain English: what is true, and how the proof lines show it
-    kind: str  # callers | callees | impact | writes | reads | find | diff | git_diff | signature
+    kind: str  # callers | callees | impact | writes | reads | find | diff | git_diff | signature | data
     query: str = ""  # the function asked about, as name@file (kinds other than diff)
     proof: tuple[Line, ...] = ()
     must: tuple = ()  # Fn for function kinds, variable qualified names for writes/reads
@@ -112,6 +143,18 @@ class Fact:
     changed_state: dict[str, str] = field(default_factory=dict)  # name@file -> new | removed | changed
     changed_decls: tuple[str, ...] = ()
     no_outside: bool = False  # every changed line must be placed (no "could not follow")
+    # data facts (kind "data": `query` is a field or global): users, initializers, escapes (Addr: `how` is
+    # in the detail), globals that may set it by position, places that do not compile after `edits` (for
+    # data facts the edits are APPLIED to a fresh copy, which is then indexed). `must` lists callers of the
+    # users (Fn with distance), asked with `depth`. `data_from`: the value question (who reads what this
+    # function writes). `must_not` may hold Use, Addr, Broke or Fn.
+    uses: tuple[Use, ...] = ()
+    inits: tuple[Init, ...] = ()
+    escapes: tuple[Addr, ...] = ()
+    by_position: tuple[str, ...] = ()
+    broken: tuple[Broke, ...] = ()
+    data_from: str = ""
+    exact_writers: bool = False
     # a fact AeroTrace gets wrong today. The test still runs; it must keep failing (strict xfail), so a fix
     # shows up as "unexpectedly passed" and the mark gets removed.
     known_bug: str | None = None

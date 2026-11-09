@@ -438,3 +438,44 @@ SQLite 3.54.1 (`sqlite3.c`):
 - #18 Escapes: an array element passed by value (`close(arr[0])`) is recorded as the array's address
   escaping.
 - #19 Fields of anonymous structs/unions have a machine path in their qualified name.
+
+## Review (independent reviewer, then coordinator decisions)
+
+The reviewer re-checked every count above with SQL; all matched. Verdict: go, with these changes. What the
+build did with each:
+
+- **Scope: query side only.** `analysis/data.py`, `render_data.py`, `aerotrace data`, MCP `data_users`.
+  No parser change, no `PARSER_VERSION` bump. D1 (positional initializers), D2 (`&x` in file-scope tables;
+  `escapes` has no file column and merge drops rows without a function, so a design that fits format 3 is
+  needed, else it is an owner decision), offsetof and the other compile-error forms go into one parser PR
+  later. Issues: #24 offsetof, #25 designator / "use of undeclared identifier" errors, #26 positional
+  initializers (D1), #27 `&x` in file-scope initializers (D2), #28 C++ file-scope dynamic initializers,
+  #29 clang's error limit (19 rows per file), #37 designated initializers inside functions record nothing
+  (found while building the fixture). Golden facts for #24, #25, #26, #27 and #18 are `known_bug`.
+- **Finding 5 (done):** globals whose type is the field's struct, or an array of it, are listed as
+  unknown "may set it by position". On SQLite this is the only signal (0 initializer rows).
+- **Findings 2-4 (done):** limit lines for every gap above, printed until the parser PR lands. Fixtures:
+  a removed field set by `{.gone = 1}` (not listed; the limit says so), a removed field used twice in one
+  macro call on one line (one row; the limit says "count as one place"). Fact 8 now says "one row per
+  line, not per use".
+- **Finding 6 (done):** members of unnamed unions/structs are matched by the name people type:
+  `CallReply::str` gives two candidates, `CallReply::val.str` and `CallReply::val.verbatim_str.str`; the
+  unnamed spelling (with its machine path, #19) is never printed for the target. #19 stays open.
+- **Finding 7 (done):** limit lines for size/layout dependents (sizeof, struct copy, raw I/O), union
+  members sharing storage (only for union members, from the clang ID), C++ template-dependent access and
+  `##`-built names.
+- **Finding 8 / D4 (done):** `--from` ships in the CLI and MCP. Deviation from the item's wording, on
+  purpose: for a plain global the readers are **exact** (one object; the answer says the order of reads
+  and writes is not known). For a field they are probable. `--from` on a struct global (`server`) answers
+  through the fields the writer writes (`updateHZ` writes `server.hz`, `server.config_hz`), probable.
+- **D3:** depth 2 for globals, 0 for fields (coordinator decision).
+- **Finding 9 (done):** a "no member named" error that names another type (a typedef, a base) is listed as
+  probable, always. The struct's qualified container name (C++) is compared first. Note: clang names the
+  struct for `conn_t *c` (typedef of `struct conn`), so in C this mostly matches exactly.
+- **Finding 10 (done):** the function line says `first use L`.
+- **Finding 11 (done):** fact 1 has the serverCron proof lines 1572, 1579, 1581; fact 5 names all 14
+  writer lines and their functions from the source.
+
+Changes from the plan text above: the fixture is a new `tests/fixtures/c_fields` (Part A's tests count the
+escapes and initializers of `c_data` exactly); the renderer is its own module (`render_data.py`) so it does
+not collide with the ranking work in `render.py`; it uses the same caps and "... and N more" hints.
