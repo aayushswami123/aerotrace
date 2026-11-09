@@ -280,7 +280,7 @@ def _check_signature(conn: sqlite3.Connection, fact: Fact) -> list[str]:
         problems.append(f"returns_void is {r.returns_void}, expected {fact.returns_void}")
     callers = {(s.caller.qualified_name, s.caller.file) for s in r.sites + r.pointer_sites}
     problems += [f"false claim: {m} is listed as a call site" for m in fact.must_not if _key(m) in callers]
-    if fact.ranked or fact.groups or fact.max_lines or fact.text_must_not:
+    if fact.ranked or fact.groups or fact.max_lines or fact.text_must_not or fact.upstream:
         problems += _check_ranking(conn, fact)
     return problems
 
@@ -316,8 +316,24 @@ def _check_ranking(conn: sqlite3.Connection, fact: Fact) -> list[str]:
                 problems.append(f"{m} is not in the group of {g.entry}")
             elif m.confidence and h.confidence != m.confidence:
                 problems.append(f"{m} is '{h.confidence}' in the group of {g.entry}")
-    in_groups = {(h.fn.qualified_name, h.fn.file) for x in r.groups for h in x.members}
-    problems += [f"false claim: {m} is a caller further up" for m in fact.must_not if _key(m) in in_groups]
+    hits = {(h.fn.qualified_name, h.fn.file): h for h in r.upstream}
+    for m in fact.upstream:
+        h = hits.get(_key(m))
+        if h is None:
+            problems.append(f"{m} is not a caller further up")
+        elif m.confidence and h.confidence != m.confidence:
+            problems.append(f"{m} is '{h.confidence}' further up")
+    want_ptr = sum(1 for m in fact.upstream if m.confidence == "via_pointer")
+    said = re.search(r"(\d+) of them reached through a pointer call on the way", text)
+    if fact.upstream and (said is None or int(said.group(1)) < want_ptr):
+        problems.append(f"the summary counts fewer than {want_ptr} callers reached through a pointer call")
+    # a must_not with a confidence forbids only that label ("never exact"); without one, any listing
+    in_groups = {(h.fn.qualified_name, h.fn.file): h for x in r.groups for h in x.members}
+    problems += [
+        f"false claim: {m} is a caller further up"
+        for m in fact.must_not
+        if _key(m) in in_groups and (m.confidence is None or in_groups[_key(m)].confidence == m.confidence)
+    ]
     if fact.max_lines is not None and len(rows) > fact.max_lines:
         problems.append(f"the default answer has {len(rows)} lines, more than {fact.max_lines}")
     head = text.split("Limits of this answer")[0]

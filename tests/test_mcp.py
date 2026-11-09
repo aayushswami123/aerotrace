@@ -201,7 +201,11 @@ async def test_signature_impact_is_short_by_default_and_can_show_all(repo_factor
         full = text_of(
             await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c", "show_all": True})
         )
-        bad = text_of(await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c", "limit": 0}))
+        zero = await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c", "limit": 0})
+        both = await client.call_tool(
+            "signature_impact", {"symbol": "f@src/a_first.c", "limit": 3, "show_all": True}
+        )
     assert "  ... and 12 more call sites (call again with show_all=true, or a bigger limit)." in short
     assert "more call sites" not in full and full.count("  - many  src/a_first.c:") == 20
-    assert bad == "limit must be 1 or more."
+    assert zero.is_error and "limit must be 1 or more." in text_of(zero)
+    assert both.is_error and "not both" in text_of(both)

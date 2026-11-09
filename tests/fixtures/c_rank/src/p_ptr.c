@@ -26,3 +26,8 @@ int only_ptr6(void) { return dispatch2(6); }
 
 /* distance 3, only through pointers */
 int deep(void) { return top2(); }
+
+/* reached through direct_caller (a direct entry), but through a pointer call one step up: probable */
+typedef int (*thunk)(void);
+static thunk thunks[] = {direct_caller};
+int run_thunk(void) { return thunks[0](); }

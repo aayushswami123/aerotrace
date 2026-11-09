@@ -318,6 +318,7 @@ POINTER_CAP = 10
 DIRECT_GROUP_CAP = 10
 POINTER_GROUP_CAP = 5
 GROUP_HEADER_CAP = 10
+FILES_CAP = 20
 CLI_MORE = "use --all to see every one, or --limit N"
 MCP_MORE = "call again with show_all=true, or a bigger limit"
 
@@ -351,8 +352,9 @@ def _capped_sites(r: SignatureImpact, sites: list[Site], cap: int | None) -> tup
     return broken + shown, len(rest) - len(shown)
 
 
-def _more(n: int, what: str, hint: str) -> str:
-    return f"  ... and {n} more {what} ({hint})."
+def _more(n: int, word: str, hint: str) -> str:
+    """'  ... and 3 more call sites (hint).' `word` is singular: 'call site'."""
+    return f"  ... and {n} more {word if n == 1 else word + 's'} ({hint})."
 
 
 def _upstream_line(h: Hit, also: int, target: str, indent: str) -> str:
@@ -390,7 +392,7 @@ def signature_text(
     files = r.files()
     level = Counter(s.certainty for s in r.sites)
     broken = sum(1 for s in r.sites + r.pointer_sites if s.broken)
-    through_ptr = sum(len(g.members) for g in r.groups if g.kind == "pointer")
+    through_ptr = r.through_pointers()
     lines = [
         f"Signature impact of {t.qualified_name} ({t.where}): {t.signature}, {takes}.",
         f"A change to its parameters or return type affects {_n(len(r.sites), 'call site')} in "
@@ -401,7 +403,7 @@ def signature_text(
         + ", ".join(f"{level[lv]} {lv}" for lv in certainty.LEVELS)
         + f"); {broken} {'does' if broken == 1 else 'do'} not compile now; "
         f"{_n(len(r.pointer_sites), 'pointer call')} (probable); "
-        f"{_n(len(r.upstream), 'caller')} further up, {through_ptr} of them only through pointers.",
+        f"{_n(len(r.upstream), 'caller')} further up, {through_ptr} of them reached through a pointer call on the way.",
     ]
     returns = not r.returns_void
     if returns and r.sites:
@@ -411,13 +413,16 @@ def signature_text(
     if not returns and (r.sites or r.pointer_sites):
         lines.append("It returns void, so no caller uses a return value.")
     if files:
-        lines.append("Call sites per file, most first: " + ", ".join(f"{f} {n}" for f, n in files) + ".")
+        fc = None if show_all else max(FILES_CAP, limit or 0)
+        listed = ", ".join(f"{f} {n}" for f, n in (files if fc is None else files[:fc]))
+        rest = "" if fc is None or len(files) <= fc else f", ... and {len(files) - fc} more files"
+        lines.append(f"Call sites per file, most first: {listed}{rest}.")
     if r.sites:
         shown, left = _capped_sites(r, r.sites, cap(SITE_CAP))
         lines.append(f"Call sites ({len(r.sites)}), most important first:")
         lines += [_site_line(s, r, returns) for s in shown]
         if left:
-            lines.append(_more(left, "call sites", more))
+            lines.append(_more(left, "call site", more))
     if r.address_sites:
         lines.append(
             f"Places that use its address ({len(r.address_sites)}): stored, passed or compared as a pointer. "
@@ -436,7 +441,7 @@ def signature_text(
         c = cap(ADDRESS_CAP)
         lines += rows if c is None else rows[:c]
         if c is not None and len(rows) > c:
-            lines.append(_more(len(rows) - c, "places", more))
+            lines.append(_more(len(rows) - c, "place", more))
     if r.pointer_sites:
         lines.append(
             f"Calls through a pointer of its type that may reach it ({len(r.pointer_sites)}) [probable]:"
@@ -444,27 +449,29 @@ def signature_text(
         shown, left = _capped_sites(r, r.pointer_sites, cap(POINTER_CAP))
         lines += [_site_line(s, r, returns) for s in shown]
         if left:
-            lines.append(_more(left, "pointer calls", more))
+            lines.append(_more(left, "pointer call", more))
     if r.upstream:
         lines.append(
             f"Callers further up ({len(r.upstream)}, {r.depth} more step{'s' if r.depth != 1 else ''}), "
             f"grouped by the caller of {t.name} they come through. Each is listed once:"
         )
         hc = None if show_all else max(GROUP_HEADER_CAP, limit or 0)
+        shown_hits: list[Hit] = []
         for g in r.groups if hc is None else r.groups[:hc]:
             lines.append(_group_header(g))
             c = cap(DIRECT_GROUP_CAP if g.kind == "direct" else POINTER_GROUP_CAP)
             members = g.members if c is None else g.members[:c]
+            shown_hits += members
             lines += [_upstream_line(h, g.also.get(h.fn.id, 0), t.name, "    ") for h in members]
             if len(g.members) > len(members):
-                lines.append("  " + _more(len(g.members) - len(members), "in this group", more))
+                lines.append(f"    ... and {len(g.members) - len(members)} more in this group ({more}).")
         if hc is not None and len(r.groups) > hc:
             rest = r.groups[hc:]
             lines.append(
                 f"  ... and {_n(len(rest), 'more group')} ({_n(sum(len(g.members) for g in rest), 'caller')}) "
                 f"({more})."
             )
-        lines += _legend(r.upstream)
+        lines += _legend(shown_hits)
     levels = {s.certainty for s in r.sites + r.pointer_sites}
     lines += [
         f"[{lv}] = {certainty.MEANING[lv]}"
@@ -559,7 +566,7 @@ def signature_json(r: SignatureImpact, limit: int | None = 50, show_all: bool = 
             "pointer_call_sites": len(r.pointer_sites),
             "address_sites": len(r.address_sites),
             "upstream": len(r.upstream),
-            "upstream_only_through_pointers": sum(len(g.members) for g in r.groups if g.kind == "pointer"),
+            "upstream_through_a_pointer_call": r.through_pointers(),
             "direct_uses": {
                 u: c for u, c in sorted(r.uses(r.sites).items(), key=lambda kv: USES.index(kv[0]))
             },

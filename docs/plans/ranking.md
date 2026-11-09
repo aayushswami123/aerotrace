@@ -205,3 +205,15 @@ An independent reviewer read the first plan. Findings and what changed:
 14. Nit: deterministic group order; byte-identical output twice. Done, tested.
 - The mocked example had setCommand at the wrong line; the examples are now real output
   (t_string.c:435).
+
+## Changes after PR review (#23)
+
+1. The summary counted only callers in pointer groups as "only through pointers" (0 for
+   getGenericCommand, though 7 of its 11 far callers come in through getCommand's table entry). It now
+   counts every caller whose best path has a pointer call on it, and says so: "N of them reached through a
+   pointer call on the way". JSON: `summary.upstream_through_a_pointer_call`. Fixture `run_thunk()` and the
+   getGenericCommand golden fact check it.
+2. "1 more place", "1 more call site", "1 more pointer call" (singular).
+3. The `[via_pointer]` legend is printed only when a shown line carries the tag.
+4. The per-file line lists up to 20 files, then "... and N more files"; complete with `--all` and in JSON.
+5. MCP: `limit` with `show_all` is rejected, and both input errors are tool errors (`is_error`).

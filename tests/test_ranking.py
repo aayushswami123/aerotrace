@@ -78,7 +78,10 @@ def test_text_shows_ranked_sites_capped_and_counts_what_is_left(rank):
         "Summary: 28 call sites in 3 files (25 exact, 3 probable, 0 unknown); 1 does not compile now; "
         in text
     )
-    assert "4 pointer calls (probable); 10 callers further up, 8 of them only through pointers." in text
+    assert (
+        "4 pointer calls (probable); 11 callers further up, 9 of them reached through a pointer call on the way."
+        in text
+    )
     assert "Call sites per file, most first: src/a_first.c 25, src/m_use.c 2, src/z_last.c 1." in text
     # direct and pointer uses are counted apart
     assert (
@@ -108,13 +111,14 @@ def test_upstream_groups_by_entry(rank):
     assert groups == [
         # top: exact through direct_caller, also through dispatch1 -> direct group, once, exact
         # calls_both: through both_ways, which calls f directly and through a pointer -> exact
-        ("direct", None, [], [("top", "exact"), ("calls_both", "exact")]),
+        # run_thunk comes in through direct_caller, but calls it through a pointer: direct group, probable
+        ("direct", None, [], [("top", "exact"), ("calls_both", "exact"), ("run_thunk", "via_pointer")]),
         # top2 ties between dispatch1 and dispatch2 at the same distance: the lowest entry id wins
         ("pointer", "dispatch1", [4], [("top2", "via_pointer"), ("deep", "via_pointer")]),
         ("pointer", "dispatch2", [7, 8], [(f"only_ptr{i}", "via_pointer") for i in range(1, 7)]),
     ]
     also = {h.fn.name: g.also.get(h.fn.id, 0) for g in r.groups for h in g.members}
-    assert also == {"top": 1, "calls_both": 0, "top2": 1, "deep": 1} | {
+    assert also == {"top": 1, "calls_both": 0, "run_thunk": 0, "top2": 1, "deep": 1} | {
         f"only_ptr{i}": 0 for i in range(1, 7)
     }
     # every upstream caller is in exactly one group
@@ -132,7 +136,7 @@ def test_pointer_only_callers_are_never_exact(rank):
 def test_upstream_text_headers_caps_and_also(rank):
     _, conn = rank
     text = render.signature_text(impact(conn))
-    assert "  2 callers, reached through its direct call sites:" in text
+    assert "  3 callers, reached through its direct call sites; 1 of them probable:" in text
     assert "    - top  src/p_ptr.c:12 via direct_caller (also reached through 1 other caller of f)" in text
     assert "  2 callers, reached through the pointer call in dispatch1() at src/p_ptr.c:4 [probable]:" in text
     assert (
@@ -157,7 +161,7 @@ def test_every_more_count_is_total_minus_shown(rank):
     for kw in ({}, {"limit": 1}, {"limit": 2}):
         text = render.signature_text(r, **kw)
         rows = site_rows(text, "Call sites (28)")
-        m = re.search(r"\.\.\. and (\d+) more call sites", text)
+        m = re.search(r"\.\.\. and (\d+) more call sites?", text)
         assert len(rows) + int(m.group(1)) == 28
         for g in r.groups:
             shown = sum(1 for h in g.members if f"    - {h.fn.qualified_name}  {h.fn.where}" in text)
@@ -165,14 +169,14 @@ def test_every_more_count_is_total_minus_shown(rank):
             if left:
                 assert f"... and {left} more in this group" in text
         p = site_rows(text, "Calls through a pointer")
-        m = re.search(r"\.\.\. and (\d+) more pointer calls", text)
+        m = re.search(r"\.\.\. and (\d+) more pointer calls?", text)
         assert len(p) + (int(m.group(1)) if m else 0) == 4
         a = [
             line
             for line in text.splitlines()
             if line.startswith("  - src/a_first.c:") and "initializer" in line
         ]
-        m = re.search(r"\.\.\. and (\d+) more places", text)
+        m = re.search(r"\.\.\. and (\d+) more places?", text)
         assert len(a) + (int(m.group(1)) if m else 0) == 2
 
 
@@ -213,7 +217,8 @@ def test_json_keeps_old_order_and_cap_and_adds_keys(rank):
     assert out["call_sites_total"] == 28 and out["call_sites_omitted"] == 0  # default cap stays 50
     assert out["return_value_uses"] == {u: c for u, c in r.uses().items()}
     assert out["summary"]["by_certainty"] == {"exact": 25, "probable": 3, "unknown": 0}
-    assert out["summary"]["upstream_only_through_pointers"] == 8
+    # every caller whose path has a pointer call on it, not only those in pointer groups
+    assert out["summary"]["upstream_through_a_pointer_call"] == 9
     assert [g["kind"] for g in out["upstream_groups"]] == ["direct", "pointer", "pointer"]
     assert out["upstream_groups"][2]["pointer_call_lines"] == [7, 8]
     small = render.signature_json(r, limit=3)
@@ -239,3 +244,30 @@ def test_cli_flags(rank, capsys):
         capsys.readouterr()
     assert main(["signature", F, "--root", str(root), "--json", "--all"]) == 0
     assert len(json.loads(capsys.readouterr().out)["call_sites"]) == 28
+
+
+def test_one_more_is_singular(rank):
+    _, conn = rank
+    text = render.signature_text(impact(conn), limit=1)
+    assert "  ... and 1 more place (use --all" in text
+    assert "  ... and 3 more pointer calls (use --all" in text
+
+
+def test_no_legend_for_tags_that_are_all_hidden(rank, monkeypatch):
+    _, conn = rank
+    monkeypatch.setattr(render, "GROUP_HEADER_CAP", 1)
+    text = render.signature_text(impact(conn), limit=1)  # one group, one member: top (exact)
+    assert "[via_pointer]" not in text
+    assert "[via_pointer] = " in render.signature_text(impact(conn))
+
+
+def test_per_file_line_is_capped_but_complete_with_all(rank, monkeypatch):
+    _, conn = rank
+    monkeypatch.setattr(render, "FILES_CAP", 1)
+    r = impact(conn)
+    assert (
+        "Call sites per file, most first: src/a_first.c 25, ... and 2 more files." in render.signature_text(r)
+    )
+    full = render.signature_text(r, show_all=True)
+    assert "Call sites per file, most first: src/a_first.c 25, src/m_use.c 2, src/z_last.c 1." in full
+    assert len(render.signature_json(r)["summary"]["call_sites_per_file"]) == 3

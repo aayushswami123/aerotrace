@@ -103,6 +103,7 @@ class Fact:
     # ranked signature answers: these call sites (caller, file, line) appear in this order in the text
     ranked: tuple[tuple[str, str, int], ...] = ()
     groups: tuple[Group, ...] = ()  # pointer groups of callers further up (needs depth >= 1)
+    upstream: tuple[Fn, ...] = ()  # callers further up, with the confidence of their best path
     max_lines: int | None = None  # the default text answer has at most this many lines
     text_must_not: tuple[str, ...] = ()  # words the default text must not use before "Limits of this answer"
     # diff facts

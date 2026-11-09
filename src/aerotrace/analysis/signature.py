@@ -121,6 +121,10 @@ class SignatureImpact:
             ),
         )
 
+    def through_pointers(self) -> int:
+        """Callers further up whose best path has a pointer call somewhere on it (so they are probable)."""
+        return sum(1 for h in self.upstream if h.confidence == "via_pointer")
+
     def files(self) -> list[tuple[str, int]]:
         """Every file with direct call sites, and how many: most first, then by name."""
         counts = Counter(s.caller.file for s in self.sites)

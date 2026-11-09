@@ -661,7 +661,9 @@ FACTS = [
         id="redis-ranking-getGenericCommand-uses-before-ignored",
         why="Three callers compare the result with == C_ERR; GET ignores it. A ranked answer lists the three "
         "calls that use the result before the one that ignores it, even though getCommand (line 476) comes "
-        "before getdelCommand (558) in the file. It must not put the ignored call first.",
+        "before getdelCommand (558) in the file. It must not put the ignored call first. call() and "
+        "processCommand reach it only through getCommand's table entry, so the summary must count them as "
+        "reached through a pointer call, and call() must never be exact.",
         kind="signature",
         query=f"getGenericCommand@{T}",
         proof=(
@@ -669,7 +671,23 @@ FACTS = [
             Line(T, 476, "getGenericCommand(c);"),
             Line(T, 558, "if (getGenericCommand(c) == C_ERR) return;"),
             Line(T, 569, "if (getGenericCommand(c) == C_ERR) return;"),
+            # setCommand calls setGenericCommand directly; getCommand is only in the command table (grep
+            # finds no direct call), so call() and its callers reach it only through c->cmd->proc.
+            Line(T, 435, "void setCommand(client *c) {"),
+            Line(T, 475, "void getCommand(client *c) {"),
+            Line("src/commands.def", 13079, ",getCommand,"),
+            Line(S, 3992, "void call(client *c, int flags) {"),
+            Line(S, 4058, "c->cmd->proc(c);"),
+            Line(S, 4467, "int processCommand(client *c) {"),
+            Line(S, 4844, "call(c,flags);"),
         ),
+        depth=2,
+        upstream=(
+            Fn("setCommand", T, "exact"),
+            Fn("call", S, "via_pointer"),
+            Fn("processCommand", S, "via_pointer"),
+        ),
+        must_not=(Fn("call", S, "exact"),),
         ranked=(
             ("setGenericCommand", T, 100),
             ("getdelCommand", T, 558),

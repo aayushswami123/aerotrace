@@ -13,6 +13,7 @@ from contextlib import closing
 from pathlib import Path
 
 from mcp.server import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from aerotrace import __version__
 from aerotrace.analysis import diff, graph, render, signature, symbols
@@ -118,7 +119,9 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
         never cut. Lists are short by default (about 15) and say how many were left out: pass `limit` for
         more per list, or `show_all=true` for everything."""
         if limit is not None and limit < 1:
-            return "limit must be 1 or more."
+            raise ToolError("limit must be 1 or more.")
+        if limit is not None and show_all:
+            raise ToolError("Pass either limit or show_all, not both.")
         conn, note = state.open()
         with closing(conn):
             fn, msg = resolve(conn, symbol)
