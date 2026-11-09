@@ -37,10 +37,37 @@ jobs:
       - run: uv sync --locked
       - run: uv run pytest
 
+  # Golden facts on pinned Redis and SQLite (tests/realrepo). Slow-ish (~1 min), but it runs on every PR.
+  realrepo:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --locked
+      # The pinned archives never change, so the cache key is the file that pins them.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/aerotrace-realrepo
+          key: realrepo-${{ hashFiles('tests/realrepo/repos.py') }}
+      - name: Download and check the pinned sources (SHA-256)
+        run: uv run python tests/realrepo/repos.py
+      - name: Golden facts
+        run: uv run pytest -m realrepo -rxX
+
   # One stable check name for branch protection (matrix job names change).
   ci-ok:
     if: always()
-    needs: [lint, test]
+    needs: [lint, test, realrepo]
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.lint.result }}" = success && test "${{ needs.test.result }}" = success
+      - run: >-
+          test "${{ needs.lint.result }}" = success &&
+          test "${{ needs.test.result }}" = success &&
+          test "${{ needs.realrepo.result }}" = success

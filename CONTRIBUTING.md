@@ -46,7 +46,11 @@ Scopes: `model`, `toolchain`, `cpp`, `index`, `analysis`, `mcp`, `cli`, `hooks`,
 uv run ruff check .
 uv run ruff format --check .
 uv run pytest
+uv run pytest -m realrepo -rxX   # golden facts on pinned Redis and SQLite (downloads once, ~20 s)
 ```
+
+If your change touches analysis, add golden facts for it in `tests/realrepo/`. Its README explains how to
+check a fact by hand and write down the source lines that prove it.
 
 Or install the hooks once with `uv run pre-commit install` and they run on every commit.
 
