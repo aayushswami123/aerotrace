@@ -199,6 +199,47 @@ def file_hash(path: str) -> str:
     return h.hexdigest()
 
 
+def file_stamp(path: str, parsed: str | None) -> tuple[str, int, int]:
+    """(hash, size, mtime_ns) of a file, taken together, so the index can tell later whether it changed.
+    `parsed` is the hash of the content that was actually parsed (None when libclang can't tell us). If
+    the file on disk is no longer that content, or changes while we hash it, return hash "" and mtime -1:
+    they never match, so the next check re-indexes the file instead of trusting an old parse (#43)."""
+    try:
+        before = os.stat(path)
+        h = file_hash(path)
+        after = os.stat(path)
+    except OSError:  # gone (deleted during the build): changed for sure
+        return "", -1, -1
+    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns) or (
+        parsed is not None and parsed != h
+    ):
+        return "", after.st_size, -1
+    return h, after.st_size, after.st_mtime_ns
+
+
+_contents_fn: list = []  # clang_getFileContents, set up once (None when this libclang lacks it)
+
+
+def parsed_hash(tu: cindex.TranslationUnit, f: cindex.File) -> str | None:
+    """The hash of the bytes libclang parsed for file `f` (libclang 6+), or None when it can't say."""
+    if not _contents_fn:
+        try:
+            fn = cindex.conf.lib.clang_getFileContents
+            fn.argtypes = [cindex.TranslationUnit, cindex.c_object_p, ctypes.POINTER(ctypes.c_size_t)]
+            fn.restype = ctypes.c_void_p
+            _contents_fn.append(fn)
+        except AttributeError:
+            _contents_fn.append(None)
+    fn = _contents_fn[0]
+    if fn is None or f is None:
+        return None
+    size = ctypes.c_size_t()
+    ptr = fn(tu, f, ctypes.byref(size))
+    if not ptr:
+        return None
+    return hashlib.sha256(ctypes.string_at(ptr, size.value)).hexdigest()
+
+
 def _scope_parts(cursor: Cursor) -> list[str]:
     parts: list[str] = []
     p = cursor.semantic_parent
@@ -1031,7 +1072,7 @@ def _get_index() -> cindex.Index:
 def parse_unit(unit: CompileUnit, root: Path, excludes: list[str], extra_args: list[str]) -> dict:
     """Parse one source file. Returns a JSON-friendly dict of facts."""
     rel_src = rel_to(unit.file, root) or unit.file
-    result: dict = {"file": rel_src, "error_count": 0, "errors": [], "deps": {}}
+    result: dict = {"file": rel_src, "error_count": 0, "errors": [], "deps": {}, "stats": {}}
     # Stay in the build folder until we are done: libclang reports files from relative -I paths
     # relative to it, and we turn those into repo paths below.
     if not os.path.isfile(unit.file):
@@ -1062,7 +1103,12 @@ def without_machine_flags(args: list[str]) -> tuple[list[str], list[str]]:
 
 
 def _collect_unit(
-    unit: CompileUnit, root: Path, excludes: list[str], extra_args: list[str], rel_src: str, result: dict
+    unit: CompileUnit,
+    root: Path,
+    excludes: list[str],
+    extra_args: list[str],
+    rel_src: str,
+    result: dict,
 ) -> dict:
     result["ignored_flags"] = []
     result["dropped_flags"] = []
@@ -1080,7 +1126,9 @@ def _collect_unit(
         except cindex.TranslationUnitLoadError as e:
             result["error_count"] = 1
             result["errors"] = [f"{rel_src}: libclang could not load this file ({e})"]
-            result["deps"] = {rel_src: file_hash(unit.file)}
+            h, size, mtime = file_stamp(unit.file, None)
+            result["deps"] = {rel_src: h}
+            result["stats"] = {rel_src: [size, mtime]}
             return result
 
     ignored: set[str] = set()
@@ -1113,12 +1161,13 @@ def _collect_unit(
     col = Collector(root, excludes)
     col.collect(tu.cursor)
 
-    deps = {rel_src: file_hash(unit.file)}
+    stamps = {rel_src: file_stamp(unit.file, parsed_hash(tu, tu.get_file(unit.file)))}
     for inc in tu.get_includes():
         r = col.rel(inc.include)
-        if r is not None and r not in deps:
-            deps[r] = file_hash(inc.include.name)
-    result["deps"] = dict(sorted(deps.items()))
+        if r is not None and r not in stamps:
+            stamps[r] = file_stamp(inc.include.name, parsed_hash(tu, inc.include))
+    result["deps"] = {r: stamps[r][0] for r in sorted(stamps)}
+    result["stats"] = {r: [stamps[r][1], stamps[r][2]] for r in sorted(stamps)}
     result["functions"] = sorted(col.functions.values(), key=lambda f: (f["file"], f["line_start"], f["usr"]))
     result["variables"] = sorted(col.variables.values(), key=lambda v: (v["file"], v["line"], v["usr"]))
     result["class_bases"] = dict(sorted(col.class_bases.items()))

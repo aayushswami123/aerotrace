@@ -245,3 +245,150 @@ def test_a_newer_or_damaged_index_is_rebuilt_not_a_crash(repo_factory):
     conn, note = fresh_index(root)
     assert "can't be read" in note and store.read_meta(conn)["schema_version"] == store.SCHEMA_VERSION
     conn.close()
+
+
+# ---------------------------------------------------------------- progress, stopping, crashes
+
+
+@pytest.mark.parametrize(("jobs", "isolate"), [(1, False), (1, True), (2, False)])
+def test_build_reports_progress_file_by_file(tmp_path, jobs, isolate):
+    from conftest import make_repo
+
+    root = make_repo(tmp_path / "p", "c_multi")
+    plain = make_repo(tmp_path / "q", "c_multi")
+    calls = []
+    report = build_index(root, jobs=jobs, isolate=isolate, progress=calls.append)
+    build_index(plain, jobs=1)
+    phases = [p.phase for p in calls]
+    assert phases[:2] == ["flags", "cache"] and phases[-1] == "save"
+    assert phases.count("parse") == report.units  # one call per parsed file
+    assert [p.done for p in calls] == sorted(p.done for p in calls)  # never goes down
+    assert calls[-1].done == calls[-1].total == report.units
+    # neither the callback nor the process pool changes the index
+    assert store.dump_canonical(store.connect(root)) == store.dump_canonical(store.connect(plain))
+
+    warm = []
+    build_index(root, jobs=jobs, isolate=isolate, progress=warm.append)
+    assert "parse" not in [p.phase for p in warm]
+    assert warm[-1].reused == warm[-1].total == report.units
+
+
+def test_stopped_build_writes_nothing(repo_factory):
+    import threading
+
+    from aerotrace.index.build import BuildStopped
+
+    root = repo_factory("c_multi")
+    stop = threading.Event()
+    stop.set()
+    with pytest.raises(BuildStopped):
+        build_index(root, jobs=2, stop=stop)
+    assert not (root / ".aerotrace" / "index.db").exists()
+
+
+def crash_on_b(job):
+    """A parse worker that dies on b.c (it runs in a child process)."""
+    unit = job[0]
+    if unit.file.endswith("b.c"):
+        os._exit(3)
+    return {"file": unit.file}
+
+
+def test_parser_crash_names_the_files_and_keeps_finished_results(tmp_path):
+    from aerotrace.index.build import ParserCrashed, _parse_in_pool
+    from aerotrace.toolchain import libclang
+    from aerotrace.toolchain.compdb import CompileUnit
+
+    units = [CompileUnit(file=str(tmp_path / f"{c}.c"), directory=str(tmp_path)) for c in "abcdef"]
+    done = []
+    with pytest.raises(ParserCrashed) as e:
+        _parse_in_pool(
+            tmp_path,
+            [(u, "key", []) for u in units],
+            [],
+            2,
+            libclang.configure(),
+            lambda u, key, res: done.append(res["file"]),
+            None,
+            work=crash_on_b,
+        )
+    assert "b.c" in e.value.files
+    assert all(not f.endswith("b.c") for f in done)  # what did finish was handed back (and cached)
+
+
+# ---------------------------------------------------------------- files edited during a build (#43)
+
+
+def _two_files(root):
+    root.mkdir()
+    (root / "a.c").write_text("int helper(int x) { return x + 1; }\n")
+    (root / "b.c").write_text("int helper(int x);\nint user(void) { return helper(2); }\n")
+
+
+def _names(root):
+    with store.connect(root) as conn:
+        return sorted(r[0] for r in conn.execute("SELECT name FROM functions"))
+
+
+@pytest.mark.parametrize("use_cache", [False, True])
+def test_file_edited_between_parse_and_save_is_seen_as_changed(tmp_path, use_cache):
+    from aerotrace.index.build import index_plan
+
+    root = tmp_path / "repo"
+    _two_files(root)
+    if use_cache:
+        build_index(root, jobs=1)  # so the next build takes both files from the cache
+
+    def edit_now(p):
+        if p.phase == "save":  # both files were read; the user saves b.c now
+            (root / "b.c").write_text(
+                "int helper(int x);\nint user(void) { return helper(2); }\nint user2(void) { return helper(3); }\n"
+            )
+
+    build_index(root, jobs=1, use_cache=use_cache, progress=edit_now)
+    assert _names(root) == ["helper", "user"]  # the build saw the old b.c
+    plan = index_plan(root)
+    assert plan is not None and plan.changed == ("b.c",)  # ...and the index knows it is out of date
+    build_index(root, jobs=1)
+    assert _names(root) == ["helper", "user", "user2"]
+    assert index_plan(root) is None
+
+
+def test_parse_records_the_hash_of_what_libclang_read(tmp_path):
+    from aerotrace.frontends.cpp import parse as parse_mod
+    from aerotrace.toolchain import libclang
+    from aerotrace.toolchain.compdb import CompileUnit
+
+    libclang.configure()
+    root = tmp_path / "repo"
+    _two_files(root)
+    (root / "h.h").write_text("int helper(int x);\n")
+    (root / "b.c").write_text('#include "h.h"\nint user(void) { return helper(2); }\n')
+    res = parse_mod.parse_unit(CompileUnit(str(root / "b.c"), str(root), ["-x", "c"]), root, [], [])
+    assert res["deps"] == {r: parse_mod.file_hash(str(root / r)) for r in ("b.c", "h.h")}
+    for r, (size, mtime) in res["stats"].items():
+        st = (root / r).stat()
+        assert (size, mtime) == (st.st_size, st.st_mtime_ns)
+    # a file that differs from what was parsed is never trusted
+    assert parse_mod.file_stamp(str(root / "h.h"), "not the parsed content") == (
+        "",
+        (root / "h.h").stat().st_size,
+        -1,
+    )
+
+
+@pytest.mark.parametrize(("jobs", "isolate"), [(1, False), (2, True)])
+def test_fresh_index_on_an_unchanged_tree_plans_nothing(repo_factory, jobs, isolate):
+    """Every file, including a header four units include, is recorded as unchanged (#43 must not make a
+    file look changed forever)."""
+    from aerotrace.index.build import index_plan
+
+    root = repo_factory("c_multi")
+    build_index(root, jobs=jobs, isolate=isolate)
+    with store.connect(root) as conn:
+        rows = {r[0]: r[1] for r in conn.execute("SELECT path, mtime_ns FROM files")}
+        assert store.changed_files(conn, root) == []
+    assert rows["include/shared.h"] > 0, rows  # a real stamp, not the "never trust" -1
+    assert index_plan(root) is None
+    build_index(root, jobs=jobs, isolate=isolate)  # and again, all from the cache
+    assert index_plan(root) is None

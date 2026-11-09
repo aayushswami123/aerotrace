@@ -389,7 +389,7 @@ def cmd_tests(args: argparse.Namespace) -> int:
 def cmd_mcp(args: argparse.Namespace) -> int:
     from aerotrace.mcp.server import run
 
-    run(find_root(args.root), Path(args.build_dir).resolve() if args.build_dir else None)
+    run(find_root(args.root), Path(args.build_dir).resolve() if args.build_dir else None, args.jobs)
     return 0
 
 
@@ -545,6 +545,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     m = with_root(sub.add_parser("mcp", help="run the MCP server on stdin/stdout (agents start this)"))
     m.add_argument("--build-dir", help="folder holding compile_commands.json")
+    m.add_argument("--jobs", type=int, help="parallel parsers (default: CPU count)")
     m.set_defaults(func=cmd_mcp)
 
     ins = with_root(sub.add_parser("install", help="add AeroTrace to Claude Code, Cursor or Codex"))

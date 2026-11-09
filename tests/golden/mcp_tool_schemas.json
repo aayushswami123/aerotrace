@@ -1,0 +1,260 @@
+{
+  "callees": {
+    "description": "Functions this one calls, directly or through other functions, up to `depth` steps.",
+    "inputSchema": {
+      "properties": {
+        "depth": {
+          "default": 3,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 40,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol"
+      ],
+      "title": "calleesArguments",
+      "type": "object"
+    }
+  },
+  "callers": {
+    "description": "Functions that call this one, directly or through other functions, up to `depth` steps.",
+    "inputSchema": {
+      "properties": {
+        "depth": {
+          "default": 3,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 40,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol"
+      ],
+      "title": "callersArguments",
+      "type": "object"
+    }
+  },
+  "data_users": {
+    "description": "Before renaming, removing or retyping a struct field or a global: every function that reads or\nwrites it (with lines), initializers that set it ({.f = x}), code that still uses a removed field,\nglobals of its type that may set it by position, and where its address goes (unknown). For a global,\nalso its users' callers (depth, default 2; fields 0). `name` is Struct::field, global, name@file or\nglobal.field. With `from_function`, only what reads the value that function writes (a field's readers\nare probable: fields are tracked per struct type, not per object). A summary comes first; lists are\nshort by default (about 15) and say how many were left out: pass `limit`, or `show_all=true`.",
+    "inputSchema": {
+      "properties": {
+        "depth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "from_function": {
+          "default": "",
+          "title": "From Function",
+          "type": "string"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "show_all": {
+          "default": false,
+          "title": "Show All",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "data_usersArguments",
+      "type": "object"
+    }
+  },
+  "diff_impact": {
+    "description": "What a whole change could break. With no arguments: your uncommitted edits compared with HEAD\n(new files included). `base=\"main\"`: everything on this branch plus uncommitted edits, compared with\nwhere the branch left main. `patch=\"<unified diff>\"`: a change you have NOT applied yet; its old\nside must match the files on disk. Lists changed and removed functions, changed globals and fields,\nevery affected caller, and the changes it could not follow.",
+    "inputSchema": {
+      "properties": {
+        "base": {
+          "default": "HEAD",
+          "title": "Base",
+          "type": "string"
+        },
+        "depth": {
+          "default": 5,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 40,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "patch": {
+          "default": "",
+          "title": "Patch",
+          "type": "string"
+        }
+      },
+      "title": "diff_impactArguments",
+      "type": "object"
+    }
+  },
+  "find": {
+    "description": "Find functions by exact name, part of a name, ns::Class::method, name@file, or file.c:LINE.",
+    "inputSchema": {
+      "properties": {
+        "limit": {
+          "default": 20,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "title": "findArguments",
+      "type": "object"
+    }
+  },
+  "impact": {
+    "description": "What could break if this C/C++ function changes: every caller up to `depth` steps away (direct,\nvirtual and function-pointer calls), functions that read globals or fields it writes, and the\nlimits of the answer. `symbol` is a name, ns::Class::method, name@file, or file.c:LINE.",
+    "inputSchema": {
+      "properties": {
+        "depth": {
+          "default": 5,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 40,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol"
+      ],
+      "title": "impactArguments",
+      "type": "object"
+    }
+  },
+  "index_status": {
+    "description": "What AeroTrace indexed (files, functions, compile flags, libclang) and what it could not see.",
+    "inputSchema": {
+      "properties": {},
+      "title": "index_statusArguments",
+      "type": "object"
+    }
+  },
+  "signature_impact": {
+    "description": "Before changing a function's parameters (add, remove, reorder, retype) or its return type: every\ncall site with its argument count and how it uses the return value (stored, compared, passed on,\nignored, ...), every place that stores the function's address (tables, callbacks), pointer calls that\nmay reach it, and callers further up, grouped by the caller they come through. Each result says\nexact / probable and why. A summary comes first; call sites that do not compile come first and are\nnever cut. Lists are short by default (about 15) and say how many were left out: pass `limit` for\nmore per list, or `show_all=true` for everything.",
+    "inputSchema": {
+      "properties": {
+        "depth": {
+          "default": 2,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit"
+        },
+        "show_all": {
+          "default": false,
+          "title": "Show All",
+          "type": "boolean"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol"
+      ],
+      "title": "signature_impactArguments",
+      "type": "object"
+    }
+  },
+  "tests_for_change": {
+    "description": "Which tests to run for a change, why, and how sure (exact / probable), plus the changed code no\nknown test reaches. Same inputs as `diff_impact` (no arguments = your uncommitted edits), or\n`symbol` for one function. It never runs tests. \"Not known\" means AeroTrace can't tell, not that\nthe code is untested.",
+    "inputSchema": {
+      "properties": {
+        "base": {
+          "default": "HEAD",
+          "title": "Base",
+          "type": "string"
+        },
+        "depth": {
+          "default": 8,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 30,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "patch": {
+          "default": "",
+          "title": "Patch",
+          "type": "string"
+        },
+        "symbol": {
+          "default": "",
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "title": "tests_for_changeArguments",
+      "type": "object"
+    }
+  }
+}
