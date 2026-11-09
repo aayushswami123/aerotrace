@@ -1,201 +1,207 @@
 # Plan: ranked, capped signature answers
 
-Work item 1 ("ranking"). Branch `feat/ranking`, based on `launch-candidate`.
+Work item 1 ("ranking"). Branch `feat/ranking`, based on `launch-candidate`. Revised after review (see
+"Review" at the end); the examples below are real output on Redis 8.10.3.
 
 ## Goal
 
-`aerotrace signature addReply` on Redis 8.10.3 prints over 300 lines today (247 call sites, 357 upstream
-callers, a cap of 50 per list on the CLI and 40 in MCP, several lists). An agent reads the first screen and
-stops. The answer should start with a summary, list the most important call sites first, group far callers
-by how they are reached, and stay short by default, while saying exactly what it left out.
+`aerotrace signature addReply` on Redis 8.10.3 printed 116 lines (CLI cap 50 per list; MCP 40), most of
+them long, with call sites in file order. An agent reads the first screen and stops. The answer should
+start with a summary, list the most important call sites first, group far callers by how they are
+reached, and stay short by default, while saying exactly what it left out.
 
-Scope: `signature` (CLI) and `signature_impact` (MCP), text and JSON. `impact` and `diff` are follow-ups
-(see the end).
+Scope: `signature` (CLI) and `signature_impact` (MCP). Ranked order and short caps apply to the **text**
+answer. JSON stays backward compatible (see Flags). `impact` and `diff` are follow-ups.
 
 ## Output format (text)
 
-Mocked examples. The counts marked (measured) come from Redis 8.10.3; file names and per-file counts are
-placeholders. The PR will paste the real output.
-
-### addReply (void, many sites)
+### addReply (void, 247 call sites): 44 lines (was 116; `--all` gives 621)
 
 ```
 Signature impact of addReply (src/networking.c:606): void addReply(client *, robj *), 2 parameters.
-Summary: 247 call sites in 63 files (all exact), 0 places use its address, 0 pointer calls may reach it,
-357 callers further up. It returns void, so only the argument list matters.
-Most call sites: src/t_list.c (21), src/cluster.c (18), src/server.c (15), src/t_zset.c (14), src/db.c (12).
-Call sites (247), first 15:
-  - blpopCommand  src/t_list.c:1201
-  ... (14 more lines, ordered by file and line)
+A change to its parameters or return type affects 247 call sites in 126 functions, 0 places that use its address, and 0 pointer calls that may reach it.
+Summary: 247 call sites in 34 files (247 exact, 0 probable, 0 unknown); 0 do not compile now; 0 pointer calls (probable); 357 callers further up, 0 of them only through pointers.
+It returns void, so no caller uses a return value.
+Call sites per file, most first: src/debug.c 30, src/networking.c 21, src/db.c 15, ... (every file, one line)
+Call sites (247), most important first:
+  - aclCommand  src/acl.c:2962
+  ... (15 rows)
   ... and 232 more call sites (use --all to see every one, or --limit N).
-Callers further up (357, 2 more steps), first 15:
-  Through direct call sites (357):
-    Distance 2 (180):
-      - processCommand  src/server.c:4500 via call
-      ...
-  ... and 342 more callers.
+Callers further up (357, 2 more steps), grouped by the caller of addReply they come through. Each is listed once:
+  357 callers, reached through its direct call sites; 24 of them probable:
+    - backupStatusCommand  src/aof.c:3768 via addReplyLongLong
+    ... (10 rows)
+    ... and 347 more in this group (use --all to see every one, or --limit N).
+[via_pointer] = a call through a function pointer of the matching type
 Limits of this answer:
-  - addReply can be called from outside this repo ...
+  ...
 ```
 
-### setCommand (no direct sites, reached through pointers)
+### setCommand (no direct sites, reached through pointers): 35 lines (was 33)
 
 ```
-Signature impact of setCommand (src/t_string.c:439): void setCommand(client *), 1 parameter.
-Summary: 0 direct call sites, 2 places use its address, 2 pointer calls may reach it (measured),
-11 callers further up, all through pointers (measured). It returns void.
-Places that use its address (2): ...
-  - src/commands.def:13094  in the initializer of redisCommandTable: stored in an initializer
-  - src/t_string.c:201  in setGenericCommand: compared
+Summary: 0 call sites in 0 files (0 exact, 0 probable, 0 unknown); 0 do not compile now; 2 pointer calls (probable); 11 callers further up, 11 of them only through pointers.
+...
 Calls through a pointer of its type that may reach it (2) [probable]:
-  - call  src/server.c:4058 [probable]
   - loadSingleAppendOnlyFile  src/aof.c:1993 [probable]
-Callers further up (11, 2 more steps), grouped by the pointer call that brings them in [probable]:
-  9 callers, reached through the pointer call in call() at src/server.c:4058:
-    - processCommand  src/server.c:4844 [via_pointer]
-    - execCommand  src/multi.c:227 [via_pointer]
+  - call  src/server.c:4058 [probable]
+Callers further up (11, 2 more steps), grouped by the caller of setCommand they come through. Each is listed once:
+  5 callers, reached through the pointer call in loadSingleAppendOnlyFile() at src/aof.c:1993 [probable]:
+    - loadAppendOnlyFiles  src/aof.c:2113 [via_pointer] via loadSingleAppendOnlyFile
     ...
-  2 callers, reached through the pointer call in loadSingleAppendOnlyFile() at src/aof.c:1993:
-    - loadAppendOnlyFiles  src/aof.c:... [via_pointer]
+  6 callers, reached through the pointer call in call() at src/server.c:4058 [probable]:
+    - RM_Call  src/module.c:6859 [via_pointer] via call
+    - processCommand  src/server.c:4467 [via_pointer] via call
     ...
-[probable] = the link is real, but may not apply here (pointer, virtual call, same name, other object)
-Limits of this answer: ...
+    ... and 1 more in this group (use --all to see every one, or --limit N).
 ```
 
-### Non-void function (createStringObject, 139 sites, measured)
+### Non-void (createStringObject, 139 sites): 44 lines (was 116)
 
-The summary line gives the use split, e.g. "139 call sites in N files; 120 use the result (98 stored, 22
-passed on), 19 ignore it". If every site ignores the result, it says "all ignore the result". For a void
-function it never says "ignore" (addReply is void; the measured "all ignored" is only how void calls are
-stored).
+`How callers use the return value: 139 use it (131 stored, 3 passed on, 5 returned).` Pointer calls get
+their own line (`How pointer calls use it: ...`). If every call ignores it: `all ignore it (...)`.
 
 ## Ranking rules
 
-Call sites (direct, and separately pointer call sites), sorted by this key:
+Call sites (direct, and separately the pointer call sites), in `SignatureImpact.ranked()`:
 
-1. Calls that do not compile now (argument count does not match).
-2. Calls that use the result: stored, compared, checked, passed, returned, used, called.
-3. Calls that ignore it: ignored, discarded with (void).
-4. Inside each group: exact before probable before unknown; then file, line, column, caller id.
+1. `does_not_compile`: the argument count does not match.
+2. `uses_result`: stored, compared, checked, passed, returned, used, called.
+3. `ignores_result`: ignored, or discarded with `(void)`.
+4. `no_result`: every call of a void function (never called "ignores").
+5. Inside a group: exact, probable, unknown; then file, line, column, caller id.
 
-For void functions groups 2 and 3 collapse (every call is "ignored"), so the order is: broken, then
-exact/probable, then file/line.
+Callers further up, in `signature._groups()`, grouped by **entry**: the distance-1 function (a caller of
+the target) their path comes through.
 
-The rank is computed in `analysis/signature.py` (a `rank_key(site)` function and the lists are stored
-already ranked), not in the renderer, so CLI, MCP and JSON agree.
-
-Most-call-site files: top 5 files by number of direct call sites; ties by file name.
-
-Callers further up (upstream), grouped by the distance-1 call site whose path brings them in ("entry"):
-
-- Each upstream hit is assigned to the entry on its best path (the path `walk_many` already picks:
-  shortest, then strongest). Each caller appears once.
-- Group order: callers through direct exact sites; then through probable direct sites (virtual, same
-  name); then one group per pointer call site, ordered by file and line.
-- Direct groups are one group ("Through direct call sites"), shown by distance like today. Pointer groups
-  are one group per pointer call site, named by its function, file and line, because that is the thing an
-  agent must look at.
-- Inside a group: distance, then confidence, file, line (today's order).
-
-To know the entry, `Hit` gets an optional `via_id: str | None = None` (the id behind today's `via` name),
-filled by `walk_many`. Names alone are not enough: two static functions can share a name. This is an
-in-memory field only; no index change.
+- A distance-1 function that calls the target directly at least once is a direct entry, even if it also
+  calls it through a pointer. All direct entries form one group ("reached through its direct call
+  sites"); probable members are tagged and counted in the header.
+- A distance-1 function that reaches the target only through a pointer is a pointer entry: one group
+  each. The header names the function and every pointer-call line of that type in it.
+- Entries are found from the call edges between distance d-1 and d (not from the `via` name alone), so
+  ties are seen. Among the walk's shortest, strongest paths, a direct entry wins, then the lowest entry
+  id. Each caller is in exactly one group; if it is also reached through other groups at the same
+  distance, the line says `(also reached through N other callers of <target>)`.
+- Group order: direct group, then pointer groups by entry file, first line, entry id. Members nearest
+  first (today's order).
 
 ## Caps (text default)
 
-| List | Default cap | Why |
+| List | Cap | Never cut |
 |---|---|---|
-| Call sites | 15 | Enough to see the broken and used ones first; the summary and top files tell where the rest are. |
-| Places that use the address | 10 | Usually 1 to 3; tables can be long. |
-| Pointer call sites | 10 | Usually 1 to 5. |
-| Callers further up | 15 in total, at most 5 per pointer group | Far callers matter less than call sites; groups keep the "why" visible. |
-| Most-call-site files | 5 | One line. |
+| Call sites | 15 | calls that do not compile (always shown, on top of the 15) |
+| Places that use the address | 10 | |
+| Pointer call sites | 10 | pointer calls that do not compile |
+| Direct group members | 10 | the group header and its count |
+| Members per pointer group | 5 | the group header and its count |
+| Group headers | 10 (or `--limit` if bigger) | "... and N more groups (M callers)" |
 
-Worst case is about 75 lines (header 4, sites 16, uses 1, addresses 11, pointer 11, upstream about 22,
-legend 2, limits about 6), instead of 300+. Every capped list ends with "... and N more <things> (use
---all to see every one, or --limit N)". In MCP the hint says `show_all=true` instead of `--all`.
+Never cut: the summary (counts, exact/probable/unknown split, not-compiling count, pointer counts even
+when 0), the per-file line (every file), the use splits, the legends, and "Limits of this answer". Every
+capped list ends with "... and N more ... (use --all to see every one, or --limit N)"; in MCP the hint is
+"call again with show_all=true, or a bigger limit". Measured: 35 to 44 lines on the Redis and SQLite
+examples (was 33 to 116).
 
 ## Flags
 
-- CLI `aerotrace signature`: `--limit N` keeps working and sets every list cap to N (as today).
-  New `--all`: no caps. `--all` and `--limit` together is an error (argparse mutually exclusive group).
-  With neither, the default caps above apply. This lowers the CLI default from 50 per list; that is the
-  default change this item is approved for.
-- MCP `signature_impact(symbol, depth=2, limit=None, show_all=False)`: same meaning. Today's default is
-  40 per list; it becomes the caps above. `limit` given = today's behaviour.
-- `--json`: same ranking. Caps: `--limit` and `--all` as above; with neither, keep today's 50 per list so
-  scripts don't silently lose rows. New keys only (no key removed or renamed): `summary`
-  (counts, use split, top files), `call_sites_omitted`, `address_sites_omitted`,
-  `pointer_call_sites_omitted`, `upstream_omitted`, `upstream_groups` (entry + member ids), and each
-  call site gets `rank_group` ("does_not_compile" | "uses_result" | "ignores_result").
-  Note for the owner: the order of `call_sites` in JSON changes (ranked instead of certainty/file).
+- CLI `aerotrace signature`: `--limit N` (N >= 1) sets every list cap to N; `--all` removes the caps;
+  using both is an error. With neither, the caps above. This lowers the text default from 50 per list,
+  which is the default change this item is approved for.
+- MCP `signature_impact(symbol, depth=2, limit=None, show_all=False)`: same meaning. Schema change:
+  `limit` is now optional (was `40`) and `show_all` is new; `limit < 1` gives a short error.
+- JSON (`--json`), coordinator decision: backward compatible. `call_sites`, `upstream` and the other
+  lists keep today's order and today's default cap of 50 (`--limit` and `--all` work as above). Only new
+  keys: `rank_group` per site, `*_total` and `*_omitted` per list, `not_compiling_call_sites` (never
+  capped), `upstream_groups` (kind, entry, pointer-call lines, total, capped members with
+  `also_reached_through`, `members_omitted`), `summary` (counts, `by_certainty`, `not_compiling`,
+  `direct_uses`, `pointer_uses`, `call_sites_per_file`). `return_value_uses` keeps its meaning (direct
+  and pointer calls together).
 
-## Files to change
+## Files changed
 
-- `src/aerotrace/analysis/signature.py`: rank key, ranked lists, top files, use split, upstream groups.
-- `src/aerotrace/analysis/graph.py`: `Hit.via_id` (optional, default None), set in `walk_many`.
-- `src/aerotrace/analysis/render.py`: `signature_text` / `signature_json` new layout, caps, omitted
-  counts, a `more_hint` argument so CLI and MCP name their own flag.
-- `src/aerotrace/cli.py`: `--all`, `--limit` default `None`.
-- `src/aerotrace/mcp/server.py`: `show_all`, `limit=None`; tool description mentions the cap.
-- `tests/test_signature.py`, new fixture `tests/fixtures/c_rank/`, `tests/realrepo/facts_redis.py`,
-  `tests/realrepo/facts.py` + `test_golden.py` (order and group checks).
-- `README` / docs only where the `signature` flags are listed.
+- `src/aerotrace/analysis/signature.py`: rank groups, `ranked()`, `files()`, `uses(sites)`,
+  `UpstreamGroup`, `_groups()`.
+- `src/aerotrace/analysis/render.py`: new `signature_text` layout and caps, new JSON keys.
+- `src/aerotrace/cli.py`: `--all`, `--limit` (>= 1, default none). `src/aerotrace/mcp/server.py`:
+  `limit=None`, `show_all`.
+- No change to `graph.py` (no `Hit.via_id` needed) and no index change.
+- Tests: `tests/fixtures/c_rank/`, `tests/test_ranking.py`, one MCP test, 3 Redis golden facts with a
+  small new check (`ranked`, `groups`, `max_lines`, `text_must_not` in `facts.py` / `test_golden.py`).
 
 ## Test plan
 
-Fixture `tests/fixtures/c_rank/` (written to trip the ranking up):
+Fixture `tests/fixtures/c_rank/` (written to trip it up):
 
-- `int f(int a, int b)` called from `a.c` (file first alphabetically) with the result ignored, from `z.c`
-  with one wrong-argument-count call (must still rank first), from `m.c` stored/compared/passed, and one
-  `(void)f(...)` discard (ranks with "ignored").
-- A same-name static `f` in another file so one call is `ambiguous` (probable): a probable "used" site must
-  rank before an exact "ignored" site (use group beats certainty), and an exact "used" site before a
-  probable "used" one.
-- 20 calls in one file so the 15 cap triggers; the test checks "... and N more" equals total minus shown.
-- Two pointer tables of `f`'s type called from `dispatch1()` and `dispatch2()`, each with its own callers:
-  two upstream groups with the right members. One function `both()` calls `f` directly and also reaches it
-  through `dispatch1()`: it must sit under the direct group, once, and be exact. A caller only reachable
-  through a pointer must never be exact.
-- A void function: the summary says "returns void" and never "ignore".
-- `--all` shows every line; `--all` with `--limit` fails; `--limit 3` caps every list at 3; MCP
-  `show_all=True` and default; JSON omitted counts and unchanged default cap of 50.
-- Determinism: the same answer twice, byte for byte.
+- `f` defined in `src/a_first.c` and again in `dup/f.c`, so calls from other files are ambiguous
+  (probable). `z_last.c` (sorts last) has the only call that does not compile: it must come first.
+  A probable use must come before an exact ignore; exact before probable inside a group; `(void)` ranks
+  with "ignores". 20 ignored calls in `many()` trigger the cap of 15.
+- `top()` calls `direct_caller()` (calls f) and `dispatch1()` (pointer call): direct group, once, exact,
+  "also reached through 1". `top2()` reaches f only through `dispatch1()` and `dispatch2()` at the same
+  distance: dispatch1 group (lowest entry id), never exact, "also 1". `deep()` (distance 3) follows top2.
+  `calls_both()` comes through `both_ways()`, which calls f directly and through a pointer: direct, exact.
+  `dispatch2()` has two pointer-call lines (both in the header) and 6 callers (cap 5, "1 more").
+- `note()` is void: rank group `no_result`, the text never says "ignore".
+- Every "N more" equals total minus shown, for every list, at the default and at `--limit 1`/`2`.
+  Group headers beyond the cap are counted. Calls that do not compile survive `--limit 1` (text and JSON).
+- CLI `--all`, `--limit 3`, `--all --limit 3` (error), `--limit 0` (error), `--json --all`. MCP default,
+  `show_all`, `limit=0`. JSON keeps today's order and cap. Same answer twice, byte for byte.
 
-Golden facts (Redis 8.10.3, hand-checked, proof lines copied from the source):
+Golden facts (Redis 8.10.3, proof lines copied from the source):
 
-- `redis-ranking-getGenericCommand`: the three `== C_ERR` comparisons (t_string.c:100, 558, 569) are
-  listed before the ignored call in `getCommand` (t_string.c:476). Must not: the ignored site first.
-- `redis-ranking-setCommand-groups`: `processCommand` (server.c:4844 `call(c,flags);`) is in the upstream
-  group of the pointer call in `call()` at server.c:4058, labelled probable / via_pointer. Must not:
-  `processCommand` shown as exact, or `processTimeEvents` in any group.
-- `redis-ranking-addReply-void`: `void addReply(client *c, robj *obj)` (networking.c:606); the text answer
-  says it returns void, does not say "ignore", is at most 80 lines by default, and its "and N more" equals
-  total minus shown (a consistency check, not a copied number).
-- These need a small new check kind (`order` = list of (caller, file, line) that must appear in this
-  relative order; `groups` = entry -> required members). Existing facts and the 3 known failures stay as
-  they are.
-
-Runs: `uv run ruff check . && uv run ruff format --check . && uv run pytest`, then
-`uv run pytest -m realrepo -rxX` (still exactly the 3 known failures, #12, #13).
+- `redis-ranking-getGenericCommand-uses-before-ignored`: the three `== C_ERR` calls (t_string.c:100,
+  558, 569) come before the ignored call in `getCommand` (476).
+- `redis-ranking-setCommand-pointer-groups`: `processCommand` (server.c:4844 `call(c,flags);`) and
+  `execCommand` (multi.c:229) are in the group of the pointer call in `call()` at server.c:4058, as
+  via_pointer; `loadAppendOnlyFiles` (aof.c:2152) in the group of `loadSingleAppendOnlyFile` (aof.c:1993).
+  Must not: `processTimeEvents`, which calls `te->timeProc` (ae.c:335), an `aeTimeProc` (ae.h:47, 63),
+  not a `redisCommandProc` (server.h:2959, 3073).
+- `redis-ranking-addReply-void-and-short`: `void addReply(...)` (networking.c:606); the default answer
+  is at most 60 lines, never says "ignore", and shown + "N more" equals the number of call sites.
 
 ## Risks
 
-- `Hit.via_id` is shared by `impact` and `diff`. Default `None` and not added to their JSON, so their
-  output is unchanged; existing tests prove it.
-- A caller reachable through two pointers (or a pointer and a direct call) is shown under one entry only,
-  the best path. The group header says "reached through", not "only through"; the text will say each
-  caller is listed once.
-- Lower default caps hide rows that were shown before. Mitigated by the summary, top files, exact omitted
-  counts and the `--all` hint. A wrong "safe" reading is the risk: the summary must always give the full
-  counts, including broken calls, which always rank first and are never hidden behind a cap before any
-  non-broken site.
-- Existing text assertions in `tests/test_signature.py` may need new expectations where the layout
-  changes on purpose. No assertion is weakened; each change is listed in the PR.
-- JSON `call_sites` order changes (flagged above for the owner).
+- A caller reachable through several entries is listed once; the "(also reached through N ...)" note
+  says so. The group header says "reached through", not "only through".
+- Lower text caps hide rows that were shown before. The summary, the per-file line, exact "N more"
+  counts and the flag hint make up for it; calls that do not compile are never hidden.
+- The direct group can hold callers whose path has a pointer step further up (tagged `[via_pointer]`,
+  counted in the header as probable).
 
-## Follow-ups (not in this item; default changes need the owner)
+## Follow-ups (default changes need the owner)
 
-- `impact` and `diff` text: same "summary first, group far callers by the pointer that brings them in,
-  smaller default cap, --all". The group helper will be written so they can reuse it.
-- `callers` / `callees`: say which flag shows more ("raise `limit`" today).
+- `impact` and `diff` text: summary first, group far callers by the pointer that brings them in, shorter
+  default cap, `--all`. `signature._groups()` can be reused.
+- `callers` / `callees` say "raise `limit`"; they could name the flag like signature does.
+
+## Review
+
+An independent reviewer read the first plan. Findings and what changed:
+
+1. Must-fix: the `both()` fixture tested nothing (distance-1 callers are call sites, not upstream).
+   Done: `top()` (direct_caller + dispatch1) and `top2()` (dispatch1 + dispatch2 tie), plus `deep()`.
+2. Must-fix: group by entry function, follow paths back to distance 1, list every pointer-call line,
+   a function calling both ways is direct. Done in `_groups()`; entries are computed from the call edges
+   of each step (this also finds ties), so `Hit.via_id` was not needed. Tested (`calls_both`, dispatch2
+   lines 7, 8).
+3. Must-fix: the upstream cap must never hide groups. Done: every header with its count, up to 10
+   headers, then "... and N more groups (M callers)"; 10 direct, 5 per pointer group. Tested.
+4. Must-fix: calls that do not compile are never cut (text and JSON); the summary always gives the
+   broken count, exact/probable/unknown split and pointer counts; limits and legends never cut. Done and
+   written down under Caps. Tested with `--limit 1`.
+5. Should-fix: void calls are `no_result`. Done, tested.
+6. Should-fix: separate use splits for direct and pointer calls; JSON `return_value_uses` unchanged.
+   Done (`direct_uses`, `pointer_uses` in `summary`).
+7. Coordinator decision: JSON backward compatible (old order, cap 50, only new keys); ranked order for
+   text. Done, tested.
+8. Should-fix: one line with every file and its count. Done.
+9. Should-fix: "(also reached through N other ...)". Done, tested.
+10. Should-fix: measure real line counts before fixing the budget; test "N more = total - shown" for
+    every list. Measured (above); the test covers call sites, pointer calls, addresses and groups.
+11. Nit: one direct group, probable members tagged. Done (header counts them).
+12. Nit: reject `--limit < 1`; mention the MCP schema change. Done (CLI error, MCP message; in the PR).
+13. Nit: proof for the processTimeEvents must-not. Done (ae.h:47, 63; server.h:2959, 3073; ae.c:335).
+14. Nit: deterministic group order; byte-identical output twice. Done, tested.
+- The mocked example had setCommand at the wrong line; the examples are now real output
+  (t_string.c:435).
