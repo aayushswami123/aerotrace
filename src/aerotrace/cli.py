@@ -290,7 +290,17 @@ def cmd_diff(args: argparse.Namespace) -> int:
         return 2
     if note:
         _err(note)
-    res = diff.analyse(conn, root, diffs, mode=mode, base=base, depth=args.depth, old=old, now=outliner.now)
+    res = diff.analyse(
+        conn,
+        root,
+        diffs,
+        mode=mode,
+        base=base,
+        depth=args.depth,
+        old=old,
+        now=outliner.now,
+        patched=outliner.text,
+    )
     print(
         json.dumps(render.diff_json(res, args.limit), indent=2)
         if args.json

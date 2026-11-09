@@ -134,3 +134,26 @@ def parse_unified(text: str) -> list[FileDiff]:
 def whole_file_added(path: str, n_lines: int) -> FileDiff:
     """A new file git does not track yet, as if a diff added every line."""
     return FileDiff(None, path, added=[(n, 0) for n in range(1, n_lines + 1)], hunks=1)
+
+
+def apply(text: str, fd: FileDiff) -> str | None:
+    """The file after the patch: `text` (the file as it is, which the patch's old side must match) with the
+    removed lines dropped and the added lines put in. Line endings are kept as they are. Returns None when
+    the patch does not fit the text exactly (it is never moved or applied loosely)."""
+    lines = text.split("\n")  # a trailing "" means the file ends with a newline
+    ends_nl = len(lines) > 1 and lines[-1] == ""
+    body = lines[:-1] if ends_nl else lines
+    if any(not (0 < n <= len(body)) or body[n - 1] != t for n, t in fd.old_text.items()):
+        return None
+    removed = {o for o, _ in fd.removed}
+    inserts: dict[int, list[tuple[int, str]]] = {}
+    for n, gap in fd.added:
+        inserts.setdefault(gap, []).append((n, fd.new_text.get(n, "")))
+    out: list[str] = []
+    for g in range(len(body) + 1):
+        if g > 0 and g not in removed:
+            out.append(body[g - 1])
+        out.extend(t for _, t in sorted(inserts.get(g, [])))
+    if any(not (0 < n <= len(out)) or out[n - 1] != t for n, t in fd.new_text.items()):
+        return None
+    return "\n".join(out) + ("\n" if ends_nl or (fd.added and not body) else "")

@@ -474,8 +474,6 @@ FACTS = [
         ),
         changed_decls=("redisServer::stat_numcommands",),
         no_outside=True,
-        known_bug="#13: In patch mode the new text of a changed declaration is reported as 'could not follow' "
-        "(only the old side is matched to the field).",
     ),
     Fact(
         id="redis-diff-comment-only",

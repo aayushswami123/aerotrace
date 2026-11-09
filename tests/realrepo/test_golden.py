@@ -258,7 +258,9 @@ def _diff_problems(res, fact: Fact) -> list[str]:
 
 def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
     diffs = diff.load_patch(root, _patch(root, fact))
-    return _diff_problems(diff.analyse(conn, root, diffs, mode="patch", now=Outliner(root).now), fact)
+    outliner = Outliner(root)
+    res = diff.analyse(conn, root, diffs, mode="patch", now=outliner.now, patched=outliner.text)
+    return _diff_problems(res, fact)
 
 
 def _check_calls(want, got, what: str) -> list[str]:

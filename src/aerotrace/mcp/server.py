@@ -428,7 +428,15 @@ def _create(
 
         def body(conn: sqlite3.Connection) -> str:
             res = diff.analyse(
-                conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now
+                conn,
+                root,
+                diffs,
+                mode=mode,
+                base=desc,
+                depth=depth,
+                old=old,
+                now=outliner.now,
+                patched=outliner.text,
             )
             return render.diff_text(res, limit)
 

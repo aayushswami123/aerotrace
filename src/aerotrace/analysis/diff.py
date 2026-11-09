@@ -26,6 +26,7 @@ from aerotrace.analysis.graph import Hit
 from aerotrace.analysis.symbols import Fn
 from aerotrace.index import store
 from aerotrace.index.history import Outline, Outliner
+from aerotrace.toolchain import unidiff
 from aerotrace.toolchain.compdb import SOURCE_EXTS
 from aerotrace.toolchain.unidiff import FileDiff, parse_unified, whole_file_added
 
@@ -137,6 +138,25 @@ def _disk_lines(root: Path, path: str) -> dict[int, str]:
     except OSError:
         return {}
     return {i: t for i, t in enumerate(text.split("\n"), 1)}
+
+
+def patched_text(root: Path, fd: FileDiff) -> str | None:
+    """Patch mode: the file as the patch would leave it (in memory; nothing is written)."""
+    if fd.old_path is None:
+        text = ""
+    else:
+        try:
+            text = (root / fd.old_path).read_bytes().decode("utf-8", "surrogateescape")
+        except OSError:
+            return None
+    return unidiff.apply(text, fd)
+
+
+def patched_outline(root: Path, fd: FileDiff, patched: Callable[..., Outline | None]) -> Outline | None:
+    text = patched_text(root, fd)
+    if text is None or fd.new_path is None:
+        return None
+    return patched(fd.new_path, text, fd.old_path or fd.new_path)
 
 
 def _still_calling(conn: sqlite3.Connection, name: str) -> list[str]:
@@ -262,7 +282,9 @@ class _Collect:
         mode: str,
         old: Outline | None,
         now: Callable[[str], Outline | None] | None,
+        new: Outline | None = None,
     ) -> None:
+        """`new`: patch mode, an outline of the file with the patch applied (in memory)."""
         conn, res = self.conn, self.res
         if mode == "git":
             here = sorted({n for n, _ in fd.added})
@@ -312,6 +334,9 @@ class _Collect:
             else:
                 removed_old = {o for o, _ in fd.removed}
                 other -= self.explain(old, removed_old, fd.old_path or path, path, old=True)
+        # Added lines (patch mode) belong to the patched version: map them onto its outline (#13).
+        if mode == "patch" and new is not None and other:
+            other -= self.explain(new, set(other), fd.new_path or path, path, old=False)
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:
             res.outside.append(Outside(path, out_lines, sorted(other)))
@@ -327,11 +352,13 @@ def analyse(
     depth: int = 5,
     old: dict[str, Outline | None] | None = None,
     now: Callable[[str], Outline | None] | None = None,
+    patched: Callable[..., Outline | None] | None = None,
 ) -> DiffImpact:
     """Map a parsed diff onto the index and walk everything upstream of what changed.
 
     `old` holds outlines of the old versions of changed files (git mode), keyed by old path. `now` outlines
-    a file as it is on disk; it is called only for changed lines the index can't place."""
+    a file as it is on disk; it is called only for changed lines the index can't place. `patched` (patch
+    mode, `Outliner.text`) outlines a file with the patch applied in memory, so added lines are placed too."""
     if mode not in ("git", "patch"):
         raise ValueError(f"unknown mode {mode}")
     old = old or {}
@@ -364,7 +391,10 @@ def analyse(
         if mode == "patch" and not _matches_disk(root, fd):
             res.mismatched.append(path)
             continue
-        col.map_file(path, fd, mode, old.get(fd.old_path or "") if mode == "git" else None, now)
+        new = None
+        if mode == "patch" and patched is not None and fd.new_path and fd.added:
+            new = patched_outline(root, fd, patched)
+        col.map_file(path, fd, mode, old.get(fd.old_path or "") if mode == "git" else None, now, new)
 
     fns = symbols.get_many(conn, list(col.changed))
     res.changed = sorted(
