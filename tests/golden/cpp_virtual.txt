@@ -15,3 +15,7 @@ edge fixed@shapes.cpp -calls/exact-> Square::area@shapes.cpp :12
 edge total@shapes.cpp -calls/exact-> Shape::area@shapes.hpp :8
 edge total@shapes.cpp -calls/virtual-> Circle::area@shapes.cpp :8
 edge total@shapes.cpp -calls/virtual-> Square::area@shapes.cpp :8
+call_site fixed@shapes.cpp -> Square::area@shapes.cpp :12:12 args=0 exact returned
+call_site total@shapes.cpp -> Circle::area@shapes.cpp :8:12 args=0 virtual returned
+call_site total@shapes.cpp -> Shape::area@shapes.hpp :8:12 args=0 exact returned
+call_site total@shapes.cpp -> Square::area@shapes.cpp :8:12 args=0 virtual returned

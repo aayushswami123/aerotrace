@@ -44,3 +44,18 @@ blind calls_missing@lib/shared.c unresolved_call :19 declared_only: declared in 
 blind dispatch@lib/table.c pointer_call :11 call through a pointer to 'void (void)'; may reach 2 functions of that type
 address_taken on_a@lib/table.c void (void)
 address_taken on_b@lib/table.c void (void)
+call_site apply@lib/table.c -> pointer 'int (int)' :17:12 args=1 via_pointer returned
+call_site dispatch@lib/table.c -> pointer 'void (void)' :11:5 args=0 via_pointer ignored
+call_site main@prog_a/main.c -> add@lib/shared.c :6:5 args=1 exact ignored
+call_site main@prog_a/main.c -> next_id@lib/shared.c :6:9 args=0 exact passed (to add() as argument 1)
+call_site main@prog_a/main.c -> util_run@prog_a/util.c :7:12 args=0 exact returned
+call_site main@prog_b/main.c -> calls_missing@lib/shared.c :7:5 args=0 exact ignored
+call_site main@prog_b/main.c -> dispatch@lib/table.c :6:5 args=1 exact ignored
+call_site main@prog_b/main.c -> get@lib/shared.c :8:27 args=0 exact used (in arithmetic (+))
+call_site main@prog_b/main.c -> util_run_b@prog_b/util.c :8:12 args=0 exact used (in arithmetic (+))
+call_site on_a@lib/table.c -> add@lib/shared.c :5:26 args=1 exact ignored
+call_site on_b@lib/table.c -> add@lib/shared.c :6:26 args=1 exact ignored
+call_site util_run@prog_a/util.c -> bump@prog_a/util.c :8:5 args=0 exact ignored
+call_site util_run_b@prog_b/util.c -> bump@prog_b/util.c :8:5 args=0 exact ignored
+address_site on_a@lib/table.c lib/table.c:8 in table@lib/table.c stored in an initializer
+address_site on_b@lib/table.c lib/table.c:8 in table@lib/table.c stored in an initializer
