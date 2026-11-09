@@ -201,7 +201,7 @@ FACTS = [
             Line("src/blocked.c", 308, "if (c->cmd && c->cmd->proc == sflushCommand)"),
         ),
         must_not=(Fn("sflushCommand", "src/cluster.c"),),
-        known_bug="Comparing a function's address (== f) is treated as taking its address, so pointer calls "
+        known_bug="#12: Comparing a function's address (== f) is treated as taking its address, so pointer calls "
         "of the same type are linked to it.",
     ),
     Fact(
@@ -474,7 +474,7 @@ FACTS = [
         ),
         changed_decls=("redisServer::stat_numcommands",),
         no_outside=True,
-        known_bug="In patch mode the new text of a changed declaration is reported as 'could not follow' "
+        known_bug="#13: In patch mode the new text of a changed declaration is reported as 'could not follow' "
         "(only the old side is matched to the field).",
     ),
     Fact(

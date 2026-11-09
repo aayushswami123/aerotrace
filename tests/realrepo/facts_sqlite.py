@@ -403,7 +403,7 @@ FACTS = [
         ),
         changed_decls=("sqlite3::busyTimeout",),
         no_outside=True,
-        known_bug="In patch mode the new text of a changed declaration is reported as 'could not follow' "
+        known_bug="#13: In patch mode the new text of a changed declaration is reported as 'could not follow' "
         "(only the old side is matched to the field).",
     ),
     # ------------------------------------------------------------ signatures (build item 5, part A)
