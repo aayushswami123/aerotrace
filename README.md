@@ -16,12 +16,39 @@ uv tool install git+https://github.com/aayushswami123/aerotrace   # or: pipx ins
 Run one command inside your C/C++ repo:
 
 ```bash
-aerotrace install --client claude   # writes .mcp.json (Claude Code)
+aerotrace install --client claude   # writes .mcp.json and the edit-check hook in .claude/settings.json
 aerotrace install --client cursor   # writes .cursor/mcp.json (Cursor)
 aerotrace install --client codex    # adds it to ~/.codex/config.toml (Codex, every repo)
 ```
 
 Add `--dry-run` to see the change first. Only the `aerotrace` entry is added or replaced; other servers are kept.
+
+For Claude Code, install also adds an **edit check** (a `PreToolUse` hook on Edit, MultiEdit and Write;
+other hooks and settings are kept). Before Claude edits a C/C++ file, AeroTrace checks the edit as a patch:
+
+- an exact break: Claude gets the full list (changed, broken and affected functions, data, tests to run);
+- a probable break, or 10+ affected functions or data: a short warning;
+- anything else: nothing.
+
+It only warns. To block edits, add rules in `.aerotrace/rules.toml`:
+
+```toml
+[thresholds]
+medium_affected = 10   # affected functions/data that make an edit "medium"
+timeout_seconds = 5    # the check gives up after this and lets the edit through
+
+[[rule]]
+name = "core is protected"
+paths = ["src/core/*"]   # globs on repo-relative paths (no paths = every file)
+level = "medium"          # low | medium | high: the lowest level at which the rule fires
+action = "block"          # warn (default) | block
+```
+
+If the index is missing or far out of date, the check fails, or `rules.toml` is invalid, the edit is
+never blocked: Claude is told "AeroTrace couldn't check this edit (reason)". The one exception is a
+protected path (a `level = "low"` block rule): it stays blocked, since protecting a path does not need
+the index. `aerotrace hook off` /
+`aerotrace hook on` turn it off and on for the repo; `aerotrace hook status` shows the state.
 
 The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_users`, `tests_for_change`,
 `callers`, `callees`, `find` and `index_status`. The first question
