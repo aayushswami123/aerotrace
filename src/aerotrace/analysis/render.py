@@ -330,10 +330,15 @@ def _split(r: SignatureImpact, sites: list[Site]) -> str:
     n_use, n_ign = sum(used[u] for u in use), sum(used[u] for u in ign)
     parts = []
     if n_use:
-        parts.append(f"{n_use} use it ({', '.join(f'{used[u]} {USE_WORDS[u]}' for u in use)})")
+        parts.append(
+            f"{n_use} {'uses' if n_use == 1 else 'use'} it ({', '.join(f'{used[u]} {USE_WORDS[u]}' for u in use)})"
+        )
     if n_ign:
         detail = ", ".join(f"{used[u]} {USE_WORDS[u]}" for u in ign)
-        parts.append(("all ignore it" if not n_use else f"{n_ign} ignore it") + f" ({detail})")
+        parts.append(
+            ("all ignore it" if not n_use else f"{n_ign} {'ignores' if n_ign == 1 else 'ignore'} it")
+            + f" ({detail})"
+        )
     return ", ".join(parts)
 
 
