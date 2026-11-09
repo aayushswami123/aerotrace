@@ -1,0 +1,11 @@
+✅ Nothing found that this change can break, in the code AeroTrace can see.
+    You changed 1 function in 1 C/C++ file (compared with HEAD).
+    No other indexed function calls what changed or reads what it writes.
+
+Tests to run (1)
+  tests/unit/type/string.tcl  covers getGenericCommand
+
+Limits of the index (1)
+  ? Macro uses are not followed anywhere in the index.
+
+index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)

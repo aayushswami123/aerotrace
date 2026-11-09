@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-KIY4GSsS62WWKjFRnFTpWi/+Ti7e1VSxlHy4GPiw8js=&#x27;; style-src &#x27;sha256-knIJrdrkO01nGTq7o+lbwBuNd+5R/cG+VGS881uhTWQ=&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>AeroTrace: Nothing found that this change can break, but 2 parts of the change could not be followed.</title>
+<style>/* AeroTrace report. System fonts only; every colour is a variable with a light and a dark value. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff; --fg: #1d2939; --muted: #475467; --panel: #f6f7f9; --line: #d0d5dd; --edge: #98a2b3;
+  --breaks: #b42318; --affected: #b54708; --unknown: #344054; --noeffect: #667085; --changed: #1d4ed8;
+  --on-breaks: #ffffff; --on-affected: #ffffff; --on-changed: #ffffff; --on-noeffect: #ffffff;
+  --hl: #1d4ed8; --match: #fef0c7;
+}
+:root[data-theme="dark"] {
+  --bg: #0f1419; --fg: #e6e9ef; --muted: #a7b0be; --panel: #171d24; --line: #344054; --edge: #5c6878;
+  --breaks: #f97066; --affected: #fdb022; --unknown: #d0d5dd; --noeffect: #98a2b3; --changed: #84adff;
+  --on-breaks: #0f1419; --on-affected: #0f1419; --on-changed: #0f1419; --on-noeffect: #0f1419;
+  --hl: #84adff; --match: #4e3d0a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1419; --fg: #e6e9ef; --muted: #a7b0be; --panel: #171d24; --line: #344054; --edge: #5c6878;
+    --breaks: #f97066; --affected: #fdb022; --unknown: #d0d5dd; --noeffect: #98a2b3; --changed: #84adff;
+    --on-breaks: #0f1419; --on-affected: #0f1419; --on-changed: #0f1419; --on-noeffect: #0f1419;
+    --hl: #84adff; --match: #4e3d0a;
+  }
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+header { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+header p { margin: 2px 0 2px 2px; }
+h1.head { font-size: 20px; margin: 0 0 4px; }
+.proof { color: var(--muted); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.note { color: var(--muted); }
+.tools { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+#search { width: 340px; max-width: 100%; }
+input, button {
+  font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 3px 8px;
+}
+button { cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--hl); box-shadow: inset 0 0 0 1px var(--hl); }
+:focus-visible { outline: 2px solid var(--hl); outline-offset: 2px; }
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 340px) 1fr minmax(240px, 320px); }
+#list, #details { overflow: auto; padding: 8px 12px; background: var(--panel); }
+#list { border-right: 1px solid var(--line); }
+#details { border-left: 1px solid var(--line); }
+#list ul { list-style: none; margin: 4px 0 10px; padding: 0; }
+#list summary { font-weight: 600; cursor: pointer; padding: 4px 0; }
+#list li.plain { padding: 3px 4px; }
+#list li[hidden] { display: none; }
+button.it {
+  display: block; width: 100%; text-align: left; background: transparent; border: 1px solid transparent;
+  padding: 3px 4px; border-radius: 4px;
+}
+button.it:hover, button.it.sel { border-color: var(--line); background: var(--bg); }
+.it i, #list i { font-style: normal; }
+.it em { font-style: normal; font-weight: 700; font-size: 12px; letter-spacing: 0.02em; }
+.it span { color: var(--muted); font-size: 12px; }
+.it small { display: block; color: var(--muted); font-size: 12px; }
+.s-breaks em, .s-breaks > i { color: var(--breaks); }
+.s-affected em, .s-affected > i { color: var(--affected); }
+.s-changed em, .s-new em, .s-removed em { color: var(--changed); }
+#graphpane { position: relative; min-width: 0; display: flex; flex-direction: column; }
+#graphpane.empty { padding: 16px; }
+.gtools { display: flex; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+#graph { flex: 1; width: 100%; min-height: 300px; display: block; touch-action: none; cursor: grab; }
+#graph.drag { cursor: grabbing; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.edge.data { stroke-dasharray: 4 3; }
+.edge.hl { stroke: var(--hl); stroke-width: 2.5; }
+.node { cursor: pointer; }
+.node .shape { stroke: var(--bg); stroke-width: 1.5; }
+.node .icon { fill: none; stroke-width: 2; stroke-linecap: round; }
+.node text { fill: var(--fg); font-size: 11px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+.s-changed .shape, .s-new .shape { fill: var(--changed); stroke: var(--fg); stroke-width: 2.5; }
+.s-removed .shape { fill: var(--bg); stroke: var(--changed); stroke-width: 2.5; stroke-dasharray: 4 2; }
+.s-changed .icon, .s-new .icon { stroke: var(--on-changed); }
+.s-changed .icon { fill: var(--on-changed); }
+.s-removed .icon { stroke: var(--changed); }
+.s-breaks .shape { fill: var(--breaks); }
+.s-breaks .icon { stroke: var(--on-breaks); }
+.s-affected .shape { fill: var(--affected); }
+.s-affected .icon { stroke: var(--on-affected); }
+.s-unknown .shape { fill: var(--bg); stroke: var(--unknown); stroke-width: 2; stroke-dasharray: 3 2; }
+.s-unknown .icon { stroke: var(--unknown); }
+.s-no_effect .shape { fill: var(--noeffect); }
+.s-no_effect .icon { stroke: var(--on-noeffect); }
+.node.sel .shape { stroke: var(--hl); stroke-width: 4; }
+.node.cur .shape { stroke: var(--hl); stroke-width: 3; stroke-dasharray: none; }
+.node.dim { opacity: 0.25; }
+.node .lbl { display: none; }
+#graph.lod .node .lbl, .node.always .lbl, .node.sel .lbl, .node.match .lbl, .node.cur .lbl { display: inline; }
+.hid { display: none; }
+.bubble rect { fill: var(--panel); stroke: var(--muted); stroke-dasharray: 3 2; }
+.bubble text { fill: var(--fg); font-size: 11px; }
+.bubble { cursor: pointer; }
+.legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 6px 10px; border-top: 1px solid var(--line); font-size: 12px; }
+.legend li { display: flex; align-items: center; gap: 4px; }
+svg.lg { width: 18px; height: 18px; }
+#details h2 { font-size: 16px; margin: 4px 0; word-break: break-all; }
+#details dl { margin: 0; }
+#details dt { font-weight: 600; margin-top: 8px; }
+#details dd { margin: 0; word-break: break-word; }
+#details .path button { display: block; margin: 2px 0; text-align: left; }
+#copybox { width: 100%; margin-top: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 900px) {
+  main { display: block; overflow: auto; }
+  #graph { height: 70vh; }
+  #list, #details { border: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; transition: none; } }
+</style>
+</head>
+<body>
+<header id="top">
+<h1 class="head h-info"><span class="hicon" aria-hidden="true">ℹ️</span> Nothing found that this change can break, but 2 parts of the change could not be followed.</h1>
+<p>You changed 1 function in 1 C/C++ file (compared with HEAD).</p>
+<p class="proof">index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)</p>
+<div class="tools">
+<label for="search">Search</label>
+<input id="search" type="search" placeholder="name, file or file:line  (press /)" autocomplete="off" spellcheck="false">
+<button type="button" id="theme" aria-label="Colour theme">Theme: auto</button>
+</div>
+<p id="status" class="note" aria-live="polite"></p>
+</header>
+<main id="main">
+<nav id="list" aria-label="All findings">
+<p id="listnote" class="note" hidden></p>
+<details open><summary>What changed (1)</summary><ul>
+<li data-i="0"><button class="it s-changed"><i aria-hidden="true">◆</i> <em>CHANGED</em> <b>getGenericCommand</b> <span>src/t_string.c:380</span><small>you changed 2 lines in it. Link: exact.</small></button></li>
+</ul></details>
+<details open><summary>Changes AeroTrace could not follow (2)</summary><ul>
+<li class="plain"><i aria-hidden="true">?</i> src/t_string.c: lines 40-42 outside any function.</li>
+<li class="plain"><i aria-hidden="true">?</i> src/extra.c is not in the index (not in compile_commands.json, excluded, or a header no indexed file includes).</li>
+</ul></details>
+<p class="note">Tests: not known yet (no test map in the index).</p>
+<details open><summary>Limits of the index (1)</summary><ul>
+<li class="plain"><i aria-hidden="true">?</i> Macro uses are not followed anywhere in the index.</li>
+</ul></details>
+</nav>
+<section id="graphpane" aria-label="Graph">
+<div class="gtools"><button type="button" id="expand">Expand all</button><button type="button" id="focusbtn" aria-pressed="false">Focus</button><button type="button" id="fit">Fit</button><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">-</button></div>
+<svg id="graph" role="application" tabindex="0" aria-roledescription="impact graph" aria-label="Impact graph. Arrow keys move between nodes, Home goes to the change, F focuses, E expands, Escape shows all. The list on the left has the same facts." aria-describedby="announce"><g id="edges"><path id="e-calls" class="edge"/><path id="e-data" class="edge data"/><path id="e-hl" class="edge hl"/></g><g id="nodes"></g><g id="bubbles"></g></svg>
+<ul class="legend" aria-label="Legend"><li><svg class="lg" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><g class="node s-changed"><path class="shape" d="M0,-13L13,0L0,13L-13,0Z"/><path class="icon" d="M-3,-3H3V3H-3Z"/></g></svg> CHANGED / NEW / REMOVED <span class="sr">(diamond)</span></li><li><svg class="lg" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><g class="node s-breaks"><path class="shape" d="M-10,-10H10V10H-10Z"/><path class="icon" d="M-5,-5L5,5M5,-5L-5,5"/></g></svg> BREAKS (will not build or link) <span class="sr">(square)</span></li><li><svg class="lg" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><g class="node s-affected"><path class="shape" d="M0,-12L12,10H-12Z"/><path class="icon" d="M0,-4V3M0,6V7"/></g></svg> AFFECTED <span class="sr">(triangle)</span></li><li><svg class="lg" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><g class="node s-unknown"><path class="shape" d="M-10,0A10,10 0 1,0 10,0A10,10 0 1,0 -10,0Z"/><path class="icon" d="M-3,-4C-3,-8 3,-8 3,-4C3,-1 0,-1 0,2M0,5V6"/></g></svg> UNKNOWN (could not follow) <span class="sr">(dashed circle)</span></li><li><svg class="lg" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><g class="node s-no_effect"><path class="shape" d="M-6,0A6,6 0 1,0 6,0A6,6 0 1,0 -6,0Z"/><path class="icon" d="M-3,0H3"/></g></svg> NO EFFECT FOUND <span class="sr">(small circle)</span></li></ul>
+</section>
+<aside id="details" aria-label="Details">
+<p class="note">Select a function or declaration to see where it is, why it is listed, and how sure the link is.</p>
+</aside>
+</main>
+<p id="announce" class="sr" aria-live="polite"></p>
+<noscript><p class="note">JavaScript is off, so the graph is not drawn. Every finding is in the list.</p></noscript>
+<script type="application/json" id="data">{"certainties":["exact","probable","unknown"],"edge_kinds":["calls","reads","writes"],"edges":[],"files":["src/t_string.c"],"icons":{"affected":"\u25b2","breaks":"\u2716","changed":"\u25c6","new":"\u25c6","no_effect":"\u00b7","removed":"\u25c6","unknown":"?"},"kinds":["function","field","global","static_local"],"meaning":{"exact":"the compiler resolved this exact link","probable":"the link is real, but may not apply here (pointer, virtual call, same name, other object)","unknown":"the data leaves code AeroTrace can follow; what happens next is not known"},"nodes":[["getGenericCommand",0,0,380,0,0,"","you changed 2 lines in it",0,-1,[],"CHANGED",""]],"omitted":0,"shapes":[["M0,-13L13,0L0,13L-13,0Z","M-3,-3H3V3H-3Z"],["M0,-13L13,0L0,13L-13,0Z","M-5,0H5M0,-5V5"],["M0,-13L13,0L0,13L-13,0Z","M-5,-5L5,5M5,-5L-5,5"],["M-10,-10H10V10H-10Z","M-5,-5L5,5M5,-5L-5,5"],["M0,-12L12,10H-12Z","M0,-4V3M0,6V7"],["M-10,0A10,10 0 1,0 10,0A10,10 0 1,0 -10,0Z","M-3,-4C-3,-8 3,-8 3,-4C3,-1 0,-1 0,2M0,5V6"],["M-6,0A6,6 0 1,0 6,0A6,6 0 1,0 -6,0Z","M-3,0H3"]],"statuses":["changed","new","removed","breaks","affected","unknown","no_effect"]}</script>
+<script>/* AeroTrace report: draws the impact graph from the inlined data. No libraries, no network.
+   Rules for this file: no line comments (the no-URL test scans for double slashes), and data
+   only ever reaches the page through textContent or attributes, never as HTML. */
+(function () {
+  "use strict";
+  var T0 = performance.now();
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var root = document.documentElement;
+  var D = JSON.parse(document.getElementById("data").textContent);
+
+  /* ------------------------------------------------------------ theme */
+  var THEMES = ["auto", "light", "dark"];
+  var themeBtn = document.getElementById("theme");
+  function setTheme(t, remember) {
+    if (t === "auto") { root.removeAttribute("data-theme"); } else { root.setAttribute("data-theme", t); }
+    themeBtn.textContent = "Theme: " + t;
+    if (remember) { try { window.localStorage.setItem("aerotrace-theme", t); } catch (e) { /* file: may block storage */ } }
+  }
+  var saved = "auto";
+  try { saved = window.localStorage.getItem("aerotrace-theme") || "auto"; } catch (e) { saved = "auto"; }
+  setTheme(THEMES.indexOf(saved) >= 0 ? saved : "auto", false);
+  themeBtn.addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || "auto";
+    setTheme(THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length], true);
+  });
+
+  var svg = document.getElementById("graph");
+  var N = D.nodes;
+  var COUNT = N.length;
+  if (!svg || !COUNT) { root.setAttribute("data-render-ms", String(Math.round(performance.now() - T0))); return; }
+
+  /* node fields */
+  var NAME = 0, KIND = 1, FILE = 2, LINE = 3, ST = 4, CERT = 5, LINK = 6, WHY = 7, DIST = 8, VIA = 9, LINES = 10, WORD = 11, VIANAME = 12;
+  var STATUS = D.statuses;
+  var ST_BREAKS = STATUS.indexOf("breaks"), ST_UNKNOWN = STATUS.indexOf("unknown");
+  var RING_CAP = 40, FOCUS_CAP = 200, LIST_NOTE = document.getElementById("listnote");
+  var statusLine = document.getElementById("status");
+  var announce = document.getElementById("announce");
+  var details = document.getElementById("details");
+  var search = document.getElementById("search");
+
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) { e.className = cls; }
+    if (text !== undefined) { e.textContent = text; }
+    return e;
+  }
+  function sel_(tag, attrs) {
+    var e = document.createElementNS(SVG_NS, tag);
+    for (var k in attrs) { if (Object.prototype.hasOwnProperty.call(attrs, k)) { e.setAttribute(k, attrs[k]); } }
+    return e;
+  }
+  function kindWord(i) { var k = D.kinds[N[i][KIND]]; return k === "function" ? "" : " (" + k.replace("_", " ") + ")"; }
+  function where(i) { return D.files[N[i][FILE]] + ":" + N[i][LINE]; }
+  function sayNode(i) {
+    return N[i][WORD] + ": " + N[i][NAME] + kindWord(i) + ", " + D.files[N[i][FILE]] + " line " + N[i][LINE] +
+      ". Link: " + D.certainties[N[i][CERT]] + ".";
+  }
+
+  /* ------------------------------------------------------------ adjacency */
+  var E = D.edges;
+  var adj = [];
+  for (var a = 0; a < COUNT; a++) { adj.push([]); }
+  for (var k = 0; k < E.length; k++) {
+    adj[E[k][0]].push(E[k][1]);
+    if (E[k][1] !== E[k][0]) { adj[E[k][1]].push(E[k][0]); }
+  }
+
+  /* ------------------------------------------------------------ layout: rings by distance */
+  var X = new Float64Array(COUNT), Y = new Float64Array(COUNT), ANG = new Float64Array(COUNT);
+  var placed = new Uint8Array(COUNT);
+  var rings = [], given = [];
+  var i, d;
+  for (i = 0; i < COUNT; i++) {
+    d = N[i][DIST];
+    while (rings.length <= d) { rings.push([]); given.push([]); }
+    rings[d].push(i);
+    given[d].push(i);
+  }
+  var SPACING = 30, prevR = 0;
+  for (d = 0; d < rings.length; d++) {
+    var ring = rings[d];
+    if (!ring.length) { continue; }
+    ring.sort(function (p, q) {
+      var pa = N[p][VIA] >= 0 && placed[N[p][VIA]] ? ANG[N[p][VIA]] : 99;
+      var qa = N[q][VIA] >= 0 && placed[N[q][VIA]] ? ANG[N[q][VIA]] : 99;
+      return pa - qa || N[p][ST] - N[q][ST] || p - q;
+    });
+    var r;
+    if (d === 0) { r = ring.length === 1 ? 0 : Math.max(90, ring.length * SPACING / (2 * Math.PI)); }
+    else { r = Math.max(prevR + 140, ring.length * SPACING / (2 * Math.PI)); }
+    for (var j = 0; j < ring.length; j++) {
+      var n = ring[j];
+      var ang = -Math.PI / 2 + 2 * Math.PI * j / ring.length;
+      ANG[n] = ang;
+      X[n] = Math.round(r * Math.cos(ang) * 10) / 10;
+      Y[n] = Math.round(r * Math.sin(ang) * 10) / 10;
+      placed[n] = 1;
+    }
+    prevR = r;
+  }
+
+  /* ------------------------------------------------------------ draw every node once */
+  var nodeLayer = document.getElementById("nodes");
+  var bubbleLayer = document.getElementById("bubbles");
+  var G = new Array(COUNT);
+  var LIST = {};
+  var frag = document.createDocumentFragment();
+  for (i = 0; i < COUNT; i++) {
+    var st = N[i][ST];
+    var always = STATUS[st] === "changed" || STATUS[st] === "new" || STATUS[st] === "removed" || st === ST_BREAKS;
+    var g = sel_("g", {
+      "class": "node s-" + STATUS[st] + (always ? " always" : ""),
+      "id": "n" + i,
+      "data-i": String(i),
+      "transform": "translate(" + X[i] + "," + Y[i] + ")",
+      "aria-label": sayNode(i)
+    });
+    g.appendChild(sel_("path", { "class": "shape", "d": D.shapes[st][0] }));
+    g.appendChild(sel_("path", { "class": "icon", "d": D.shapes[st][1] }));
+    var t = sel_("text", { "class": "lbl", "x": "15", "y": "4" });
+    t.textContent = N[i][NAME];
+    g.appendChild(t);
+    var tt = sel_("title", {});
+    tt.textContent = sayNode(i);
+    g.appendChild(tt);
+    frag.appendChild(g);
+    G[i] = g;
+  }
+  nodeLayer.appendChild(frag);
+  var buttons = document.querySelectorAll("#list li[data-i]");
+  for (i = 0; i < buttons.length; i++) {
+    var li = buttons[i];
+    var idx = li.getAttribute("data-i");
+    (LIST[idx] = LIST[idx] || []).push(li);
+  }
+
+  /* ------------------------------------------------------------ what is visible */
+  var expanded = [], expandAll = false, pinned = new Uint8Array(COUNT);
+  var focusOn = -1, query = "", matches = null, cur = -1;
+  var vis = new Uint8Array(COUNT);
+  var HAY = new Array(COUNT);
+  for (i = 0; i < COUNT; i++) { HAY[i] = (N[i][NAME] + " " + D.files[N[i][FILE]] + ":" + N[i][LINE]).toLowerCase(); }
+
+  function withChain(set, i0) {
+    var guard = 0;
+    for (var x = i0; x >= 0 && !set[x] && guard < 1000; x = N[x][VIA], guard++) { set[x] = 1; }
+    set[i0] = 1;
+  }
+  function computeVisible() {
+    vis.fill(0);
+    var x;
+    if (focusOn >= 0) {
+      withChain(vis, focusOn);
+      var nb = adj[focusOn];
+      for (x = 0; x < nb.length && x < FOCUS_CAP; x++) { vis[nb[x]] = 1; }
+      return;
+    }
+    for (var dd = 0; dd < given.length; dd++) {
+      var ids = given[dd];
+      var all = dd === 0 || expandAll || expanded[dd];
+      var lim = all ? ids.length : (dd === 1 ? Math.min(RING_CAP, ids.length) : 0);
+      for (x = 0; x < lim; x++) { vis[ids[x]] = 1; }
+    }
+    for (x = 0; x < COUNT; x++) {
+      if (N[x][ST] === ST_BREAKS || N[x][ST] === ST_UNKNOWN || pinned[x]) { withChain(vis, x); }
+    }
+    if (matches) { for (x = 0; x < matches.length; x++) { withChain(vis, matches[x]); } }
+  }
+
+  var eCalls = document.getElementById("e-calls"), eData = document.getElementById("e-data"), eHl = document.getElementById("e-hl");
+  function edgePaths() {
+    var calls = [], data = [], hl = [];
+    for (var x = 0; x < E.length; x++) {
+      var p = E[x][0], q = E[x][1];
+      if (p === q || !vis[p] || !vis[q]) { continue; }
+      var seg = "M" + X[p] + " " + Y[p] + "L" + X[q] + " " + Y[q];
+      if (cur >= 0 && (p === cur || q === cur)) { hl.push(seg); }
+      else if (E[x][2] === 0) { calls.push(seg); } else { data.push(seg); }
+    }
+    eCalls.setAttribute("d", calls.join(""));
+    eData.setAttribute("d", data.join(""));
+    eHl.setAttribute("d", hl.join(""));
+  }
+
+  function bubbles() {
+    while (bubbleLayer.firstChild) { bubbleLayer.removeChild(bubbleLayer.firstChild); }
+    BOXES = [];
+    if (focusOn >= 0) { return 0; }
+    var hiddenTotal = 0;
+    for (var dd = 1; dd < rings.length; dd++) {
+      var hid = [];
+      for (var x = 0; x < rings[dd].length; x++) { if (!vis[rings[dd][x]]) { hid.push(rings[dd][x]); } }
+      if (!hid.length) { continue; }
+      hiddenTotal += hid.length;
+      var by = {}, order = [];
+      for (x = 0; x < hid.length; x++) {
+        var w = N[hid[x]][WORD].toLowerCase();
+        if (!by[w]) { by[w] = 0; order.push(w); }
+        by[w]++;
+      }
+      order.sort(function (p, q) { return by[q] - by[p] || (p < q ? -1 : 1); });
+      var parts = [];
+      for (x = 0; x < order.length; x++) { parts.push(fmt(by[order[x]]) + " " + order[x]); }
+      var label = "+" + fmt(hid.length) + " more at distance " + dd + ": " + parts.join(", ");
+      var m = hid[Math.floor(hid.length / 2)];
+      BOXES.push([X[m], Y[m], label.length * 6.2 + 16]);
+      var b = sel_("g", { "class": "bubble", "data-ring": String(dd), "transform": "translate(" + X[m] + "," + Y[m] + ")" });
+      b.appendChild(sel_("rect", { "x": "-8", "y": "-11", "rx": "9", "width": String(label.length * 6.2 + 16), "height": "22" }));
+      var tx = sel_("text", { "x": "0", "y": "4" });
+      tx.textContent = label;
+      b.appendChild(tx);
+      var ti = sel_("title", {});
+      ti.textContent = label + ". Click or press E to show them.";
+      b.appendChild(ti);
+      bubbleLayer.appendChild(b);
+    }
+    return hiddenTotal;
+  }
+
+  function listFilter() {
+    var keep = null, why = "";
+    if (focusOn >= 0) { keep = vis; why = "in focus on " + N[focusOn][NAME]; }
+    else if (matches) {
+      keep = new Uint8Array(COUNT);
+      for (var x = 0; x < matches.length; x++) { keep[matches[x]] = 1; }
+      why = "matching “" + query + "”";
+    }
+    var shown = 0, hidden = 0;
+    for (var key in LIST) {
+      if (!Object.prototype.hasOwnProperty.call(LIST, key)) { continue; }
+      var on = !keep || keep[+key];
+      var items = LIST[key];
+      for (var y = 0; y < items.length; y++) { items[y].hidden = !on; if (on) { shown++; } else { hidden++; } }
+    }
+    if (keep) {
+      LIST_NOTE.hidden = false;
+      LIST_NOTE.textContent = "The list shows only items " + why + ": " + fmt(shown) + " shown, " + fmt(hidden) +
+        " hidden. Press Escape to show all.";
+    } else { LIST_NOTE.hidden = true; LIST_NOTE.textContent = ""; }
+  }
+
+  function apply() {
+    computeVisible();
+    var shown = 0;
+    for (var x = 0; x < COUNT; x++) {
+      var c = "node s-" + STATUS[N[x][ST]];
+      if (G[x].classList.contains("always")) { c += " always"; }
+      if (!vis[x]) { c += " hid"; } else { shown++; }
+      if (x === cur) { c += " sel"; }
+      if (matches) { c += HAYMATCH[x] ? " match" : " dim"; }
+      G[x].setAttribute("class", c);
+    }
+    shownCount = shown;
+    edgePaths();
+    var folded = bubbles();
+    var msg;
+    if (focusOn >= 0) {
+      msg = "Focus: " + N[focusOn][NAME] + " (" + fmt(shown) + " of " + fmt(COUNT) + " nodes shown). Press Escape to show all.";
+    } else if (matches) {
+      msg = fmt(matches.length) + " match" + (matches.length === 1 ? "" : "es") + " for “" + query + "”.";
+    } else {
+      msg = "Showing " + fmt(shown) + " of " + fmt(COUNT) + " nodes." +
+        (folded ? " " + fmt(folded) + (folded === 1 ? " is" : " are") + " folded into “+N more” bubbles: click one, press E, or use Expand all." : "");
+    }
+    if (D.omitted) { msg += " " + fmt(D.omitted) + " more were left out of this report."; }
+    statusLine.textContent = msg;
+    listFilter();
+    document.getElementById("focusbtn").setAttribute("aria-pressed", focusOn >= 0 ? "true" : "false");
+    document.getElementById("expand").textContent = expandAll ? "Collapse" : "Expand all";
+  }
+  var HAYMATCH = new Uint8Array(COUNT), shownCount = 0, BOXES = [];
+
+  /* ------------------------------------------------------------ view box: pan and zoom */
+  var vb = { x: -400, y: -300, w: 800, h: 600 };
+  var frame = 0;
+  function lodScale() {
+    var rect = svg.getBoundingClientRect();
+    return Math.min(rect.width / vb.w, rect.height / vb.h);
+  }
+  function setView() {
+    if (frame) { return; }
+    frame = window.requestAnimationFrame(function () {
+      frame = 0;
+      svg.setAttribute("viewBox", vb.x.toFixed(1) + " " + vb.y.toFixed(1) + " " + vb.w.toFixed(1) + " " + vb.h.toFixed(1));
+      if (shownCount <= 60 || lodScale() > 0.8) { svg.classList.add("lod"); } else { svg.classList.remove("lod"); }
+    });
+  }
+  function fit() {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (var x = 0; x < COUNT; x++) {
+      if (!vis[x]) { continue; }
+      if (X[x] < minX) { minX = X[x]; } if (X[x] > maxX) { maxX = X[x]; }
+      if (Y[x] < minY) { minY = Y[x]; } if (Y[x] > maxY) { maxY = Y[x]; }
+    }
+    for (x = 0; x < BOXES.length; x++) {
+      minX = Math.min(minX, BOXES[x][0]); maxX = Math.max(maxX, BOXES[x][0] + BOXES[x][2]);
+      minY = Math.min(minY, BOXES[x][1]); maxY = Math.max(maxY, BOXES[x][1]);
+    }
+    if (minX === Infinity) { minX = minY = -100; maxX = maxY = 100; }
+    var pad = 80;
+    vb = { x: minX - pad, y: minY - pad, w: Math.max(200, maxX - minX + 2 * pad + 120), h: Math.max(200, maxY - minY + 2 * pad) };
+    setView();
+  }
+  function zoom(f, cx, cy) {
+    if (cx === undefined) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
+    var nw = Math.min(Math.max(vb.w * f, 60), 200000);
+    f = nw / vb.w;
+    vb = { x: cx - (cx - vb.x) * f, y: cy - (cy - vb.y) * f, w: vb.w * f, h: vb.h * f };
+    setView();
+  }
+  function toSvg(ev) {
+    var m = svg.getScreenCTM();
+    if (!m) { return { x: vb.x + vb.w / 2, y: vb.y + vb.h / 2 }; }
+    var pt = svg.createSVGPoint();
+    pt.x = ev.clientX; pt.y = ev.clientY;
+    return pt.matrixTransform(m.inverse());
+  }
+  function panTo(x) {
+    if (X[x] < vb.x || X[x] > vb.x + vb.w || Y[x] < vb.y || Y[x] > vb.y + vb.h) {
+      vb.x = X[x] - vb.w / 2; vb.y = Y[x] - vb.h / 2; setView();
+    }
+  }
+  svg.addEventListener("wheel", function (ev) {
+    ev.preventDefault();
+    var p = toSvg(ev);
+    zoom(ev.deltaY > 0 ? 1.15 : 1 / 1.15, p.x, p.y);
+  }, { passive: false });
+  var drag = null;
+  svg.addEventListener("pointerdown", function (ev) {
+    if (ev.target.closest && ev.target.closest("[data-i],[data-ring]")) { return; }
+    var rect = svg.getBoundingClientRect();
+    drag = { x: ev.clientX, y: ev.clientY, vx: vb.x, vy: vb.y, s: Math.max(vb.w / rect.width, vb.h / rect.height) };
+    svg.classList.add("drag");
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener("pointermove", function (ev) {
+    if (!drag) { return; }
+    vb.x = drag.vx - (ev.clientX - drag.x) * drag.s;
+    vb.y = drag.vy - (ev.clientY - drag.y) * drag.s;
+    setView();
+  });
+  function endDrag() { drag = null; svg.classList.remove("drag"); }
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+
+  /* ------------------------------------------------------------ selection and details */
+  function dd_(dl, term, value) {
+    dl.appendChild(el("dt", "", term));
+    var v = el("dd");
+    if (typeof value === "string") { v.textContent = value; } else { v.appendChild(value); }
+    dl.appendChild(v);
+  }
+  function ranges(ls) {
+    var s = ls.slice().sort(function (p, q) { return p - q; }), out = [], k2 = 0;
+    while (k2 < s.length) {
+      var start = s[k2];
+      while (k2 + 1 < s.length && s[k2 + 1] <= s[k2] + 1) { k2++; }
+      out.push(start === s[k2] ? String(start) : start + "-" + s[k2]);
+      k2++;
+    }
+    return out.join(", ");
+  }
+  function showDetails(x) {
+    details.textContent = "";
+    var h = el("h2", "", N[x][NAME]);
+    details.appendChild(h);
+    var w = el("p", "it s-" + STATUS[N[x][ST]]);
+    w.appendChild(el("i", "", D.icons[STATUS[N[x][ST]]] + " "));
+    w.appendChild(el("em", "", N[x][WORD]));
+    details.appendChild(w);
+    var dl = el("dl");
+    var loc = el("div");
+    loc.appendChild(el("span", "", where(x)));
+    var copy = el("button", "", "Copy file:line");
+    copy.type = "button";
+    var box = el("input");
+    box.id = "copybox"; box.readOnly = true; box.value = where(x); box.setAttribute("aria-label", "file and line");
+    copy.addEventListener("click", function () {
+      function fallback() { box.focus(); box.select(); copy.textContent = "Selected: press Ctrl+C or Cmd+C"; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(box.value).then(function () { copy.textContent = "Copied"; }, fallback);
+      } else { fallback(); }
+    });
+    loc.appendChild(document.createTextNode(" "));
+    loc.appendChild(copy);
+    loc.appendChild(box);
+    dd_(dl, "Where", loc);
+    dd_(dl, "Kind", D.kinds[N[x][KIND]].replace("_", " "));
+    dd_(dl, "Why it is listed", N[x][WHY] || "(no reason given)");
+    var cert = D.certainties[N[x][CERT]];
+    dd_(dl, "How sure is the link", cert + ": " + D.meaning[cert]);
+    if (N[x][LINK]) { dd_(dl, "Link label", N[x][LINK]); }
+    dd_(dl, "Distance", N[x][DIST] === 0 ? "part of the change" : N[x][DIST] + " step" + (N[x][DIST] === 1 ? "" : "s") + " from the change");
+    if (N[x][VIA] >= 0 || N[x][VIANAME]) {
+      var path = el("div", "path");
+      var guard = 0;
+      for (var y = N[x][VIA]; y >= 0 && guard < 50; y = N[y][VIA], guard++) {
+        var b = el("button", "", "→ " + N[y][NAME] + " (" + N[y][WORD].toLowerCase() + ")");
+        b.type = "button";
+        b.setAttribute("data-go", String(y));
+        path.appendChild(b);
+      }
+      if (N[x][VIA] < 0) { path.appendChild(el("span", "", "→ " + N[x][VIANAME] + " (left out of this report)")); }
+      dd_(dl, "Path back to the change", path);
+    }
+    if (N[x][LINES].length) { dd_(dl, "Lines of the link", ranges(N[x][LINES])); }
+    details.appendChild(dl);
+  }
+  function select(x) {
+    if (x < 0 || x >= COUNT) { return; }
+    var prev = cur;
+    cur = x;
+    if (prev >= 0 && LIST[prev]) { for (var a2 = 0; a2 < LIST[prev].length; a2++) { var bb = LIST[prev][a2].querySelector("button"); if (bb) { bb.classList.remove("sel"); } } }
+    if (LIST[x]) { for (var a3 = 0; a3 < LIST[x].length; a3++) { var b3 = LIST[x][a3].querySelector("button"); if (b3) { b3.classList.add("sel"); } } }
+    if (!vis[x]) { pinned[x] = 1; }
+    apply();
+    svg.setAttribute("aria-activedescendant", "n" + x);
+    showDetails(x);
+    announce.textContent = sayNode(x);
+    panTo(x);
+  }
+  details.addEventListener("click", function (ev) {
+    var b = ev.target.closest ? ev.target.closest("[data-go]") : null;
+    if (b) { select(+b.getAttribute("data-go"), "path"); }
+  });
+  svg.addEventListener("click", function (ev) {
+    var t2 = ev.target.closest ? ev.target.closest("[data-i],[data-ring]") : null;
+    if (!t2) { return; }
+    if (t2.hasAttribute("data-ring")) { expanded[+t2.getAttribute("data-ring")] = true; apply(); return; }
+    select(+t2.getAttribute("data-i"), "graph");
+  });
+  document.getElementById("list").addEventListener("click", function (ev) {
+    var b = ev.target.closest ? ev.target.closest("li[data-i]") : null;
+    if (b) { select(+b.getAttribute("data-i"), "list"); }
+  });
+
+  /* ------------------------------------------------------------ focus, expand, search */
+  function toggleFocus() {
+    if (focusOn >= 0) { focusOn = -1; } else if (cur >= 0) { focusOn = cur; } else { return; }
+    apply(); fit();
+  }
+  function clearAll() {
+    var changed = focusOn >= 0 || matches;
+    focusOn = -1;
+    if (matches) { search.value = ""; query = ""; matches = null; HAYMATCH.fill(0); }
+    if (changed) { apply(); fit(); }
+  }
+  document.getElementById("focusbtn").addEventListener("click", toggleFocus);
+  document.getElementById("fit").addEventListener("click", fit);
+  document.getElementById("zin").addEventListener("click", function () { zoom(1 / 1.3); });
+  document.getElementById("zout").addEventListener("click", function () { zoom(1.3); });
+  document.getElementById("expand").addEventListener("click", function () {
+    expandAll = !expandAll;
+    if (!expandAll) { expanded = []; pinned.fill(0); }
+    apply(); fit();
+  });
+  var timer = 0;
+  function runSearch() {
+    query = search.value.trim();
+    var q = query.toLowerCase();
+    HAYMATCH.fill(0);
+    if (!q) { matches = null; }
+    else {
+      matches = [];
+      for (var x = 0; x < COUNT; x++) { if (HAY[x].indexOf(q) >= 0) { matches.push(x); HAYMATCH[x] = 1; } }
+    }
+    apply();
+  }
+  search.addEventListener("input", function () { window.clearTimeout(timer); timer = window.setTimeout(runSearch, 80); });
+  search.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") { window.clearTimeout(timer); runSearch(); if (matches && matches.length) { select(matches[0], "search"); svg.focus(); } }
+    else if (ev.key === "Escape") { clearAll(); }
+  });
+
+  /* ------------------------------------------------------------ keyboard */
+  function nearest(dx, dy) {
+    var from = cur >= 0 ? cur : rings[0][0];
+    var best = -1, bestScore = Infinity;
+    for (var x = 0; x < COUNT; x++) {
+      if (x === from || !vis[x]) { continue; }
+      var vx = X[x] - X[from], vy = Y[x] - Y[from];
+      var along = vx * dx + vy * dy;
+      if (along <= 0) { continue; }
+      var across = Math.abs(vx * dy - vy * dx);
+      var score = along + 2 * across;
+      if (score < bestScore) { bestScore = score; best = x; }
+    }
+    return best;
+  }
+  svg.addEventListener("keydown", function (ev) {
+    var k2 = ev.key, used = true;
+    if (k2 === "ArrowRight") { select(nearest(1, 0), "key"); }
+    else if (k2 === "ArrowLeft") { select(nearest(-1, 0), "key"); }
+    else if (k2 === "ArrowUp") { select(nearest(0, -1), "key"); }
+    else if (k2 === "ArrowDown") { select(nearest(0, 1), "key"); }
+    else if (k2 === "Home") { select(rings[0][0], "key"); }
+    else if (k2 === "Enter" || k2 === " ") { if (cur < 0) { select(rings[0][0], "key"); } else { announce.textContent = sayNode(cur); } }
+    else if (k2 === "f" || k2 === "F") { toggleFocus(); }
+    else if (k2 === "e" || k2 === "E") {
+      if (cur >= 0 && N[cur][DIST] + 1 < rings.length) { expanded[N[cur][DIST] + 1] = true; expanded[N[cur][DIST]] = true; }
+      else { expandAll = true; }
+      apply();
+    }
+    else if (k2 === "Escape") { clearAll(); }
+    else if (k2 === "+" || k2 === "=") { zoom(1 / 1.3); }
+    else if (k2 === "-") { zoom(1.3); }
+    else if (k2 === "0") { fit(); }
+    else { used = false; }
+    if (used) { ev.preventDefault(); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    var tag = ev.target && ev.target.tagName;
+    if (ev.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") { ev.preventDefault(); search.focus(); }
+  });
+
+  /* ------------------------------------------------------------ first render */
+  apply();
+  fit();
+  window.requestAnimationFrame(function () {
+    root.setAttribute("data-render-ms", String(Math.round(performance.now() - T0)));
+  });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{CSP}}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>{{TITLE}}</title>
+<style>{{CSS}}</style>
+</head>
+<body>
+<header id="top">
+{{HEADER}}
+<div class="tools">
+<label for="search">Search</label>
+<input id="search" type="search" placeholder="name, file or file:line  (press /)" autocomplete="off" spellcheck="false">
+<button type="button" id="theme" aria-label="Colour theme">Theme: auto</button>
+</div>
+<p id="status" class="note" aria-live="polite"></p>
+</header>
+<main id="main">
+<nav id="list" aria-label="All findings">
+{{LIST}}
+</nav>
+{{GRAPH}}
+<aside id="details" aria-label="Details">
+<p class="note">Select a function or declaration to see where it is, why it is listed, and how sure the link is.</p>
+</aside>
+</main>
+<p id="announce" class="sr" aria-live="polite"></p>
+<noscript><p class="note">JavaScript is off, so the graph is not drawn. Every finding is in the list.</p></noscript>
+<script type="application/json" id="data">{{DATA}}</script>
+<script>{{JS}}</script>
+</body>
+</html>

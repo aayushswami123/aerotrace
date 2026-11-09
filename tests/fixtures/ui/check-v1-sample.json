@@ -1,0 +1,463 @@
+{
+  "change": {
+    "base": "HEAD",
+    "changed_declarations": 1,
+    "changed_functions": 1,
+    "files": 2,
+    "mode": "git",
+    "new_functions": 0,
+    "not_followed": {
+      "deleted": [],
+      "mismatched": [],
+      "new_files": [],
+      "not_indexed": [],
+      "outside": [
+        {
+          "file": "src/t_string.c",
+          "lines": [
+            40,
+            41,
+            42,
+            43,
+            44
+          ],
+          "other_side_lines": []
+        }
+      ],
+      "unreadable": []
+    },
+    "other_files": 1,
+    "removed_functions": 1
+  },
+  "edges": [
+    {
+      "certainty": "unknown",
+      "from": "fn:src/module.c:RM_Call",
+      "kind": "calls",
+      "to": "fn:src/server.c:call"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/networking.c:_addReplyProtoToList",
+      "kind": "calls",
+      "to": "fn:src/networking.c:_addReplyToBuffer"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/networking.c:_addReplyToBuffer",
+      "kind": "reads",
+      "to": "var:src/server.h:client::bufpos"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/networking.c:_addReplyToBuffer",
+      "kind": "writes",
+      "to": "var:src/server.h:client::bufpos"
+    },
+    {
+      "certainty": "unknown",
+      "from": "fn:src/networking.c:_addReplyToBuffer",
+      "kind": "reads",
+      "to": "var:src/server.h:client::reply"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/networking.c:_addReplyToBuffer",
+      "kind": "writes",
+      "to": "var:src/server.h:redisServer::stat_net_output_bytes"
+    },
+    {
+      "certainty": "probable",
+      "from": "fn:src/server.c:call",
+      "kind": "calls",
+      "to": "fn:src/t_string.c:getCommand"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/server.c:processCommand",
+      "kind": "calls",
+      "to": "fn:src/server.c:call"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/t_string.c:appendCommand",
+      "kind": "calls",
+      "to": "removed:src/t_string.c:95:checkStringLength"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/t_string.c:getCommand",
+      "kind": "calls",
+      "to": "fn:src/t_string.c:getGenericCommand"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/t_string.c:getGenericCommand",
+      "kind": "calls",
+      "to": "fn:src/db.c:lookupKeyReadOrReply"
+    },
+    {
+      "certainty": "probable",
+      "from": "fn:src/t_string.c:getdelCommand",
+      "kind": "calls",
+      "to": "fn:src/t_string.c:getGenericCommand"
+    },
+    {
+      "certainty": "probable",
+      "from": "fn:src/t_string.c:getexCommand",
+      "kind": "calls",
+      "to": "fn:src/t_string.c:getGenericCommand"
+    },
+    {
+      "certainty": "exact",
+      "from": "fn:src/t_string.c:setrangeCommand",
+      "kind": "calls",
+      "to": "removed:src/t_string.c:95:checkStringLength"
+    }
+  ],
+  "format": "aerotrace-check",
+  "message": null,
+  "nodes": [
+    {
+      "certainty": "exact",
+      "distance": 0,
+      "file": "src/server.h",
+      "id": "var:src/server.h:client::bufpos",
+      "kind": "field",
+      "line": 1201,
+      "lines": [],
+      "link": null,
+      "name": "client.bufpos",
+      "status": "changed",
+      "via": null,
+      "via_name": null,
+      "why": "its declaration changed"
+    },
+    {
+      "certainty": "exact",
+      "distance": 0,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:getGenericCommand",
+      "kind": "function",
+      "line": 380,
+      "lines": [],
+      "link": null,
+      "name": "getGenericCommand",
+      "status": "changed",
+      "via": null,
+      "via_name": null,
+      "why": "you changed 6 lines in it"
+    },
+    {
+      "certainty": "exact",
+      "distance": 0,
+      "file": "src/t_string.c",
+      "id": "removed:src/t_string.c:95:checkStringLength",
+      "kind": "function",
+      "line": 95,
+      "lines": [],
+      "link": null,
+      "name": "checkStringLength",
+      "status": "removed",
+      "via": null,
+      "via_name": null,
+      "why": "this change removes it"
+    },
+    {
+      "certainty": "exact",
+      "distance": 1,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:getCommand",
+      "kind": "function",
+      "line": 398,
+      "lines": [
+        399
+      ],
+      "link": "exact",
+      "name": "getCommand",
+      "status": "breaks",
+      "via": "fn:src/t_string.c:getGenericCommand",
+      "via_name": "getGenericCommand",
+      "why": "passes 1 argument; getGenericCommand now takes 2"
+    },
+    {
+      "certainty": "exact",
+      "distance": 1,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:setrangeCommand",
+      "kind": "function",
+      "line": 612,
+      "lines": [
+        619
+      ],
+      "link": "calls_removed",
+      "name": "setrangeCommand",
+      "status": "breaks",
+      "via": "removed:src/t_string.c:95:checkStringLength",
+      "via_name": "checkStringLength (removed)",
+      "why": "still calls checkStringLength, which this change removes"
+    },
+    {
+      "certainty": "exact",
+      "distance": 1,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:appendCommand",
+      "kind": "function",
+      "line": 688,
+      "lines": [
+        701
+      ],
+      "link": "calls_removed",
+      "name": "appendCommand",
+      "status": "breaks",
+      "via": "removed:src/t_string.c:95:checkStringLength",
+      "via_name": "checkStringLength (removed)",
+      "why": "still calls checkStringLength, which this change removes"
+    },
+    {
+      "certainty": "probable",
+      "distance": 1,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:getexCommand",
+      "kind": "function",
+      "line": 421,
+      "lines": [
+        455
+      ],
+      "link": "ambiguous",
+      "name": "getexCommand",
+      "status": "breaks",
+      "via": "fn:src/t_string.c:getGenericCommand",
+      "via_name": "getGenericCommand",
+      "why": "calls a getGenericCommand (2 functions have that name); if it is this one, it passes 1 argument and it now takes 2"
+    },
+    {
+      "certainty": "exact",
+      "distance": 1,
+      "file": "src/networking.c",
+      "id": "fn:src/networking.c:_addReplyToBuffer",
+      "kind": "function",
+      "line": 420,
+      "lines": [
+        431,
+        440
+      ],
+      "link": "uses_changed",
+      "name": "_addReplyToBuffer",
+      "status": "affected",
+      "via": "var:src/server.h:client::bufpos",
+      "via_name": "client.bufpos",
+      "why": "reads and writes client.bufpos, whose declaration changed"
+    },
+    {
+      "certainty": "exact",
+      "distance": 2,
+      "file": "src/networking.c",
+      "id": "fn:src/networking.c:_addReplyProtoToList",
+      "kind": "function",
+      "line": 460,
+      "lines": [
+        466
+      ],
+      "link": "exact",
+      "name": "_addReplyProtoToList",
+      "status": "affected",
+      "via": "fn:src/networking.c:_addReplyToBuffer",
+      "via_name": "_addReplyToBuffer",
+      "why": "calls _addReplyToBuffer"
+    },
+    {
+      "certainty": "probable",
+      "distance": 1,
+      "file": "src/t_string.c",
+      "id": "fn:src/t_string.c:getdelCommand",
+      "kind": "function",
+      "line": 470,
+      "lines": [
+        476
+      ],
+      "link": "via_pointer",
+      "name": "getdelCommand",
+      "status": "affected",
+      "via": "fn:src/t_string.c:getGenericCommand",
+      "via_name": "getGenericCommand",
+      "why": "calls a function pointer of the same type as getGenericCommand"
+    },
+    {
+      "certainty": "probable",
+      "distance": 2,
+      "file": "src/server.c",
+      "id": "fn:src/server.c:call",
+      "kind": "function",
+      "line": 3780,
+      "lines": [
+        3851
+      ],
+      "link": "via_pointer",
+      "name": "call",
+      "status": "affected",
+      "via": "fn:src/t_string.c:getCommand",
+      "via_name": "getCommand",
+      "why": "calls getCommand through c->cmd->proc, a function pointer"
+    },
+    {
+      "certainty": "probable",
+      "distance": 2,
+      "file": "src/server.h",
+      "id": "var:src/server.h:redisServer::stat_net_output_bytes",
+      "kind": "global",
+      "line": 1890,
+      "lines": [
+        445
+      ],
+      "link": "data",
+      "name": "server.stat_net_output_bytes",
+      "status": "affected",
+      "via": "fn:src/networking.c:_addReplyToBuffer",
+      "via_name": "_addReplyToBuffer",
+      "why": "_addReplyToBuffer writes it; 4 functions read it"
+    },
+    {
+      "certainty": "probable",
+      "distance": 3,
+      "file": "src/server.c",
+      "id": "fn:src/server.c:processCommand",
+      "kind": "function",
+      "line": 4221,
+      "lines": [
+        4590
+      ],
+      "link": "exact",
+      "name": "processCommand",
+      "status": "affected",
+      "via": "fn:src/server.c:call",
+      "via_name": "call",
+      "why": "calls call, 3 steps from the change"
+    },
+    {
+      "certainty": "unknown",
+      "distance": 2,
+      "file": "src/server.h",
+      "id": "var:src/server.h:client::reply",
+      "kind": "field",
+      "line": 1205,
+      "lines": [
+        452
+      ],
+      "link": "data",
+      "name": "client.reply",
+      "status": "unknown",
+      "via": "fn:src/networking.c:_addReplyToBuffer",
+      "via_name": "_addReplyToBuffer",
+      "why": "_addReplyToBuffer passes it to listAddNodeTail as void *; what happens next is not known"
+    },
+    {
+      "certainty": "unknown",
+      "distance": 3,
+      "file": "src/module.c",
+      "id": "fn:src/module.c:RM_Call",
+      "kind": "function",
+      "line": 6620,
+      "lines": [
+        6702
+      ],
+      "link": "via_pointer",
+      "name": "RM_Call",
+      "status": "unknown",
+      "via": "fn:src/server.c:call",
+      "via_name": "call",
+      "why": "reaches call from a module; AeroTrace cannot see which modules are loaded"
+    },
+    {
+      "certainty": "exact",
+      "distance": 1,
+      "file": "src/db.c",
+      "id": "fn:src/db.c:lookupKeyReadOrReply",
+      "kind": "function",
+      "line": 180,
+      "lines": [],
+      "link": "exact",
+      "name": "lookupKeyReadOrReply",
+      "status": "no_effect",
+      "via": "fn:src/t_string.c:getGenericCommand",
+      "via_name": "getGenericCommand",
+      "why": "getGenericCommand calls it; a change in the caller does not change it"
+    }
+  ],
+  "omitted": {
+    "nodes": 0
+  },
+  "proof": {
+    "depth": 5,
+    "index_files": 117,
+    "index_functions": 5064,
+    "stopped_early": false
+  },
+  "sections": {
+    "blind_spots": [
+      {
+        "node": null,
+        "scope": "change",
+        "text": "3 calls through function pointers in src/t_string.c were matched by type only."
+      },
+      {
+        "node": null,
+        "scope": "index",
+        "text": "Macro uses are not followed anywhere in the index."
+      }
+    ],
+    "data": [
+      "var:src/server.h:redisServer::stat_net_output_bytes",
+      "var:src/server.h:client::reply"
+    ],
+    "functions": [
+      "fn:src/t_string.c:getCommand",
+      "fn:src/t_string.c:setrangeCommand",
+      "fn:src/t_string.c:appendCommand",
+      "fn:src/t_string.c:getexCommand",
+      "fn:src/networking.c:_addReplyToBuffer",
+      "fn:src/networking.c:_addReplyProtoToList",
+      "fn:src/t_string.c:getdelCommand",
+      "fn:src/server.c:call",
+      "fn:src/server.c:processCommand",
+      "fn:src/module.c:RM_Call",
+      "fn:src/db.c:lookupKeyReadOrReply"
+    ],
+    "tests_to_run": [
+      {
+        "covers": [
+          "fn:src/t_string.c:getCommand"
+        ],
+        "name": "tests/unit/type/incr.tcl",
+        "why": "calls getCommand"
+      },
+      {
+        "covers": [
+          "fn:src/t_string.c:appendCommand",
+          "fn:src/t_string.c:getCommand",
+          "fn:src/t_string.c:setrangeCommand"
+        ],
+        "name": "tests/unit/type/string.tcl",
+        "why": "calls appendCommand, getCommand and setrangeCommand"
+      }
+    ],
+    "untested_changes": [
+      {
+        "node": "fn:src/t_string.c:getGenericCommand",
+        "why": "no test reaches it"
+      }
+    ]
+  },
+  "status": "ok",
+  "summary": {
+    "affected_direct": 2,
+    "affected_further": 4,
+    "breaks_exact": 3,
+    "breaks_probable": 1,
+    "no_effect": 1,
+    "not_followed": 2,
+    "unknown": 2
+  },
+  "tool": "aerotrace 0.1.0",
+  "version": 1
+}

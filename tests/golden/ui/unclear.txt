@@ -1,0 +1,13 @@
+ℹ️  Nothing found that this change can break, but 2 parts of the change could not be followed.
+    You changed 1 function in 1 C/C++ file (compared with HEAD).
+
+Changes AeroTrace could not follow (2)
+  ? src/t_string.c: lines 40-42 outside any function.
+  ? src/extra.c is not in the index (not in compile_commands.json, excluded, or a header no indexed file includes).
+
+Tests: not known yet (no test map in the index).
+
+Limits of the index (1)
+  ? Macro uses are not followed anywhere in the index.
+
+index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
