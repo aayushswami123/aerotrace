@@ -365,13 +365,15 @@ class Collector:
         elif k in (K.MEMBER_REF_EXPR, K.DECL_REF_EXPR):
             ref = c.referenced
             if ref is not None and ref.kind in FUNC_KINDS:
-                if k == K.DECL_REF_EXPR and not self.is_callee(stack, idx):
-                    if self.is_broken_callee(stack, idx):
-                        # Known bug, reported and fixed separately: a call that does not compile still counts
-                        # as "address taken" and gets no call link. Only the call_sites table records it.
-                        self.mark_address_taken(ref)
-                    else:
-                        self.mark_address_taken(ref, (usr, rel, ""), c, self.address_use(stack, idx))
+                # The function named first in a call that does not compile is being called, not used as a value
+                # (on_broken_call records the call). Taking it for "address taken" linked it to every pointer
+                # call of its type (#14).
+                if (
+                    k == K.DECL_REF_EXPR
+                    and not self.is_callee(stack, idx)
+                    and not self.is_broken_callee(stack, idx)
+                ):
+                    self.mark_address_taken(ref, (usr, rel, ""), c, self.address_use(stack, idx))
                 return
             self.on_ref(c, stack, idx, usr, rel)
         elif k == K.MEMBER_REF and len(stack) == 1:
@@ -433,6 +435,8 @@ class Collector:
         use, detail = self.result_use(stack, idx)
         n_args = len(list(c.get_children())) - 1
         detail = "does not compile: the arguments do not match" + (f"; {detail}" if detail else "")
+        # a real call link, so callers/impact/diff still list it after a signature change (#14)
+        self.calls.add((usr, rel, target, line, False, ref.spelling))
         self.call_sites.add(
             (usr, rel, target, ref.spelling, line, c.location.column, n_args, use, detail, "")
         )

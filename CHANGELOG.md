@@ -26,6 +26,9 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A call that doesn't compile (wrong number of arguments) is a call again: its caller shows up in
+  `callers`, `impact` and `diff`, and the function no longer counts as "address taken" (#14). Right after a
+  parameter is added in the working tree, every old caller is such a call.
 - Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
   clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
   defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace

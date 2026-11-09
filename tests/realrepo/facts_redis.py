@@ -632,4 +632,28 @@ FACTS = [
             Call("getbitCommand", "src/bitops.c", 911, "stored", "in kv"),
         ),
     ),
+    Fact(
+        id="redis-git-diff-new-parameter-keeps-old-callers",
+        why="Adding a parameter to checkStringLength in the working tree leaves its three calls with too few "
+        "arguments. They no longer compile, but they are exactly what the change breaks, so diff must still "
+        "list setrangeCommand and appendCommand (#14). Only t_string.c is compiled, to keep the test fast; "
+        "the function and all its callers are in it.",
+        kind="git_diff",
+        only_files=(T,),
+        proof=(
+            Line(T, 26, "static int checkStringLength(client *c, long long size, long long append) {"),
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        edits=(
+            Edit(
+                T,
+                "static int checkStringLength(client *c, long long size, long long append) {\n",
+                "static int checkStringLength(client *c, long long size, long long append, int strict) {\n",
+            ),
+        ),
+        changed=(f"checkStringLength@{T}",),
+        must=(Fn("setrangeCommand", T, "exact", 1), Fn("appendCommand", T, "exact", 1)),
+        must_not=(Fn("setCommand", T),),
+    ),
 ]

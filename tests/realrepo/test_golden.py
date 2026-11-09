@@ -12,8 +12,11 @@ Facts with `known_bug` are expected to fail today (strict xfail). If a change fi
 from __future__ import annotations
 
 import difflib
+import json
+import os
 import re
 import sqlite3
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -24,7 +27,7 @@ from facts_sqlite import FACTS as SQLITE_FACTS
 
 from aerotrace.analysis import diff, graph, signature, symbols
 from aerotrace.index import store
-from aerotrace.index.build import build_index
+from aerotrace.index.build import build_index, fresh_index
 from aerotrace.index.history import Outliner
 
 pytestmark = pytest.mark.realrepo
@@ -164,9 +167,46 @@ def _patch(root: Path, fact: Fact) -> str:
     return text
 
 
-def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
-    diffs = diff.load_patch(root, _patch(root, fact))
-    res = diff.analyse(conn, root, diffs, mode="patch", now=Outliner(root).now)
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", *args],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        env={**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"},
+    )
+
+
+def git_diff_result(pinned: repos.Pinned, fact: Fact, tmp: Path):
+    """Unpack a fresh copy, commit it, make the fact's edits in the working tree, index, run the git diff."""
+    root = repos.unpack(pinned, tmp)
+    if fact.only_files:
+        db = root / "compile_commands.json"
+        entries = json.loads(db.read_text())
+        keep = [
+            e
+            for e in entries
+            if any(Path(e["directory"], e["file"]).resolve() == (root / f).resolve() for f in fact.only_files)
+        ]
+        assert len(keep) == len(fact.only_files), "only_files must name compile_commands.json entries"
+        db.write_text(json.dumps(keep))
+    _git(root, "init", "-q")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "--no-verify", "-m", "pinned")
+    build_index(root)
+    for e in fact.edits:
+        p = root / e.file
+        p.write_text(p.read_text(errors="replace").replace(e.old, e.new, 1))
+    outliner = Outliner(root)
+    diffs, desc, old = diff.load_git(root, "HEAD", outliner)
+    conn, _ = fresh_index(root, want=diff.wanted(diffs, "git"))
+    try:
+        return diff.analyse(conn, root, diffs, mode="git", base=desc, old=old, now=outliner.now)
+    finally:
+        conn.close()
+
+
+def _diff_problems(res, fact: Fact) -> list[str]:
     problems = []
     if res.mismatched or res.not_indexed:
         problems.append(f"the patch did not map: mismatched {res.mismatched}, not indexed {res.not_indexed}")
@@ -193,6 +233,11 @@ def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
         if f"{m.name}@{m.file}" in got:
             problems.append(f"false claim: {m} is listed as changed")
     return problems + _check_hits(fact, res.affected, list(fact.must), "affected functions")
+
+
+def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
+    diffs = diff.load_patch(root, _patch(root, fact))
+    return _diff_problems(diff.analyse(conn, root, diffs, mode="patch", now=Outliner(root).now), fact)
 
 
 def _check_calls(want, got, what: str) -> list[str]:
@@ -302,6 +347,9 @@ def test_only_expected_files_have_parse_errors(indexed, pinned):
 
 
 @pytest.mark.parametrize("pinned, fact", [_param(p, f, check_bugs=True) for p, f in CASES])
-def test_fact(indexed, pinned, fact):
-    problems = answer_problems(indexed(pinned), fact)
+def test_fact(indexed, pinned, fact, tmp_path):
+    if fact.kind == "git_diff":
+        problems = _diff_problems(git_diff_result(pinned, fact, tmp_path), fact)
+    else:
+        problems = answer_problems(indexed(pinned), fact)
     assert not problems, f"{fact.id}: {fact.why}\n  - " + "\n  - ".join(problems)
