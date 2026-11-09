@@ -1275,7 +1275,9 @@ def _outline_variable(c: Cursor, kind: str, position: int, data: bytes) -> dict:
     }
 
 
-def function_outline(path: str, content: str, args: list[str], directory: str) -> dict | None:
+def function_outline(
+    path: str, content: str, args: list[str], directory: str, others: list[tuple[str, str]] | None = None
+) -> dict | None:
     """What one file declares, as `content` gives it (an older version, the file on disk, or a patched
     version in memory). Nothing is stored. Returns:
 
@@ -1289,7 +1291,8 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
       other files of the translation unit, {qualified_name: [signature, ...]}; "noproto": names declared
       there without a prototype (`int f();` in C).
 
-    None when libclang could not load it. `path` is the file's absolute path."""
+    None when libclang could not load it. `path` is the file's absolute path. `others`: (absolute path,
+    content) of other files of the same version (a patched header), used instead of the files on disk."""
     old_cwd = os.getcwd()
     os.chdir(directory if os.path.isdir(directory) else os.path.dirname(path) or ".")
     data = content.encode("utf-8", "surrogateescape")
@@ -1298,7 +1301,7 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
             tu = _get_index().parse(
                 path,
                 args=args,
-                unsaved_files=[(path, content)],
+                unsaved_files=[(path, content), *(others or [])],
                 options=cindex.TranslationUnit.PARSE_INCOMPLETE,  # bodies are parsed: skipping them loses end lines
             )
         except cindex.TranslationUnitLoadError:

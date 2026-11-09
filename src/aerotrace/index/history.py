@@ -83,12 +83,27 @@ class Outliner:
         self.build_dir = build_dir
         self._units: dict[str, CompileUnit] | None = None
         self._fallback: CompileUnit | None = None
-        self._cache: dict[tuple[str, str, str], Outline | None] = {}
+        self._cache: dict[tuple[str, str, str, str], Outline | None] = {}
+        # Other files of the same change, so one version is parsed with its own headers: git mode, the
+        # changed files as they were at the base; patch mode, the patched files (in memory).
+        self.base_overlay: dict[str, str] = {}
+        self.new_overlay: dict[str, str] = {}
         self.parses = 0  # libclang parses done (the same text is parsed once)
         self.seconds = 0.0
 
-    def _parse(self, rel: str, content: str, flags_from: str | None = None) -> Outline | None:
-        key = (rel, flags_from or rel, hashlib.sha256(content.encode("utf-8", "surrogateescape")).hexdigest())
+    def _parse(
+        self, rel: str, content: str, flags_from: str | None = None, overlay: dict[str, str] | None = None
+    ) -> Outline | None:
+        others = sorted((r, c) for r, c in (overlay or {}).items() if r != rel)
+        digest = hashlib.sha256()
+        for r, c in others:
+            digest.update(r.encode() + b"\0" + c.encode("utf-8", "surrogateescape") + b"\0")
+        key = (
+            rel,
+            flags_from or rel,
+            hashlib.sha256(content.encode("utf-8", "surrogateescape")).hexdigest(),
+            digest.hexdigest(),
+        )
         if key in self._cache:
             return self._cache[key]
         if self._units is None:
@@ -99,8 +114,10 @@ class Outliner:
             }
             self._fallback = flags.units[0] if flags.units else None
         args, directory = _args_for(flags_from or rel, self.root, self._units, self._fallback)
+        args = [*args, "-ferror-limit=0"]  # every new error counts: clang stops after 20 by default
         t = time.perf_counter()
-        got = parse_mod.function_outline(os.path.join(str(self.root), rel), content, args, directory)
+        unsaved = [(os.path.join(str(self.root), r), c) for r, c in others]
+        got = parse_mod.function_outline(os.path.join(str(self.root), rel), content, args, directory, unsaved)
         self.parses += 1
         self.seconds += time.perf_counter() - t
         out = Outline(**got) if got is not None else None
@@ -109,8 +126,10 @@ class Outliner:
 
     def at(self, sha: str, rel: str) -> Outline | None:
         """`rel` as it was at commit `sha`; None when it did not exist there or could not be parsed."""
-        content = git.show(self.root, sha, rel)
-        return None if content is None else self._parse(rel, content)
+        content = self.base_overlay.get(rel)
+        if content is None:
+            content = git.show(self.root, sha, rel)
+        return None if content is None else self._parse(rel, content, overlay=self.base_overlay)
 
     def now(self, rel: str) -> Outline | None:
         """`rel` as it is on disk now."""
@@ -123,4 +142,4 @@ class Outliner:
     def text(self, rel: str, content: str, flags_from: str | None = None) -> Outline | None:
         """`rel` with this content (a patched version in memory). `flags_from`: parse it with another
         file's compile flags (the old path of a renamed file)."""
-        return self._parse(rel, content, flags_from)
+        return self._parse(rel, content, flags_from, self.new_overlay)

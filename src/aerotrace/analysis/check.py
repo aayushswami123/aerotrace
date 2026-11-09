@@ -223,6 +223,7 @@ class _Run:
         self.edited = {c.fn.id for c in res.diff.changed}
         self.index_limits = set(graph.index_limits(conn))
         self.sig_seen: set[str] = set()
+        self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
         self.decl_handled: set[str] = (
             set()
@@ -240,6 +241,15 @@ class _Run:
         def rank(n: Node) -> tuple:
             return (STATUSES.index(n.status), certainty.LEVELS.index(n.certainty), n.distance)
 
+        if cur.distance == 0 and node.status == "breaks":
+            # part of the change, and it will not build: the break is what matters (never hide it)
+            node.why = f"{cur.why}; but {node.why}"
+            node.lines = sorted(set(node.lines) | set(cur.lines))
+            self.res.nodes[node.id] = node
+            return
+        if node.distance == 0 and cur.status == "breaks":
+            cur.why = f"{node.why}; but {cur.why}"
+            return
         if rank(node) < rank(cur):
             node.others = cur.others + 1
             node.lines = sorted(set(node.lines) | set(cur.lines))
@@ -285,6 +295,12 @@ class _Run:
             )
         )
 
+    def defer(self, fn: Fn) -> bool:
+        """Patch mode, a function the patch also edits, in a file whose patched version was parsed with the
+        rest of the patch: whether its calls still match is known from the compiler (`errors`), not guessed
+        from the old index."""
+        return self.mode == "patch" and fn.id in self.edited and fn.file in self.compiled
+
     def blind(self, text: str, node: str | None = None) -> None:
         scope = "index" if text in self.index_limits else "change"
         self.res.blind_spots.append((text, scope, node if scope == "change" else None))
@@ -320,6 +336,8 @@ class _Run:
         si = signature.signature_impact(self.conn, fn, depth=0)
         for s in si.sites:
             level, why = s.certainty, f"calls {fn.name}, which this patch removes"
+            if self.defer(s.caller):
+                continue  # its patched code was compiled: a call that is left shows up as a new error
             if s.caller.id in self.edited:
                 level, why = PROBABLE, why + " (the patch also edits this function; check it still calls it)"
             self.fn_node(s.caller, "breaks", level, "calls_removed", why, 1, key, fn.qualified_name, [s.line])
@@ -411,6 +429,8 @@ class _Run:
                 level = s.certainty
                 if link_fail and not s.broken:
                     level = PROBABLE
+                if self.defer(s.caller):
+                    continue  # its patched code was compiled: a broken call shows up as a new error
                 if self.mode == "patch" and s.caller.id in self.edited:
                     level = PROBABLE
                     broken += " (the patch also edits this function; check the call)"
@@ -434,10 +454,12 @@ class _Run:
                          f"calls a pointer of the old type of {fn.name} ({sc.words})", 1, fn.id,
                          fn.qualified_name, [p.line])  # fmt: skip
         for a in si.address_sites:
-            cxx_site = Path(a.file).suffix.lower() in CXX_EXTS
-            status, level = ("breaks", PROBABLE) if cxx_site else ("affected", EXACT)
-            why = f"names {fn.name} as a value ({a.how}); the pointer type there must change too " + (
-                "(C++ rejects the old type)" if cxx_site else "(C compiles it with a warning)"
+            # an incompatible function pointer type is an error in C++, and in C on clang 16+ and GCC 14+
+            status, level = ("affected", PROBABLE) if sc.same_underlying else ("breaks", PROBABLE)
+            why = f"names {fn.name} as a value ({a.how}); its pointer type there no longer matches " + (
+                "(the same underlying types, so it should still build)"
+                if sc.same_underlying
+                else "(current compilers reject that: clang 16+, GCC 14+, every C++ compiler)"
             )
             if a.in_function is not None:
                 self.fn_node(
@@ -454,7 +476,10 @@ class _Run:
         for h in si.upstream:
             self._hit(h, f"calls {{via}}, which calls {fn.name}")
         for b in si.blind_spots:
-            self.blind(b, fn.id)
+            if not b.startswith("Stopped at depth"):  # one depth line for the whole answer (the diff's)
+                self.blind(b, fn.id)
+        if si.truncated:
+            self.blind(f"Signature effects follow callers {si.depth} steps further up; more exist.", fn.id)
         self.blind(IFDEF_NOTE)
 
     # -- declarations
@@ -561,6 +586,8 @@ class _Run:
                 for u in du.uses:
                     level = u.certainty
                     why = f"uses {name}, which this change removes"
+                    if self.defer(u.fn):
+                        continue
                     if u.fn.id in self.edited:
                         level, why = PROBABLE, why + " (the patch also edits this function; check it)"
                     self.fn_node(u.fn, "breaks", level, "uses_changed", why, 1, nid, name, u.reads + u.writes,
@@ -680,7 +707,7 @@ class _Run:
             fid = self.lookup._fn_in_file(f, file) if f is not None else None
             fn = symbols.get(self.conn, fid) if fid else None
             text = f"{file}:{d['line']} does not compile after this change: {d['text']}"
-            if fn is not None and not (fn.id in self.res.nodes and self.res.nodes[fn.id].distance == 0):
+            if fn is not None:
                 self.fn_node(fn, "breaks", EXACT, "exact", f"does not compile after this change: {d['text']}", 1,
                              None, None, [d["line"]])  # fmt: skip
             else:
@@ -763,6 +790,13 @@ def run(
     """Everything `diff` finds, plus signature and data effects. `old`: git mode, outlines of the old
     versions (from `diff.load_git`)."""
     old = old or {}
+    if mode == "patch":
+        # parse each patched file with the other patched files (a .h and a .c changed together)
+        for fd in diffs:
+            if fd.new_path and not fd.binary and Path(fd.new_path).suffix.lower() in diff.CODE_EXTS:
+                text = diff.patched_text(root, fd)
+                if text is not None:
+                    outliner.new_overlay[fd.new_path] = text
     d = diff.analyse(
         conn, root, diffs, mode=mode, base=base, depth=depth, old=old, now=outliner.now, patched=outliner.text
     )
@@ -775,6 +809,8 @@ def run(
             if not f["has_prototype"]:
                 r.no_proto.add(f["qualified_name"])
         r.no_proto.update(n.noproto if n is not None else [])
+    if mode == "patch":
+        r.compiled = {ip for _, ip, o, n in pairs if ip and o is not None and n is not None}
     for shown, index_path, o, n in pairs:
         if o is None or n is None:
             side = "old" if o is None else "new"
@@ -897,7 +933,7 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
                 "status": n.status,
                 "certainty": n.certainty,
                 "link": n.link,
-                "why": n.why + (f" (and {_n(n.others, 'other link')})" if n.others else ""),
+                "why": n.why + (f" (and {_n(n.others, 'other link')})" if n.others and n.distance else ""),
                 "distance": n.distance,
                 "via": via,
                 "via_name": n.via_name,

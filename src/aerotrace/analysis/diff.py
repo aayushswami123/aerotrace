@@ -573,6 +573,12 @@ def load_git(
         and Path(fd.old_path).suffix.lower() in CODE_EXTS
     ]
     outliner = outliner or Outliner(root)
+    if every:
+        # parse each old file with the old versions of the other changed files (its old headers)
+        for rel in sorted(set(old_paths)):
+            content = git.show(root, base.sha, rel)
+            if content is not None:
+                outliner.base_overlay[rel] = content
     return diffs, desc, {rel: outliner.at(base.sha, rel) for rel in sorted(set(old_paths))}
 
 

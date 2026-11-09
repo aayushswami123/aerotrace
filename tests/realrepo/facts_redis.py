@@ -799,6 +799,55 @@ FACTS = [
         must_not=(Fn("getrangeCommand", T),),
     ),
     Fact(
+        id="redis-check-edited-caller-still-broken",
+        why="computeFieldHash gains a second parameter. The patch fixes the calls at 957 and 978, and also "
+        "edits computeFieldsHash (a comment) but leaves its call at 592 with one argument. computeFieldsHash "
+        "will not compile, even though the patch touched it; the two fixed functions are not breaks. "
+        "(Review of #48: a compiled build of this patch fails at t_hash.c:592 only.)",
+        kind="check",
+        proof=(
+            Line("src/t_hash.c", 580, "static uint64_t computeFieldHash(sds field) {"),
+            Line(
+                "src/t_hash.c",
+                589,
+                "static uint64_t computeFieldsHash(sds *fields, unsigned long long field_count) {",
+            ),
+            Line("src/t_hash.c", 592, "hash += computeFieldHash(fields[i]);"),
+            Line("src/t_hash.c", 957, "uint64_t new_hash = tmpl->hash + computeFieldHash(field);"),
+            Line(
+                "src/t_hash.c", 978, "uint64_t new_hash = tmpl->hash - computeFieldHash(tmpl->fields[idx]);"
+            ),
+        ),
+        edits=(
+            Edit(
+                "src/t_hash.c",
+                "static uint64_t computeFieldHash(sds field) {",
+                "static uint64_t computeFieldHash(sds field, uint64_t seed) {",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "    uint64_t hash = 0;\n    for (unsigned long long i = 0; i < field_count; i++)",
+                "    uint64_t hash = 0; /* edited */\n    for (unsigned long long i = 0; i < field_count; i++)",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "tmpl->hash + computeFieldHash(field);",
+                "tmpl->hash + computeFieldHash(field, 0);",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "tmpl->hash - computeFieldHash(tmpl->fields[idx]);",
+                "tmpl->hash - computeFieldHash(tmpl->fields[idx], 0);",
+            ),
+        ),
+        breaks=(Fn("computeFieldsHash", "src/t_hash.c", "exact"),),
+        exact=True,
+        must_not=(
+            Fn("hashTemplateForInsertedField", "src/t_hash.c"),
+            Fn("hashTemplateForDeletedField", "src/t_hash.c"),
+        ),
+    ),
+    Fact(
         id="redis-check-return-void-breaks-comparisons",
         why="checkStringLength now returns void. All three calls compare its result with != C_OK, which does "
         "not compile with a void value.",

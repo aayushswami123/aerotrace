@@ -106,7 +106,8 @@ def test_added_parameter_breaks_every_call(repo, mode):
     got = nodes(c)
     assert got["use_parse"] == ("breaks", "exact")
     assert got["parse"][0] == "changed"
-    assert got["handlers"] == ("affected", "exact")  # stores it in a table of the old pointer type
+    # stored in a table of the old pointer type: an error on clang 16+ / GCC 14+, so a probable break
+    assert got["handlers"] == ("breaks", "probable")
     if mode == "patch":
         assert got["dispatch"] == ("affected", "probable")  # calls a pointer of the old type
     assert [s.kinds for s in res.signatures] == [["params_added"]]
@@ -130,8 +131,9 @@ def test_retyped_parameter_is_affected_not_a_break(repo):
             H: [("int parse(int x);", "int parse(long x);")],
         },
     )
-    assert nodes(c)["use_parse"] == ("affected", "exact")
-    assert not nodes(c, "breaks")
+    assert nodes(c)["use_parse"] == ("affected", "exact")  # int -> long converts: the call still builds
+    assert nodes(c, "breaks") == {"handlers": ("breaks", "probable")}  # the pointer type no longer matches
+    assert not any("conflicting types" in t for t in blind(c))  # .h and .c parsed together
 
 
 def test_renaming_a_parameter_is_not_a_signature_change(repo):
@@ -222,10 +224,46 @@ def test_initial_value_change_affects_readers(repo):
 # ---------------------------------------------------------------- compile errors, gaps, contract
 
 
-def test_definition_that_no_longer_matches_its_prototype_is_reported(repo):
+def test_definition_that_no_longer_matches_its_prototype_is_a_break(repo):
+    # the changed function itself does not compile: it is a break, never only a note (review of #48)
     _, c = run_patch(repo, {A: [("int scale(int a, int b) {", "int scale(long a, int b) {")]})
-    assert any("does not compile after this change" in t and "conflicting types" in t for t in blind(c))
-    assert c["summary"]["not_followed"] > 0
+    scale = next(n for n in c["nodes"] if n["name"] == "scale")
+    assert (scale["status"], scale["certainty"]) == ("breaks", "exact")
+    assert "conflicting types" in scale["why"]
+    assert check.exit_code(c) == 1
+
+
+def test_caller_edited_by_the_patch_but_still_broken_is_a_break(repo):
+    # review of #48, finding 1: the patch edits use_parse, but leaves its calls with one argument
+    edits = {**ADD_PARAM, U: [("int use_parse(int v) {", "int use_parse(int v) { /* edited */")]}
+    _, c = run_patch(repo, edits)
+    assert nodes(c)["use_parse"] == ("breaks", "exact")
+    assert check.exit_code(c) == 1
+
+
+def test_caller_fixed_by_the_patch_is_not_a_break(repo):
+    edits = {**ADD_PARAM, U: [("return parse(v) + PARSE_TWICE(v);", "return parse(v, 0);")]}
+    _, c = run_patch(repo, edits)
+    assert "use_parse" not in nodes(c, "breaks")
+
+
+def test_removed_field_whose_user_is_edited_but_still_uses_it(repo):
+    edits = {
+        H: [("    long total;\n", "")],
+        U: [("long read_total(void) {", "long read_total(void) { /* x */")],
+    }
+    _, c = run_patch(repo, edits)
+    assert nodes(c)["read_total"] == ("breaks", "exact")
+
+
+def test_knr_to_prototype_in_header_and_definition_breaks_old_calls(repo):
+    # review of #48, finding 2: the patched .c must be parsed with the patched .h
+    edits = {
+        H: [("int old_style();", "int old_style(int x, int y);")],
+        A: [("int old_style(x)\n    int x;\n{", "int old_style(int x, int y) {")],
+    }
+    _, c = run_patch(repo, edits)
+    assert nodes(c)["use_old"] == ("breaks", "exact")
 
 
 def test_patch_that_does_not_match_is_counted(repo):
