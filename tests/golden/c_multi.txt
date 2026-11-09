@@ -6,6 +6,7 @@ fn likely_positive lib/shared.c:22-27 external []
 fn on_a lib/table.c:5-5 internal []
 fn on_b lib/table.c:6-6 internal []
 fn dispatch lib/table.c:10-12 external []
+fn apply lib/table.c:16-18 external []
 fn main prog_a/main.c:5-8 external ['clash']
 fn bump prog_a/util.c:3-5 internal ['clash']
 fn util_run prog_a/util.c:7-10 external []
@@ -20,6 +21,8 @@ var global count prog_b/util.c:1 clash
 edge add@lib/shared.c -writes/exact-> g_total@lib/shared.c :6
 edge bump@prog_a/util.c -writes/exact-> count@prog_a/util.c :4
 edge bump@prog_b/util.c -writes/exact-> count@prog_b/util.c :4
+edge dispatch@lib/table.c -calls/via_pointer-> on_a@lib/table.c :11
+edge dispatch@lib/table.c -calls/via_pointer-> on_b@lib/table.c :11
 edge dispatch@lib/table.c -reads/exact-> table@lib/table.c :11
 edge get@lib/shared.c -reads/exact-> g_total@lib/shared.c :10
 edge main@prog_a/main.c -calls/exact-> add@lib/shared.c :6
@@ -36,7 +39,8 @@ edge util_run@prog_a/util.c -calls/exact-> bump@prog_a/util.c :8
 edge util_run@prog_a/util.c -reads/exact-> count@prog_a/util.c :9
 edge util_run_b@prog_b/util.c -calls/exact-> bump@prog_b/util.c :8
 edge util_run_b@prog_b/util.c -reads/exact-> count@prog_b/util.c :9
+blind apply@lib/table.c pointer_call :17 call through a pointer to 'int (int)'; no function of that type has its address taken
 blind calls_missing@lib/shared.c unresolved_call :19 declared_only: declared in the repo, no definition was parsed
-blind dispatch@lib/table.c pointer_call :11 call through a pointer; target unknown
-address_taken on_a@lib/table.c
-address_taken on_b@lib/table.c
+blind dispatch@lib/table.c pointer_call :11 call through a pointer to 'void (void)'; may reach 2 functions of that type
+address_taken on_a@lib/table.c void (void)
+address_taken on_b@lib/table.c void (void)

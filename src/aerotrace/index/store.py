@@ -13,7 +13,7 @@ from pathlib import Path
 
 from aerotrace.index.merge import Graph
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 DIR_NAME = ".aerotrace"
 DB_NAME = "index.db"
 
@@ -71,7 +71,7 @@ CREATE TABLE blind_spots (
     line INTEGER NOT NULL,
     detail TEXT NOT NULL
 );
-CREATE TABLE address_taken (function_id TEXT PRIMARY KEY);
+CREATE TABLE address_taken (function_id TEXT PRIMARY KEY, type TEXT NOT NULL);
 CREATE TABLE class_bases (class TEXT NOT NULL, base TEXT NOT NULL);
 CREATE INDEX edges_src ON edges (src, kind);
 CREATE INDEX edges_dst ON edges (dst, kind);
@@ -129,7 +129,7 @@ def write_index(root: Path, graph: Graph, files: list[dict], meta: dict[str, str
         )
         conn.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?)", graph.edges)
         conn.executemany("INSERT INTO blind_spots VALUES (?, ?, ?, ?)", graph.blind_spots)
-        conn.executemany("INSERT INTO address_taken VALUES (?)", [(i,) for i in graph.address_taken])
+        conn.executemany("INSERT INTO address_taken VALUES (?, ?)", graph.address_taken)
         conn.executemany(
             "INSERT INTO class_bases VALUES (?, ?)",
             [(c, b) for c, bs in graph.class_bases.items() for b in bs],
@@ -210,7 +210,8 @@ def dump_canonical(conn: sqlite3.Connection) -> str:
         for r in conn.execute("SELECT * FROM blind_spots")
     )
     lines += sorted(
-        f"address_taken {name.get(r[0], r[0])}" for r in conn.execute("SELECT function_id FROM address_taken")
+        f"address_taken {name.get(r[0], r[0])} {r[1]}"
+        for r in conn.execute("SELECT function_id, type FROM address_taken")
     )
     return "\n".join(lines) + "\n"
 

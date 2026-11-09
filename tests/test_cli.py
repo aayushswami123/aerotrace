@@ -4,6 +4,7 @@ import pytest
 
 from aerotrace import __version__
 from aerotrace.cli import main
+from conftest import GOLDEN
 
 
 def test_version_flag_prints_version(capsys):
@@ -24,7 +25,8 @@ def test_index_then_status(repo_factory, capsys):
     capsys.readouterr()
     assert main(["status", "--root", str(root), "--json"]) == 0
     status = json.loads(capsys.readouterr().out)
-    assert status["functions"] == 14
+    golden = (GOLDEN / "c_multi.txt").read_text().splitlines()
+    assert status["functions"] == sum(1 for line in golden if line.startswith("fn "))
     assert status["flags_source"] == "compile_commands.json"
     assert status["changed_since_index"] == 0
 
