@@ -161,6 +161,11 @@ def read_meta(conn: sqlite3.Connection) -> dict[str, str]:
     return {r["key"]: r["value"] for r in conn.execute("SELECT key, value FROM meta ORDER BY key")}
 
 
+def indexed_paths(conn: sqlite3.Connection) -> set[str]:
+    """Every file in the index: parsed sources and the headers they include."""
+    return {r[0] for r in conn.execute("SELECT path FROM files")}
+
+
 def changed_files(conn: sqlite3.Connection, root: Path) -> list[str]:
     """Indexed files whose content changed (or that are gone) since the index was built."""
     from aerotrace.frontends.cpp.parse import file_hash
