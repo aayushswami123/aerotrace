@@ -33,6 +33,11 @@ USE_WORDS = {
     "discarded": "discarded with (void)",
 }
 BROKEN = "does not compile"
+IGNORING = ("ignored", "discarded")
+
+# Rank groups for call sites, most important first. A void function's calls are "no_result", never
+# "ignores_result": there is no result to ignore.
+RANK_GROUPS = ("does_not_compile", "uses_result", "ignores_result", "no_result")
 
 
 @dataclass
@@ -62,6 +67,20 @@ class AddressSite:
 
 
 @dataclass
+class UpstreamGroup:
+    """Callers further up that come in through one function that calls the target (the entry).
+
+    `kind` is "direct" for every entry that calls the target directly (one group for all of them), or
+    "pointer" for an entry that reaches it only through a function pointer (one group per entry)."""
+
+    kind: str  # direct | pointer
+    entry: Fn | None  # None for the direct group
+    lines: list[int]  # the pointer-call lines in the entry (pointer groups)
+    members: list[Hit]  # nearest first
+    also: dict[str, int] = field(default_factory=dict)  # member id -> other entries at the same distance
+
+
+@dataclass
 class SignatureImpact:
     target: Fn
     params: int | None  # None when the signature can't be read
@@ -71,12 +90,45 @@ class SignatureImpact:
     pointer_sites: list[Site] = field(default_factory=list)  # calls through pointers of its type
     address_sites: list[AddressSite] = field(default_factory=list)
     upstream: list[Hit] = field(default_factory=list)  # callers of the callers: distance 2 .. depth + 1
+    groups: list[UpstreamGroup] = field(default_factory=list)  # `upstream`, grouped by entry
     depth: int = 2
     truncated: bool = False
     blind_spots: list[str] = field(default_factory=list)
 
-    def uses(self) -> Counter:
-        return Counter(s.use for s in self.sites + self.pointer_sites)
+    def uses(self, sites: list[Site] | None = None) -> Counter:
+        """How the return value is used, over `sites` (default: direct and pointer call sites together)."""
+        return Counter(s.use for s in (self.sites + self.pointer_sites if sites is None else sites))
+
+    def rank_group(self, s: Site) -> str:
+        if s.broken:
+            return "does_not_compile"
+        if self.returns_void:
+            return "no_result"
+        return "ignores_result" if s.use in IGNORING else "uses_result"
+
+    def ranked(self, sites: list[Site]) -> list[Site]:
+        """Calls that do not compile, then calls that use the result, then calls that ignore it. Inside a
+        group: exact before probable before unknown, then file, line, column."""
+        return sorted(
+            sites,
+            key=lambda s: (
+                RANK_GROUPS.index(self.rank_group(s)),
+                certainty.LEVELS.index(s.certainty),
+                s.caller.file,
+                s.line,
+                s.col,
+                s.caller.id,
+            ),
+        )
+
+    def through_pointers(self) -> int:
+        """Callers further up whose best path has a pointer call somewhere on it (so they are probable)."""
+        return sum(1 for h in self.upstream if h.confidence == "via_pointer")
+
+    def files(self) -> list[tuple[str, int]]:
+        """Every file with direct call sites, and how many: most first, then by name."""
+        counts = Counter(s.caller.file for s in self.sites)
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
 
 def parameters(signature: str, name: str) -> tuple[int | None, bool, bool]:
@@ -190,8 +242,70 @@ def signature_impact(conn: sqlite3.Connection, target: Fn, depth: int = 2) -> Si
         # weaker link on its whole path. Distance 1 are the call sites listed above.
         hits, res.truncated = graph.walk_many(conn, [target], "callers", depth + 1)
         res.upstream = [h for h in hits if h.distance >= 2]
+        res.groups = _groups(conn, res, hits)
     res.blind_spots = _limits(conn, res)
     return res
+
+
+def _groups(conn: sqlite3.Connection, res: SignatureImpact, hits: list[Hit]) -> list[UpstreamGroup]:
+    """Group the callers further up by the entry their path comes through: the function at distance 1
+    (a caller of the target). A distance-1 function that calls the target directly at least once is a
+    direct entry, even if it also calls it through a pointer.
+
+    Each caller is put in exactly one group. Among its shortest, strongest paths (the ones the walk keeps),
+    a direct entry wins, then the lowest entry id. `also` counts the other groups it is reached through at
+    the same distance (any strength)."""
+    by_id = {h.fn.id: h for h in hits}
+    # entry ids reachable on the walk's best paths, and on any path of the same length
+    best: dict[str, set[str]] = {h.fn.id: {h.fn.id} for h in hits if h.distance == 1}
+    every: dict[str, set[str]] = {k: set(v) for k, v in best.items()}
+    top = max((h.distance for h in hits), default=0)
+    for d in range(2, top + 1):
+        prev = sorted(h.fn.id for h in hits if h.distance == d - 1)
+        nbrs = graph._neighbours(conn, prev, "callers", graph.ALL_CALL_CONFIDENCE)
+        for a in prev:
+            for b, conf, _ in nbrs.get(a, []):
+                hb = by_id.get(b)
+                if hb is None or hb.distance != d:
+                    continue
+                every.setdefault(b, set()).update(every.get(a, set()))
+                if graph.weaker(by_id[a].confidence, conf) == hb.confidence:
+                    best.setdefault(b, set()).update(best.get(a, set()))
+
+    def is_direct(entry: str) -> bool:
+        return by_id[entry].confidence != "via_pointer"
+
+    def group_key(entry: str) -> str:
+        return "" if is_direct(entry) else entry
+
+    ptr_lines: dict[str, set[int]] = {}
+    for s in res.pointer_sites:
+        ptr_lines.setdefault(s.caller.id, set()).add(s.line)
+    groups: dict[str, UpstreamGroup] = {}
+    for h in res.upstream:
+        fid = h.fn.id
+        cands = best.get(fid) or every.get(fid) or set()
+        if not cands:  # cannot happen: the walk reached it from some entry
+            continue
+        entry = min(cands, key=lambda e: (not is_direct(e), e))
+        key = group_key(entry)
+        g = groups.get(key)
+        if g is None:
+            if key == "":
+                g = UpstreamGroup("direct", None, [], [])
+            else:
+                g = UpstreamGroup("pointer", by_id[entry].fn, sorted(ptr_lines.get(entry, set())), [])
+            groups[key] = g
+        g.members.append(h)
+        others = {group_key(e) for e in every.get(fid, cands)} - {key}
+        if others:
+            g.also[fid] = len(others)
+    out = [groups[k] for k in groups if k == ""]
+    out += sorted(
+        (g for k, g in groups.items() if k != ""),
+        key=lambda g: (g.entry.file, g.lines[:1], g.entry.id),  # type: ignore[union-attr]
+    )
+    return out
 
 
 def _limits(conn: sqlite3.Connection, res: SignatureImpact) -> list[str]:

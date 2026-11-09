@@ -35,6 +35,7 @@ aerotrace index                # builds .aerotrace/index.db
 aerotrace impact setCommand    # what could break if this function changes
 aerotrace callers dictAdd --depth 2
 aerotrace signature lookupKeyReadOrReply   # every call site, and how each uses the return value
+aerotrace signature addReply --all         # a summary and the top call sites by default; --all for every one
 aerotrace find src/server.c:4221
 aerotrace diff                 # what your uncommitted edits could break (new files included)
 aerotrace diff main            # everything on this branch, compared with where it left main

@@ -12,6 +12,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
   value (stored, compared, checked, passed on, returned, ignored, discarded), every place that uses the
   function's address (handler tables, callbacks, comparisons), pointer calls that may reach it, and callers
   further up. Each result is exact or probable, with the reason. Calls that no longer compile are listed.
+- `signature` answers are ranked and short: a summary first (counts, exact/probable split, calls that do
+  not compile, every file with its count), then call sites that do not compile, then the ones that use the
+  result, then the ones that ignore it. Callers further up are grouped by the caller they come through
+  (one group per pointer call). Text lists are capped (about 15) and say how many were left out;
+  `--all` (MCP `show_all=true`) shows everything, `--limit N` still works. JSON keeps its order and
+  only gains keys (`summary`, `upstream_groups`, `rank_group`, `*_omitted`, `not_compiling_call_sites`).
 - Index format 3 (ADR 0007): call sites, address uses, escapes (`foo(&x)`), designated initializers and
   "no member named" errors are recorded.
 

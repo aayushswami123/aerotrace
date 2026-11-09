@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from facts import Addr, Call, Edit, Fact, Fn, Line
+from facts import Addr, Call, Edit, Fact, Fn, Group, Line
 
 T = "src/t_string.c"
 S = "src/server.c"
@@ -655,5 +655,100 @@ FACTS = [
         changed=(f"checkStringLength@{T}",),
         must=(Fn("setrangeCommand", T, "exact", 1), Fn("appendCommand", T, "exact", 1)),
         must_not=(Fn("setCommand", T),),
+    ),
+    # ------------------------------------------------------------ ranked signature answers (work item "ranking")
+    Fact(
+        id="redis-ranking-getGenericCommand-uses-before-ignored",
+        why="Three callers compare the result with == C_ERR; GET ignores it. A ranked answer lists the three "
+        "calls that use the result before the one that ignores it, even though getCommand (line 476) comes "
+        "before getdelCommand (558) in the file. It must not put the ignored call first. call() and "
+        "processCommand reach it only through getCommand's table entry, so the summary must count them as "
+        "reached through a pointer call, and call() must never be exact.",
+        kind="signature",
+        query=f"getGenericCommand@{T}",
+        proof=(
+            Line(T, 100, "if (getGenericCommand(c) == C_ERR) return;"),
+            Line(T, 476, "getGenericCommand(c);"),
+            Line(T, 558, "if (getGenericCommand(c) == C_ERR) return;"),
+            Line(T, 569, "if (getGenericCommand(c) == C_ERR) return;"),
+            # setCommand calls setGenericCommand directly; getCommand is only in the command table (grep
+            # finds no direct call), so call() and its callers reach it only through c->cmd->proc.
+            Line(T, 435, "void setCommand(client *c) {"),
+            Line(T, 475, "void getCommand(client *c) {"),
+            Line("src/commands.def", 13079, ",getCommand,"),
+            Line(S, 3992, "void call(client *c, int flags) {"),
+            Line(S, 4058, "c->cmd->proc(c);"),
+            Line(S, 4467, "int processCommand(client *c) {"),
+            Line(S, 4844, "call(c,flags);"),
+        ),
+        depth=2,
+        upstream=(
+            Fn("setCommand", T, "exact"),
+            Fn("call", S, "via_pointer"),
+            Fn("processCommand", S, "via_pointer"),
+        ),
+        must_not=(Fn("call", S, "exact"),),
+        ranked=(
+            ("setGenericCommand", T, 100),
+            ("getdelCommand", T, 558),
+            ("getsetCommand", T, 569),
+            ("getCommand", T, 476),
+        ),
+    ),
+    Fact(
+        id="redis-ranking-setCommand-pointer-groups",
+        why="Nothing calls setCommand directly. call() reaches it through c->cmd->proc (a redisCommandProc "
+        "pointer), and processCommand and execCommand call call(), so they come in through the pointer call "
+        "in call() and are only probable (via_pointer). loadSingleAppendOnlyFile replays the AOF through "
+        "cmd->proc, and loadAppendOnlyFiles calls it. processTimeEvents calls te->timeProc, an aeTimeProc "
+        "(a different type), so it must not show up as a caller.",
+        kind="signature",
+        query=f"setCommand@{T}",
+        depth=1,
+        proof=(
+            Line(S, 3992, "void call(client *c, int flags) {"),
+            Line(S, 4058, "c->cmd->proc(c);"),
+            Line(S, 4467, "int processCommand(client *c) {"),
+            Line(S, 4844, "call(c,flags);"),
+            Line("src/multi.c", 127, "void execCommand(client *c) {"),
+            Line("src/multi.c", 229, "call(c,CMD_CALL_FULL);"),
+            Line("src/aof.c", 1810, "int loadSingleAppendOnlyFile(char *filename) {"),
+            Line("src/aof.c", 1993, "cmd->proc(fakeClient);"),
+            Line("src/aof.c", 2113, "int loadAppendOnlyFiles(aofManifest *am) {"),
+            Line("src/aof.c", 2152, "ret = loadSingleAppendOnlyFile(aof_name);"),
+            Line("src/server.h", 2959, "typedef void redisCommandProc(client *c);"),
+            Line("src/server.h", 3073, "redisCommandProc *proc; /* Command implementation */"),
+            Line(
+                "src/ae.h",
+                47,
+                "typedef int aeTimeProc(struct aeEventLoop *eventLoop, long long id, void *clientData);",
+            ),
+            Line("src/ae.h", 63, "aeTimeProc *timeProc;"),
+            Line("src/ae.c", 335, "retval = te->timeProc(eventLoop, id, te->clientData);"),
+        ),
+        groups=(
+            Group(
+                f"call@{S}",
+                4058,
+                (Fn("processCommand", S, "via_pointer"), Fn("execCommand", "src/multi.c", "via_pointer")),
+            ),
+            Group(
+                "loadSingleAppendOnlyFile@src/aof.c",
+                1993,
+                (Fn("loadAppendOnlyFiles", "src/aof.c", "via_pointer"),),
+            ),
+        ),
+        must_not=(Fn("processTimeEvents", "src/ae.c"),),
+    ),
+    Fact(
+        id="redis-ranking-addReply-void-and-short",
+        why="addReply returns void, so a ranked answer must never say a caller ignores its result. It has "
+        "hundreds of call sites; the default answer must stay short and count what it leaves out.",
+        kind="signature",
+        query="addReply@src/networking.c",
+        proof=(Line("src/networking.c", 606, "void addReply(client *c, robj *obj) {"),),
+        returns_void=True,
+        max_lines=60,
+        text_must_not=("ignore",),
     ),
 ]

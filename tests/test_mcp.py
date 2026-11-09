@@ -192,3 +192,20 @@ async def test_signature_impact_lists_call_sites_and_return_value_uses(repo_fact
     assert "uses  src/use.c:10  result compared with ==" in out
     assert "DOES NOT COMPILE NOW: passes 1 argument, it takes 2" in out
     assert "src/parse.c:6  in the initializer of parsers" in out
+
+
+@pytest.mark.anyio
+async def test_signature_impact_is_short_by_default_and_can_show_all(repo_factory):
+    async with Client(create_server(repo_factory("c_rank"))) as client:
+        short = text_of(await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c"}))
+        full = text_of(
+            await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c", "show_all": True})
+        )
+        zero = await client.call_tool("signature_impact", {"symbol": "f@src/a_first.c", "limit": 0})
+        both = await client.call_tool(
+            "signature_impact", {"symbol": "f@src/a_first.c", "limit": 3, "show_all": True}
+        )
+    assert "  ... and 12 more call sites (call again with show_all=true, or a bigger limit)." in short
+    assert "more call sites" not in full and full.count("  - many  src/a_first.c:") == 20
+    assert zero.is_error and "limit must be 1 or more." in text_of(zero)
+    assert both.is_error and "not both" in text_of(both)
