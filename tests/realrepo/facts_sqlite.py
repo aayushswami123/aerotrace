@@ -489,4 +489,31 @@ FACTS = [
         calls=(Call("shellFakeSchema", SH, 26438, "ignored", n_args=3),),
         must_not=(Fn("sqlite3_create_filename", C),),
     ),
+    Fact(
+        id="sqlite-git-diff-new-parameter-keeps-old-callers",
+        why="Adding a parameter to openDatabase in the working tree leaves its three callers with too few "
+        "arguments; diff must still list all three open functions (#14).",
+        kind="git_diff",
+        proof=(
+            Line(C, 191739, "static int openDatabase("),
+            Line(C, 191743, "const char *zVfs       /* Name of the VFS to use */"),
+            Line(C, 192108, "return openDatabase(zFilename, ppDb,"),
+            Line(C, 192117, "return openDatabase(filename, ppDb, (unsigned int)flags, zVfs);"),
+            Line(C, 192145, "rc = openDatabase(zFilename8, ppDb,"),
+        ),
+        edits=(
+            Edit(
+                C,
+                "  const char *zVfs       /* Name of the VFS to use */\n){\n",
+                "  const char *zVfs,      /* Name of the VFS to use */\n  int nRetry\n){\n",
+            ),
+        ),
+        changed=(f"openDatabase@{C}",),
+        must=(
+            Fn("sqlite3_open", C, "exact", 1),
+            Fn("sqlite3_open_v2", C, "exact", 1),
+            Fn("sqlite3_open16", C, "exact", 1),
+        ),
+        must_not=(Fn("sqlite3_libversion", C),),
+    ),
 ]

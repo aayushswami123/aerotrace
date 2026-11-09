@@ -104,11 +104,15 @@ def merge(results: list[dict]) -> Graph:
 
     for res in results:
         visible = set(res.get("deps", {}))
-        for caller, cfile, callee, line, dispatch, name in res.get("calls", []):
+        overload_calls: set[tuple] = set()  # (caller, file, callee, line) that may go to another overload
+        for caller, cfile, callee, line, dispatch, name, overload in res.get("calls", []):
             if caller not in fns.defs:
                 continue
             src = fns.id_of(caller, cfile)
             targets = fns.resolve(callee, visible)
+            if overload:
+                overload_calls.add((caller, cfile, callee, line))
+                targets = [(dst, "ambiguous") for dst, _ in targets]
             if not targets:
                 blind.add(
                     (src, "unresolved_call", line, f"{name}: declared in the repo, no definition was parsed")
@@ -144,8 +148,11 @@ def merge(results: list[dict]) -> Graph:
             if not callee:
                 call_sites.add((src, None, "via_pointer", line, col, n_args, use, detail, ptype))
                 continue
+            overload = (caller, cfile, callee, line) in overload_calls
             for dst, conf in fns.resolve(callee, visible):
-                call_sites.add((src, dst, conf, line, col, n_args, use, detail, ""))
+                call_sites.add(
+                    (src, dst, "ambiguous" if overload else conf, line, col, n_args, use, detail, "")
+                )
         for fn, in_fn, in_file, in_var, file, line, how in res.get("address_sites", []):
             in_fn_id = fns.id_of(in_fn, in_file) if in_fn and in_fn in fns.defs else None
             in_var_ids = [v for v, _ in vars_.resolve(in_var, visible)] if in_var else []

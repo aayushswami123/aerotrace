@@ -74,7 +74,7 @@ class Edit:
 class Fact:
     id: str
     why: str  # plain English: what is true, and how the proof lines show it
-    kind: str  # callers | callees | impact | writes | reads | find | diff | signature
+    kind: str  # callers | callees | impact | writes | reads | find | diff | git_diff | signature
     query: str = ""  # the function asked about, as name@file (kinds other than diff)
     proof: tuple[Line, ...] = ()
     must: tuple = ()  # Fn for function kinds, variable qualified names for writes/reads
@@ -88,6 +88,8 @@ class Fact:
     addresses: tuple[Addr, ...] = ()
     pointer_calls: tuple[Call, ...] = ()
     returns_void: bool | None = None
+    # git_diff facts: the edits are made in the working tree of a fresh git copy, then `aerotrace diff`
+    only_files: tuple[str, ...] = ()  # compile only these files (keeps the test fast); () = all
     # diff facts
     edits: tuple[Edit, ...] = ()
     changed: tuple[str, ...] = ()  # name@file of functions the diff changes
