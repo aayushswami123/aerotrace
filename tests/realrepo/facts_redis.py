@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from facts import Edit, Fact, Fn, Line
+from facts import Addr, Call, Edit, Fact, Fn, Line
 
 T = "src/t_string.c"
 S = "src/server.c"
@@ -493,5 +493,143 @@ FACTS = [
         ),
         changed=(),
         must_not=(Fn("setCommand", T), Fn("setGenericCommand", T)),
+    ),
+    # ------------------------------------------------------------ signatures (build item 5, part A)
+    Fact(
+        id="redis-signature-checkStringLength",
+        why="All three calls pass 3 arguments and compare the result with != C_OK. A change to its "
+        "parameters breaks exactly these three lines.",
+        kind="signature",
+        query=f"checkStringLength@{T}",
+        proof=(
+            Line(T, 26, "static int checkStringLength(client *c, long long size, long long append) {"),
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 623, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        calls=(
+            Call("setrangeCommand", T, 604, "compared", "with !=", 3, "exact"),
+            Call("setrangeCommand", T, 623, "compared", "with !=", 3, "exact"),
+            Call("appendCommand", T, 1391, "compared", "with !=", 3, "exact"),
+        ),
+        exact=True,
+        returns_void=False,
+    ),
+    Fact(
+        id="redis-signature-getGenericCommand-uses",
+        why="Three callers compare the result with == C_ERR; GET ignores it.",
+        kind="signature",
+        query=f"getGenericCommand@{T}",
+        proof=(
+            Line(T, 100, "if (getGenericCommand(c) == C_ERR) return;"),
+            Line(T, 476, "getGenericCommand(c);"),
+            Line(T, 558, "if (getGenericCommand(c) == C_ERR) return;"),
+            Line(T, 569, "if (getGenericCommand(c) == C_ERR) return;"),
+        ),
+        calls=(
+            Call("setGenericCommand", T, 100, "compared", "with =="),
+            Call("getCommand", T, 476, "ignored"),
+            Call("getdelCommand", T, 558, "compared", "with =="),
+            Call("getsetCommand", T, 569, "compared", "with =="),
+        ),
+        exact=True,
+    ),
+    Fact(
+        id="redis-signature-setGenericCommand-void",
+        why="setGenericCommand returns void and takes 9 parameters; its four callers pass 9 arguments each.",
+        kind="signature",
+        query=f"setGenericCommand@{T}",
+        proof=(
+            Line(
+                T, 87, "void setGenericCommand(client *c, int flags, robj *key, robj **valref, robj *expire,"
+            ),
+            Line(T, 88, "int unit, robj *match_value, robj *ok_reply, robj *abort_reply)"),
+            Line(
+                T,
+                443,
+                "setGenericCommand(c, args.flags, c->argv[1], &(c->argv[2]), args.expire, args.unit, args.match_value, NULL, NULL);",
+            ),
+            Line(
+                T,
+                448,
+                "setGenericCommand(c, OBJ_SET_NX, c->argv[1], &(c->argv[2]), NULL, 0, NULL, shared.cone, shared.czero);",
+            ),
+            Line(
+                T,
+                453,
+                "setGenericCommand(c, OBJ_EX, c->argv[1], &(c->argv[3]), c->argv[2], UNIT_SECONDS, NULL, NULL, NULL);",
+            ),
+            Line(
+                T,
+                458,
+                "setGenericCommand(c, OBJ_PX, c->argv[1], &(c->argv[3]), c->argv[2], UNIT_MILLISECONDS, NULL, NULL, NULL);",
+            ),
+        ),
+        calls=(
+            Call("setCommand", T, 443, "ignored", n_args=9),
+            Call("setnxCommand", T, 448, "ignored", n_args=9),
+            Call("setexCommand", T, 453, "ignored", n_args=9),
+            Call("psetexCommand", T, 458, "ignored", n_args=9),
+        ),
+        exact=True,
+        returns_void=True,
+    ),
+    Fact(
+        id="redis-signature-setCommand-table-and-comparison",
+        why="Nothing calls setCommand directly (grep finds only its definition and these two lines). The "
+        "command table stores it, and setGenericCommand compares c->cmd->proc with it. call() reaches it "
+        "through the redisCommandProc pointer. The timer pointer in processTimeEvents has another type.",
+        kind="signature",
+        query=f"setCommand@{T}",
+        proof=(
+            Line(
+                "src/commands.def",
+                13094,
+                '{MAKE_CMD("set","Sets the string value of a key, ignoring its type.',
+            ),
+            Line("src/commands.def", 13094, ",setCommand,"),
+            Line(T, 201, "if ((c->cmd->proc == setCommand) && c->argc == 5) {"),
+            Line(S, 4058, "c->cmd->proc(c);"),
+        ),
+        addresses=(
+            Addr("src/commands.def", 13094, "stored in an initializer"),
+            Addr(T, 201, "compared"),
+        ),
+        pointer_calls=(Call("call", S, 4058, "ignored", certainty="probable"),),
+        must_not=(Fn("processTimeEvents", "src/ae.c"),),
+        exact=True,  # no direct call sites
+    ),
+    Fact(
+        id="redis-signature-serverCron-callback",
+        why="initServer passes serverCron to aeCreateTimeEvent as its 3rd argument; the event loop calls it "
+        "through te->timeProc and stores the result in retval.",
+        kind="signature",
+        query=f"serverCron@{S}",
+        proof=(
+            Line(S, 3201, "aeCreateTimeEvent(server.el, 1, serverCron, NULL, NULL)"),
+            Line("src/ae.c", 335, "retval = te->timeProc(eventLoop, id, te->clientData);"),
+        ),
+        addresses=(Addr(S, 3201, "passed to aeCreateTimeEvent() as argument 3"),),
+        pointer_calls=(
+            Call("processTimeEvents", "src/ae.c", 335, "stored", "in retval", certainty="probable"),
+        ),
+        must_not=(Fn("call", S),),
+        exact=True,
+    ),
+    Fact(
+        id="redis-signature-lookupKeyReadOrReply-stored-then-compared",
+        why="GET stores the result in o and compares that assignment with NULL in the same expression. "
+        "GETBIT stores it in a new variable and compares on the next line, which AeroTrace does not follow: "
+        "it must say only 'stored'.",
+        kind="signature",
+        query="lookupKeyReadOrReply@src/db.c",
+        proof=(
+            Line(T, 464, "if ((o = lookupKeyReadOrReply(c, c->argv[1], shared.null[c->resp])) == NULL)"),
+            Line("src/bitops.c", 911, "kvobj *kv = lookupKeyReadOrReply(c, c->argv[1], shared.czero);"),
+        ),
+        calls=(
+            Call("getGenericCommand", T, 464, "stored", "in o, then compared with =="),
+            Call("getbitCommand", "src/bitops.c", 911, "stored", "in kv"),
+        ),
     ),
 ]

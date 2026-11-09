@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections import Counter
 
+from aerotrace.analysis import certainty
 from aerotrace.analysis.diff import DiffImpact, ranges
 from aerotrace.analysis.graph import CONFIDENCE_MEANING, CONFIDENCE_ORDER, Hit, Impact, Walk
+from aerotrace.analysis.signature import USE_WORDS, USES, SignatureImpact, Site
 from aerotrace.analysis.symbols import Fn
 
 
@@ -280,4 +282,137 @@ def diff_json(d: DiffImpact, limit: int = 50) -> dict:
         "mismatched_files": d.mismatched,
         "not_indexed": d.not_indexed,
         "blind_spots": d.blind_spots,
+    }
+
+
+# ---------------------------------------------------------------- signature impact
+
+
+def _use_text(s: Site) -> str:
+    detail = s.detail
+    if s.broken:
+        detail = detail.split("; ", 1)[1] if "; " in detail else ""
+    if s.use == "discarded":
+        return USE_WORDS["discarded"]
+    if s.use == "used" and detail:
+        return f"used {detail}"
+    return USE_WORDS.get(s.use, s.use) + (f" {detail}" if detail else "")
+
+
+def _site_line(s: Site, t: SignatureImpact, returns: bool) -> str:
+    use = f"  result {_use_text(s)}" if returns else ""
+    tag = "" if s.certainty == certainty.EXACT else f" [{s.certainty}]"
+    args = ""
+    if s.broken:
+        args = f"  DOES NOT COMPILE NOW: passes {s.n_args} argument{'s' if s.n_args != 1 else ''}"
+        if t.params is not None:
+            args += f", it takes {t.params}{' or more' if t.variadic else ''}"
+    return f"  - {s.caller.qualified_name}  {s.caller.file}:{s.line}{tag}{use}{args}"
+
+
+def signature_text(r: SignatureImpact, limit: int = 50) -> str:
+    t = r.target
+    takes = (
+        "an unknown number of parameters"
+        if r.params is None
+        else f"{_n(r.params, 'parameter')}{' and more (...)' if r.variadic else ''}"
+    )
+    callers = {s.caller.id for s in r.sites}
+    lines = [
+        f"Signature impact of {t.qualified_name} ({t.where}): {t.signature}, {takes}.",
+        f"A change to its parameters or return type affects {_n(len(r.sites), 'call site')} in "
+        f"{_n(len(callers), 'function')}, {_n(len(r.address_sites), 'place')} that {'uses' if len(r.address_sites) == 1 else 'use'} its address, and "
+        f"{_n(len(r.pointer_sites), 'pointer call')} that may reach it.",
+    ]
+    returns = not r.returns_void
+    if r.sites:
+        lines.append(f"Call sites ({len(r.sites)}):")
+        lines += _cap([_site_line(s, r, returns) for s in r.sites], limit)
+    if returns and (r.sites or r.pointer_sites):
+        used = r.uses()
+        lines.append(
+            "How callers use the return value: "
+            + ", ".join(f"{used[u]} {USE_WORDS[u]}" for u in USES if used[u])
+            + "."
+        )
+    elif not returns and r.sites:
+        lines.append("It returns void, so no caller uses a return value.")
+    if r.address_sites:
+        lines.append(
+            f"Places that use its address ({len(r.address_sites)}): stored, passed or compared as a pointer. "
+            "Its type there must match the new signature:"
+        )
+        rows = []
+        for a in r.address_sites:
+            where = (
+                f"in {a.in_function.qualified_name}"
+                if a.in_function
+                else f"in the initializer of {a.in_variable}"
+                if a.in_variable
+                else "at file scope"
+            )
+            rows.append(f"  - {a.file}:{a.line}  {where}: {a.how}")
+        lines += _cap(rows, limit)
+    if r.pointer_sites:
+        lines.append(
+            f"Calls through a pointer of its type that may reach it ({len(r.pointer_sites)}) [probable]:"
+        )
+        lines += _cap([_site_line(s, r, returns) for s in r.pointer_sites], limit)
+    if r.upstream:
+        lines.append(f"Callers further up (to depth {r.depth}), nearest first:")
+        level_lines, shown = _levels(r.upstream, limit, via_always=True)
+        lines += level_lines
+        lines += _legend(shown)
+    levels = {s.certainty for s in r.sites + r.pointer_sites}
+    lines += [
+        f"[{lv}] = {certainty.MEANING[lv]}"
+        for lv in certainty.LEVELS
+        if lv in levels and lv != certainty.EXACT
+    ]
+    if r.blind_spots:
+        lines.append("Limits of this answer:")
+        lines += [f"  - {n}" for n in r.blind_spots]
+    return "\n".join(lines)
+
+
+def _site_json(s: Site) -> dict:
+    return {
+        "caller": s.caller.brief(),
+        "line": s.line,
+        "column": s.col,
+        "arguments": s.n_args,
+        "use": s.use,
+        "detail": s.detail,
+        "compiles": not s.broken,
+        "link": s.link,
+        "certainty": s.certainty,
+        "reason": s.reason,
+    }
+
+
+def signature_json(r: SignatureImpact, limit: int = 50) -> dict:
+    used = r.uses()
+    return {
+        "target": r.target.brief(),
+        "parameters": r.params,
+        "variadic": r.variadic,
+        "returns_void": r.returns_void,
+        "call_sites": [_site_json(s) for s in r.sites[:limit]],
+        "call_sites_total": len(r.sites),
+        "return_value_uses": {u: used[u] for u in USES if used[u]},
+        "address_sites": [
+            {
+                "file": a.file,
+                "line": a.line,
+                "in_function": a.in_function.brief() if a.in_function else None,
+                "in_variable": a.in_variable,
+                "how": a.how,
+            }
+            for a in r.address_sites[:limit]
+        ],
+        "pointer_call_sites": [_site_json(s) for s in r.pointer_sites[:limit]],
+        "upstream": [hit_json(h) for h in r.upstream[:limit]],
+        "upstream_total": len(r.upstream),
+        "truncated_at_depth": r.truncated,
+        "blind_spots": r.blind_spots,
     }

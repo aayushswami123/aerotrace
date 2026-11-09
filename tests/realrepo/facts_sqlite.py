@@ -7,7 +7,7 @@ build compiles), and used grep to make sure no other call site exists when a fac
 
 from __future__ import annotations
 
-from facts import Edit, Fact, Fn, Line
+from facts import Addr, Call, Edit, Fact, Fn, Line
 
 C = "sqlite3.c"
 SH = "shell.c"
@@ -405,5 +405,88 @@ FACTS = [
         no_outside=True,
         known_bug="In patch mode the new text of a changed declaration is reported as 'could not follow' "
         "(only the old side is matched to the field).",
+    ),
+    # ------------------------------------------------------------ signatures (build item 5, part A)
+    Fact(
+        id="sqlite-signature-openDatabase",
+        why="Two of the three open functions return openDatabase's result directly; sqlite3_open16 stores it in rc.",
+        kind="signature",
+        query=f"openDatabase@{C}",
+        proof=(
+            Line(C, 192108, "return openDatabase(zFilename, ppDb,"),
+            Line(C, 192117, "return openDatabase(filename, ppDb, (unsigned int)flags, zVfs);"),
+            Line(C, 192145, "rc = openDatabase(zFilename8, ppDb,"),
+        ),
+        calls=(
+            Call("sqlite3_open", C, 192108, "returned", n_args=4),
+            Call("sqlite3_open_v2", C, 192117, "returned", n_args=4),
+            Call("sqlite3_open16", C, 192145, "stored", "in rc", 4),
+        ),
+        exact=True,
+    ),
+    Fact(
+        id="sqlite-signature-sqlite3_open-shell-and-api-table",
+        why="The shell stores sqlite3_open's result in rc in one place and ignores it in another. The "
+        "extension API table sqlite3Apis stores its address. The recover code is not compiled, so it must "
+        "not appear.",
+        kind="signature",
+        query=f"sqlite3_open@{C}",
+        proof=(
+            Line(SH, 1968, 'rc = sqlite3_open(":memory:",&db);'),
+            Line(SH, 30012, "static void open_db(ShellState *p, int openFlags){"),
+            Line(SH, 30059, "sqlite3_open(0, &p->db);"),
+            Line(C, 143834, "static const sqlite3_api_routines sqlite3Apis = {"),
+            Line(C, 143913, "sqlite3_open,"),
+            Line(SH, 20773, "#define SQLITE_SHELL_HAVE_RECOVER 0"),
+        ),
+        calls=(
+            Call("qrfJsonbToJson", SH, 1968, "stored", "in rc", 2),
+            Call("open_db", SH, 30059, "ignored", n_args=2),
+        ),
+        addresses=(Addr(C, 143913, "stored in an initializer"),),
+        must_not=(Fn("recoverTransferSettings", SH),),
+    ),
+    Fact(
+        id="sqlite-signature-returnSingleInt-void",
+        why="returnSingleInt returns void; all 16 calls are statements of their own in sqlite3Pragma "
+        "(grep: 16 lines start with 'returnSingleInt(v,').",
+        kind="signature",
+        query=f"returnSingleInt@{C}",
+        proof=(
+            Line(C, 145533, "static void returnSingleInt(Vdbe *v, i64 value){"),
+            Line(C, 147978, "returnSingleInt(v, db->busyTimeout);"),
+        ),
+        calls=(Call("sqlite3Pragma", C, 147978, "ignored", n_args=2),),
+        returns_void=True,
+    ),
+    Fact(
+        id="sqlite-signature-busy-callback",
+        why="sqlite3_busy_timeout passes the callback (cast) to sqlite3_busy_handler as argument 2. "
+        "sqlite3InvokeBusyHandler calls it through xBusyHandler and stores the result in rc. The pager's "
+        "busy handler has another type (one argument), so pager_wait_on_lock must not be listed.",
+        kind="signature",
+        query=f"sqliteDefaultBusyCallback@{C}",
+        proof=(
+            Line(C, 190233, "sqlite3_busy_handler(db, (int(*)(void*,int))sqliteDefaultBusyCallback,"),
+            Line(C, 190157, "rc = p->xBusyHandler(p->pBusyArg, p->nBusy);"),
+            Line(C, 62974, "pPager->xBusyHandler(pPager->pBusyHandlerArg)"),
+        ),
+        addresses=(Addr(C, 190233, "passed to sqlite3_busy_handler() as argument 2"),),
+        pointer_calls=(Call("sqlite3InvokeBusyHandler", C, 190157, "stored", "in rc", 2, "probable"),),
+        must_not=(Fn("pager_wait_on_lock", C),),
+        exact=True,
+    ),
+    Fact(
+        id="sqlite-signature-static-appendText-in-shell",
+        why="A signature change to shell.c's static appendText affects only shell.c's calls, never "
+        "sqlite3_create_filename's calls to sqlite3.c's own appendText.",
+        kind="signature",
+        query=f"appendText@{SH}",
+        proof=(
+            Line(SH, 26438, "appendText(&s, zSchema, cQuote);"),
+            Line(C, 193261, "p = appendText(p, zDatabase);"),
+        ),
+        calls=(Call("shellFakeSchema", SH, 26438, "ignored", n_args=3),),
+        must_not=(Fn("sqlite3_create_filename", C),),
     ),
 ]

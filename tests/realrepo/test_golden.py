@@ -22,7 +22,7 @@ from facts import Fact, Fn
 from facts_redis import FACTS as REDIS_FACTS
 from facts_sqlite import FACTS as SQLITE_FACTS
 
-from aerotrace.analysis import diff, graph, symbols
+from aerotrace.analysis import diff, graph, signature, symbols
 from aerotrace.index import store
 from aerotrace.index.build import build_index
 from aerotrace.index.history import Outliner
@@ -195,11 +195,56 @@ def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
     return problems + _check_hits(fact, res.affected, list(fact.must), "affected functions")
 
 
+def _check_calls(want, got, what: str) -> list[str]:
+    problems = []
+    by = {(s.caller.qualified_name, s.caller.file, s.line): s for s in got}
+    for c in want:
+        s = by.get((c.caller, c.file, c.line))
+        if s is None:
+            problems.append(f"missing {what}: {c.caller}@{c.file}:{c.line}")
+            continue
+        if c.use and s.use != c.use:
+            problems.append(f"{c.caller}@{c.file}:{c.line}: result is '{s.use}', expected '{c.use}'")
+        if c.detail and c.detail not in s.detail:
+            problems.append(
+                f"{c.caller}@{c.file}:{c.line}: detail is '{s.detail}', expected '{c.detail}' in it"
+            )
+        if c.n_args is not None and s.n_args != c.n_args:
+            problems.append(f"{c.caller}@{c.file}:{c.line}: passes {s.n_args} arguments, expected {c.n_args}")
+        if c.certainty and s.certainty != c.certainty:
+            problems.append(
+                f"{c.caller}@{c.file}:{c.line}: certainty '{s.certainty}', expected '{c.certainty}'"
+            )
+    return problems
+
+
+def _check_signature(conn: sqlite3.Connection, fact: Fact) -> list[str]:
+    r = signature.signature_impact(conn, _one(conn, fact.query), depth=0)
+    problems = _check_calls(fact.calls, r.sites, "call site")
+    problems += _check_calls(fact.pointer_calls, r.pointer_sites, "pointer call")
+    if fact.exact:
+        want = {(c.caller, c.file, c.line) for c in fact.calls}
+        extra = sorted({(s.caller.qualified_name, s.caller.file, s.line) for s in r.sites} - want)
+        if extra:
+            problems.append(f"call sites the source does not have: {extra[:10]}")
+    for a in fact.addresses:
+        if not any(x.file == a.file and x.line == a.line and a.how in x.how for x in r.address_sites):
+            got = [(x.file, x.line, x.how) for x in r.address_sites]
+            problems.append(f"missing address use {a.file}:{a.line} '{a.how}'; got {got[:10]}")
+    if fact.returns_void is not None and r.returns_void != fact.returns_void:
+        problems.append(f"returns_void is {r.returns_void}, expected {fact.returns_void}")
+    callers = {(s.caller.qualified_name, s.caller.file) for s in r.sites + r.pointer_sites}
+    problems += [f"false claim: {m} is listed as a call site" for m in fact.must_not if _key(m) in callers]
+    return problems
+
+
 def answer_problems(root: Path, fact: Fact) -> list[str]:
     conn = store.connect(root)
     try:
         if fact.kind == "diff":
             return _check_diff(conn, root, fact)
+        if fact.kind == "signature":
+            return _check_signature(conn, fact)
         if fact.kind == "find":
             found = {(f.qualified_name, f.file) for f in symbols.find(conn, fact.query)}
             problems = [f"missing: {m}" for m in fact.must if _key(m) not in found]

@@ -34,6 +34,7 @@ async def test_server_lists_its_tools(repo_factory):
         "find",
         "impact",
         "index_status",
+        "signature_impact",
     ]
 
 
@@ -181,3 +182,13 @@ async def test_status_explains_flag_problems(repo_factory):
     async with Client(create_server(root)) as client:
         status = text_of(await client.call_tool("index_status", {}))
     assert "Note: 1 C/C++ source file is not in compile_commands.json" in status and "lib/extra.c" in status
+
+
+@pytest.mark.anyio
+async def test_signature_impact_lists_call_sites_and_return_value_uses(repo_factory):
+    async with Client(create_server(repo_factory("c_data"))) as client:
+        out = text_of(await client.call_tool("signature_impact", {"symbol": "parse_num"}))
+    assert "affects 12 call sites in 2 functions" in out
+    assert "uses  src/use.c:10  result compared with ==" in out
+    assert "DOES NOT COMPILE NOW: passes 1 argument, it takes 2" in out
+    assert "src/parse.c:6  in the initializer of parsers" in out

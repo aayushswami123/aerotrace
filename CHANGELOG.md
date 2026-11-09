@@ -7,6 +7,14 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace signature <function>` and the `signature_impact` MCP tool: what a change to a function's
+  parameters or return type affects. Every call site with its argument count and how it uses the return
+  value (stored, compared, checked, passed on, returned, ignored, discarded), every place that uses the
+  function's address (handler tables, callbacks, comparisons), pointer calls that may reach it, and callers
+  further up. Each result is exact or probable, with the reason. Calls that no longer compile are listed.
+- Index format 3 (ADR 0007): call sites, address uses, escapes (`foo(&x)`), designated initializers and
+  "no member named" errors are recorded.
+
 - Cross builds: the target comes from the compiler name (`arm-none-eabi-gcc` -> `--target=arm-none-eabi`),
   so ARM-only flags parse and target `#ifdef`s are right. The compiler is never run.
 - GCC-only flags clang does not know no longer count as parse errors. If libclang refuses a file, it is

@@ -39,6 +39,29 @@ class Fn:
 
 
 @dataclass(frozen=True)
+class Call:
+    """A call site: `caller@file` calls at `line`. `use` is how the result is used (stored, compared, ...);
+    `detail` must appear in the detail AeroTrace gives (e.g. "in o, then compared with ==")."""
+
+    caller: str
+    file: str
+    line: int
+    use: str | None = None
+    detail: str | None = None
+    n_args: int | None = None
+    certainty: str | None = None
+
+
+@dataclass(frozen=True)
+class Addr:
+    """A place that uses a function's address: `how` must appear in AeroTrace's description."""
+
+    file: str
+    line: int
+    how: str
+
+
+@dataclass(frozen=True)
 class Edit:
     """Replace `old` (must appear exactly once) with `new` in `file`, as a patch that is not applied."""
 
@@ -51,7 +74,7 @@ class Edit:
 class Fact:
     id: str
     why: str  # plain English: what is true, and how the proof lines show it
-    kind: str  # callers | callees | impact | writes | reads | find | diff
+    kind: str  # callers | callees | impact | writes | reads | find | diff | signature
     query: str = ""  # the function asked about, as name@file (kinds other than diff)
     proof: tuple[Line, ...] = ()
     must: tuple = ()  # Fn for function kinds, variable qualified names for writes/reads
@@ -60,6 +83,11 @@ class Fact:
     depth: int = 1
     # computed expectations, for lists too long to type (e.g. every handler in Redis's command table)
     must_from_source: Callable[[Path], list[Fn]] | None = None
+    # signature facts: call sites, places that use the address, pointer calls that may reach it
+    calls: tuple[Call, ...] = ()
+    addresses: tuple[Addr, ...] = ()
+    pointer_calls: tuple[Call, ...] = ()
+    returns_void: bool | None = None
     # diff facts
     edits: tuple[Edit, ...] = ()
     changed: tuple[str, ...] = ()  # name@file of functions the diff changes
