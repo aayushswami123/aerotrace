@@ -474,8 +474,6 @@ FACTS = [
         ),
         changed_decls=("redisServer::stat_numcommands",),
         no_outside=True,
-        known_bug="#13: In patch mode the new text of a changed declaration is reported as 'could not follow' "
-        "(only the old side is matched to the field).",
     ),
     Fact(
         id="redis-diff-comment-only",
@@ -773,5 +771,126 @@ FACTS = [
         not_known=("psetexCommand",),
         exact=True,  # no tests listed
         must_not=(Fn("sdsTest", "src/sds.c"), Fn("main", S)),
+    ),
+    # ------------------------------------------------------------ check (build item 5, part C)
+    Fact(
+        id="redis-check-parameter-added-breaks-calls",
+        why="A 4th parameter is added to the static checkStringLength. Its three calls pass 3 arguments, so "
+        "setrangeCommand (two calls) and appendCommand will not compile. It is static, so nothing outside "
+        "t_string.c can call it.",
+        kind="check",
+        proof=(
+            Line(T, 26, "static int checkStringLength(client *c, long long size, long long append) {"),
+            Line(T, 580, "void setrangeCommand(client *c) {"),
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 623, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1369, "void appendCommand(client *c) {"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        edits=(
+            Edit(
+                T,
+                "static int checkStringLength(client *c, long long size, long long append) {",
+                "static int checkStringLength(client *c, long long size, long long append, int strict) {",
+            ),
+        ),
+        breaks=(Fn("setrangeCommand", T, "exact"), Fn("appendCommand", T, "exact")),
+        exact=True,
+        must_not=(Fn("getrangeCommand", T),),
+    ),
+    Fact(
+        id="redis-check-edited-caller-still-broken",
+        why="computeFieldHash gains a second parameter. The patch fixes the calls at 957 and 978, and also "
+        "edits computeFieldsHash (a comment) but leaves its call at 592 with one argument. computeFieldsHash "
+        "will not compile, even though the patch touched it; the two fixed functions are not breaks. "
+        "(Review of #48: a compiled build of this patch fails at t_hash.c:592 only.)",
+        kind="check",
+        proof=(
+            Line("src/t_hash.c", 580, "static uint64_t computeFieldHash(sds field) {"),
+            Line(
+                "src/t_hash.c",
+                589,
+                "static uint64_t computeFieldsHash(sds *fields, unsigned long long field_count) {",
+            ),
+            Line("src/t_hash.c", 592, "hash += computeFieldHash(fields[i]);"),
+            Line("src/t_hash.c", 957, "uint64_t new_hash = tmpl->hash + computeFieldHash(field);"),
+            Line(
+                "src/t_hash.c", 978, "uint64_t new_hash = tmpl->hash - computeFieldHash(tmpl->fields[idx]);"
+            ),
+        ),
+        edits=(
+            Edit(
+                "src/t_hash.c",
+                "static uint64_t computeFieldHash(sds field) {",
+                "static uint64_t computeFieldHash(sds field, uint64_t seed) {",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "    uint64_t hash = 0;\n    for (unsigned long long i = 0; i < field_count; i++)",
+                "    uint64_t hash = 0; /* edited */\n    for (unsigned long long i = 0; i < field_count; i++)",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "tmpl->hash + computeFieldHash(field);",
+                "tmpl->hash + computeFieldHash(field, 0);",
+            ),
+            Edit(
+                "src/t_hash.c",
+                "tmpl->hash - computeFieldHash(tmpl->fields[idx]);",
+                "tmpl->hash - computeFieldHash(tmpl->fields[idx], 0);",
+            ),
+        ),
+        breaks=(Fn("computeFieldsHash", "src/t_hash.c", "exact"),),
+        exact=True,
+        must_not=(
+            Fn("hashTemplateForInsertedField", "src/t_hash.c"),
+            Fn("hashTemplateForDeletedField", "src/t_hash.c"),
+        ),
+    ),
+    Fact(
+        id="redis-check-return-void-breaks-comparisons",
+        why="checkStringLength now returns void. All three calls compare its result with != C_OK, which does "
+        "not compile with a void value.",
+        kind="check",
+        proof=(
+            Line(T, 604, "if (checkStringLength(c,offset,value_len) != C_OK)"),
+            Line(T, 1391, "if (checkStringLength(c,stringObjectLen(o),append_len) != C_OK)"),
+        ),
+        edits=(
+            Edit(T, "static int checkStringLength(client *c,", "static void checkStringLength(client *c,"),
+        ),
+        breaks=(Fn("setrangeCommand", T, "exact"), Fn("appendCommand", T, "exact")),
+    ),
+    Fact(
+        id="redis-check-field-retype-affects-users-no-break",
+        why="stat_numcommands becomes unsigned long long. Every use still compiles, so its users are affected, "
+        "not broken, and the changed line is fully understood (#13).",
+        kind="check",
+        proof=(
+            Line("src/server.h", 2171, "long long stat_numcommands;     /* Number of processed commands */"),
+            Line(S, 4228, "server.stat_numcommands++;"),
+            Line(S, 2916, "server.stat_numcommands = 0;"),
+        ),
+        edits=(
+            Edit(
+                "src/server.h",
+                "    long long stat_numcommands;     /* Number of processed commands */\n",
+                "    unsigned long long stat_numcommands;     /* Number of processed commands */\n",
+            ),
+        ),
+        affected_only=(Fn("call", S), Fn("resetServerStats", S), Fn("serverCron", S)),
+        no_breaks=True,
+        no_outside=True,
+        must_not=(Fn("crc16", "src/crc16.c"),),
+    ),
+    Fact(
+        id="redis-check-bitfield-width-is-never-all-clear",
+        why="The width of the bit-field redisObject.encoding changes from 4 to 5 bits. Its type looks the same, "
+        "so AeroTrace can't tell what the change does; the answer must not be an all-clear and builds nothing.",
+        kind="check",
+        proof=(Line("src/object.h", 104, "unsigned encoding:4;"),),
+        edits=(Edit("src/object.h", "unsigned encoding:4;", "unsigned encoding:5;"),),
+        no_breaks=True,
+        not_clear=True,
     ),
 ]

@@ -26,6 +26,7 @@ from aerotrace.analysis.graph import Hit
 from aerotrace.analysis.symbols import Fn
 from aerotrace.index import store
 from aerotrace.index.history import Outline, Outliner
+from aerotrace.toolchain import unidiff
 from aerotrace.toolchain.compdb import SOURCE_EXTS
 from aerotrace.toolchain.unidiff import FileDiff, parse_unified, whole_file_added
 
@@ -51,6 +52,16 @@ class RemovedFn:
     line_start: int  # in the old version
     line_end: int
     still_called_by: list[Fn]  # functions in the working tree that still call a function of this name
+
+
+@dataclass
+class AddedFn:
+    """A function only the patched version defines (patch mode): it is not in the index yet."""
+
+    name: str  # qualified name
+    file: str
+    line_start: int  # in the patched version
+    line_end: int
 
 
 @dataclass
@@ -80,6 +91,7 @@ class DiffImpact:
     files: int = 0  # code files the diff touches
     changed: list[ChangedFn] | None = None
     removed: list[RemovedFn] | None = None
+    added: list[AddedFn] | None = None  # patch mode: functions the patch adds
     changed_vars: list[ChangedVar] | None = None
     affected: list[Hit] | None = None
     truncated: bool = False
@@ -94,7 +106,7 @@ class DiffImpact:
 
     def __post_init__(self) -> None:
         for name in (
-            "changed", "removed", "changed_vars", "affected", "outside", "not_indexed", "deleted",
+            "changed", "removed", "added", "changed_vars", "affected", "outside", "not_indexed", "deleted",
             "new_files", "mismatched", "unreadable", "blind_spots",
         ):  # fmt: skip
             if getattr(self, name) is None:
@@ -137,6 +149,25 @@ def _disk_lines(root: Path, path: str) -> dict[int, str]:
     except OSError:
         return {}
     return {i: t for i, t in enumerate(text.split("\n"), 1)}
+
+
+def patched_text(root: Path, fd: FileDiff) -> str | None:
+    """Patch mode: the file as the patch would leave it (in memory; nothing is written)."""
+    if fd.old_path is None:
+        text = ""
+    else:
+        try:
+            text = (root / fd.old_path).read_bytes().decode("utf-8", "surrogateescape")
+        except OSError:
+            return None
+    return unidiff.apply(text, fd)
+
+
+def patched_outline(root: Path, fd: FileDiff, patched: Callable[..., Outline | None]) -> Outline | None:
+    text = patched_text(root, fd)
+    if text is None or fd.new_path is None:
+        return None
+    return patched(fd.new_path, text, fd.old_path or fd.new_path)
 
 
 def _still_calling(conn: sqlite3.Connection, name: str) -> list[str]:
@@ -211,12 +242,20 @@ class _Collect:
         return found[0] if len(found) == 1 else None
 
     def explain(
-        self, outline: Outline, lines: set[int], file: str, index_file: str | None, old: bool
+        self,
+        outline: Outline,
+        lines: set[int],
+        file: str,
+        index_file: str | None,
+        old: bool,
+        patched: bool = False,
     ) -> set[int]:
         """Map lines onto an outline of one version of `file`; returns the lines that landed on something.
 
         `old` = the outline is of the old version (git mode), so a function that is not in the index any
-        more was removed. `index_file` is the file's path in the index (None when it was deleted)."""
+        more was removed. `patched` = the outline is of the patched version (patch mode), so a function that
+        is not in the index yet is new. `index_file` is the file's path in the index (None when it was
+        deleted)."""
         used: set[int] = set()
         for f in outline.functions:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
@@ -238,6 +277,8 @@ class _Collect:
                         sorted(callers.values(), key=lambda c: (c.file, c.line_start, c.id)),
                     )
                 )
+            elif patched:
+                used |= inside  # a function the patch adds; listed by `added_in`
         for f in outline.declarations:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
             ids = self._fns_declared(f) if inside else []
@@ -262,7 +303,9 @@ class _Collect:
         mode: str,
         old: Outline | None,
         now: Callable[[str], Outline | None] | None,
+        new: Outline | None = None,
     ) -> None:
+        """`new`: patch mode, an outline of the file with the patch applied (in memory)."""
         conn, res = self.conn, self.res
         if mode == "git":
             here = sorted({n for n, _ in fd.added})
@@ -312,6 +355,26 @@ class _Collect:
             else:
                 removed_old = {o for o, _ in fd.removed}
                 other -= self.explain(old, removed_old, fd.old_path or path, path, old=True)
+        # Added lines (patch mode) belong to the patched version: map them onto its outline (#13).
+        if mode == "patch" and new is not None and other:
+            other -= self.explain(new, set(other), fd.new_path or path, path, old=False, patched=True)
+        if mode == "patch" and new is not None and new.functions:
+            # A touched function the patched version no longer defines is removed, even when the patch
+            # splits its deletion across a neighbour (#44).
+            have = {f["usr"] for f in new.functions} | {f["qualified_name"] for f in new.functions}
+            for r in conn.execute("SELECT id, usr, qualified_name FROM functions WHERE file = ?", (path,)):
+                cur = self.changed.get(r["id"])
+                if cur is not None and r["usr"] not in have and r["qualified_name"] not in have:
+                    cur[1], cur[2] = False, True
+            # A function only the patched version defines is new (#45).
+            added_lines = {n for n, _ in fd.added}
+            for f in new.functions:
+                if self._fn_in_file(f, path) is None and any(
+                    f["line_start"] <= n <= f["line_end"] for n in added_lines
+                ):
+                    res.added.append(
+                        AddedFn(f["qualified_name"], fd.new_path or path, f["line_start"], f["line_end"])
+                    )
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:
             res.outside.append(Outside(path, out_lines, sorted(other)))
@@ -327,11 +390,13 @@ def analyse(
     depth: int = 5,
     old: dict[str, Outline | None] | None = None,
     now: Callable[[str], Outline | None] | None = None,
+    patched: Callable[..., Outline | None] | None = None,
 ) -> DiffImpact:
     """Map a parsed diff onto the index and walk everything upstream of what changed.
 
     `old` holds outlines of the old versions of changed files (git mode), keyed by old path. `now` outlines
-    a file as it is on disk; it is called only for changed lines the index can't place."""
+    a file as it is on disk; it is called only for changed lines the index can't place. `patched` (patch
+    mode, `Outliner.text`) outlines a file with the patch applied in memory, so added lines are placed too."""
     if mode not in ("git", "patch"):
         raise ValueError(f"unknown mode {mode}")
     old = old or {}
@@ -364,7 +429,10 @@ def analyse(
         if mode == "patch" and not _matches_disk(root, fd):
             res.mismatched.append(path)
             continue
-        col.map_file(path, fd, mode, old.get(fd.old_path or "") if mode == "git" else None, now)
+        new = None
+        if mode == "patch" and patched is not None and fd.new_path and fd.added:
+            new = patched_outline(root, fd, patched)
+        col.map_file(path, fd, mode, old.get(fd.old_path or "") if mode == "git" else None, now, new)
 
     fns = symbols.get_many(conn, list(col.changed))
     res.changed = sorted(
@@ -376,6 +444,7 @@ def analyse(
         key=lambda c: (c.fn.file, c.fn.line_start, c.fn.id),
     )
     res.removed.sort(key=lambda r: (r.file, r.line_start, r.name))
+    res.added.sort(key=lambda a: (a.file, a.line_start, a.name))
     res.changed_vars = sorted(col.vars.values(), key=lambda v: (v.file, v.line, v.id))
 
     starts = [c.fn for c in res.changed]
@@ -471,7 +540,7 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
 
 
 def load_git(
-    root: Path, ref: str = "HEAD", outliner: Outliner | None = None
+    root: Path, ref: str = "HEAD", outliner: Outliner | None = None, every: bool = False
 ) -> tuple[list[FileDiff], str, dict[str, Outline | None]]:
     """The working tree compared with where HEAD left `ref`, including new files git does not track yet.
     Returns (file diffs, a short description of the base, outlines of the old versions of changed code
@@ -498,9 +567,18 @@ def load_git(
     old_paths = [
         fd.old_path
         for fd in diffs
-        if fd.old_path and fd.removed and not fd.binary and Path(fd.old_path).suffix.lower() in CODE_EXTS
+        if fd.old_path
+        and (fd.removed or every)
+        and not fd.binary
+        and Path(fd.old_path).suffix.lower() in CODE_EXTS
     ]
     outliner = outliner or Outliner(root)
+    if every:
+        # parse each old file with the old versions of the other changed files (its old headers)
+        for rel in sorted(set(old_paths)):
+            content = git.show(root, base.sha, rel)
+            if content is not None:
+                outliner.base_overlay[rel] = content
     return diffs, desc, {rel: outliner.at(base.sha, rel) for rel in sorted(set(old_paths))}
 
 

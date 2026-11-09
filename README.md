@@ -47,6 +47,7 @@ aerotrace find src/server.c:4221
 aerotrace diff                 # what your uncommitted edits could break (new files included)
 aerotrace diff main            # everything on this branch, compared with where it left main
 aerotrace diff --patch fix.diff   # a change that is not applied yet
+aerotrace check --patch fix.diff  # what it will break (does not build), may affect, and could not follow
 aerotrace tests                # which tests to run for your edits (same inputs as diff, or --symbol FN)
 ```
 

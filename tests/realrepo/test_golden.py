@@ -258,7 +258,9 @@ def _diff_problems(res, fact: Fact) -> list[str]:
 
 def _check_diff(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
     diffs = diff.load_patch(root, _patch(root, fact))
-    return _diff_problems(diff.analyse(conn, root, diffs, mode="patch", now=Outliner(root).now), fact)
+    outliner = Outliner(root)
+    res = diff.analyse(conn, root, diffs, mode="patch", now=outliner.now, patched=outliner.text)
+    return _diff_problems(res, fact)
 
 
 def _check_calls(want, got, what: str) -> list[str]:
@@ -486,9 +488,54 @@ def _check_tests(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
     return problems
 
 
+def _check_check(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
+    from aerotrace.analysis import check
+    from aerotrace.ui import schema
+
+    diffs = diff.load_patch(root, _patch(root, fact))
+    res = check.run(conn, root, diffs, mode="patch", outliner=Outliner(root))
+    data = check.to_contract(conn, res, "aerotrace golden", cap=100000)
+    problems = []
+    try:
+        schema.check(data)
+    except schema.ContractError as e:
+        problems.append(f"the answer does not follow the UI contract: {e}")
+    nodes = {(n["name"], n["file"]): n for n in data["nodes"]}
+    broken = {k for k, n in nodes.items() if n["status"] == "breaks"}
+    for f in fact.breaks:
+        n = nodes.get(_key(f))
+        if n is None or n["status"] != "breaks":
+            problems.append(f"missing break: {f.name}@{f.file} ({n['status'] if n else 'not listed'})")
+        elif f.confidence and n["certainty"] != f.confidence:
+            problems.append(f"{f.name}@{f.file}: break is {n['certainty']}, expected {f.confidence}")
+    for f in fact.affected_only:
+        n = nodes.get(_key(f))
+        if n is None or n["status"] != "affected":
+            problems.append(
+                f"{f.name}@{f.file} should be affected (not a break), got {n['status'] if n else 'nothing'}"
+            )
+    if fact.no_breaks and broken:
+        problems.append(f"false breaks: {sorted(broken)[:10]}")
+    if fact.breaks and fact.exact and broken - {_key(f) for f in fact.breaks}:
+        problems.append(f"extra breaks: {sorted(broken - {_key(f) for f in fact.breaks})[:10]}")
+    s = data["summary"]
+    if fact.not_clear and not (
+        s["breaks_exact"] or s["breaks_probable"] or s["unknown"] or s["not_followed"]
+    ):
+        problems.append("the answer is an all-clear")
+    for m in fact.must_not:
+        if _key(m) in broken:
+            problems.append(f"false claim: {m.name}@{m.file} is listed as a break")
+    if fact.no_outside and data["change"]["not_followed"]["outside"]:
+        problems.append(f"lines reported as 'could not follow': {data['change']['not_followed']['outside']}")
+    return problems
+
+
 def answer_problems(root: Path, fact: Fact) -> list[str]:
     conn = store.connect(root)
     try:
+        if fact.kind == "check":
+            return _check_check(conn, root, fact)
         if fact.kind == "data":
             return _check_data(conn, fact)
         if fact.kind == "diff":

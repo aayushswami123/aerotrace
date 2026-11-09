@@ -295,7 +295,22 @@ def patch_of(root, rel, old, new):
 def run_patch_mode(root, text):
     diffs = diff.load_patch(root, text)
     conn, _ = fresh_index(root, want=diff.wanted(diffs, "patch"))
-    return diff.analyse(conn, root, diffs, mode="patch", now=Outliner(root).now)
+    outliner = Outliner(root)
+    return diff.analyse(conn, root, diffs, mode="patch", now=outliner.now, patched=outliner.text)
+
+
+def test_patch_places_the_new_text_of_a_changed_declaration(repo):
+    # #13: the new side of a changed declaration line was listed as "could not follow"
+    text = patch_of(repo, "lib/shared.c", "int g_total;", "long g_total;")
+    res = run_patch_mode(repo, text)
+    assert [v.name for v in res.changed_vars] == ["g_total"]
+    assert res.outside == []
+
+
+def test_patch_new_text_outside_everything_is_still_reported(repo):
+    text = patch_of(repo, "lib/shared.c", "int g_total;", "int g_total;\n#define MORE 1")
+    res = run_patch_mode(repo, text)
+    assert [(o.file, o.other_side) for o in res.outside] != []
 
 
 def test_patch_not_applied_yet_maps_to_the_current_code(repo):
@@ -315,6 +330,16 @@ def test_patch_removing_a_whole_function_says_so(repo):
     text = patch_of(repo, "prog_b/util.c", "static void bump(void) {\n    count += 2;\n}\n", "")
     res = run_patch_mode(repo, text)
     assert [(c.fn.qualified_name, c.state) for c in res.changed] == [("bump", "removed")]
+
+
+def test_patch_replacing_a_function_head_labels_the_old_one_removed(repo):
+    # #44: the old function is gone from the patched version, so it is removed, not changed
+    text = patch_of(repo, "lib/shared.c", "int likely_positive(int x) {", "int unused(int x) {")
+    res = run_patch_mode(repo, text)
+    assert [(c.fn.qualified_name, c.state) for c in res.changed] == [("likely_positive", "removed")]
+    # #45: the function the patch adds is listed as new, not as code AeroTrace could not follow
+    assert [(a.name, a.file) for a in res.added] == [("unused", "lib/shared.c")]
+    assert res.outside == []
 
 
 def test_stale_patch_is_skipped_not_mapped_to_wrong_lines(repo):

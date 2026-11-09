@@ -156,6 +156,8 @@ def diff_text(d: DiffImpact, limit: int = 50) -> str:
     counts = [_n(len(d.changed), "function") + " changed"]
     if d.removed:
         counts.append(_n(len(d.removed), "function") + " removed")
+    if d.added:
+        counts.append(_n(len(d.added), "function") + " added")
     if d.changed_vars:
         counts.append(_n(len(d.changed_vars), "declaration") + " changed")
     lines = [f"Diff impact, {where}: {_n(d.files, 'C/C++ file')}, {', '.join(counts)}."]
@@ -187,6 +189,9 @@ def diff_text(d: DiffImpact, limit: int = 50) -> str:
             )
             rem.append(f"  - {r.name}  (was {r.file}:{r.line_start}-{r.line_end})  {still}")
         lines += _cap(rem, limit)
+    if d.added:
+        lines.append(f"Functions the patch adds ({len(d.added)}):")
+        lines += _cap([f"  - {a.name}  {a.file}:{a.line_start}  (new)" for a in d.added], limit)
     if d.changed_vars:
         lines.append(f"Changed globals and fields ({len(d.changed_vars)}):")
         lines += _cap(
@@ -204,7 +209,7 @@ def diff_text(d: DiffImpact, limit: int = 50) -> str:
         lines.append(f"May affect {_n(len(hits), 'other function')} ({parts}), nearest first:")
         level_lines, shown = _levels(hits, limit, via_always=True)
         lines += level_lines
-    elif d.changed or d.changed_vars or d.removed:
+    elif d.changed or d.changed_vars or d.removed or d.added:
         lines.append("No other function in the index calls or reads what changed.")
     lines += _legend(shown)
 
@@ -266,6 +271,15 @@ def diff_json(d: DiffImpact, limit: int = 50) -> dict:
             }
             for r in d.removed[:limit]
         ],
+        **(
+            {
+                "added_functions": [
+                    {"name": a.name, "file": a.file, "line": a.line_start} for a in d.added[:limit]
+                ]
+            }
+            if d.added
+            else {}
+        ),
         "changed_declarations": [
             {"name": v.name, "kind": v.kind, "file": v.file, "line": v.line, "users": v.users}
             for v in d.changed_vars[:limit]

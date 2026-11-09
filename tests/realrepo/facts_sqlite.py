@@ -403,8 +403,6 @@ FACTS = [
         ),
         changed_decls=("sqlite3::busyTimeout",),
         no_outside=True,
-        known_bug="#13: In patch mode the new text of a changed declaration is reported as 'could not follow' "
-        "(only the old side is matched to the field).",
     ),
     # ------------------------------------------------------------ signatures (build item 5, part A)
     Fact(
@@ -531,5 +529,46 @@ FACTS = [
         not_known=("sqlite3Select",),
         exact=True,
         must_not=(Fn("main", SH),),
+    ),
+    # ------------------------------------------------------------ check (build item 5, part C)
+    Fact(
+        id="sqlite-check-removed-field-breaks-users",
+        why="Removing sqlite3.busyTimeout breaks the four compiled uses: sqlite3Pragma reads it, "
+        "sqliteDefaultBusyCallback reads it, sqlite3_busy_handler and sqlite3_busy_timeout write it. Line "
+        "190136 is in an #else branch that is not compiled. sqlite3InvokeBusyHandler (190154) does not use it, "
+        "so it is not a break (it may be listed further up, as a caller).",
+        kind="check",
+        proof=(
+            Line(C, 18979, "int busyTimeout;              /* Busy handler timeout, in msec */"),
+            Line(C, 147978, "returnSingleInt(v, db->busyTimeout);"),
+            Line(C, 190115, "int tmout = db->busyTimeout;"),
+            Line(C, 190182, "db->busyTimeout = 0;"),
+            Line(C, 190235, "db->busyTimeout = ms;"),
+            Line(C, 190154, "SQLITE_PRIVATE int sqlite3InvokeBusyHandler(BusyHandler *p){"),
+        ),
+        edits=(Edit(C, "  int busyTimeout;              /* Busy handler timeout, in msec */\n", ""),),
+        breaks=(
+            Fn("sqlite3Pragma", C, "exact"),
+            Fn("sqliteDefaultBusyCallback", C, "exact"),
+            Fn("sqlite3_busy_handler", C, "exact"),
+            Fn("sqlite3_busy_timeout", C, "exact"),
+        ),
+        exact=True,
+        must_not=(Fn("sqlite3InvokeBusyHandler", C),),
+    ),
+    Fact(
+        id="sqlite-check-field-retype-no-break",
+        why="busyTimeout becomes i64. Its four users still compile, so they are affected, not broken.",
+        kind="check",
+        proof=(Line(C, 18979, "int busyTimeout;"),),
+        edits=(Edit(C, "  int busyTimeout;", "  i64 busyTimeout;"),),
+        affected_only=(
+            Fn("sqlite3Pragma", C),
+            Fn("sqliteDefaultBusyCallback", C),
+            Fn("sqlite3_busy_handler", C),
+            Fn("sqlite3_busy_timeout", C),
+        ),
+        no_breaks=True,
+        no_outside=True,
     ),
 ]

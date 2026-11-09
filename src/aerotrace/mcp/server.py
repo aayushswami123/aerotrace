@@ -61,6 +61,8 @@ and its answers are deterministic.
 
 Use it BEFORE you edit C or C++ code:
 - Before changing a function, call `impact` on it. Read the affected callers and the "Limits of this answer".
+- Before you finish an edit, call `check` with your patch: what will not build, what may change, and
+  what AeroTrace could not follow, each with how sure it is.
 - After editing, or before applying a patch, call `diff_impact` to check the whole change: changed and
   deleted functions, changed globals and fields, and everything upstream of them.
 - Before changing a function's parameters or return type, call `signature_impact`: it lists every call
@@ -428,11 +430,44 @@ def _create(
 
         def body(conn: sqlite3.Connection) -> str:
             res = diff.analyse(
-                conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now
+                conn,
+                root,
+                diffs,
+                mode=mode,
+                base=desc,
+                depth=depth,
+                old=old,
+                now=outliner.now,
+                patched=outliner.text,
             )
             return render.diff_text(res, limit)
 
         return await answer(ctx, body, diff.wanted(diffs, mode))
+
+    @server.tool()
+    async def check(
+        base: str = "HEAD", patch: str = "", depth: int = 5, limit: int = 15, ctx: Context | None = None
+    ) -> str:
+        """Before you finish an edit, call this with your patch (a unified diff not applied yet), or with no
+        arguments for your uncommitted edits. It lists what will not build (calls that no longer match a
+        changed signature, uses of a removed field or function), what may change behaviour (callers, users
+        of retyped fields and globals), and what AeroTrace could not follow. Each line says how sure it is."""
+        from aerotrace import ui
+        from aerotrace.analysis import check as check_mod
+
+        outliner = Outliner(root, build_dir)
+        try:
+            change = await anyio.to_thread.run_sync(
+                lambda: check_mod.load_change(root, outliner, base=base, patch_text=patch or None)
+            )
+        except (GitError, ValueError) as e:
+            return f"Could not read the change: {e}"
+
+        def body(conn: sqlite3.Connection) -> str:
+            data = check_mod.check_loaded(conn, root, change, outliner, depth=depth)
+            return ui.render_text(data, color=False, unicode=False, limit=limit)
+
+        return await answer(ctx, body, change.want)
 
     @server.tool()
     async def signature_impact(

@@ -30,6 +30,7 @@ async def test_server_lists_its_tools(repo_factory):
     assert sorted(t.name for t in tools.tools) == [
         "callees",
         "callers",
+        "check",
         "data_users",
         "diff_impact",
         "find",
