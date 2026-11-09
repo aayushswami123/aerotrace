@@ -375,3 +375,20 @@ def test_parse_records_the_hash_of_what_libclang_read(tmp_path):
         (root / "h.h").stat().st_size,
         -1,
     )
+
+
+@pytest.mark.parametrize(("jobs", "isolate"), [(1, False), (2, True)])
+def test_fresh_index_on_an_unchanged_tree_plans_nothing(repo_factory, jobs, isolate):
+    """Every file, including a header four units include, is recorded as unchanged (#43 must not make a
+    file look changed forever)."""
+    from aerotrace.index.build import index_plan
+
+    root = repo_factory("c_multi")
+    build_index(root, jobs=jobs, isolate=isolate)
+    with store.connect(root) as conn:
+        rows = {r[0]: r[1] for r in conn.execute("SELECT path, mtime_ns FROM files")}
+        assert store.changed_files(conn, root) == []
+    assert rows["include/shared.h"] > 0, rows  # a real stamp, not the "never trust" -1
+    assert index_plan(root) is None
+    build_index(root, jobs=jobs, isolate=isolate)  # and again, all from the cache
+    assert index_plan(root) is None

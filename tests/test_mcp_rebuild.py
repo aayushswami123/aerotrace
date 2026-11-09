@@ -203,6 +203,10 @@ async def test_note_of_a_finished_build_is_kept_when_the_next_build_runs_long(re
     async with Client(create_server(root, wait=1.0, build=build)) as client:
         out = text_of(await client.call_tool("impact", {"symbol": "add"}))
         second.set()
+        # let the second build end here: a build still running in this process during the next test
+        # would change the working folder under it (the parser chdirs; the server parses in child processes)
+        await until_answered(client, "find", {"query": "add"})
+    assert len(calls) == 2
     assert out.startswith("(Built the index: ")
     assert (
         "\nAeroTrace is still building the index (1 changed file(s): lib/shared.c): 0 of 6 files done." in out
