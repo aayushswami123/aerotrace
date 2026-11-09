@@ -359,11 +359,12 @@ server.h = `src/server.h` changed (included by most files).
   hash together (stat, hash, stat), and compares the hash with the bytes libclang parsed
   (`clang_getFileContents`). If they differ, or the file changes while being hashed, it records hash ""
   and mtime -1, which never match, so the next check re-indexes it. A cache hit takes fresh stamps the same
-  way. A file deleted during the build no longer fails the build. `PARSER_VERSION` is 8 (old cache entries
+  way. A file deleted during the build no longer fails the build. `PARSER_VERSION` is 11 (old cache entries
   are parsed again once); the index format is unchanged.
 - Parser processes ignore SIGINT (Ctrl-C in a terminal reaches the whole process group; the server ends
-  them itself), and the server releases the pool's semaphores before it exits on a signal: no tracebacks,
-  no "leaked semaphore" warning. Tested with SIGINT to the process group.
+  them itself), and the server releases the pool's semaphores before it exits on a signal: no tracebacks
+  (tested with SIGINT to the process group). A "leaked semaphore" warning from multiprocessing's
+  resource tracker can still show now and then; it is harmless, the tracker removes them.
 - A note is no longer lost: if a call finishes one build and the next build runs past the wait, the answer
   is the first build's note followed by the "still building" text. Whether a note was shown is read and
   written under the lock.

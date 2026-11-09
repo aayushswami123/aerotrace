@@ -12,7 +12,6 @@ and versions follow [Semantic Versioning](https://semver.org/).
   files done, ask again shortly". A failed build says why (no compile_commands.json in `--build-dir`,
   libclang missing, a parser crash, disk full, ...) instead of "Error executing tool". Quitting the server
   mid-build ends the parser processes at once. New `aerotrace mcp --jobs N`.
-
 - `aerotrace data <Struct::field | global | name@file | global.field>` and the `data_users` MCP tool:
   before renaming, removing or retyping a field or global, every function that reads or writes it (with
   lines), initializers that set it, code that still uses a removed field, globals of its type that may set
