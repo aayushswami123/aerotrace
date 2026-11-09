@@ -28,7 +28,6 @@ VALUE = "value"  # change what one function stores in it
 
 GLOBAL_DEPTH = 2  # default: callers of the users, and their callers
 FIELD_DEPTH = 0  # default: users only (a field change breaks the code that names it)
-CLANG_ERROR_LIMIT = 20  # libclang stops after this many errors in one file (19 + "too many errors")
 
 _VAR_COLS = "id, usr, name, qualified_name, container, kind, type, file, line, clash"
 _UNNAMED = re.compile(r"^(?:struct|union|class|enum)? ?\((?:unnamed|anonymous)(?: \w+)? at (.+)\)$")
@@ -128,11 +127,12 @@ class Broken:
 class Escape:
     """Its address goes where we can't follow it."""
 
-    fn: Fn
+    fn: Fn  # for &x in a file-scope initializer: stands for the global (see `in_variable`)
     line: int
     detail: str
     certainty: str = certainty.UNKNOWN
     reason: str = ""
+    in_variable: Var | None = None  # the global whose initializer stores the address (no function does it)
 
 
 @dataclass
@@ -286,27 +286,39 @@ def find_variables(conn: sqlite3.Connection, query: str) -> list[Var]:
 
 
 def gone_fields(conn: sqlite3.Connection, query: str) -> list[Var]:
-    """Fields the index has no declaration for, but that code still uses: compile errors "no member named
-    X in S". `query` is `S::X` (or `X` for every record). They come back with exists=False."""
+    """Fields (and globals) the index has no declaration for, but that code still uses: compile errors "no
+    member named X in S", "field designator X does not refer to any field in S", and for a bare name X
+    "use of undeclared identifier X" (a removed global). `query` is `S::X` (or `X` for every record). They
+    come back with exists=False."""
     q = query.strip().rsplit("@", 1)[0]
     record, _, member = q.rpartition("::")
     records = [
         r[0]
         for r in conn.execute(
-            "SELECT DISTINCT record FROM missing_members WHERE member = ? ORDER BY record", (member,)
+            "SELECT DISTINCT record FROM missing_members WHERE member = ? AND record != '' ORDER BY record",
+            (member,),
         )
     ]
+    undeclared = (
+        conn.execute(
+            "SELECT 1 FROM missing_members WHERE member = ? AND record = '' LIMIT 1", (member,)
+        ).fetchone()
+        is not None
+    )
+    gone_global = not record and undeclared
     if record:
         # asked for S::X: answer for S when an error names S, or when S is a known struct and errors name
-        # another type (a typedef of S, a base; listed as probable). A typo'd S is "not found".
+        # another type (a typedef of S, a base; listed as probable) or name X alone (C++: X used without
+        # this-> in a method). A typo'd S is "not found".
         known = record in records or (
-            records
+            (records or undeclared)
             and conn.execute("SELECT 1 FROM variables WHERE container = ? LIMIT 1", (record,)).fetchone()
         )
         records = [record] if known else []
-    return [
-        Var("", "", member, f"{r}::{member}", r, "field", "", "", 0, False, exists=False) for r in records
-    ]
+    out = [Var("", "", member, f"{r}::{member}", r, "field", "", "", 0, False, exists=False) for r in records]
+    if gone_global:
+        out.append(Var("", "", member, member, None, "global", "", "", 0, False, exists=False))
+    return out
 
 
 def suggest(conn: sqlite3.Connection, query: str, limit: int = 10) -> list[Var]:
@@ -405,13 +417,29 @@ def _broken(conn: sqlite3.Connection, var: Var) -> list[Broken]:
         (var.name,),
     ):
         fn = _innermost(conn, r["file"], r["line"])
-        if r["record"] in exact_names:
+        if r["record"] == "":
+            # "use of undeclared identifier X": a removed global, or (C++) a removed member used without
+            # this-> inside a method of its class
+            if var.kind != "field":
+                level = certainty.EXACT
+                reason = f"does not compile now: use of undeclared identifier '{var.name}'"
+            elif fn is not None and any(fn.qualified_name.startswith(n + "::") for n in exact_names):
+                level = certainty.PROBABLE
+                reason = (
+                    f"use of undeclared identifier '{var.name}' inside a method of {var.record}: probably this "
+                    "member, used without this->"
+                )
+            else:
+                continue
+        elif var.kind != "field":
+            continue
+        elif r["record"] in exact_names:
             level = certainty.EXACT
-            reason = f"does not compile now: no member named '{var.name}' in '{r['record']}'"
+            reason = f"does not compile now: '{r['record']}' has no member named '{var.name}'"
         else:
             level = certainty.PROBABLE
             reason = (
-                f"no member named '{var.name}' in '{r['record']}': the same field name in another type, which "
+                f"'{r['record']}' has no member named '{var.name}': the same field name in another type, which "
                 "may be a typedef or a base of this one"
             )
         out.append(Broken(r["file"], r["line"], fn, r["record"], level, reason))
@@ -446,7 +474,8 @@ def _initializers(conn: sqlite3.Connection, var: Var) -> list[InitSite]:
 
 def _by_position(conn: sqlite3.Connection, var: Var) -> list[Var]:
     """Globals whose type is the field's struct (or an array of it). If their initializer lists values in
-    order ({1, 2}), it sets this field by position, which the index does not record (#26)."""
+    order ({1, 2}), they may set this field by position: listed as unknown, because a value the parser can't
+    match to a field for sure is left out of `initializers`."""
     names = _container_names(var)
     if not names:
         return []
@@ -475,16 +504,27 @@ def _escapes(conn: sqlite3.Connection, var: Var) -> list[Escape]:
         (var.id,),
     ).fetchall()
     fns = symbols.get_many(conn, sorted({r[0] for r in rows}))
-    out = [
-        Escape(
-            fns[r[0]],
-            r[1],
-            r[2],
-            reason=f"its address is {r[2].replace('address ', '', 1)}; what happens to it there is not seen",
+    out = []
+    for r in rows:
+        reason = f"its address is {r[2].replace('address ', '', 1)}; what happens to it there is not seen"
+        if r[0] in fns:
+            out.append(Escape(fns[r[0]], r[1], r[2], reason=reason))
+            continue
+        # &x in a file-scope initializer (a table): the row is kept under that global (#27)
+        g = conn.execute(f"SELECT {_VAR_COLS} FROM variables WHERE id = ?", (r[0],)).fetchone()
+        if g is None:
+            continue
+        gv = _row(g)
+        stand_in = Fn(gv.id, gv.name, gv.qualified_name, gv.file, gv.line, gv.line, gv.type, "", gv.clash)
+        out.append(
+            Escape(
+                stand_in,
+                r[1],
+                r[2],
+                reason=reason + " (code that uses the table can change it)",
+                in_variable=gv,
+            )
         )
-        for r in rows
-        if r[0] in fns
-    ]
     out.sort(key=lambda e: (e.fn.file, e.line, e.fn.id, e.detail))
     return out
 
@@ -564,7 +604,7 @@ def data_users_of(
             (var.usr, var.id),
         ).fetchall()
         res.other_copies = [_row(x) for x in same_usr]
-    if var.kind == "field" and writer is None:
+    if writer is None and (var.kind == "field" or not var.exists):
         res.broken = _broken(conn, var)
     copies = {v.id for v in res.other_copies} | {var.id}
     res.same_name = [v for v, _ in _by_name(conn, var.name) if v.id not in copies]
@@ -616,29 +656,23 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
                 f"Ask without a writer to see every user of {v.shown}."
             )
     if not v.exists:
-        notes.append(
-            f'{v.shown} is not declared any more. Only places that fail to compile with "no member named" are '
-            'listed. A {.field = ...} initializer ("field designator ... does not refer to any field") and a '
-            'C++ use without this-> ("use of undeclared identifier") are not recorded (#25).'
-        )
+        if is_field:
+            notes.append(
+                f"{v.shown} is not declared any more. Listed: places that fail to compile because of it "
+                '("no member named", "field designator ... does not refer to any field", and in C++ "use of '
+                'undeclared identifier" inside a method of its class, probable).'
+            )
+        else:
+            notes.append(
+                f'{v.shown} is not declared any more. Listed: places that fail with "use of undeclared '
+                'identifier". A file that still declares it (an extern left in a header) compiles, and only the '
+                "link fails: those uses are not listed."
+            )
     if res.broken or not v.exists:
         notes.append(
             "Several uses on one line (for example two calls of the same macro) count as one place. Inside a "
             "macro, the error is at the line where the macro is used."
         )
-        full = [
-            f
-            for f, n in conn.execute(
-                "SELECT path, error_count FROM files WHERE error_count >= ? ORDER BY path",
-                (CLANG_ERROR_LIMIT,),
-            )
-            if f in {b.file for b in res.broken}
-        ]
-        if full:
-            notes.append(
-                f"clang stops after {CLANG_ERROR_LIMIT} errors in a file; {', '.join(full[:3])} reached that, so "
-                "more uses may exist there (#29)."
-            )
     if res.question == VALUE and res.escapes:
         notes.append(
             "Places that take its address (&x) are listed as unknown, not as readers: code that reads it later "
@@ -650,29 +684,26 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
             "writes made through that pointer elsewhere are not listed."
         )
     notes.append(
-        "Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size "
-        "and layout (sizeof, copying the whole struct, raw reads and writes of its bytes)."
+        "Not seen: access through a void * or a cast to another type, offsetof outside a function (a "
+        "file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads "
+        "and writes of its bytes)."
     )
     if is_field:
         notes.append(
-            "Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct "
-            "type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared "
-            "with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} "
-            "inside a function (a local or a compound literal) is not recorded either (#37)."
+            "Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field "
+            "for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of "
+            "a struct that contains it, are still listed as unknown. Not checked there: globals declared with a "
+            "typedef name other than the struct's (node_t for struct node), and local variables. {0} (all "
+            "zero) is not counted."
         )
-    notes.append("Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).")
     if v.in_union:
         notes.append(
             "It is a member of a union: writing another member of the same union changes it too, and that is "
             "not listed."
         )
-    if v.kind == "global":
-        if not v.is_static:
-            notes.append(
-                f"{v.name} can be used from outside this repo (code that links to it); that is not seen."
-            )
+    if v.kind == "global" and not v.is_static:
         notes.append(
-            'After a global is removed, its uses fail with "use of undeclared identifier", which is not recorded (#25).'
+            f"{v.name} can be used from outside this repo (code that links to it); that is not seen."
         )
     if _has_cpp(conn):
         notes.append(

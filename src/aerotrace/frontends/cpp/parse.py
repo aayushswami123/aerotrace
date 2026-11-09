@@ -45,6 +45,8 @@ STD_FUNCTION_CLASSES = {"function", "move_only_function", "function_ref"}
 ASSIGN_OPS = {"=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="}
 OVERLOADED_WRITE_OPS = {f"operator{op}" for op in ASSIGN_OPS | {"++", "--"}}
 MAX_ERRORS_KEPT = 10
+# clang stops reporting after 20 errors in a file; every error can be a use of a removed field (#29)
+NO_ERROR_LIMIT = ["-ferror-limit=0"]
 
 
 # ---------------------------------------------------------------- libclang extras
@@ -143,6 +145,12 @@ _BINARY_SPELLING = {
     24: "/=", 25: "%=", 26: "+=", 27: "-=", 28: "<<=", 29: ">>=", 30: "&=", 31: "^=", 32: "|=", 33: ",",
 }  # fmt: skip
 _MISSING_MEMBER = re.compile(r"^no member named '([^']+)' in '(?:struct |union |class )?([^']+)'")
+# {.gone = 1} after the field is removed (#25)
+_MISSING_DESIGNATOR = re.compile(
+    r"^field designator '([^']+)' does not refer to any field in type '(?:const |volatile )*(?:struct |union |class )?([^']+)'"
+)
+# a removed global, or (C++) a removed member used without this-> (#25); stored with record ""
+_UNDECLARED = re.compile(r"^use of undeclared identifier '([^']+)'")
 
 # Standard C functions that write through their first argument (memset(&x, ...), strcpy(buf, ...)).
 # Matched by name, also as __builtin_NAME and the fortified __builtin___NAME_chk forms.
@@ -240,12 +248,25 @@ def parsed_hash(tu: cindex.TranslationUnit, f: cindex.File) -> str | None:
     return hashlib.sha256(ctypes.string_at(ptr, size.value)).hexdigest()
 
 
+_UNNAMED_PATH = re.compile(
+    r"(\((?:unnamed|anonymous|lambda)(?: struct| union| enum| class)? at )([^)]*?)(:\d+:\d+\))"
+)
+
+
+def no_machine_path(text: str) -> str:
+    """Unnamed structs and unions are spelled "union (unnamed at /abs/dir/f.c:12:3)". Keep only the file
+    name, "union (unnamed at f.c:12:3)", so names hold no machine path and match on every machine (#19)."""
+    if " at " not in text:
+        return text
+    return _UNNAMED_PATH.sub(lambda m: m.group(1) + os.path.basename(m.group(2)) + m.group(3), text)
+
+
 def _scope_parts(cursor: Cursor) -> list[str]:
     parts: list[str] = []
     p = cursor.semantic_parent
     while p is not None and p.kind != K.TRANSLATION_UNIT:
         if (p.kind in SCOPE_KINDS or p.kind in FUNC_KINDS) and p.spelling:
-            parts.append(p.spelling)
+            parts.append(no_machine_path(p.spelling))
         p = p.semantic_parent
     parts.reverse()
     return parts
@@ -255,7 +276,7 @@ def _enclosing_class(cursor: Cursor) -> str | None:
     p = cursor.semantic_parent
     while p is not None and p.kind != K.TRANSLATION_UNIT:
         if p.kind in CLASS_KINDS and p.spelling:
-            return "::".join([*_scope_parts(p), p.spelling])
+            return "::".join([*_scope_parts(p), no_machine_path(p.spelling)])
         p = p.semantic_parent
     return None
 
@@ -280,6 +301,11 @@ def _is_deref_or_addr(c: Cursor) -> bool:
     if kind is not None:
         return kind in (UNARY_DEREF, UNARY_ADDR_OF)
     return next((t.spelling for t in c.get_tokens()), "") in ("*", "&")
+
+
+def _is_designator_expr(c: Cursor) -> bool:
+    """`.f = 1` or `[2] = x` inside a braced list: libclang shows it as an unnamed expression of type void."""
+    return c.kind == K.UNEXPOSED_EXPR and c.type.kind == TypeKind.VOID
 
 
 def _strip_wrappers(stack: list[list], j: int) -> int:
@@ -316,6 +342,9 @@ class Collector:
         self.address_sites: set[tuple] = set()
         self.escapes: set[tuple] = set()  # (fn_usr, fn_file, var_usr, line, detail)
         self.initializers: set[tuple] = set()  # (global_usr, global_file, field_usr, file, line)
+        # (global_usr, global_file, var_usr, line, detail): &x stored in a file-scope initializer (#27)
+        self.init_escapes: set[tuple] = set()
+        self._fields: dict[str, list[Cursor] | None] = {}
         self.external_calls: dict[tuple[str, str], int] = {}
 
     # -- repo membership
@@ -372,7 +401,7 @@ class Collector:
             "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
             "container": _enclosing_class(c),
             "kind": kind,
-            "type": c.type.spelling,
+            "type": no_machine_path(c.type.spelling),
             "file": rel,
             "line": c.location.line,
             # C's `int x;` (a tentative definition) is a definition too; only `extern` without a value is not.
@@ -391,7 +420,7 @@ class Collector:
                 bases.append(ch.type.spelling)
             else:
                 bases.append("::".join([*_scope_parts(decl), decl.spelling]))
-        name = "::".join([*_scope_parts(c), c.spelling])
+        name = "::".join([*_scope_parts(c), no_machine_path(c.spelling)])
         known = self.class_bases.setdefault(name, [])
         known.extend(b for b in bases if b not in known)
 
@@ -469,10 +498,145 @@ class Collector:
             self.on_ref(c, stack, idx, usr, rel, force_write=True)  # constructor initializer: `: x_(0)`
         elif k == K.UNEXPOSED_EXPR and self.broken_callee(c) is not None:
             self.on_broken_call(c, usr, rel, stack, idx)
-        elif k == K.MEMBER_REF and stack[-1][0].kind == K.INIT_LIST_EXPR:
-            self.on_ref(c, stack, idx, usr, rel, force_write=True)  # designated initializer: {.count = 1}
+        elif k == K.MEMBER_REF:
+            if self.is_designator(stack):
+                # designated initializer in a local, a static local or a compound literal: {.count = 1} (#37)
+                self.on_ref(c, stack, idx, usr, rel, force_write=True)
+            else:
+                self.on_ref(c, stack, idx, usr, rel, force_read=True)  # offsetof(struct conn, count) (#24)
+        elif k == K.INIT_LIST_EXPR and stack[-1][0].kind != K.INIT_LIST_EXPR:
+            # {1, 2} sets fields by position (#26); nested lists are mapped with the outer one
+            for f, value in self.positional_fields(c):
+                if self.cursor_rel(f) is not None and f.get_usr():
+                    self.accesses.add((usr, rel, f.get_usr(), "writes", value.location.line))
         elif k == K.VAR_DECL and _variable_kind(c) == "static_local":
             self.record_variable(c, rel, "static_local")
+
+    @staticmethod
+    def is_designator(stack: list[list]) -> bool:
+        """True when the MEMBER_REF just visited (a child of stack[-1]) names a field in a designated
+        initializer. libclang puts it under an unnamed expression (the designator) inside the list."""
+        p = stack[-1][0]
+        if p.kind == K.INIT_LIST_EXPR:
+            return True
+        return p.kind == K.UNEXPOSED_EXPR and len(stack) >= 2 and stack[-2][0].kind == K.INIT_LIST_EXPR
+
+    # -- initializers that set fields by position
+    def record_fields(self, t) -> list[Cursor] | None:
+        """The fields of a struct or union type, in the order an initializer list fills them, or None when
+        the type is not a plain C aggregate (a class with bases, an unknown type)."""
+        t = t.get_canonical()
+        if t.kind != TypeKind.RECORD:
+            return None
+        key = t.spelling
+        if key in self._fields:
+            return self._fields[key]
+        decl = t.get_declaration()
+        fields: list[Cursor] | None = None
+        if not decl.kind.is_invalid() and not any(
+            ch.kind == K.CXX_BASE_SPECIFIER for ch in decl.get_children()
+        ):
+            # unnamed bit-fields (int :3;) take no value
+            fields = [f for f in t.get_fields() if not (f.is_bitfield() and not f.spelling)]
+            if decl.kind == K.UNION_DECL:
+                fields = fields[:1]  # {x} sets a union's first member
+        self._fields[key] = fields
+        return fields
+
+    def positional_fields(self, lst: Cursor) -> list[tuple[Cursor, Cursor]]:
+        """(field, value) for every field a braced list sets by position ({1, 2}), following C's rules for
+        nested lists and left-out braces ({{1, 2}, 3} and {1, 2, 3} both work for a struct inside a
+        struct). When a value can't be matched to a field for sure (after a designator, a value of an
+        unknown type), the rest of that list is left out: Part B still lists globals of the type as
+        "may set it by position" (unknown). `{0}` (set everything to zero) is not counted: no change to
+        the struct's fields can break it."""
+        elems = list(lst.get_children())
+        if len(elems) == 1 and elems[0].kind == K.INTEGER_LITERAL and self.is_zero(elems[0]):
+            return []
+        out: list[tuple[Cursor, Cursor]] = []
+        self._map_list(lst, elems, out, 0)
+        return out
+
+    @staticmethod
+    def is_zero(e: Cursor) -> bool:
+        ext = e.extent
+        if ext.end.offset - ext.start.offset > 4:
+            return False  # from a macro: don't read its tokens
+        toks = [t.spelling for t in e.get_tokens()]
+        return len(toks) == 1 and toks[0] in ("0", "0u", "0U", "0l", "0L")
+
+    def _slots(self, t) -> tuple[list[Cursor | None], list] | None:
+        """(fields or None per array element, their types) for an aggregate type; None when not one."""
+        t = t.get_canonical()
+        if t.kind == TypeKind.CONSTANTARRAY:
+            n = t.element_count
+            if n > 1 << 16:
+                return None
+            return [None] * n, [t.element_type] * n
+        fields = self.record_fields(t)
+        if fields is None:
+            return None
+        return list(fields), [f.type for f in fields]
+
+    @staticmethod
+    def _is_aggregate(t) -> bool:
+        k = t.get_canonical().kind
+        return k == TypeKind.RECORD or k in ARRAY_TYPES
+
+    def _map_list(self, lst: Cursor, elems: list[Cursor], out: list, depth: int) -> None:
+        if depth > 20:
+            return
+        top = self._slots(lst.type)
+        if top is None:
+            return
+        # each frame: [fields (None for an array element), types, next index]; frames above the first are
+        # aggregates whose braces were left out
+        frames: list[list] = [[top[0], top[1], 0]]
+        for e in elems:
+            if _is_designator_expr(e) or (e.kind == K.UNEXPOSED_EXPR and e.type.kind == TypeKind.INVALID):
+                return  # a designator ({.f = 1}, [2] = x) or broken code: positions after it are not followed
+            while True:
+                fr = frames[-1]
+                if fr[2] >= len(fr[0]):
+                    if len(frames) == 1:
+                        return  # more values than slots (an error, or an incomplete type)
+                    frames.pop()
+                    continue
+                f, t = fr[0][fr[2]], fr[1][fr[2]]
+                tc = t.get_canonical()
+                if e.kind == K.INIT_LIST_EXPR:
+                    if f is not None:
+                        out.append((f, e))
+                    if self._is_aggregate(tc):
+                        self._map_list(e, list(e.get_children()), out, depth + 1)
+                    fr[2] += 1
+                    break
+                if not self._is_aggregate(tc):
+                    if f is not None:
+                        out.append((f, e))
+                    fr[2] += 1
+                    break
+                value = e
+                while value.kind in WRAPPER_KINDS:
+                    kids = list(value.get_children())
+                    if len(kids) != 1:
+                        break
+                    value = kids[0]
+                vt = value.type.get_canonical()
+                if vt.kind == TypeKind.INVALID:
+                    return
+                if vt == tc or (value.kind == K.STRING_LITERAL and tc.kind in ARRAY_TYPES):
+                    if f is not None:  # the whole struct (a copy) or a char array from a string
+                        out.append((f, e))
+                    fr[2] += 1
+                    break
+                sub = self._slots(tc)
+                if sub is None:
+                    return
+                if f is not None:
+                    out.append((f, e))
+                fr[2] += 1
+                frames.append([sub[0], sub[1], 0])  # braces left out: the value starts filling this one
 
     @staticmethod
     def is_broken_callee(stack: list[list], idx: int) -> bool:
@@ -629,20 +793,72 @@ class Collector:
 
     def scan_initializer(self, var: Cursor) -> None:
         """Functions named in a global's initializer (handler tables) have their address taken. Designated
-        initializers ({.field = value}) set fields."""
+        initializers ({.field = value}) and values listed in order ({1, 2}) set fields. `&x` (a global or a
+        field) stored there is an escape: code that uses the table can change x (#27)."""
         var_rel = self.cursor_rel(var) or ""
-        todo = list(var.get_children())
+        var_usr = var.get_usr()
+
+        def sets(f: Cursor, at: Cursor) -> None:
+            frel = self.rel(at.location.file)
+            if frel is not None and self.cursor_rel(f) is not None and f.get_usr():
+                self.initializers.add((var_usr, var_rel, f.get_usr(), frel, at.location.line))
+
+        # (cursor, its parent, its first parent that is not a cast or parentheses)
+        todo = [(c, var, var) for c in var.get_children()]
         while todo:
-            c = todo.pop()
-            if c.kind == K.DECL_REF_EXPR and c.referenced is not None and c.referenced.kind in FUNC_KINDS:
-                self.mark_address_taken(c.referenced, ("", "", var.get_usr()), c, "stored in an initializer")
-            elif c.kind == K.MEMBER_REF and c.referenced is not None and c.referenced.kind == K.FIELD_DECL:
-                frel = self.rel(c.location.file)
-                if frel is not None and self.cursor_rel(c.referenced) is not None and c.referenced.get_usr():
-                    self.initializers.add(
-                        (var.get_usr(), var_rel, c.referenced.get_usr(), frel, c.location.line)
-                    )
-            todo.extend(c.get_children())
+            c, parent, real = todo.pop()
+            k = c.kind
+            if k == K.DECL_REF_EXPR and c.referenced is not None and c.referenced.kind in FUNC_KINDS:
+                self.mark_address_taken(c.referenced, ("", "", var_usr), c, "stored in an initializer")
+            elif k == K.MEMBER_REF and c.referenced is not None and c.referenced.kind == K.FIELD_DECL:
+                sets(c.referenced, c)
+            elif k == K.INIT_LIST_EXPR and parent.kind != K.INIT_LIST_EXPR:
+                for f, value in self.positional_fields(c):
+                    sets(f, value)
+            elif k == K.UNARY_OPERATOR and self.is_addr_of(c):
+                self.init_escape(var, var_rel, c)
+            elif k in (K.DECL_REF_EXPR, K.MEMBER_REF_EXPR) and (
+                real.kind in (K.INIT_LIST_EXPR, K.VAR_DECL) or _is_designator_expr(real)
+            ):
+                ref = c.referenced
+                if ref is not None and ref.type.get_canonical().kind in ARRAY_TYPES:
+                    self.init_escape(var, var_rel, c, ref)  # an array stored as a pointer: {buf}
+            up = real if k in WRAPPER_KINDS and not _is_designator_expr(c) else c
+            todo.extend((ch, c, up) for ch in c.get_children())
+
+    def init_escape(self, var: Cursor, var_rel: str, at: Cursor, ref: Cursor | None = None) -> None:
+        """`&x` (or an array) at `at`, inside the initializer of the global `var`: record where x's address
+        goes. The row is kept under the global (it has no function), with the line in the global's file."""
+        if ref is None:
+            e = next(at.get_children(), None)
+            while e is not None and (
+                e.kind in WRAPPER_KINDS or (e.kind == K.ARRAY_SUBSCRIPT_EXPR and self.subscripts_array(e))
+            ):
+                e = next(e.get_children(), None)
+            if e is None or e.kind not in (K.DECL_REF_EXPR, K.MEMBER_REF_EXPR):
+                return
+            ref = e.referenced
+        if ref is None or not (ref.kind == K.FIELD_DECL or (ref.kind == K.VAR_DECL and _variable_kind(ref))):
+            return
+        if self.cursor_rel(ref) is None or not ref.get_usr() or not var.get_usr():
+            return
+        name = var.spelling
+        frel = self.rel(at.location.file)
+        line = at.location.line
+        detail = f"address stored in the initializer of {name}"
+        if frel != var_rel:
+            # the value comes from an included file: name the place, and keep a line of var's file
+            detail += f" (at {frel or 'another file'}:{line})"
+            line = var.location.line
+        self.init_escapes.add((var.get_usr(), var_rel, ref.get_usr(), line, detail))
+
+    @staticmethod
+    def subscripts_array(e: Cursor) -> bool:
+        """`a[i]` where `a` itself is an array (not a pointer): &a[i] is an address inside a."""
+        base = next(e.get_children(), None)
+        while base is not None and base.kind in WRAPPER_KINDS:
+            base = next(base.get_children(), None)
+        return base is not None and base.type.get_canonical().kind in ARRAY_TYPES
 
     def canonical(self, ref: Cursor) -> Cursor:
         for _ in range(5):
@@ -893,7 +1109,14 @@ class Collector:
         return False
 
     def on_ref(
-        self, c: Cursor, stack: list[list], idx: int, usr: str, rel: str, force_write: bool = False
+        self,
+        c: Cursor,
+        stack: list[list],
+        idx: int,
+        usr: str,
+        rel: str,
+        force_write: bool = False,
+        force_read: bool = False,
     ) -> None:
         ref = c.referenced
         if ref is None:
@@ -910,12 +1133,16 @@ class Collector:
         target = ref.get_usr()
         if not target:
             return
-        write = force_write or self.is_write(stack, idx, ref)
-        self.accesses.add((usr, rel, target, "writes" if write else "reads", c.location.line))
-        if not write:
+        line = c.location.line
+        how = "write" if force_write else "read" if force_read else self.access_of(stack, idx, ref)
+        if how in ("write", "update"):
+            self.accesses.add((usr, rel, target, "writes", line))
+        if how in ("read", "update"):  # x++ and x += n read the old value too (#52)
+            self.accesses.add((usr, rel, target, "reads", line))
+        if how == "read" and not force_read:
             where = self.escape_of(stack, idx, ref)
             if where:
-                self.escapes.add((usr, rel, target, c.location.line, where))
+                self.escapes.add((usr, rel, target, line, where))
 
     def escape_of(self, stack: list[list], idx: int, ref: Cursor) -> str | None:
         """Where the address of a global or field goes when we can't see what happens to it there:
@@ -928,6 +1155,9 @@ class Collector:
             if (pc.kind in WRAPPER_KINDS and len(list(pc.get_children())) == 1) or (
                 pc.kind == K.ARRAY_SUBSCRIPT_EXPR and is_array and pos == 0
             ):
+                if pc.kind == K.ARRAY_SUBSCRIPT_EXPR:
+                    # close(a[0]) passes an element by value, not the array (#18); &a[0] still escapes
+                    is_array = pc.type.get_canonical().kind in ARRAY_TYPES
                 pos = stack[j - 1][1] - 1 if j > 0 else 0
                 j -= 1
                 continue
@@ -963,42 +1193,53 @@ class Collector:
         return k >= 0 and self.writes_first_arg(stack[k][0])
 
     # -- read or write?
-    def is_write(self, stack: list[list], idx: int, ref: Cursor) -> bool:
+    def access_of(self, stack: list[list], idx: int, ref: Cursor) -> str:
+        """How the code at child `idx` of stack[-1] uses the variable: read | write | update (x++, x += n:
+        reads the old value and writes a new one)."""
         is_array = ref.type.get_canonical().kind in ARRAY_TYPES
         j = len(stack) - 1
         pos = idx
         while j >= 0:
             pc = stack[j][0]
             if pc.kind in WRAPPER_KINDS or (pc.kind == K.ARRAY_SUBSCRIPT_EXPR and is_array and pos == 0):
+                if pc.kind == K.ARRAY_SUBSCRIPT_EXPR:
+                    is_array = pc.type.get_canonical().kind in ARRAY_TYPES  # a[i] is an element (#18)
                 pos = stack[j - 1][1] - 1 if j > 0 else 0
                 j -= 1
             else:
                 break
         if j < 0:
-            return False
+            return "read"
         pc = stack[j][0]
         if pc.kind == K.CALL_EXPR:
             if pos == 1 and is_array and self.writes_first_arg(pc):
-                return True  # memset(arr, 0, sizeof arr): the array decays to a pointer
+                return "write"  # memset(arr, 0, sizeof arr): the array decays to a pointer
             # libclang lists the object an overloaded operator acts on first
             r = pc.referenced
-            return pos == 0 and r is not None and r.spelling in OVERLOADED_WRITE_OPS
+            if pos == 0 and r is not None and r.spelling in OVERLOADED_WRITE_OPS:
+                return "write" if r.spelling == "operator=" else "update"
+            return "read"
         if pos != 0:
-            return False
+            return "read"
         if pc.kind == K.UNARY_OPERATOR and self.is_addr_of(pc):
-            return self.address_written(stack, j)
+            return "write" if self.address_written(stack, j) else "read"
         if pc.kind == K.COMPOUND_ASSIGNMENT_OPERATOR:
-            return True
+            return "update"
         if pc.kind == K.BINARY_OPERATOR:
             kind = binary_kind(pc)
-            return kind in BINARY_ASSIGN_KINDS if kind is not None else self.binary_op(pc) in ASSIGN_OPS
+            if kind is not None:
+                if kind == BINARY_ASSIGN:
+                    return "write"
+                return "update" if kind in BINARY_ASSIGN_KINDS else "read"
+            op = self.binary_op(pc)
+            return "write" if op == "=" else "update" if op in ASSIGN_OPS else "read"
         if pc.kind == K.UNARY_OPERATOR:
             kind = unary_kind(pc)
             if kind is not None:
-                return kind in UNARY_INC_DEC_KINDS
+                return "update" if kind in UNARY_INC_DEC_KINDS else "read"
             toks = [t.spelling for t in pc.get_tokens()]
-            return bool(toks) and (toks[0] in ("++", "--") or toks[-1] in ("++", "--"))
-        return False
+            return "update" if toks and (toks[0] in ("++", "--") or toks[-1] in ("++", "--")) else "read"
+        return "read"
 
     @staticmethod
     def is_addr_of(c: Cursor) -> bool:
@@ -1114,14 +1355,14 @@ def _collect_unit(
     result["dropped_flags"] = []
     result["missing_headers"] = []
     try:
-        tu = _get_index().parse(unit.file, args=unit.args + extra_args)
+        tu = _get_index().parse(unit.file, args=unit.args + extra_args + NO_ERROR_LIMIT)
     except cindex.TranslationUnitLoadError:
         # Usually a flag clang refuses for this target (-mfloat-abi=hard on the host). Try once without them.
         kept, dropped = without_machine_flags(unit.args)
         try:
             if not dropped:
                 raise
-            tu = _get_index().parse(unit.file, args=kept + extra_args)
+            tu = _get_index().parse(unit.file, args=kept + extra_args + NO_ERROR_LIMIT)
             result["dropped_flags"] = sorted(set(dropped))
         except cindex.TranslationUnitLoadError as e:
             result["error_count"] = 1
@@ -1144,11 +1385,16 @@ def _collect_unit(
         h = _MISSING_HEADER.match(d.spelling)
         if h:
             missing.add(h.group(1))
-        mm = _MISSING_MEMBER.match(d.spelling)
-        if mm and d.location.file is not None:
-            where = rel_to(d.location.file.name, root)
-            if where is not None:
-                members.add((where, d.location.line, mm.group(1), mm.group(2)))
+        if d.location.file is not None:
+            mm = _MISSING_MEMBER.match(d.spelling) or _MISSING_DESIGNATOR.match(d.spelling)
+            un = None if mm else _UNDECLARED.match(d.spelling)
+            if mm or un:
+                where = rel_to(d.location.file.name, root)
+                if where is not None:
+                    if mm:
+                        members.add((where, d.location.line, mm.group(1), no_machine_path(mm.group(2))))
+                    else:
+                        members.add((where, d.location.line, un.group(1), ""))
         result["error_count"] += 1
         if len(result["errors"]) < MAX_ERRORS_KEPT:
             loc = d.location
@@ -1180,6 +1426,7 @@ def _collect_unit(
     result["address_sites"] = sorted(list(t) for t in col.address_sites)
     result["escapes"] = sorted(list(t) for t in col.escapes)
     result["initializers"] = sorted(list(t) for t in col.initializers)
+    result["init_escapes"] = sorted(list(t) for t in col.init_escapes)
     result["external_calls"] = sorted([u, f, n] for (u, f), n in col.external_calls.items())
     return result
 

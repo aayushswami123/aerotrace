@@ -204,7 +204,10 @@ def test_removed_field_breaks_its_users(repo, mode):
     assert got["read_total"] == ("breaks", "exact")
     assert got["conn::total"][0] == "removed"
     assert any("size and layout" in t for t in blind(c))
-    assert nodes(c)["defaults"] == ("unknown", "unknown")  # may set fields by position
+    # `defaults = {1, 2, 0, 3}` sets total by position (#26): seen in the index before the change (patch);
+    # after it (the index of the changed code), the values shift and the global is still "may set by position"
+    want = ("breaks", "exact") if mode == "patch" else ("unknown", "unknown")
+    assert nodes(c)["defaults"] == want
 
 
 def test_renamed_field_is_removed_and_added_with_a_hint(repo):

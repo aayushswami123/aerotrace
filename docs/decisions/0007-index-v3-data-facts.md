@@ -31,6 +31,16 @@ callee and line ("f calls g at line 12"), and reads/writes per function. It did 
 The plan named four tables; `initializers` was added because a file-scope initializer has no function to
 attach a write to.
 
+Later additions, same format (3), parser version 12:
+
+- `escapes.function_id` may hold the id of a global instead of a function: `&x` stored in that global's
+  file-scope initializer (a table such as Redis `static_configs`). No function does it, and the format
+  has no file column; the line is in that global's file (#27).
+- `initializers` also has fields set by position (`{1, 2}`), when each value can be matched to a field
+  for sure (#26).
+- `missing_members` also has "field designator X does not refer to any field in S", and "use of
+  undeclared identifier X" with `record` = '' (a removed global, or a C++ member used without `this->`) (#25).
+
 How a result is used is read from the call's parent expressions (skipping parentheses and implicit
 conversions). Operators come from libclang's operator kind, never from tokens: reading tokens of large
 macro expansions made SQLite's index 30 times slower in the first draft.

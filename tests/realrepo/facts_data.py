@@ -162,7 +162,6 @@ REDIS = [
         ),
         uses=(Use("closeChildInfoPipe", "src/childinfo.c", None, 40),),
         must_not=(Addr("src/childinfo.c", 40, "passed to close()"),),
-        known_bug="#18: an array element passed by value is recorded as the array's address escaping",
     ),
     Fact(
         id="redis-data-lazyfree-objects",
@@ -254,7 +253,6 @@ REDIS = [
             ),
         ),
         escapes=(Addr("src/config.c", 3537, "static_configs"),),
-        known_bug="#27: the address of a field stored in a file-scope initializer is recorded nowhere",
     ),
     Fact(
         id="redis-data-removed-subcommands-designator",
@@ -275,7 +273,6 @@ REDIS = [
             Broke("latencyAllCommandsFillCDF", "src/latency.c", 487, "exact"),
             Broke("", "src/commands.def", 12833),
         ),
-        known_bug="#25: 'field designator ... does not refer to any field' is not recorded as a missing member",
     ),
 ]
 
@@ -395,7 +392,6 @@ SQLITE = [
             Line(C, 24368, "0,                         /* bSmallMalloc */"),
         ),
         inits=(Init("sqlite3Config", C, 24368),),
-        known_bug="#26: initializers that set fields by position are not recorded",
     ),
     Fact(
         id="sqlite-data-keyinfo-offsetof",
@@ -409,14 +405,15 @@ SQLITE = [
             Line(C, 151138, "p = sqlite3DbMallocRawNN(db, SZ_KEYINFO(0) + nExtra);"),
         ),
         uses=(Use("sqlite3KeyInfoAlloc", C, None, 151138),),
-        known_bug="#24: offsetof(S, field) is never recorded as a use of the field",
     ),
     Fact(
         id="sqlite-data-vfs-pNext-two-copies",
         why="struct sqlite3_vfs is defined twice (sqlite3.c:1838 in the amalgamation, sqlite3.h:1517 for "
         "shell.c), so sqlite3_vfs::pNext names two fields. The sqlite3.c copy is used by sqlite3_vfs_find, "
-        "vfsUnlink and sqlite3_vfs_register; do_meta_command (shell.c) uses the sqlite3.h copy. Savepoint "
-        "has its own pNext (sqlite3CloseSavepoints): never mixed in.",
+        "vfsUnlink and sqlite3_vfs_register; sqlite3_os_init (the unix one, 49105) sets it by position in its "
+        "static aVfs[] table: UNIXVFS(...) lists 0 for pNext as the 4th value (49130); the unix-none entry "
+        "(49166) is outside every #if. do_meta_command (shell.c) uses the sqlite3.h copy. "
+        "Savepoint has its own pNext (sqlite3CloseSavepoints): never mixed in.",
         kind="data",
         query=f"sqlite3_vfs::pNext@{C}",
         proof=(
@@ -428,6 +425,11 @@ SQLITE = [
             Line(C, 28056, "vfsList = pVfs->pNext;"),
             Line(C, 28073, "SQLITE_API int sqlite3_vfs_register(sqlite3_vfs *pVfs, int makeDflt){"),
             Line(C, 28087, "pVfs->pNext = vfsList;"),
+            Line(C, 49105, "SQLITE_API int sqlite3_os_init(void){"),
+            Line(C, 49126, "#define UNIXVFS(VFSNAME, FINDER) {                        \\"),
+            Line(C, 49130, "0,                    /* pNext */                       \\"),
+            Line(C, 49158, "static sqlite3_vfs aVfs[] = {"),
+            Line(C, 49166, 'UNIXVFS("unix-none",     nolockIoFinder ),'),
             Line("shell.c", 38134, "for(pVfs=sqlite3_vfs_find(0); pVfs; pVfs=pVfs->pNext){"),
             Line(C, 189559, "SQLITE_PRIVATE void sqlite3CloseSavepoints(sqlite3 *db){"),
             Line(C, 189562, "db->pSavepoint = pTmp->pNext;"),
@@ -436,6 +438,7 @@ SQLITE = [
             Use("sqlite3_vfs_find", C, "reads", 28040),
             Use("vfsUnlink", C, "reads", 28056),
             Use("sqlite3_vfs_register", C, "writes", 28087),
+            Use("sqlite3_os_init", C, "writes", 49166),
         ),
         exact=True,
         must_not=(Fn("do_meta_command", "shell.c"), Fn("sqlite3CloseSavepoints", C)),
