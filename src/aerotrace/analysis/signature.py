@@ -70,7 +70,7 @@ class SignatureImpact:
     sites: list[Site] = field(default_factory=list)  # direct, virtual and same-name calls
     pointer_sites: list[Site] = field(default_factory=list)  # calls through pointers of its type
     address_sites: list[AddressSite] = field(default_factory=list)
-    upstream: list[Hit] = field(default_factory=list)  # callers of the callers, to `depth`
+    upstream: list[Hit] = field(default_factory=list)  # callers of the callers: distance 2 .. depth + 1
     depth: int = 2
     truncated: bool = False
     blind_spots: list[str] = field(default_factory=list)
@@ -185,10 +185,11 @@ def signature_impact(conn: sqlite3.Connection, target: Fn, depth: int = 2) -> Si
                 r["how"],
             )
         )
-    starts = {s.caller.id: s.caller for s in res.sites + res.pointer_sites}
-    if starts and depth > 0:
-        hits, res.truncated = graph.walk_many(conn, list(starts.values()), "callers", depth)
-        res.upstream = [h for h in hits if h.fn.id != target.id]
+    if (res.sites or res.pointer_sites) and depth > 0:
+        # Walk from the function itself, so a caller reached only through a pointer call keeps that
+        # weaker link on its whole path. Distance 1 are the call sites listed above.
+        hits, res.truncated = graph.walk_many(conn, [target], "callers", depth + 1)
+        res.upstream = [h for h in hits if h.distance >= 2]
     res.blind_spots = _limits(conn, res)
     return res
 

@@ -96,6 +96,20 @@ def test_virtual_calls_reach_every_override(repo_factory):
     conn.close()
 
 
+def test_callers_reached_through_a_pointer_are_never_exact(repo_factory):
+    # on_a is only reached through the handler table: dispatch() calls it through a pointer, and main@prog_b
+    # calls dispatch(). Both must stay probable (via_pointer), never exact.
+    root = repo_factory("c_multi")
+    build_index(root, jobs=1)
+    conn = store.connect(root)
+    r = signature.signature_impact(conn, one(conn, "on_a"), depth=1)
+    assert [(s.caller.name, s.certainty) for s in r.pointer_sites] == [("dispatch", "probable")]
+    assert [(h.fn.name, h.fn.file, h.confidence, h.distance) for h in r.upstream] == [
+        ("main", "prog_b/main.c", "via_pointer", 2)
+    ]
+    conn.close()
+
+
 def test_upstream_callers_and_depth(repo_factory):
     root = repo_factory("c_multi")
     build_index(root, jobs=1)

@@ -359,7 +359,7 @@ def signature_text(r: SignatureImpact, limit: int = 50) -> str:
         )
         lines += _cap([_site_line(s, r, returns) for s in r.pointer_sites], limit)
     if r.upstream:
-        lines.append(f"Callers further up (to depth {r.depth}), nearest first:")
+        lines.append(f"Callers further up ({r.depth} more step{'s' if r.depth != 1 else ''}), nearest first:")
         level_lines, shown = _levels(r.upstream, limit, via_always=True)
         lines += level_lines
         lines += _legend(shown)
