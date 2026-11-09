@@ -317,6 +317,30 @@ def cmd_signature(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_data(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import data, render_data
+
+    conn = _open(args)
+    if conn is None:
+        return 2
+    found = data.find_variables(conn, args.name) or data.gone_fields(conn, args.name)
+    if len(found) != 1:
+        _err(render_data.candidates_text(args.name, found, near=data.suggest(conn, args.name)))
+        return 1
+    writer = None
+    if args.writer:
+        writer = _resolve_one(conn, args.writer)
+        if writer is None:
+            return 1
+    res = data.data_users_of(conn, found[0], args.depth, writer.id if writer else None)
+    print(
+        json.dumps(render_data.data_json(res, args.limit, args.all), indent=2)
+        if args.json
+        else render_data.data_text(res, args.limit, args.all)
+    )
+    return 0
+
+
 def cmd_mcp(args: argparse.Namespace) -> int:
     from aerotrace.mcp.server import run
 
@@ -408,6 +432,36 @@ def build_parser() -> argparse.ArgumentParser:
     caps.add_argument("--all", action="store_true", help="show every result, no caps")
     sig.add_argument("--json", action="store_true")
     sig.set_defaults(func=cmd_signature)
+
+    dt = with_root(
+        sub.add_parser(
+            "data",
+            help="who reads and writes a struct field or global (before renaming, removing or retyping it)",
+        )
+    )
+    dt.add_argument("name", help="Struct::field, global, name@file, or global.field")
+    dt.add_argument(
+        "--depth",
+        type=int,
+        default=None,
+        help="how many steps of callers above the users to list (default: 2 for globals, 0 for fields)",
+    )
+    dt.add_argument(
+        "--from",
+        dest="writer",
+        metavar="FUNCTION",
+        help="only what reads the value this function writes (fields: probable, maybe another object)",
+    )
+    dcaps = dt.add_mutually_exclusive_group()
+    dcaps.add_argument(
+        "--limit",
+        type=_positive,
+        default=None,
+        help="most results per list (default: about 15; 50 with --json)",
+    )
+    dcaps.add_argument("--all", action="store_true", help="show every result, no caps")
+    dt.add_argument("--json", action="store_true")
+    dt.set_defaults(func=cmd_data)
 
     df = with_root(
         sub.add_parser(

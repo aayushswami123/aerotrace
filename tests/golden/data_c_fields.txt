@@ -1,0 +1,34 @@
+Data users of conn::count (include/fields.h:4): field of conn, type int.
+Summary: 7 functions use it in 1 file: 5 write it, 2 only read it (7 exact). 1 initializer sets it, 6 globals of its type may set it by position, 2 places pass its address on, 0 places do not compile now.
+Functions that use it (7), writers first:
+  - touch  src/fields.c  first use 18: writes 18
+  - touch_array  src/fields.c  first use 19: writes 19
+  - reset_all  src/fields.c  first use 33: writes 33
+  - bump_any  src/fields.c  first use 35: writes 35
+  - put  src/fields.c  first use 44: writes 44
+  - leak_count  src/fields.c  first use 27: reads 27, 30
+  - get  src/fields.c  first use 45: reads 45
+Initializers that set it (1 line in 1 global):
+  - table  src/fields.c: line 8
+Globals of its type that may set it by position (6) [unknown]: if their initializer lists values in order, it sets this field too:
+  - gone_init  src/broken.c:9  (struct conn)
+  - g_main  src/fields.c:5  (struct conn)
+  - conns  src/fields.c:6  (struct conn[4])
+  - table  src/fields.c:8  (struct conn[2])
+  - pos  src/fields.c:9  (struct conn)
+  - wrapped  src/fields.c:63  (struct wrap)
+Places its address goes where AeroTrace can't follow it (2) [unknown]:
+  - leak_count  src/fields.c:27: passed to fill()
+  - leak_count  src/fields.c:30: address returned
+Not included: 4 other variables named count (count@a/state.c, count@b/state.c, buf::count, anon_t::count). Ask for one by its full name.
+[unknown] = the data leaves code AeroTrace can follow; what happens next is not known
+Limits of this answer:
+  - Fields are tracked per struct type, not per object: every conn's count is listed.
+  - 2 places pass its address on. Reads and writes made through that pointer elsewhere are not listed.
+  - Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).
+  - Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} inside a function (a local or a compound literal) is not recorded either (#37).
+  - Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).
+  - Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.
+  - 1 source file had parse errors; links in them may be missing.
+  - Only one build configuration was analysed; code under other #ifdef settings is not seen.
+  - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.

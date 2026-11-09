@@ -21,18 +21,22 @@ from pathlib import Path
 
 import pytest
 import repos
-from facts import Fact, Fn
+from facts import Addr, Broke, Fact, Fn, Use
+from facts_data import REDIS as REDIS_DATA_FACTS
+from facts_data import SQLITE as SQLITE_DATA_FACTS
 from facts_redis import FACTS as REDIS_FACTS
 from facts_sqlite import FACTS as SQLITE_FACTS
 
-from aerotrace.analysis import diff, graph, render, signature, symbols
+from aerotrace.analysis import data, diff, graph, render, signature, symbols
 from aerotrace.index import store
 from aerotrace.index.build import build_index, fresh_index
 from aerotrace.index.history import Outliner
 
 pytestmark = pytest.mark.realrepo
 
-CASES = [(repos.REDIS, f) for f in REDIS_FACTS] + [(repos.SQLITE, f) for f in SQLITE_FACTS]
+CASES = [(repos.REDIS, f) for f in REDIS_FACTS + REDIS_DATA_FACTS] + [
+    (repos.SQLITE, f) for f in SQLITE_FACTS + SQLITE_DATA_FACTS
+]
 
 
 def _param(pinned: repos.Pinned, fact: Fact, check_bugs: bool):
@@ -64,6 +68,23 @@ def indexed(sources):
         if pinned.name not in done:
             build_index(root)
             done[pinned.name] = root
+        return root
+
+    return get
+
+
+@pytest.fixture(scope="session")
+def edited(tmp_path_factory):
+    """A fresh copy of the pinned repo with a data fact's edits applied, then indexed."""
+
+    def get(pinned: repos.Pinned, fact: Fact) -> Path:
+        root = repos.unpack(pinned, tmp_path_factory.mktemp(f"{pinned.name}-{fact.id}"))
+        for e in fact.edits:
+            p = root / e.file
+            text = p.read_text(errors="replace")
+            assert text.count(e.old) == 1, f"{e.file}: the text to replace must appear exactly once"
+            p.write_text(text.replace(e.old, e.new, 1))
+        build_index(root)
         return root
 
     return get
@@ -351,9 +372,100 @@ def _check_ranking(conn: sqlite3.Connection, fact: Fact) -> list[str]:
     return problems
 
 
+def _check_data(conn: sqlite3.Connection, fact: Fact) -> list[str]:
+    found = data.find_variables(conn, fact.query) or data.gone_fields(conn, fact.query)
+    if len(found) != 1:
+        return [
+            f"'{fact.query}' should name exactly one variable; AeroTrace found {[v.shown for v in found]}"
+        ]
+    writer = _one(conn, fact.data_from).id if fact.data_from else None
+    r = data.data_users_of(conn, found[0], fact.depth if fact.must else None, writer)
+    got = {(u.fn.qualified_name, u.fn.file): u for u in r.uses}
+    problems = []
+
+    def lines_of(u, kind):
+        return u.writes if kind == "writes" else u.reads if kind == "reads" else u.reads + u.writes
+
+    def matches(w: Use) -> bool:
+        u = got.get((w.fn, w.file))
+        if u is None:
+            return False
+        ls = lines_of(u, w.kind)
+        return bool(ls) and (w.line is None or w.line in ls)
+
+    for w in fact.uses:
+        u = got.get((w.fn, w.file))
+        if u is None:
+            problems.append(f"missing user: {w.fn}@{w.file}")
+        elif not matches(w):
+            problems.append(
+                f"{w.fn}@{w.file}: expected {w.kind or 'a use'}{f' at line {w.line}' if w.line else ''}; "
+                f"got writes {u.writes[:8]}, reads {u.reads[:8]}"
+            )
+        elif w.certainty and u.certainty != w.certainty:
+            problems.append(f"{w.fn}@{w.file}: certainty '{u.certainty}', expected '{w.certainty}'")
+    if fact.exact:
+        extra = sorted(set(got) - {(w.fn, w.file) for w in fact.uses})
+        if extra:
+            problems.append(f"users the source does not have: {extra[:10]}")
+    if fact.exact_writers:
+        writers = {k for k, u in got.items() if u.writes}
+        want = {(w.fn, w.file) for w in fact.uses if w.kind == "writes"}
+        if writers != want:
+            problems.append(f"writers are {sorted(writers)}, expected exactly {sorted(want)}")
+    for i in fact.inits:
+        if not any(
+            x.variable.shown == i.variable and x.file == i.file and x.line == i.line for x in r.initializers
+        ):
+            have = sorted({(x.variable.shown, x.file, x.line) for x in r.initializers})
+            problems.append(f"missing initializer {i.variable} at {i.file}:{i.line}; got {have[:10]}")
+    for a in fact.escapes:
+        if not any(e.fn.file == a.file and e.line == a.line and a.how in e.detail for e in r.escapes):
+            have = [(e.fn.file, e.line, e.detail) for e in r.escapes]
+            problems.append(f"missing escape {a.file}:{a.line} '{a.how}'; got {have[:10]}")
+    names = {g.shown for g in r.by_position}
+    problems += [
+        f"{g} is not listed as a global that may set it by position"
+        for g in fact.by_position
+        if g not in names
+    ]
+    for b in fact.broken:
+        hit = [x for x in r.broken if x.file == b.file and x.line == b.line]
+        if not hit:
+            have = [(x.file, x.line) for x in r.broken]
+            problems.append(f"missing place that does not compile: {b.file}:{b.line}; got {have[:12]}")
+        elif not any((x.fn.qualified_name if x.fn else "") == b.fn for x in hit):  # "" = file scope
+            problems.append(f"{b.file}:{b.line} is not placed in {b.fn}")
+        elif b.certainty and not any(x.certainty == b.certainty for x in hit):
+            problems.append(
+                f"{b.file}:{b.line}: certainty {[x.certainty for x in hit]}, expected {b.certainty}"
+            )
+    problems += _check_hits(
+        Fact(id="", why="", kind=""),  # Fn in must_not means "not a user" (checked below), not "no caller"
+        r.upstream,
+        list(fact.must),
+        "callers further up",
+    )
+    for m in fact.must_not:
+        if isinstance(m, Use) and matches(m):
+            what = f"{m.kind or 'a user'}{f' at line {m.line}' if m.line else ''}"
+            problems.append(f"false claim: {m.fn}@{m.file} is listed as {what}")
+        elif isinstance(m, Fn) and _key(m) in got:
+            problems.append(f"false claim: {m} is listed as a user")
+        elif isinstance(m, Addr) and any(
+            e.fn.file == m.file and e.line == m.line and m.how in e.detail for e in r.escapes
+        ):
+            problems.append(f"false claim: an escape at {m.file}:{m.line} '{m.how}'")
+        elif isinstance(m, Broke) and any(x.file == m.file and x.line == m.line for x in r.broken):
+            problems.append(f"false claim: {m.file}:{m.line} is listed as not compiling")
+    return problems
+
+
 def answer_problems(root: Path, fact: Fact) -> list[str]:
     conn = store.connect(root)
     try:
+        if fact.kind == "data":
+            return _check_data(conn, fact)
         if fact.kind == "diff":
             return _check_diff(conn, root, fact)
         if fact.kind == "signature":
@@ -415,9 +527,11 @@ def test_only_expected_files_have_parse_errors(indexed, pinned):
 
 
 @pytest.mark.parametrize("pinned, fact", [_param(p, f, check_bugs=True) for p, f in CASES])
-def test_fact(indexed, pinned, fact, tmp_path):
+def test_fact(indexed, edited, pinned, fact, tmp_path):
     if fact.kind == "git_diff":
         problems = _diff_problems(git_diff_result(pinned, fact, tmp_path), fact)
+    elif fact.kind == "data" and fact.edits:
+        problems = answer_problems(edited(pinned, fact), fact)
     else:
         problems = answer_problems(indexed(pinned), fact)
     assert not problems, f"{fact.id}: {fact.why}\n  - " + "\n  - ".join(problems)

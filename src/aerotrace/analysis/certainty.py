@@ -32,3 +32,20 @@ def of_call(confidence: str) -> tuple[str, str]:
 
 def weakest(levels: list[str]) -> str:
     return max(levels, key=LEVELS.index) if levels else EXACT
+
+
+def of_access(confidence: str, var_kind: str, question: str = "declaration") -> tuple[str, str]:
+    """(level, reason) for a function that reads or writes a field or global (an edge with `confidence`).
+
+    question "declaration" (rename, remove, retype): the code names it, so every access is exact.
+    question "value" (what reads what one function writes): fields are tracked per struct type, not per
+    object, so a reader of a field is only probable; a global is one object, so its reader is exact.
+    """
+    what = {"field": "field", "global": "global"}.get(var_kind, "static variable")
+    if confidence == "ambiguous":
+        return PROBABLE, f"another {what} has the same name; this may be the other one"
+    if question == "value":
+        if var_kind == "field":
+            return PROBABLE, "reads the same field, maybe of another object"
+        return EXACT, f"reads the same {what}"
+    return EXACT, f"names this {what}"
