@@ -27,8 +27,9 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 
 ## Code layout
 
-- `src/aerotrace/model/`: the one graph schema. Changing it is a big decision: ask first, and
-  write an ADR in `docs/decisions/`.
+- `src/aerotrace/index/store.py`: the one graph schema (SQLite tables, `SCHEMA_VERSION`). Changing it is a
+  big decision: ask first, bump the version, and write an ADR in `docs/decisions/`.
+- `src/aerotrace/model/`: shared types used across layers (kept small).
 - `src/aerotrace/toolchain/`: finding libclang and reading `compile_commands.json`.
 - `src/aerotrace/frontends/cpp/`: the libclang parser. It turns code into facts and nothing else.
 - `src/aerotrace/index/`: building, caching and storing the index (SQLite in `.aerotrace/`).
