@@ -98,6 +98,21 @@ def _starts_together(a: Cursor, b: Cursor) -> bool:
     return a.extent.start == b.extent.start
 
 
+def _last_token(c: Cursor) -> str:
+    last = ""
+    for t in c.get_tokens():
+        last = t.spelling
+    return last
+
+
+def _is_std_function_type(t) -> bool:
+    """std::function and friends: calling one is a call through a pointer."""
+    decl = t.get_canonical().get_declaration()
+    if decl is None or decl.kind.is_invalid() or decl.spelling not in STD_FUNCTION_CLASSES:
+        return False
+    return "std" in _scope_parts(decl)
+
+
 def _template_of(cursor: Cursor) -> Cursor | None:
     try:
         t = cindex.conf.lib.clang_getSpecializedCursorTemplate(cursor)
@@ -450,11 +465,12 @@ class Collector:
         when `c` is not such a call. These are exactly the calls a signature change breaks, so they must not
         be lost. libclang keeps such a call as an unnamed expression: the callee first, then the arguments.
         - C, and C++ qualified names (`ns::f`, `K::sm`): the expression has dependent type and the callee is
-          the function itself, `(f)`, `(*f)`, `&f`, or a function pointer (`p`, `(c ? f : g)`).
+          the function itself, `(f)`, `(*f)`, `&f`, or a function pointer (`p`, `(c ? f : g)`, a
+          std::function, a pointer to member `(k.*pm)`).
         - C++: the expression keeps the return type. The callee is an overload set (`f(1)`, even when only
           one function has that name) or a member (`k.m(1)`, `k->m(1)`).
         Constructor calls (`K k(1, 2)`, `new K(1, 2)`) keep no reference to the class or the constructor,
-        so they are not found here (#21)."""
+        so they are not found here (#21); neither are calls on an object with operator() (#39)."""
         if c.kind != K.UNEXPOSED_EXPR:
             return None
         first = next(c.get_children(), None)
@@ -484,10 +500,18 @@ class Collector:
             and callee.referenced.kind in FUNC_KINDS
         ):
             pass
-        elif not function_type(callee.type):
+        elif ctype == "<bound member function type>":
+            pass  # through a pointer to member: (k.*pm)(1)
+        elif not function_type(callee.type) and not _is_std_function_type(callee.type):
             return None  # not a call: the first part is no function and no function pointer
         # `T(f)` and `T x(f, 1)` in a template start with the type, a call starts with what it calls
-        return callee if _starts_together(c, first) else None
+        if not _starts_together(c, first):
+            return None
+        # `int x = f;` (a function used as a value where it does not fit) ends with the function's name, a
+        # call ends after it, at the `)`
+        if c.extent.end == first.extent.end and _last_token(c) != ")":
+            return None
+        return callee
 
     @staticmethod
     def callee_functions(callee: Cursor) -> list[Cursor] | None:

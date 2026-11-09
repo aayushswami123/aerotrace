@@ -57,3 +57,26 @@ template <class T> T v_overload_one() {
 }
 template <class T> void v_pass(T t) { h(t, ov); }
 void good_take() { take(pair); }
+
+// Functions used as values where they do not fit: errors, but not calls
+int lone(int a) { return a; }
+int value_int() { int x = lone; return x; }
+int value_return() { return pair; }
+void value_overload() { int (*p)(int, int, int) = ov; }
+#define VALUE_OF(f) f
+int value_macro() { int x = VALUE_OF(lone); return x; }
+
+// Broken calls through a std::function and a pointer to member: still pointer calls
+namespace std {
+template <class> class function;
+template <class R, class... A> class function<R(A...)> {
+  public:
+    template <class F> function(F f);
+    R operator()(A... a) const;
+};
+}  // namespace std
+int bad_std_function(std::function<int(int)> f) { return f(1, 2); }
+int bad_member_pointer(Box &b, int (Box::*pm)(int, int)) { return (b.*pm)(1); }
+#define CALL_PAIR0() pair()
+int bad_macro_zero() { return CALL_PAIR0(); }
+void value_std_function() { std::function<int(int)> f = ov; }

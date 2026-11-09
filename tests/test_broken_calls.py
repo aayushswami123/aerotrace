@@ -181,6 +181,36 @@ def test_cpp_functions_passed_as_values_are_not_calls(repo_factory, tmp_path):
     conn.close()
 
 
+def test_cpp_function_used_as_a_value_in_broken_code_is_not_a_call(repo_factory, tmp_path):
+    conn = broken_repo(repo_factory, tmp_path)
+    values = ("value_int", "value_return", "value_overload", "value_macro", "value_std_function")
+    for caller in values:
+        assert sites(conn, caller, "src/forms.cpp") == [], caller
+    assert not {x for x in call_edges(conn, "src/forms.cpp") if x[0] in values}
+    # `int x = lone;` names lone as a value: it is address taken there
+    sql = """SELECT g.qualified_name, a.line, a.how FROM address_sites a JOIN functions f ON f.id = a.function_id
+             JOIN functions g ON g.id = a.in_function WHERE f.name = 'lone'"""
+    assert sorted(tuple(r) for r in conn.execute(sql)) == [
+        ("value_int", 63, "stored in x"),
+        ("value_macro", 67, "stored in x"),
+    ]
+    # a zero-argument call inside a macro is still a call
+    assert ("bad_macro_zero", "pair: int pair(int, int)", "exact", 81) in call_edges(conn, "src/forms.cpp")
+    conn.close()
+
+
+def test_cpp_broken_calls_through_std_function_or_member_pointer_are_pointer_calls(repo_factory, tmp_path):
+    conn = broken_repo(repo_factory, tmp_path)
+    for caller, line, n_args in (("bad_std_function", 78, 2), ("bad_member_pointer", 79, 1)):
+        [site] = sites(conn, caller, "src/forms.cpp")
+        assert site[1:4] == ("via_pointer", line, n_args), caller
+        assert site[4].startswith("does not compile"), caller
+        sql = """SELECT b.kind FROM blind_spots b JOIN functions f ON f.id = b.function_id
+                 WHERE f.qualified_name = ? AND b.line = ?"""
+        assert [tuple(r) for r in conn.execute(sql, (caller, line))] == [("pointer_call",)], caller
+    conn.close()
+
+
 def test_rarer_c_forms_of_a_broken_call(repo_factory, tmp_path):
     conn = broken_repo(repo_factory, tmp_path)
     e = call_edges(conn, "src/forms.c")
