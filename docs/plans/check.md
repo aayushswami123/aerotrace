@@ -376,3 +376,6 @@ Decided (coordinator, 2026-11-09):
    break.
 
 Coordinator: build locally on `feat/check`; no push, no PR (the owner pushes).
+
+Review of #48 (coordinator): O5 changed. In C too, a function stored or passed as a pointer whose type no
+longer matches is a probable break (clang 16+ and GCC 14+ reject it), not "affected".
