@@ -198,6 +198,37 @@ def cmd_impact(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mcp(args: argparse.Namespace) -> int:
+    from aerotrace.mcp.server import run
+
+    run(find_root(args.root), Path(args.build_dir).resolve() if args.build_dir else None)
+    return 0
+
+
+def cmd_install(args: argparse.Namespace) -> int:
+    from aerotrace.mcp import install
+
+    root = find_root(args.root)
+    try:
+        p = install.plan(args.client, root)
+    except install.InstallError as e:
+        _err(f"error: {e}")
+        return 2
+    if args.dry_run:
+        print(f"Would write {p.path}:\n{p.content}")
+        return 0
+    install.apply(p)
+    print(f"Added AeroTrace to {p.path}")
+    print(p.note)
+    try:
+        from aerotrace.index import store
+
+        store.connect(root).close()
+    except FileNotFoundError:
+        print(f"Tip: run `aerotrace index` in {root} now, so the first question is answered quickly.")
+    return 0
+
+
 # ---------------------------------------------------------------- parser
 
 
@@ -240,6 +271,15 @@ def build_parser() -> argparse.ArgumentParser:
     query("callers", "who calls this function, directly or through others", cmd_walk)
     query("callees", "what this function calls, directly or through others", cmd_walk)
     query("impact", "what could break if this function changes (callers + data readers)", cmd_impact)
+
+    m = with_root(sub.add_parser("mcp", help="run the MCP server on stdin/stdout (agents start this)"))
+    m.add_argument("--build-dir", help="folder holding compile_commands.json")
+    m.set_defaults(func=cmd_mcp)
+
+    ins = with_root(sub.add_parser("install", help="add AeroTrace to Claude Code, Cursor or Codex"))
+    ins.add_argument("--client", required=True, choices=["claude", "cursor", "codex"])
+    ins.add_argument("--dry-run", action="store_true", help="show what would be written, change nothing")
+    ins.set_defaults(func=cmd_install)
 
     s = with_root(sub.add_parser("status", help="what is in the index and whether it is up to date"))
     s.add_argument("--json", action="store_true")
