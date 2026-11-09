@@ -45,7 +45,10 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 - Every bug fix in the parser or analysis comes with a fixture that reproduces it.
 - Every new edge kind or analysis needs a fixture test showing a correct answer **and** a blind spot.
 - Tests must not need the network. Real-repo tests (Redis, SQLite) are marked `@pytest.mark.realrepo`
-  and are skipped by default.
+  and are skipped by default; CI runs them on every PR.
+- Every new analysis feature adds golden facts in `tests/realrepo/` (see its README): hand-checked, with
+  the source lines that prove them, and at least one "must not" claim. Never copy the tool's output into
+  a fact. A fact the tool gets wrong is marked `known_bug`, not weakened.
 - Output for agents must be small. Rank results and cap lists, and say how many were left out.
 - Keep messages, docs and tool descriptions in plain, short English.
 
