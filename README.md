@@ -27,6 +27,12 @@ The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_u
 `callers`, `callees`, `find` and `index_status`. The first question
 builds the index. After that, files you edit are re-indexed before each answer.
 
+While the index is being built, the server sends progress (files done out of total). If a build takes more
+than 20 seconds, the agent gets "still building: N of M files done, ask again shortly" and the build goes on
+in the background; the agent never gets an answer from an old or half-written index. If a build fails, the
+agent is told why (for example no compile_commands.json in `--build-dir`, or libclang missing). Add
+`--jobs N` to the `aerotrace mcp` command to set the number of parallel parsers (default: CPU count).
+
 ## Use it from the terminal
 
 ```bash

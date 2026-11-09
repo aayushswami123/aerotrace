@@ -1,14 +1,14 @@
 # Plan: MCP index rebuilds that keep the agent informed
 
-Status: plan, waiting for review. Branch `feat/mcp-rebuild`.
+Status: built. The plan below was reviewed; the **Review** section at the end lists every point and how
+it was handled, and wins where the two differ. Branch `feat/mcp-rebuild`.
 
 ## Goal
 
 The MCP server builds or rebuilds the index by itself when it is missing, made by another index format, or
 when files or compile flags changed (`fresh_index` in `src/aerotrace/index/build.py`). Today:
 
-- The agent gets nothing until the build is done. On a big repo that is minutes, and many clients give up
-  on a tool call after about 60 s.
+- The agent gets nothing until the build is done. On a big repo that is minutes of silence.
 - If the build fails, the agent sees only `Error executing tool <name>` (the SDK hides the text of any
   exception that is not a `ToolError`).
 
@@ -133,15 +133,15 @@ read it, its hash no longer matches and a new build starts. Nothing new is neede
 
 ### 3. The threshold: 20 s
 
-- Most clients cut a tool call at about 60 s unless they get progress (the official TypeScript SDK's default
-  request timeout is 60 s and only resets on progress when the client opts in; Codex's default tool timeout
-  is 60 s; both from memory, to be checked against their docs before the PR).
-  20 s leaves a wide margin for the query that runs after the build and for slow machines.
+- This is about the agent's experience, not a client limit: Claude Code's default MCP tool timeout is very
+  long (about 1e8 ms; `MCP_TOOL_TIMEOUT` or a per-server `timeout` changes it, and progress does not extend
+  it). We make no claim about other clients' limits here. 20 s is long enough for most builds to answer in
+  one call and short enough that the agent is never left without news for long.
 - Redis 8.10.3 (the redis-server sources) cold on 2 parsers took 9.5 s and on 1 parser 17.9 s (CLI numbers today).
   With 20 s, a cold Redis build answers in the same call even on one core; only bigger repos get the
   "still building" answer. 15 s would push one-core Redis into the background for 3 s of gain.
 - Every later call waits up to another 20 s, so an agent that keeps asking is never left with nothing for
-  more than 20 s, and no single call comes close to 60 s.
+  more than about 20 s.
 - `WAIT_SECONDS` is a constant; `create_server(..., wait=...)` lets tests use 0.2 s. There is no env var
   or flag for it (one less thing to configure; we can add one if users ask).
 
@@ -275,3 +275,75 @@ To see the early answer on a real repo, one extra run with `wait=2` on 1 parser 
 - **SDK API drift**: `Context.report_progress` is in mcp 2.3; `pyproject.toml` pins `mcp>=2.3,<3`.
 
 Nothing here needs an index format change or a new dependency.
+
+## Review
+
+An independent reviewer checked the plan against mcp 2.3.0. Verdict: go with changes. Every point, and
+what was done:
+
+| # | Point | How it was handled |
+|---|---|---|
+| 1 | MUST: open, use and close each sqlite connection in one thread | `answer()` in `server.py` runs `store.connect` + the query + close inside one `anyio.to_thread.run_sync` call. `index_plan` opens and closes its own connection. |
+| 2 | MUST: a finished build may not cover the waiting call | `IndexState.ready()` loops: plan, start or join the build, wait, plan again, until `index_plan` says fresh or the 20 s budget runs out. Wanted files that the last build could not index (excluded) end the loop, and at most 3 builds run per call (then the answer says it may miss the latest edits). Test: `test_finished_build_that_misses_new_edits_is_followed_by_another`. |
+| 3 | MUST: a failure must reach every waiter | One `Build` object per attempt (event, progress, error, note). Each waiter holds its own `Build`. No FAILED state, no global error; the next new call starts a new attempt. Test: `test_build_failure_reaches_every_waiting_call` (two waiters get the same error, the build ran once, the next call builds again). |
+| 4 | MUST: exit promptly mid-build | A stop event goes into `build_index`; the pool loop checks it every 0.5 s, terminates the parser processes, then `shutdown(wait=False, cancel_futures=True)` (the processes are taken first: `shutdown` forgets them). `run()` sets it when the server returns (stdin closed); SIGINT/SIGTERM stop the build and `os._exit`, because a normal unwind waits forever for the thread blocked on stdin. Test (subprocess): close stdin, or SIGTERM, mid-build: exit in under 3 s (measured 0.1-0.3 s), no parser process left, no index written. |
+| 5 | SHOULD: name failures instead of guessing from exception types | `index_plan` checks cheap causes before building (`--build-dir` has compile_commands.json, `AEROTRACE_LIBCLANG` exists) and raises `SetupError`. `build_index` raises `NoSourcesError(SystemExit)` (CLI unchanged), `LibclangLoadError`, `ParserCrashed`. The thread catches `BaseException`. The crash text says "crashed or ran out of memory". Disk full, permission and memory errors are still matched by type (errno ENOSPC, sqlite "disk is full", `PermissionError`, `MemoryError`); everything else is "unexpected error (Type: message)". |
+| 6 | SHOULD: save finished results on a crash | Results that finished before the pool broke are handed to `finished()`, which writes them to the cache, before `ParserCrashed` is raised. Test with a worker that kills itself on one file. |
+| 7 | SHOULD: keep refusing old answers; measure an incremental rebuild | Kept. Measured below (one .c file changed, and `server.h` changed, warm cache, 1 parser). |
+| 8 | SHOULD: wait asynchronously; a cancelled call must not stop the build | `while not finished: await anyio.sleep(...)`. Test: `test_cancelled_call_does_not_stop_the_build`. |
+| 9 | SHOULD: no redundant builds | A generation counter: a call that planned while another build finished plans again instead of starting a second build. |
+| 10 | NIT: determinism | `build_index` refuses to write when a unit has no result. `dump_canonical` of a CLI build and an MCP build of Redis compared (identical, see below); the fixture tests compare with and without progress / pool. |
+| 11 | NIT: does `Outliner` (diff_impact) parse in the server process? | Yes: `history.Outliner` parses old file versions with libclang in-process. The process isolation covers index builds only. |
+| 12 | NIT: wording | "1, 2 and 8 parallel parsers on one 8-core machine" (macOS cannot pin cores). |
+| 13 | NIT: temp-file cleanup | Issue #36. |
+| 14 | NIT: tests for 2, 3, 4, 8; tool schemas unchanged | Tests above. `test_tool_schemas_are_unchanged` compares the tool list with `tests/golden/mcp_tool_schemas.json`, captured from launch-candidate before the change: `ctx` does not show. |
+
+Other changes while building:
+
+- The parser-crash text no longer guesses which file crashed. A pool cannot tell which future was running
+  when a process died, so it lists how many files were not parsed and the first few of them.
+- A successful build's note ("(Built the index: ...)") is shown once even if every waiting call timed out:
+  the next answer carries it.
+- With 20 s, the agent sees the threshold only on big repos; the README says what happens.
+- Found an earlier bug, filed as #35: with guessed flags, a diff touching a new file in an excluded folder
+  re-indexes on every call.
+- A waiting call checks for the end of the build every 0.05 s (progress still goes out every 1 s); with a
+  1 s check, every answer came up to a second late.
+
+## Measurements (as built)
+
+Redis 8.10.3 (117 files of redis-server), 1, 2 and 8 parallel parsers on one 8-core machine (Apple M1
+Pro, macOS). The machine was shared with other jobs (load average 3 to 15), so base CLI, branch CLI and
+MCP runs were interleaved, 3 rounds; medians in seconds. CLI = `aerotrace index --jobs N` wall time,
+including Python start-up. MCP = time from the first `index_status` call to its answer, in-process client.
+Cold = no `.aerotrace/`; warm = cache kept, `index.db` deleted; one .c = `src/t_string.c` changed;
+server.h = `src/server.h` changed (included by most files).
+
+| Parsers | Case | CLI on launch-candidate | CLI on this branch | MCP on this branch |
+|---|---|---|---|---|
+| 8 | cold | 4.9 | 4.4 | 5.0 |
+| 8 | warm | 1.3 | 1.3 | 1.4 |
+| 8 | one .c | 1.5 | 1.5 | 2.0 |
+| 8 | server.h | 4.5 | 4.2 | 4.9 |
+| 2 | cold | 9.3 | 9.3 | 9.7 |
+| 2 | warm | 1.3 | 1.3 | 1.4 |
+| 2 | one .c | 1.6 | 1.5 | 2.0 |
+| 2 | server.h | 9.0 | 8.9 | 9.4 |
+| 1 | cold | 18.3 | 18.6 | 18.1 |
+| 1 | warm | 1.3 | 1.4 | 1.4 |
+| 1 | one .c | 1.6 | 1.5 | 2.0 |
+| 1 | server.h | 16.1 | 16.0 | 16.2 |
+
+- No slowdown from `as_completed` + progress (branch CLI vs base CLI: within noise).
+- Every MCP build of Redis answered in the same call (all under 20 s), even cold on 1 parser (18.1 s; the
+  slowest run was 18.8 s, close to the limit). A busier or slower machine gets the early answer instead.
+- The MCP's extra ~0.5 s for a one-file change is starting the parser process (`isolate=True`); merge and
+  write of the whole index take about 1 s on Redis, so they are far from the 20 s limit here. On a repo
+  10 times bigger they could take about 10 s on their own; the early answer covers that case.
+- A no-op call (index fresh) costs about 4 ms.
+- Early answer, real repo: 1 parser, cold, wait set to 2 s: the first call answered after 2.0 s with
+  "AeroTrace is still building the index (no index yet): 8 of 117 files done. ...", and later calls got
+  the answer.
+- A CLI build (1 parser, no pool, no cache) and an MCP build (8 parsers) of Redis give the same
+  `dump_canonical` (126,971 lines, identical).
+- Quitting mid-build (stdin closed or SIGTERM): the server exits in 0.1-0.3 s, parser processes gone.
