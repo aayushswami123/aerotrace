@@ -53,6 +53,22 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- C++ templates: a call whose target depends on the template type (`t.run(5)`, `T::f()`, `f(t)`) can't be
+  linked, because libclang does not show the instantiations. `callers`, `impact`, `signature`, `diff` and
+  `check` for a function with that name now say "UNKNOWN (#33)" and list the template calls, instead of
+  looking complete. An overload set used as a value in a template (`T p = ov;`) takes the address of every
+  candidate (#31).
+- `diff`/`check` in git mode: when a change makes a virtual override stop overriding (new parameters), the
+  callers that dispatched to it through the base are listed again, as `virtual` (#32).
+- `check`: a changed function that no longer builds stays in "What changed" (distance 0), and its break is a
+  separate node, still counted (#49).
+- `check --patch` on CRLF files: the patch is read as it is (no line-end change), and an LF patch fits a
+  CRLF file too, so the changed function is found (#51).
+- A header function compiled as C and as C++: `file:line` now gives both copies, and the choices show the
+  clang ID and the language, so each can be asked for (#40).
+- Comparing a function's address (`proc == f`, `if (f)`) no longer counts as taking it (#12). `(*f)(x)` and
+  `(&f)(x)` are direct calls to `f` (#22).
+
 - A file saved while the index was being built is re-indexed next time. Before, it could look unchanged
   forever and answers missed its new callers (#43). Parse caches are rebuilt once after the upgrade.
 - A call that doesn't compile (wrong number or type of arguments) is a call again: its caller shows up in
