@@ -51,6 +51,35 @@
       "type": "object"
     }
   },
+  "check": {
+    "description": "Before you finish an edit, call this with your patch (a unified diff not applied yet), or with no\narguments for your uncommitted edits. It lists what will not build (calls that no longer match a\nchanged signature, uses of a removed field or function), what may change behaviour (callers, users\nof retyped fields and globals), and what AeroTrace could not follow. Each line says how sure it is.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "default": "HEAD",
+          "title": "Base",
+          "type": "string"
+        },
+        "patch": {
+          "default": "",
+          "title": "Patch",
+          "type": "string"
+        },
+        "depth": {
+          "default": 5,
+          "title": "Depth",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 15,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "checkArguments"
+    }
+  },
   "data_users": {
     "description": "Before renaming, removing or retyping a struct field or a global: every function that reads or\nwrites it (with lines), initializers that set it ({.f = x}), code that still uses a removed field,\nglobals of its type that may set it by position, and where its address goes (unknown). For a global,\nalso its users' callers (depth, default 2; fields 0). `name` is Struct::field, global, name@file or\nglobal.field. With `from_function`, only what reads the value that function writes (a field's readers\nare probable: fields are tracked per struct type, not per object). A summary comes first; lists are\nshort by default (about 15) and say how many were left out: pass `limit`, or `show_all=true`.",
     "inputSchema": {

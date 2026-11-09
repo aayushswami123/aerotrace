@@ -1010,7 +1010,7 @@ def check_change(
     except FileNotFoundError as e:
         msg = f"AeroTrace has no index for this repo and could not build one: {e}"
         return empty_contract("no_index", _tool(), msg), ""
-    except Exception as e:  # noqa: BLE001 - any index failure is reported, never a crash or a silent pass
+    except Exception as e:
         return empty_contract("index_error", _tool(), f"The index could not be opened: {e}"), ""
     try:
         return check_loaded(conn, root, change, outliner, depth), note
