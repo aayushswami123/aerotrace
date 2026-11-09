@@ -7,6 +7,14 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace diff [BASE]` and the `diff_impact` MCP tool: what a whole change could break. Compares the
+  working tree (uncommitted and new files included) with a commit, or with where the branch left `main`.
+  `--patch FILE` checks a change that is not applied yet, after making sure it matches the files on disk.
+- Diff impact lists changed functions, functions the diff removed (found by parsing the old version from
+  git) and who still calls them, changed globals and fields with every user, then all affected callers.
+  Prototype and `extern` changes in headers are matched to their definitions. Lines it can't follow
+  (macros, types, files not in the index) are listed, never dropped.
+
 - MCP server (`aerotrace mcp`) with `impact`, `callers`, `callees`, `find` and `index_status` tools.
   It builds the index on the first question and re-indexes changed files before each answer.
 - `aerotrace install --client claude|cursor|codex` adds the server to Claude Code (`.mcp.json`),

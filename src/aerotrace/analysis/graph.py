@@ -9,10 +9,12 @@ from aerotrace.analysis import symbols
 from aerotrace.analysis.symbols import Fn
 
 # From strongest to weakest. A path is as weak as its weakest link.
-CONFIDENCE_ORDER = ("exact", "virtual", "ambiguous", "via_pointer", "data")
+CONFIDENCE_ORDER = ("exact", "calls_removed", "uses_changed", "virtual", "ambiguous", "via_pointer", "data")
 ALL_CALL_CONFIDENCE = ("exact", "virtual", "ambiguous", "via_pointer")
 CONFIDENCE_MEANING = {
     "exact": "a direct call the compiler resolved",
+    "calls_removed": "still calls a function this change removes (it will not build or link)",
+    "uses_changed": "reads or writes a global or field whose declaration changed",
     "virtual": "a virtual call that may land on this override",
     "ambiguous": "more than one function has this name; this is one of them",
     "via_pointer": "a call through a function pointer of the matching type",
@@ -68,28 +70,33 @@ def _neighbours(
     return out
 
 
-def walk(
+def walk_many(
     conn: sqlite3.Connection,
-    start: Fn,
+    starts: list[Fn],
     direction: str,
     depth: int,
     allowed: tuple[str, ...] = ALL_CALL_CONFIDENCE,
-    extra_first_step: dict[str, tuple[str, list[int]]] | None = None,
-) -> Walk:
-    """Breadth-first walk over call links. Each function appears once, at its shortest distance;
-    among equally short paths, the strongest confidence wins.
+    seeds: dict[str, tuple[str, str, list[int]]] | None = None,
+    labels: dict[str, str] | None = None,
+) -> tuple[list[Hit], bool]:
+    """Breadth-first walk over call links from every function in `starts` at once. Each function appears
+    once, at its shortest distance from any start; among equally short paths, the strongest confidence wins.
+    Start functions are never hits.
 
-    `extra_first_step` adds functions at distance 1 with a given confidence (used for data coupling).
+    `seeds` adds functions at distance 1 that are linked some other way: {id: (confidence, via id, lines)}.
+    `labels` names `via` ids that are not functions (for example a changed variable).
+    Returns (hits nearest first, whether more functions exist beyond `depth`).
     """
     rank = CONFIDENCE_ORDER.index
+    start_ids = sorted({f.id for f in starts})
     # id -> (distance, confidence of the best path, the function one step closer, lines of that link)
-    best: dict[str, tuple[int, str, str | None, list[int]]] = {start.id: (0, "exact", None, [])}
-    seeds = sorted(f for f in (extra_first_step or {}) if f != start.id)
-    for fid in seeds:
-        conf, lines = extra_first_step[fid]  # type: ignore[index]
-        best[fid] = (1, conf, start.id, list(lines))
+    best: dict[str, tuple[int, str, str | None, list[int]]] = {i: (0, "exact", None, []) for i in start_ids}
+    seed_ids = sorted(f for f in (seeds or {}) if f not in best)
+    for fid in seed_ids:
+        conf, via, lines = seeds[fid]  # type: ignore[index]
+        best[fid] = (1, conf, via, sorted(set(lines)))
 
-    frontier = [start.id]
+    frontier = start_ids
     reached_depth = False
     for distance in range(1, depth + 1):
         nbrs = _neighbours(conn, frontier, direction, allowed)
@@ -106,7 +113,7 @@ def walk(
                 elif cur[1] == c and cur[2] == a and line not in cur[3]:
                     cur[3].append(line)
         best.update(found)
-        frontier = sorted(set(found) | (set(seeds) if distance == 1 else set()))
+        frontier = sorted(set(found) | (set(seed_ids) if distance == 1 else set()))
         if not frontier:
             break
         reached_depth = distance == depth
@@ -116,16 +123,31 @@ def walk(
         more = _neighbours(conn, frontier, direction, allowed)
         truncated = any(b not in best for links in more.values() for b, _, _ in links)
 
-    fns = symbols.get_many(conn, [i for i in best if i != start.id])
-    names = {start.id: start.qualified_name} | {i: f.qualified_name for i, f in fns.items()}
+    fns = symbols.get_many(conn, list(best))
+    names = {i: f.qualified_name for i, f in fns.items()} | (labels or {})
     hits = [
         Hit(fns[i], d, c, names.get(v) if v else None, sorted(ls))
         for i, (d, c, v, ls) in best.items()
-        if i != start.id and i in fns
+        if d > 0 and i in fns
     ]
     hits.sort(
         key=lambda h: (h.distance, CONFIDENCE_ORDER.index(h.confidence), h.fn.file, h.fn.line_start, h.fn.id)
     )
+    return hits, truncated
+
+
+def walk(
+    conn: sqlite3.Connection,
+    start: Fn,
+    direction: str,
+    depth: int,
+    allowed: tuple[str, ...] = ALL_CALL_CONFIDENCE,
+    extra_first_step: dict[str, tuple[str, list[int]]] | None = None,
+) -> Walk:
+    """Walk from one function. `extra_first_step` adds functions at distance 1 with a given confidence
+    (used for data coupling)."""
+    seeds = {fid: (conf, start.id, lines) for fid, (conf, lines) in (extra_first_step or {}).items()}
+    hits, truncated = walk_many(conn, [start], direction, depth, allowed, seeds)
     return Walk(start, direction, depth, hits, truncated)
 
 
@@ -212,6 +234,12 @@ def blind_spots_for(conn: sqlite3.Connection, target: Fn, callers: Walk) -> list
             )
     if callers.truncated_at_depth:
         notes.append(f"Stopped at depth {callers.depth}; more callers exist further up.")
+    return notes + index_limits(conn)
+
+
+def index_limits(conn: sqlite3.Connection) -> list[str]:
+    """Plain-English limits that apply to every answer from this index."""
+    notes: list[str] = []
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
     if meta.get("flags_source") == "guessed":
         notes.append("Compile flags were guessed (no compile_commands.json), so some code may be missing.")

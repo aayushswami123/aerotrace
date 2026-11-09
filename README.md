@@ -23,7 +23,7 @@ aerotrace install --client codex    # adds it to ~/.codex/config.toml (Codex, ev
 
 Add `--dry-run` to see the change first. Only the `aerotrace` entry is added or replaced; other servers are kept.
 
-The agent gets these tools: `impact`, `callers`, `callees`, `find` and `index_status`. The first question
+The agent gets these tools: `impact`, `diff_impact`, `callers`, `callees`, `find` and `index_status`. The first question
 builds the index. After that, files you edit are re-indexed before each answer.
 
 ## Use it from the terminal
@@ -34,7 +34,15 @@ aerotrace index                # builds .aerotrace/index.db
 aerotrace impact setCommand    # what could break if this function changes
 aerotrace callers dictAdd --depth 2
 aerotrace find src/server.c:4221
+aerotrace diff                 # what your uncommitted edits could break (new files included)
+aerotrace diff main            # everything on this branch, compared with where it left main
+aerotrace diff --patch fix.diff   # a change that is not applied yet
 ```
+
+`diff` maps changed lines to functions, globals and fields, then lists everything upstream of them.
+To see which functions a diff *removed*, it reads the old version of each changed file from git, so a
+deleted function and the code that still calls it are reported. Changes it can't follow (macros, types,
+files outside the index) are listed at the end, never dropped.
 
 For accurate results, give AeroTrace your build's `compile_commands.json`
 (CMake: `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`; Make: run the build under [`bear`](https://github.com/rizsotto/Bear)).
@@ -50,5 +58,7 @@ Every link has a confidence label, and every impact answer ends with its limits.
 | `via_pointer` | A call through a function pointer whose type matches |
 | `ambiguous` | Several functions share this name; this is one of them |
 | `data` | Reads a global or field the changed function writes |
+| `uses_changed` | Reads or writes a global or field whose declaration changed (`diff` only) |
+| `calls_removed` | Still calls a function the change removes; it will not build or link (`diff` only) |
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE).

@@ -591,3 +591,59 @@ def _collect_unit(
     result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
     result["external_calls"] = sorted([u, f, n] for (u, f), n in col.external_calls.items())
     return result
+
+
+# ---------------------------------------------------------------- outline of one file version
+
+
+def function_outline(path: str, content: str, args: list[str], directory: str) -> dict | None:
+    """What one file declares, as `content` gives it (an older version from git, or the file on disk).
+    Returns {"functions": definitions [{usr, name, qualified_name, line_start, line_end}],
+    "declarations": prototypes, same fields, "variables": globals (extern too) and fields
+    [{qualified_name, line}], "errors": count}, or None when libclang could not load it.
+    `path` is the file's absolute path."""
+    old_cwd = os.getcwd()
+    os.chdir(directory if os.path.isdir(directory) else os.path.dirname(path) or ".")
+    try:
+        try:
+            tu = _get_index().parse(
+                path,
+                args=args,
+                unsaved_files=[(path, content)],
+                options=cindex.TranslationUnit.PARSE_INCOMPLETE,  # bodies are parsed: skipping them loses end lines
+            )
+        except cindex.TranslationUnitLoadError:
+            return None
+        target = os.path.realpath(path)
+        out: dict = {"functions": [], "declarations": [], "variables": []}
+
+        def visit(cursor: Cursor) -> None:
+            for c in cursor.get_children():
+                f = c.location.file
+                if f is None or os.path.realpath(f.name) != target:
+                    continue
+                if c.kind in FUNC_KINDS:
+                    out["functions" if c.is_definition() else "declarations"].append(
+                        {
+                            "usr": c.get_usr(),
+                            "name": c.spelling,
+                            "qualified_name": "::".join([*_scope_parts(c), c.spelling]),
+                            "line_start": c.extent.start.line,
+                            "line_end": c.extent.end.line,
+                        }
+                    )
+                elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):
+                    if c.spelling:
+                        names = [*_scope_parts(c), c.spelling]
+                        out["variables"].append({"qualified_name": "::".join(names), "line": c.location.line})
+                elif c.kind in DESCEND_KINDS:
+                    visit(c)
+
+        visit(tu.cursor)
+        for key in ("functions", "declarations"):
+            out[key].sort(key=lambda d: (d["line_start"], d["usr"]))
+        out["variables"].sort(key=lambda d: (d["line"], d["qualified_name"]))
+        out["errors"] = sum(1 for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error)
+        return out
+    finally:
+        os.chdir(old_cwd)

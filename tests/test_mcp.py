@@ -27,7 +27,14 @@ async def test_server_lists_its_tools(repo_factory):
     server = create_server(repo_factory("c_multi"))
     async with Client(server) as client:
         tools = await client.list_tools()
-    assert sorted(t.name for t in tools.tools) == ["callees", "callers", "find", "impact", "index_status"]
+    assert sorted(t.name for t in tools.tools) == [
+        "callees",
+        "callers",
+        "diff_impact",
+        "find",
+        "impact",
+        "index_status",
+    ]
 
 
 @pytest.mark.anyio
@@ -136,3 +143,32 @@ def test_codex_install_respects_codex_home(tmp_path, fixed_command, monkeypatch)
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "ch"))
     p = install.plan("codex", tmp_path, home=tmp_path / "home")
     assert p.path == tmp_path / "ch" / "config.toml"
+
+
+@pytest.mark.anyio
+async def test_diff_impact_sees_uncommitted_edits_and_patches(repo_factory, monkeypatch):
+    import subprocess
+
+    root = repo_factory("c_multi")
+    for k in ("GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE"):
+        monkeypatch.setenv(k, "2026-01-01T00:00:00Z")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    for args in (
+        ["init", "-q"],
+        ["add", "-A"],
+        ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"],
+    ):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+    async with Client(create_server(root)) as client:
+        clean = text_of(await client.call_tool("diff_impact", {}))
+        patch = "--- a/prog_a/util.c\n+++ b/prog_a/util.c\n@@ -4 +4 @@\n-    count++;\n+    count += 5;\n"
+        planned = text_of(await client.call_tool("diff_impact", {"patch": patch}))
+        shared = root / "lib" / "shared.c"
+        shared.write_text(shared.read_text().replace("g_total += x;", "g_total += 2 * x;"))
+        edited = text_of(await client.call_tool("diff_impact", {}))
+        bad = text_of(await client.call_tool("diff_impact", {"base": "--output=/tmp/x"}))
+    assert "0 functions changed" in clean
+    assert "bump  prog_a/util.c:3" in planned and "util_run" in planned
+    assert edited.startswith("(Re-indexed 1 changed file(s): lib/shared.c.)")
+    assert "add  lib/shared.c:5" in edited and "[data] via add" in edited
+    assert bad.startswith("Could not read the change:")

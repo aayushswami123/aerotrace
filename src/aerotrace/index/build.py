@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sqlite3
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
@@ -16,7 +17,13 @@ from aerotrace.frontends.cpp import parse as parse_mod
 from aerotrace.index import store
 from aerotrace.index.merge import merge
 from aerotrace.toolchain import libclang
-from aerotrace.toolchain.compdb import CompileUnit, find_units, system_include_args, unit_language
+from aerotrace.toolchain.compdb import (
+    SOURCE_EXTS,
+    CompileUnit,
+    find_units,
+    system_include_args,
+    unit_language,
+)
 
 PARSER_VERSION = "3"  # bump when parse output changes, so old cache entries are ignored
 
@@ -209,3 +216,41 @@ def build_index(
         f"{report.files_with_errors} of {report.units} files had parse errors"
     )
     return report
+
+
+def fresh_index(
+    root: Path,
+    *,
+    build_dir: Path | None = None,
+    want: list[str] | tuple[str, ...] = (),
+    log: Callable[[str], None] = lambda _msg: None,
+) -> tuple[sqlite3.Connection, str]:
+    """Open the index, building or refreshing it first when files changed. Returns (connection, note),
+    where the note says in one line what was done ("" when nothing was).
+
+    `want` lists repo-relative source files the caller needs in the index (for example files a diff
+    touches). When flags are guessed, a new source file is picked up by re-indexing.
+    """
+    try:
+        conn = store.connect(root)
+    except FileNotFoundError:
+        report = build_index(root, build_dir=build_dir, log=log)
+        return store.connect(
+            root
+        ), f"(Built the index: {report.functions} functions from {report.units} files.)"
+    changed = store.changed_files(conn, root)
+    missing: list[str] = []
+    if want and store.read_meta(conn).get("flags_source") == "guessed":
+        known = store.indexed_paths(conn)
+        missing = sorted(
+            p
+            for p in want
+            if p not in known and Path(p).suffix.lower() in SOURCE_EXTS and (root / p).is_file()
+        )
+    if not changed and not missing:
+        return conn, ""
+    conn.close()
+    build_index(root, build_dir=build_dir, log=log)
+    stale = changed + missing
+    shown = ", ".join(stale[:3]) + (" ..." if len(stale) > 3 else "")
+    return store.connect(root), f"(Re-indexed {len(stale)} changed file(s): {shown}.)"

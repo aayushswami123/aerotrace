@@ -1,0 +1,20 @@
+Diff impact, compared with HEAD (<commit>): 2 C/C++ files, 1 function changed, 1 function removed.
+Changed functions (1):
+  - add  lib/shared.c:5  (3 lines)
+Removed functions (1):
+  - get  (was lib/shared.c:9-11)  still called by main (prog_b/main.c:5)
+May affect 5 other functions (3 exact, 1 calls_removed, 1 via_pointer), nearest first:
+Distance 1 (4):
+  - on_a  lib/table.c:5 via add
+  - on_b  lib/table.c:6 via add
+  - main  prog_a/main.c:5 via add
+  - main  prog_b/main.c:5 [calls_removed] via get (removed)
+Distance 2 (1):
+  - dispatch  lib/table.c:10 [via_pointer] via on_a
+[calls_removed] = still calls a function this change removes (it will not build or link)
+[via_pointer] = a call through a function pointer of the matching type
+Changes AeroTrace could not follow:
+  - include/shared.h: line 3 outside any function.
+Limits of this answer:
+  - Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.
+  - Only one build configuration was analysed; code under other #ifdef settings is not seen.

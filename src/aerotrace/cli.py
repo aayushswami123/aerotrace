@@ -198,6 +198,41 @@ def cmd_impact(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_diff(args: argparse.Namespace) -> int:
+    from aerotrace.analysis import diff, render
+    from aerotrace.index.build import fresh_index
+    from aerotrace.index.history import Outliner
+    from aerotrace.toolchain.git import GitError
+
+    root = find_root(args.root)
+    build_dir = Path(args.build_dir).resolve() if args.build_dir else None
+    outliner = Outliner(root, build_dir)
+    try:
+        if args.patch:
+            text = sys.stdin.read() if args.patch == "-" else Path(args.patch).read_text(encoding="utf-8")
+            mode, base, diffs, old = "patch", None, diff.load_patch(root, text), {}
+        else:
+            mode = "git"
+            diffs, base, old = diff.load_git(root, args.base, outliner)
+    except (GitError, ValueError, OSError) as e:
+        _err(f"error: {e}")
+        return 2
+    try:
+        conn, note = fresh_index(root, build_dir=build_dir, want=diff.wanted(diffs, mode))
+    except FileNotFoundError as e:
+        _err(f"error: {e}")
+        return 2
+    if note:
+        _err(note)
+    res = diff.analyse(conn, root, diffs, mode=mode, base=base, depth=args.depth, old=old, now=outliner.now)
+    print(
+        json.dumps(render.diff_json(res, args.limit), indent=2)
+        if args.json
+        else render.diff_text(res, args.limit)
+    )
+    return 0
+
+
 def cmd_mcp(args: argparse.Namespace) -> int:
     from aerotrace.mcp.server import run
 
@@ -271,6 +306,26 @@ def build_parser() -> argparse.ArgumentParser:
     query("callers", "who calls this function, directly or through others", cmd_walk)
     query("callees", "what this function calls, directly or through others", cmd_walk)
     query("impact", "what could break if this function changes (callers + data readers)", cmd_impact)
+
+    df = with_root(
+        sub.add_parser(
+            "diff",
+            help="what a change could break: the working tree vs a commit or branch, or a patch not yet applied",
+        )
+    )
+    df.add_argument(
+        "base",
+        nargs="?",
+        default="HEAD",
+        help="commit or branch to compare the working tree with (default HEAD). For a branch such as "
+        "`main`, AeroTrace compares with the point where the current branch left it.",
+    )
+    df.add_argument("--patch", metavar="FILE", help="a unified diff that is not applied yet ('-' = stdin)")
+    df.add_argument("--build-dir", help="folder holding compile_commands.json")
+    df.add_argument("--depth", type=int, default=5, help="how many call steps to follow (default 5)")
+    df.add_argument("--limit", type=int, default=50, help="most results per list (default 50)")
+    df.add_argument("--json", action="store_true")
+    df.set_defaults(func=cmd_diff)
 
     m = with_root(sub.add_parser("mcp", help="run the MCP server on stdin/stdout (agents start this)"))
     m.add_argument("--build-dir", help="folder holding compile_commands.json")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 
+from aerotrace.analysis.diff import DiffImpact, ranges
 from aerotrace.analysis.graph import CONFIDENCE_MEANING, CONFIDENCE_ORDER, Hit, Impact, Walk
 from aerotrace.analysis.symbols import Fn
 
@@ -14,7 +15,7 @@ def _hit_line(h: Hit, show_via: bool) -> str:
     return f"  - {h.fn.qualified_name}  {h.fn.where}{tag}{via}"
 
 
-def _levels(hits: list[Hit], limit: int) -> tuple[list[str], list[Hit]]:
+def _levels(hits: list[Hit], limit: int, via_always: bool = False) -> tuple[list[str], list[Hit]]:
     """Lines grouped by distance, at most `limit` functions, and the hits that were shown."""
     out: list[str] = []
     shown_hits: list[Hit] = []
@@ -28,7 +29,7 @@ def _levels(hits: list[Hit], limit: int) -> tuple[list[str], list[Hit]]:
             break
         out.append(f"Distance {d} ({len(group)}):")
         for h in group[: max(0, limit - shown)]:
-            out.append(_hit_line(h, show_via=d > 1))
+            out.append(_hit_line(h, show_via=via_always or d > 1))
             shown_hits.append(h)
             shown += 1
     if len(hits) > shown:
@@ -128,4 +129,155 @@ def impact_json(imp: Impact, limit: int = 50) -> dict:
         "affected": [hit_json(h) for h in imp.callers.hits[:limit]],
         "omitted": max(0, len(imp.callers.hits) - limit),
         "blind_spots": imp.blind_spots,
+    }
+
+
+# ---------------------------------------------------------------- diff impact
+
+
+def _n(n: int, word: str, plural: str | None = None) -> str:
+    return f"{n} {word if n == 1 else (plural or word + 's')}"
+
+
+def _cap(items: list[str], limit: int) -> list[str]:
+    return items[:limit] + ([f"  ... and {len(items) - limit} more."] if len(items) > limit else [])
+
+
+def _lines_phrase(lines: list[int]) -> str:
+    return f"{'line' if len(lines) == 1 else 'lines'} {ranges(lines)}"
+
+
+def diff_text(d: DiffImpact, limit: int = 50) -> str:
+    where = f"compared with {d.base}" if d.mode == "git" else "a patch that is not applied yet"
+    counts = [_n(len(d.changed), "function") + " changed"]
+    if d.removed:
+        counts.append(_n(len(d.removed), "function") + " removed")
+    if d.changed_vars:
+        counts.append(_n(len(d.changed_vars), "declaration") + " changed")
+    lines = [f"Diff impact, {where}: {_n(d.files, 'C/C++ file')}, {', '.join(counts)}."]
+    if d.ignored:
+        lines.append(
+            f"({_n(d.ignored, 'other file')} in the diff {'is' if d.ignored == 1 else 'are'} not C or C++.)"
+        )
+    if d.changed:
+        lines.append(f"Changed functions ({len(d.changed)}):")
+        lines += _cap(
+            [
+                f"  - {c.fn.qualified_name}  {c.fn.where}  ("
+                + ({"new": "new", "removed": "removed by the patch"}.get(c.state) or _n(c.lines, "line"))
+                + ")"
+                for c in d.changed
+            ],
+            limit,
+        )
+    if d.removed:
+        lines.append(f"Removed functions ({len(d.removed)}):")
+        rem = []
+        for r in d.removed:
+            still = (
+                "still called by "
+                + ", ".join(f"{c.qualified_name} ({c.where})" for c in r.still_called_by[:5])
+                + (f" and {len(r.still_called_by) - 5} more" if len(r.still_called_by) > 5 else "")
+                if r.still_called_by
+                else "no remaining calls found"
+            )
+            rem.append(f"  - {r.name}  (was {r.file}:{r.line_start}-{r.line_end})  {still}")
+        lines += _cap(rem, limit)
+    if d.changed_vars:
+        lines.append(f"Changed globals and fields ({len(d.changed_vars)}):")
+        lines += _cap(
+            [
+                f"  - {v.name} ({v.kind})  {v.file}:{v.line}  used by {_n(v.users, 'function')}"
+                for v in d.changed_vars
+            ],
+            limit,
+        )
+    hits = d.affected
+    shown: list[Hit] = []
+    if hits:
+        by = Counter(h.confidence for h in hits)
+        parts = ", ".join(f"{by[c]} {c}" for c in CONFIDENCE_ORDER if by[c])
+        lines.append(f"May affect {_n(len(hits), 'other function')} ({parts}), nearest first:")
+        level_lines, shown = _levels(hits, limit, via_always=True)
+        lines += level_lines
+    elif d.changed or d.changed_vars or d.removed:
+        lines.append("No other function in the index calls or reads what changed.")
+    lines += _legend(shown)
+
+    cant: list[str] = []
+    for o in d.outside:
+        bits = []
+        if o.lines:
+            bits.append(f"{_lines_phrase(o.lines)} outside any function")
+        if o.other_side:
+            when = "removed" if d.mode == "git" else "added"
+            side = "old" if d.mode == "git" else "new"
+            bits.append(f"{when} {_lines_phrase(o.other_side)} ({side} numbering) outside any function")
+        cant.append(f"  - {o.file}: {'; '.join(bits)}.")
+    cant += [f"  - {f} was deleted." for f in d.deleted]
+    cant += [
+        f"  - {f}: could not read its old version; removed functions there are not listed."
+        for f in d.unreadable
+    ]
+    cant += [
+        f"  - {f} is new in the patch. It is analysed once it exists and is indexed." for f in d.new_files
+    ]
+    cant += [
+        f"  - {f}: the patch does not match the file on disk, so it was skipped. Make the patch against the "
+        "current file."
+        for f in d.mismatched
+    ]
+    cant += [
+        f"  - {f} is not in the index (not in compile_commands.json, excluded, or a header no indexed file "
+        "includes)."
+        for f in d.not_indexed
+    ]
+    if cant:
+        lines.append("Changes AeroTrace could not follow:")
+        lines += _cap(cant, limit)
+    if d.blind_spots:
+        lines.append("Limits of this answer:")
+        lines += [f"  - {n}" for n in d.blind_spots]
+    return "\n".join(lines)
+
+
+def diff_json(d: DiffImpact, limit: int = 50) -> dict:
+    by = Counter(h.confidence for h in d.affected)
+    return {
+        "mode": d.mode,
+        "base": d.base,
+        "depth": d.depth,
+        "files": d.files,
+        "ignored_files": d.ignored,
+        "changed_functions": [
+            {**c.fn.brief(), "changed_lines": c.lines, "state": c.state} for c in d.changed[:limit]
+        ],
+        "changed_functions_omitted": max(0, len(d.changed) - limit),
+        "removed_functions": [
+            {
+                "name": r.name,
+                "file": r.file,
+                "old_lines": [r.line_start, r.line_end],
+                "still_called_by": [c.brief() for c in r.still_called_by],
+            }
+            for r in d.removed[:limit]
+        ],
+        "changed_declarations": [
+            {"name": v.name, "kind": v.kind, "file": v.file, "line": v.line, "users": v.users}
+            for v in d.changed_vars[:limit]
+        ],
+        "total_affected": len(d.affected),
+        "by_confidence": {c: by[c] for c in CONFIDENCE_ORDER if by[c]},
+        "truncated_at_depth": d.truncated,
+        "affected": [hit_json(h) for h in d.affected[:limit]],
+        "omitted": max(0, len(d.affected) - limit),
+        "outside_functions": [
+            {"file": o.file, "lines": o.lines, "other_side_lines": o.other_side} for o in d.outside
+        ],
+        "deleted_files": d.deleted,
+        "unreadable_old_versions": d.unreadable,
+        "new_files": d.new_files,
+        "mismatched_files": d.mismatched,
+        "not_indexed": d.not_indexed,
+        "blind_spots": d.blind_spots,
     }
