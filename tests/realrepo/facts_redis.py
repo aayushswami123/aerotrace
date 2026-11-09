@@ -201,8 +201,6 @@ FACTS = [
             Line("src/blocked.c", 308, "if (c->cmd && c->cmd->proc == sflushCommand)"),
         ),
         must_not=(Fn("sflushCommand", "src/cluster.c"),),
-        known_bug="#12: Comparing a function's address (== f) is treated as taking its address, so pointer calls "
-        "of the same type are linked to it.",
     ),
     Fact(
         id="redis-dispatch-not-other-pointer-types",
