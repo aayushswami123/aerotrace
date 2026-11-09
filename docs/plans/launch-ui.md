@@ -1,527 +1,496 @@
 # Plan: launch UI (work item 9)
 
-Status: plan, for review. No code yet.
+Status: built (revised after review; see section 9).
 Branch: `feat/launch-ui` (from `origin/launch-candidate`).
 
 What this item builds:
 
-1. A terminal renderer for `aerotrace check` (the command itself comes in item 5 Part C).
-2. `aerotrace check --html <out.html>`: one self-contained, offline HTML report.
-3. `docs/launch/README.draft.md` (README.md itself is not touched).
+1. A terminal renderer for `aerotrace check`. The command itself, and the analysis that fills the JSON,
+   come in item 5 Part C. This PR only adds functions Part C calls.
+2. An HTML renderer for `aerotrace check --html <out.html>`: one self-contained, offline HTML file.
+3. `docs/launch/README.draft.md`. README.md itself is not touched.
 4. Later, not now: screenshots of a real Redis change in `docs/launch/screenshots/`.
 
-Tooling note: no "Open UI" MCP tools are available in this session. The HTML, CSS and JS are written by
-hand, with no framework, no build step and no new runtime dependency.
+Tooling note: no "Open UI" MCP tools were available. The HTML, CSS and JS are hand-written: no framework,
+no build step, no new runtime dependency.
 
-## 0. Rules this plan must keep
+Code:
+
+| file                                   | what it does                                                       |
+|----------------------------------------|--------------------------------------------------------------------|
+| `src/aerotrace/ui/schema.py`           | the versioned contract, `check(data)`, `node_word()`               |
+| `src/aerotrace/ui/terminal.py`         | `render(data, color, unicode, limit)`, `style_for(stream, env)`    |
+| `src/aerotrace/ui/html.py`             | `render(data) -> str`, `write_html(data, out, root) -> message`    |
+| `src/aerotrace/ui/assets/report.*`     | the HTML skeleton, CSS and JS that get inlined                     |
+| `tests/ui/samples.py`                  | sample data, hostile data, and `big(n)` graphs for size and speed  |
+| `tests/fixtures/ui/check-v1-sample.json` | the contract file Part C tests its output against                |
+
+## 0. Rules this keeps
 
 - **No analysis logic in the renderer.** It never decides what breaks, what is affected, or how sure a
-  link is. Part C puts every status, certainty, reason and count into the JSON. The renderer formats,
-  caps lists for the terminal, and lays out the graph. That is all.
-- **Deterministic.** Same JSON in, byte-identical text and HTML out. No timestamps, no machine paths, no
+  link is. Part C puts every status, certainty, reason and count into the JSON. The renderer checks the
+  shape, picks wording from counts, caps terminal lists, and lays out the graph.
+- **Deterministic.** Same JSON in, same bytes out (text and HTML). No timestamps, no machine paths, no
   random numbers, no hash-order iteration.
-- **Fully local.** The HTML makes no network request of any kind. A Content-Security-Policy in the file
-  enforces this in the browser too (section 3.7).
-- **Never guess silently / a wrong "safe" is the worst bug.** Blind spots are always shown, also when
-  nothing is affected. Grey nodes are labelled "no effect found", never "safe" (see risk R2).
-- **Product rule 7** in CLAUDE.md says "dashboards or web UI" are out of scope. A static report file the
-  user asks for with a flag is not a server or a dashboard, but the owner should confirm (risk R1).
+- **Fully local.** The HTML makes no network request. A Content-Security-Policy with sha256 hashes stops
+  the browser from loading or running anything else, even if there were a bug.
+- **A wrong "safe" is the worst bug.** "✅" is only shown when nothing breaks, nothing is affected or
+  unknown, and no part of the change was skipped. Grey nodes say "NO EFFECT FOUND", never "safe".
+  `check()` refuses data whose counts are more hopeful than its lists.
+- **Product rule 7** (no web UI) has an exception for this: the owner asked for `--html` (a static,
+  offline file). The coordinator will ask the owner to note it; CLAUDE.md is not changed here.
 
 ## 1. Input: the `aerotrace-check` JSON, version 1
 
-Part C produces this; both renderers read it. `aerotrace check --json` should print exactly this object,
-so agents and the HTML see the same facts. A sample file lives at
-`tests/fixtures/ui/check-v1-sample.json` and is the contract between this item and Part C.
+Part C produces this; both renderers read it. `aerotrace check --json` should print exactly this object.
+The full example is `tests/fixtures/ui/check-v1-sample.json`.
 
 ```jsonc
 {
-  "format": "aerotrace-check",       // fixed string
-  "version": 1,                       // bump on any breaking change; renderer refuses a newer major
+  "format": "aerotrace-check",       // fixed
+  "version": 1,                       // renderers refuse other versions, with a clear message
   "tool": "aerotrace 0.1.0",          // tool version, no build date
   "status": "ok",                     // "ok" | "no_index" | "index_error" | "nothing_to_check"
-  "message": null,                    // plain-English text when status != "ok"
+  "message": null,                    // required for no_index and index_error: what to do next
 
-  "change": {
-    "mode": "git",                    // "git" | "patch"
-    "base": "HEAD",                   // what we compared with (git mode), else null
-    "files": 2,                       // C/C++ files the change touches
-    "other_files": 1,                 // non-C/C++ files in the diff (ignored)
-    "changed_functions": 2,
-    "removed_functions": 1,
-    "changed_declarations": 1
+  "change": {                         // may be null for no_index / index_error
+    "mode": "git", "base": "HEAD",    // "git" | "patch"; base is null in patch mode
+    "files": 2, "other_files": 1,     // C/C++ files touched; other files in the diff (ignored)
+    "changed_functions": 1, "new_functions": 0, "removed_functions": 1, "changed_declarations": 1,
+    "not_followed": {                 // straight from DiffImpact; parts of the change AeroTrace skipped
+      "outside": [{"file": "src/t_string.c", "lines": [40, 41], "other_side_lines": []}],
+      "not_indexed": [], "deleted": [], "mismatched": [], "unreadable": [], "new_files": []
+    }
   },
 
-  "summary": {                        // the headline numbers; renderer prints them, never recomputes
-    "breaks": 3,                      // things outside the change that will not build/link/behave
-    "affected": 9,                    // probable impact
-    "unknown": 2,                     // impact could not be followed
-    "no_effect": 0                    // context nodes checked and found unaffected (grey)
+  "summary": {                        // headline numbers; the renderer prints them, never recomputes
+    "breaks_exact": 3,                // will not build or link, link exact
+    "breaks_probable": 1,             // will not build or link, link probable
+    "affected_direct": 2,             // affected, distance 1
+    "affected_further": 4,            // affected, distance > 1
+    "unknown": 2,
+    "no_effect": 1,
+    "not_followed": 2                 // entries in change.not_followed + blind spots with scope "change"
   },
 
-  "nodes": [                          // every function/declaration in the picture, already sorted
+  "nodes": [                          // sorted by (status, certainty, distance, file, line, id)
     {
-      "id": "c:@F@setrangeCommand",   // stable index id (USR-based), unique in this file
-      "name": "setrangeCommand",      // qualified name, for display
-      "kind": "function",             // "function" | "field" | "global" | "static_local"
-      "file": "src/t_string.c",       // repo-relative, forward slashes
-      "line": 612,
-      "status": "breaks",             // "changed" | "removed" | "breaks" | "affected" | "unknown" | "no_effect"
-      "certainty": "exact",           // "exact" | "probable" | "unknown"  (analysis/certainty.py levels)
-      "link": "calls_removed",        // raw label from graph.CONFIDENCE_ORDER, or null for changed nodes
-      "why": "still calls checkStringLength, which this change removes",
-      "distance": 1,                  // call/data steps from the nearest changed node; 0 for changed
-      "via": "c:@F@checkStringLength",// id one step closer to the change, or null
-      "lines": [619]                  // lines of the link inside this node's file (may be empty)
+      "id": "fn:src/t_string.c:getCommand",       // the index's function id, or a variable id
+      "name": "getCommand", "kind": "function",   // "function" | "field" | "global" | "static_local"
+      "file": "src/t_string.c", "line": 398,
+      "status": "breaks",            // "changed" | "new" | "removed" | "breaks" | "affected" | "unknown" | "no_effect"
+      "certainty": "exact",          // "exact" | "probable" | "unknown"
+      "link": "exact",               // raw label from graph.CONFIDENCE_ORDER, or null for changed nodes
+      "why": "passes 1 argument; getGenericCommand now takes 2",
+      "distance": 1,                 // 0 for changed/new/removed, and only for them
+      "via": "fn:src/t_string.c:getGenericCommand",  // id one step closer to the change, or null
+      "via_name": "getGenericCommand",               // display name of that step (kept when via is null)
+      "lines": [399]                 // lines of the link in this node's file
     }
   ],
 
-  "edges": [                          // sorted by (from, to, kind)
-    { "from": "c:@F@setrangeCommand", "to": "c:@F@checkStringLength",
-      "kind": "calls", "certainty": "exact" }
-                                      // kind: "calls" | "reads" | "writes"; from -> to in code direction
+  "edges": [                          // sorted; from -> to in code direction (caller -> callee, fn -> data)
+    {"from": "fn:src/t_string.c:getCommand", "to": "fn:src/t_string.c:getGenericCommand",
+     "kind": "calls", "certainty": "exact"}      // kind: "calls" | "reads" | "writes"
   ],
 
-  "sections": {                       // what the terminal lists, in this order; values are node ids
-    "functions": ["c:@F@setrangeCommand", "..."],
-    "data": ["c:@S@client@FI@bufpos", "..."],
-    "tests_to_run": [
-      { "name": "tests/unit/type/string.tcl", "covers": ["c:@F@setrangeCommand"], "why": "calls setrangeCommand" }
-    ],
-    "untested_changes": [ { "node": "c:@F@getGenericCommand", "why": "no test reaches it" } ],
-    "blind_spots": [ { "text": "3 calls through function pointers in src/t_string.c were matched by type only.",
-                       "node": null } ]
+  "sections": {                       // what the lists show, in order; values are node ids
+    "functions": ["..."], "data": ["..."],
+    "tests_to_run": [{"name": "tests/unit/type/string.tcl", "covers": ["<id>"], "why": "..."}],  // or null
+    "untested_changes": [{"node": "<id>", "why": "no test reaches it"}],                         // or null
+    "blind_spots": [{"text": "...", "scope": "change", "node": null}]   // scope: "change" | "index"
   },
 
-  "omitted": { "nodes": 0 },          // Part C caps the graph at 5,000 nodes and says how many it left out
+  "omitted": {"nodes": 0},            // Part C caps the graph at 5,000 nodes and says how many it dropped
 
-  "proof": { "files": 117, "functions": 5064, "exact": 3, "probable": 9, "unknown": 2 }
+  "proof": {"index_files": 117, "index_functions": 5064, "depth": 5, "stopped_early": false}
 }
 ```
 
-Contract details:
+### 1.1 Two questions, two fields
 
-- **Order is the producer's job.** Part C sorts `nodes` by (status rank, distance, file, line, id) and
-  each section the same way. The renderer keeps the given order. It sorts nothing by itself except
-  inside the graph layout (section 3.3), where the order is fixed by the layout rule.
-- **Sections refer to node ids**, so a fact is written once. Every id in `sections`, `edges` and `via`
-  must exist in `nodes`; the renderer checks this and stops with a clear error if not.
-- **Counts are explicit.** Lists may be capped by Part C, so the renderer never counts list lengths to
-  build a headline. `summary` and `proof` are the only source of the numbers.
-- **Tests sections are optional.** If Part C has no test mapping yet, it sends `"tests_to_run": null`
-  and `"untested_changes": null`, and the terminal prints "Tests: not known yet (no test map in the
-  index)." It never prints an empty "Tests to run (0)", which would look like "no tests needed".
-- Validation lives in `src/aerotrace/ui/schema.py` (TypedDicts plus a `check(data)` that only checks
-  shape, version and ids; no analysis).
+- `certainty` answers **"is the link real?"**: `exact` = the compiler resolved every step from this node to
+  the change; `probable` = at least one step is a function pointer, virtual call or same-name match;
+  `unknown` = the path leaves code AeroTrace can follow. It comes from `analysis/certainty.py`.
+- `status` answers **"what does the change do to it?"**: `breaks` = it will not build or link (and nothing
+  else, not "behaves differently"); `affected` = it uses changed code or data, so its behaviour may
+  change; `unknown` = the effect could not be followed; `no_effect` = checked and no effect found
+  (orientation only, for example a callee of a changed function); `changed` / `new` / `removed` = part
+  of the change.
+- `link` keeps the raw label (`exact`, `calls_removed`, `uses_changed`, `via_pointer`, ...) for the details
+  pane.
+
+### 1.2 Rules for Part C (checked by `schema.check`)
+
+- **Only Part C sets `breaks`.** Today's sources: `calls_removed` (matched by bare name in
+  `diff.py` `_seeds` / `_still_calling`) and `signature.Site.broken`. Either can be `probable` (a same-name
+  match), so a break is `exact` or `probable`, **never `unknown`** (rejected).
+- `status: "unknown"` and `certainty: "unknown"` always go together (rejected otherwise).
+- Changed, new and removed nodes have distance 0, and only they do.
+- **Ids.** Node ids are the index ids. A removed function uses the key `removed:{file}:{line}:{name}`
+  from `diff.py`. `Hit.via` is a qualified name, not an id: Part C maps it to an id. If a name maps to
+  more than one id, Part C sets `via` to null and keeps `via_name`. Under the 5,000-node cap, edges and
+  `via` pointing at dropped nodes are removed (`via_name` stays). Every id in `via`, `edges` and
+  `sections` must exist, or `check` stops.
+- **Counts are explicit** and can't be more hopeful than the lists: for each status, `summary` must be
+  at least what `nodes` shows. If `change.not_followed` lists anything, or a blind spot has scope
+  `change`, then `summary.not_followed` must be > 0 ("a wrong all-clear").
+- Blind spots have a `scope`: `change` ones (about this diff) block the all-clear; `index` ones (global
+  limits like "macros are not followed") are always shown but don't block it forever.
+- Tests sections may be `null` when there is no test map yet. Then the output says "Tests: not known yet",
+  never "Tests to run (0)".
+- Part C should add its own test: its output for a fixture passes `ui.schema.check` and renders.
 
 ## 2. Terminal output
 
-Code: `src/aerotrace/ui/terminal.py`, one pure function
-`render(data, *, color: bool, unicode: bool, limit: int = 8) -> str`, and
-`style_for(stream, env) -> (color, unicode)` that picks the mode:
+`render(data, *, color=False, unicode=True, limit=8)` is pure. `style_for(stream, env)` picks the mode:
 
 | situation                                  | colour | icons   |
 |--------------------------------------------|--------|---------|
-| TTY, UTF-8, no NO_COLOR, TERM != dumb       | yes    | Unicode |
+| TTY, UTF-8                                 | yes    | Unicode |
 | not a TTY (pipe, file, CI log), UTF-8      | no     | Unicode |
-| `NO_COLOR` set to any non-empty value      | no     | ASCII   |
-| stream encoding is not UTF-8               | no     | ASCII   |
-| TERM=dumb                                  | no     | ASCII   |
+| `NO_COLOR` set and not empty               | no     | ASCII   |
+| stream encoding is not UTF-8               | (TTY)  | ASCII   |
+| `TERM=dumb`                                | no     | ASCII   |
 
-Icon table (every icon always sits next to a text word, so meaning never depends on colour or glyph):
+Icons, always next to a word:
 
-| meaning         | Unicode | ASCII  | word        | colour (TTY only)    |
-|-----------------|---------|--------|-------------|----------------------|
-| headline, risk  | ⚠️      | `[!]`  | -           | bold                 |
-| headline, clear | ✅      | `[ok]` | -           | bold                 |
-| breaks          | ✖       | `[x]`  | `BREAKS`    | bold red (SGR 1;31)  |
-| affected        | ▲       | `[~]`  | `AFFECTED`  | bold yellow (1;33)   |
-| unknown         | ?       | `[?]`  | `UNKNOWN`   | bold (no hue)        |
-| no effect       | ·       | `[-]`  | `NO EFFECT` | none                 |
-| no test         | ○       | `[ ]`  | `NO TEST`   | none                 |
+| meaning         | Unicode | ASCII  | word              | colour (TTY only)   |
+|-----------------|---------|--------|-------------------|---------------------|
+| headline, risk  | ⚠️      | `[!]`  | -                 | bold                |
+| headline, clear | ✅      | `[ok]` | -                 | bold                |
+| headline, info  | ℹ️      | `[i]`  | -                 | bold                |
+| breaks          | ✖       | `[x]`  | BREAKS / MAY BREAK| bold red (1;31)     |
+| affected        | ▲       | `[~]`  | AFFECTED          | bold yellow (1;33)  |
+| unknown         | ?       | `[?]`  | UNKNOWN           | bold                |
+| no effect       | ·       | `[-]`  | NO EFFECT FOUND   | none                |
+| no test         | ○       | `[ ]`  | NO TEST           | none                |
 
-Light and dark terminals: only SGR 1 (bold), 31 and 33 are used, only on the icon and the status word.
-No dim (SGR 2), no grey, no background colours, no white or black foreground. Reasons, names and paths
-stay in the terminal's default colour. The renderer does not wrap lines (keeps output grep-able and
-deterministic); each item is two lines so narrow terminals still read well. Numbers use `1,234` style,
-fixed (not locale-dependent).
+Only bold, red and yellow, only on the icon and the word (works on light and dark terminals). No dim,
+grey or background colours. Lines are not wrapped. Data strings have control characters replaced with
+`?`, so a name can't send escape codes. Numbers use `1,234`.
 
-The mock-ups below are word for word what the renderer prints for `tests/fixtures/ui/*.json`. The names
-are Redis-flavoured but illustrative; they are not tool output and not golden facts.
+### 2.1 Headline (from counts only)
 
-### 2.1 Normal (UTF-8, colour on a TTY; same text without escapes when piped)
+| summary                                         | first line                                                                       |
+|-------------------------------------------------|----------------------------------------------------------------------------------|
+| breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch.`                            |
+| only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link.`                            |
+| affected > 0, no breaks                         | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
+| only unknown > 0                                | `⚠️  N things this change reaches are unknown: AeroTrace could not follow them. Check by hand.` |
+| only not_followed > 0                           | `ℹ️  Nothing found that this change can break, but N parts of the change could not be followed.` |
+| everything 0                                    | `✅ Nothing found that this change can break, in the code AeroTrace can see.`     |
 
-```text
-⚠️  This change can break 3 things you didn't touch.
-    9 more may be affected and 2 could not be followed.
-    You changed 2 functions, removed 1 function and changed 1 declaration in 2 files (compared with HEAD).
+The second line lists the other non-zero counts, direct counts first ("1 more may not build or link, 6
+may be affected (2 direct, 4 further up), 2 are unknown and 2 parts of the change could not be
+followed."). The proof line at the end says only what is true about the run:
+`index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)`.
 
-Functions (10)
-  ✖ BREAKS     setrangeCommand  src/t_string.c:612
-               still calls checkStringLength, which this change removes. Sure: exact.
-  ✖ BREAKS     appendCommand  src/t_string.c:688
-               still calls checkStringLength, which this change removes. Sure: exact.
-  ✖ BREAKS     getCommand  src/t_string.c:398
-               passes 1 argument; getGenericCommand now takes 2. Sure: exact.
-  ▲ AFFECTED   getexCommand  src/t_string.c:421
-               calls getGenericCommand, 2 steps away via getCommand. Sure: probable (same name in 2 files).
-  ▲ AFFECTED   getdelCommand  src/t_string.c:470
-               calls getGenericCommand through a function pointer of the same type. Sure: probable.
-  ▲ AFFECTED   lcsCommand  src/t_string.c:890
-               calls getGenericCommand through a function pointer of the same type. Sure: probable.
-  ▲ AFFECTED   call  src/server.c:3780
-               runs every command through c->cmd->proc, which may be getCommand. Sure: probable.
-  ▲ AFFECTED   processCommand  src/server.c:4221
-               3 steps away via call. Sure: probable.
-  ... and 2 more (1 AFFECTED, 1 UNKNOWN). See all: aerotrace check --limit 20, or --html report.html
+### 2.2 Mock-ups (these are the goldens in `tests/golden/ui/`)
 
-Data (4)
-  ▲ AFFECTED   client.bufpos (field)  src/server.h:1201
-               its type changed; _addReplyToBuffer reads it. Sure: probable.
-  ▲ AFFECTED   client.buf (field)  src/server.h:1200
-               written next to bufpos in _addReplyToBuffer. Sure: probable.
-  ▲ AFFECTED   server.stat_net_output_bytes (global)  src/server.h:1890
-               written by _addReplyToBuffer, read by 4 functions. Sure: probable.
-  ? UNKNOWN    client.reply (field)  src/server.h:1205
-               passed to listAddNodeTail as void *; what happens next is not known. Sure: unknown.
+Names are Redis-flavoured but made up: display test data, not facts about Redis.
 
-Tests to run (2)
-  tests/unit/type/string.tcl      covers setrangeCommand, appendCommand, getCommand
-  tests/unit/type/incr.tcl        covers getCommand
-
-Untested changes (1)
-  ○ NO TEST    getGenericCommand  src/t_string.c:380
-               no test reaches it.
-
-Blind spots (2)
-  ? 3 calls through function pointers in src/t_string.c were matched by type only.
-  ? src/t_string.c: lines 40-44 are outside any function (a macro); AeroTrace cannot follow macro uses.
-
-checked 117 files, 5,064 functions; 3 exact, 9 probable, 2 unknown
-```
-
-### 2.2 NO_COLOR=1 (also: non-UTF-8 stream, TERM=dumb)
-
-Same words, ASCII icons, no escape codes. Only the first column changes.
+Normal, NO_COLOR (`sample.nocolor.txt`; the Unicode version `sample.txt` differs only in the icons):
 
 ```text
 [!] This change can break 3 things you didn't touch.
-    9 more may be affected and 2 could not be followed.
-    You changed 2 functions, removed 1 function and changed 1 declaration in 2 files (compared with HEAD).
+    1 more may not build or link, 6 may be affected (2 direct, 4 further up), 2 are unknown and 2 parts of the change could not be followed.
+    You changed 1 function, removed 1 function and changed 1 declaration in 2 C/C++ files (compared with HEAD).
+    (1 other file in the diff is not C or C++.)
 
-Functions (10)
-  [x] BREAKS     setrangeCommand  src/t_string.c:612
-                 still calls checkStringLength, which this change removes. Sure: exact.
-  [x] BREAKS     appendCommand  src/t_string.c:688
-                 still calls checkStringLength, which this change removes. Sure: exact.
+Functions (11)
   [x] BREAKS     getCommand  src/t_string.c:398
-                 passes 1 argument; getGenericCommand now takes 2. Sure: exact.
-  [~] AFFECTED   getexCommand  src/t_string.c:421
-                 calls getGenericCommand, 2 steps away via getCommand. Sure: probable (same name in 2 files).
+                 passes 1 argument; getGenericCommand now takes 2. Link: exact.
+  [x] BREAKS     setrangeCommand  src/t_string.c:612
+                 still calls checkStringLength, which this change removes. Link: exact.
+  [x] BREAKS     appendCommand  src/t_string.c:688
+                 still calls checkStringLength, which this change removes. Link: exact.
+  [x] MAY BREAK  getexCommand  src/t_string.c:421
+                 calls a getGenericCommand (2 functions have that name); if it is this one, it passes 1 argument and it now takes 2. Link: probable.
+  [~] AFFECTED   _addReplyToBuffer  src/networking.c:420
+                 reads and writes client.bufpos, whose declaration changed. Link: exact.
+  [~] AFFECTED   _addReplyProtoToList  src/networking.c:460
+                 calls _addReplyToBuffer. Link: exact.
   [~] AFFECTED   getdelCommand  src/t_string.c:470
-                 calls getGenericCommand through a function pointer of the same type. Sure: probable.
-  [~] AFFECTED   lcsCommand  src/t_string.c:890
-                 calls getGenericCommand through a function pointer of the same type. Sure: probable.
+                 calls a function pointer of the same type as getGenericCommand. Link: probable.
   [~] AFFECTED   call  src/server.c:3780
-                 runs every command through c->cmd->proc, which may be getCommand. Sure: probable.
-  [~] AFFECTED   processCommand  src/server.c:4221
-                 3 steps away via call. Sure: probable.
-  ... and 2 more (1 AFFECTED, 1 UNKNOWN). See all: aerotrace check --limit 20, or --html report.html
+                 calls getCommand through c->cmd->proc, a function pointer. Link: probable.
+  ... and 3 more (1 AFFECTED, 1 NO EFFECT FOUND, 1 UNKNOWN). Raise --limit or use --html to see all.
 
-Data (4)
-  [~] AFFECTED   client.bufpos (field)  src/server.h:1201
-                 its type changed; _addReplyToBuffer reads it. Sure: probable.
-  [~] AFFECTED   client.buf (field)  src/server.h:1200
-                 written next to bufpos in _addReplyToBuffer. Sure: probable.
+Data (2)
   [~] AFFECTED   server.stat_net_output_bytes (global)  src/server.h:1890
-                 written by _addReplyToBuffer, read by 4 functions. Sure: probable.
+                 _addReplyToBuffer writes it; 4 functions read it. Link: probable.
   [?] UNKNOWN    client.reply (field)  src/server.h:1205
-                 passed to listAddNodeTail as void *; what happens next is not known. Sure: unknown.
+                 _addReplyToBuffer passes it to listAddNodeTail as void *; what happens next is not known. Link: unknown.
+
+Changes AeroTrace could not follow (1)
+  [?] src/t_string.c: lines 40-44 outside any function.
 
 Tests to run (2)
-  tests/unit/type/string.tcl      covers setrangeCommand, appendCommand, getCommand
-  tests/unit/type/incr.tcl        covers getCommand
+  tests/unit/type/incr.tcl    covers getCommand
+  tests/unit/type/string.tcl  covers appendCommand, getCommand, setrangeCommand
 
 Untested changes (1)
   [ ] NO TEST    getGenericCommand  src/t_string.c:380
-                 no test reaches it.
+                 no test reaches it
 
-Blind spots (2)
+Blind spots in this change (1)
   [?] 3 calls through function pointers in src/t_string.c were matched by type only.
-  [?] src/t_string.c: lines 40-44 are outside any function (a macro); AeroTrace cannot follow macro uses.
 
-checked 117 files, 5,064 functions; 3 exact, 9 probable, 2 unknown
+Limits of the index (1)
+  [?] Macro uses are not followed anywhere in the index.
+
+Link: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object); unknown = the data leaves code AeroTrace can follow; what happens next is not known.
+
+index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
 ```
 
-### 2.3 Nothing affected
-
-The headline never says "safe". Blind spots are always printed. If `summary.unknown > 0`, the
-"nothing found" headline is not used; the risk headline variant "...could not be followed" is used.
+Nothing affected (`nothing.txt`):
 
 ```text
 ✅ Nothing found that this change can break, in the code AeroTrace can see.
-    You changed 1 function in 1 file (compared with HEAD).
-    No other indexed function calls it or reads what it writes.
+    You changed 1 function in 1 C/C++ file (compared with HEAD).
+    No other indexed function calls what changed or reads what it writes.
 
 Tests to run (1)
-  tests/unit/type/string.tcl      covers getrangeCommand
+  tests/unit/type/string.tcl  covers getGenericCommand
 
-Blind spots (1)
-  ? 3 calls through function pointers in src/t_string.c were matched by type only.
+Limits of the index (1)
+  ? Macro uses are not followed anywhere in the index.
 
-checked 117 files, 5,064 functions; 0 exact, 0 probable, 0 unknown
+index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
 ```
 
-(NO_COLOR: `[ok]` instead of `✅`, `[?]` instead of `?`; otherwise identical.)
+Nothing found, but part of the change was skipped (`unclear.txt`), never ✅:
 
-Headline variants, chosen only from `summary` numbers:
+```text
+ℹ️  Nothing found that this change can break, but 2 parts of the change could not be followed.
+    You changed 1 function in 1 C/C++ file (compared with HEAD).
 
-| summary                          | headline                                                                 |
-|----------------------------------|--------------------------------------------------------------------------|
-| breaks > 0                       | `⚠️  This change can break N thing(s) you didn't touch.`                 |
-| breaks = 0, affected > 0         | `⚠️  This change may affect N thing(s) you didn't touch. None is sure to break.` |
-| breaks = affected = 0, unknown > 0 | `⚠️  N thing(s) this change reaches could not be followed. Check them by hand.` |
-| all 0                            | `✅ Nothing found that this change can break, in the code AeroTrace can see.` |
+Changes AeroTrace could not follow (2)
+  ? src/t_string.c: lines 40-42 outside any function.
+  ? src/extra.c is not in the index (not in compile_commands.json, excluded, or a header no indexed file includes).
 
-The second line lists the remaining non-zero counts ("9 more may be affected and 2 could not be
-followed."), and is left out when they are all 0.
+Tests: not known yet (no test map in the index).
 
-### 2.4 Index missing (`status: "no_index"`)
+Limits of the index (1)
+  ? Macro uses are not followed anywhere in the index.
+
+index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
+```
+
+Index missing (`no_index.nocolor.txt`), never a pass in any mode:
 
 ```text
 [!] AeroTrace has no index for this repo yet, so it checked nothing.
     Run `aerotrace index` first (Redis takes about a minute), then run `aerotrace check` again.
 ```
 
-Shown in ASCII mode; Unicode mode prints `⚠️ ` instead of `[!]`. It never uses the "clear" icon:
-nothing was checked, so it must never look like a pass. `index_error` prints Part C's `message` in the same two-line form.
-`nothing_to_check` (empty diff) prints `✅ No C or C++ changes to check (compared with HEAD).` and the
-"(N other files in the diff are not C or C++.)" line if `other_files > 0`.
-Exit codes are Part C's call; the suggestion is 0 = nothing breaks, 1 = something breaks, 2 = could not
-check (no index, error). `no_index` must never exit 0.
+Also golden: `index_error`, `nothing_to_check` (ℹ️ when other files changed, since build files can matter),
+`affected_only`, and `sample.ansi.txt` (colour).
+
+Exit codes are Part C's call. Suggestion: 0 = nothing breaks, 1 = something breaks, 2 = could not check.
+`no_index` must never exit 0.
 
 ## 3. HTML report
-
-Code: `src/aerotrace/ui/html.py` (`render(data) -> str`) plus three hand-written assets in
-`src/aerotrace/ui/assets/`: `report.html` (skeleton with placeholders), `report.css`, `report.js`.
-`html.py` reads them with `importlib.resources` and inlines them. Hatch already ships non-Python files
-inside `src/aerotrace`, so no packaging change.
 
 ### 3.1 Layout
 
 ```text
 +--------------------------------------------------------------------------------------+
-| ⚠ This change can break 3 things you didn't touch.   [search......]  [Theme: auto v] |
-| 9 more may be affected, 2 could not be followed.  checked 117 files, 5,064 functions |
+| ⚠ This change can break 3 things you didn't touch.                                   |
+| 1 more may not build or link, 6 may be affected (2 direct, 4 further up), ...        |
+| index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)|
+| Search [name, file or file:line]  [Theme: auto]                                      |
+| Showing 13 of 16 nodes. 3 are folded into "+N more" bubbles ...      (aria-live)    |
 +---------------------------+------------------------------------------+---------------+
-| LIST (keyboard friendly)  |                GRAPH (SVG)               | DETAILS       |
-| > Functions (10)          |         o   o                            | setrange...   |
-|   x BREAKS setrange...    |      o    [◆ changed]   o                | src/t_str:612 |
-|   x BREAKS append...      |         ▲    |    ✖                      | BREAKS        |
-| > Data (4)                |       ▲   ▲  +12 more                    | Why: still... |
-| > Tests to run (2)        |                                          | Sure: exact   |
-| > Untested changes (1)    |  [+] [-] [fit] [focus] [expand all]      | Path: a > b   |
-| > Blind spots (2)         |  Legend: ✖ breaks ▲ affected ? unknown   | Lines: 619    |
+| LIST (main path for       | [Expand all] [Focus] [Fit] [+] [-]       | DETAILS       |
+|  keyboard/screen reader)  |                                          | getCommand    |
+| > What changed (3)        |          GRAPH (SVG)                     | ✖ BREAKS      |
+| > Functions (11)          |    changed nodes in the centre,          | Where  [copy] |
+| > Data (2)                |    rings by distance                     | Why           |
+| > Changes not followed    |                                          | How sure      |
+| > Tests / Untested        |                                          | Path back     |
+| > Blind spots / Limits    | Legend: shape + icon + word              | Lines         |
 +---------------------------+------------------------------------------+---------------+
 ```
 
-- Header: the same headline and proof line as the terminal, and the blind-spot count as a link to its
-  list. The headline is plain HTML text, so it is readable even if JS fails.
-- Left: the sections as `<details>` lists, the same order and words as the terminal, but uncapped.
-- Centre: the graph. Right: details of the selected node.
-- Narrow window (< 900px): the three panes stack; the list comes first.
-- A `<noscript>` block and the server-rendered list mean the report still shows every fact without JS.
+- The header and the lists are rendered in Python, so every fact is readable without JavaScript.
+- Every Python-inserted string goes through `html.escape(quote=True)`; JS only uses `textContent` and
+  attributes (never `innerHTML`).
+- No graph (only header and message) for `no_index`, `index_error`, `nothing_to_check` and 0 nodes; all
+  have goldens. `no_index` / `index_error` never show ✅.
 
 ### 3.2 Status: colour + shape + icon + word
 
-| status    | fill (light / dark)    | shape           | icon in node | text label   |
-|-----------|------------------------|-----------------|--------------|--------------|
-| changed   | blue outline, thick    | diamond         | ◆            | CHANGED      |
-| removed   | blue outline, dashed   | diamond, struck | ✕            | REMOVED      |
-| breaks    | red #b42318 / #f97066  | square          | ✖ (SVG path) | BREAKS       |
-| affected  | amber #b54708 / #fdb022| triangle        | ! (SVG path) | AFFECTED     |
-| unknown   | white / dark, dashed   | circle, dashed  | ?            | UNKNOWN      |
-| no effect | grey #667085 / #98a2b3 | small circle    | -            | NO EFFECT FOUND |
+| status            | light / dark colour    | shape         | icon | word             |
+|-------------------|------------------------|---------------|------|------------------|
+| changed/new/removed | blue #1d4ed8 / #84adff | diamond (removed: dashed, hollow) | square / + / x | CHANGED / NEW / REMOVED |
+| breaks            | red #b42318 / #f97066  | square        | x    | BREAKS / MAY BREAK |
+| affected          | amber #b54708 / #fdb022| triangle      | !    | AFFECTED         |
+| unknown           | hollow, dashed outline | circle        | ?    | UNKNOWN          |
+| no effect         | grey #667085 / #98a2b3 | small circle  | -    | NO EFFECT FOUND  |
 
-- Shapes and icons are SVG paths, not font glyphs (no font dependency; system font stack only).
-- Every node has `role="button"`, an `aria-label` like "BREAKS: setrangeCommand, src/t_string.c line 612,
-  exact", and a `<title>` for hover.
-- The legend is always visible and uses the same shapes and words.
-- Colours are checked for 3:1 contrast against both backgrounds (non-text) and text labels for 4.5:1.
-  They are also checked to stay distinct under deuteranopia/protanopia simulation, but they don't have to:
-  shape and word carry the meaning.
+The table lives once in Python (`html.SHAPES` + `schema.node_word`) and is passed to the JS in the data
+block; the JS draws nodes only from it. Shapes and icons are SVG paths (no font needed). Each node has
+an `aria-label` and `<title>` like "BREAKS: getCommand, src/t_string.c line 398. Link: exact."
 
-### 3.3 How the graph is drawn (no libraries)
+### 3.3 Graph without libraries
 
-- Plain SVG built with `document.createElementNS` and `textContent` (never `innerHTML` with data, so
-  names like `operator<` or `</script>` are safe).
-- **Radial layered layout**, computed once in JS for all nodes, fully deterministic:
-  - ring 0 (centre): changed and removed nodes, in given order (one node: at the centre; several: a small
-    inner circle).
-  - ring k: nodes at `distance` k. Within a ring, nodes are ordered by the angle of their `via` parent,
-    then by status rank, then by the given order. This keeps children near their parent and cuts edge
-    crossings, without any force simulation.
-  - ring radius `r_k = max(k * 140, n_k * 28 / (2 * pi))`, so a big ring grows instead of overlapping.
-- Edges: straight lines. All edges of one kind/status go into **one `<path>`** (many `M x y L x y`
-  segments), so 3,000 edges cost a handful of DOM elements. The selected node's edges are drawn again in
-  a highlight path on top.
-- Pan with drag, zoom with wheel or `+`/`-` buttons, "fit" button. Done by changing the SVG `viewBox`
-  inside `requestAnimationFrame`.
-- Level of detail: labels show for changed, breaks, selected, searched and focused nodes always, and for
-  other nodes only when zoomed in enough that labels don't overlap (a simple zoom threshold).
+- **Radial rings by distance.** Ring 0 (centre) holds the changed nodes. Ring k holds nodes at
+  distance k, ordered by the angle of their `via` parent, then status, then input order, so children sit
+  near their parent with no force simulation. Ring radius grows with the number of nodes. Fully
+  deterministic.
+- **All ≤5,000 nodes are drawn once** (no viewport culling). Showing and hiding is one class per node.
+- Edges are stored as `[i, j, kind, certainty]` indexes and drawn as **three `<path>` elements** (calls,
+  data, highlight), so 15,000 edges are 3 DOM nodes. `vector-effect: non-scaling-stroke` keeps them thin.
+- Pan (drag), zoom (wheel, +/-), fit. Labels: one class on the SVG (`lod`) turns all labels on when
+  zoomed in or when 60 or fewer nodes are shown; changed, breaks, selected and matched nodes are always
+  labelled.
 
 ### 3.4 Collapsed by default, search, focus
 
-- **Collapsed by default:** ring 0 and ring 1 are shown, capped at 40 nodes per ring. Deeper rings and
-  the rest of a big ring are drawn as one "+N more (distance k)" bubble; click or Enter expands that
-  ring. **BREAKS and UNKNOWN nodes are never hidden by collapsing**; they are always drawn, at any
-  distance. "Expand all" shows everything.
-- **Search box** (also `/`): matches name, file, and `file:line`, case-insensitive, over strings
-  precomputed at load. Matches are highlighted in the graph (others faded, never hidden, still labelled
-  by shape), the left list filters to matches, and an `aria-live` line says "4 matches". Enter selects
-  the first match and pans to it.
-- **Focus mode** (button or `f` on a selected node): shows only that node, its `via` chain back to the
-  change, and its direct neighbours (edges in and out). Capped at 200 neighbours with a "+N more" note.
-  Esc or "Show all" leaves focus mode. The header says "Focus: setrangeCommand (12 of 1,024 nodes
-  shown)" so the user always knows the view is partial.
-- Selecting a node (click, Enter, or in the list) fills the details pane: name, kind, `file:line`,
-  status word, why, how sure (exact/probable/unknown plus the meaning text from `certainty.MEANING`,
-  passed in the JSON, not hard-coded in JS), raw link label, path back to the change (via chain, each
-  step clickable), link lines, and a "copy file:line" button.
+- **Collapsed:** ring 0 and the first 40 of ring 1 are shown. **BREAKS and UNKNOWN nodes are always
+  shown, at any distance, with their `via` chain back to the change.** The rest of each ring is a
+  bubble that says what is inside: "+12 more at distance 2: 10 affected, 2 no effect found". Click it
+  or press E to open it; "Expand all" opens everything.
+- **Search** (`/`): name, file or `file:line`. Matches are shown (with their chain) and highlighted,
+  others faded. The list filters to matches and says how many are hidden. Enter selects the first match.
+- **Focus** (button or F): only the selected node, its chain back to the change, and its neighbours (up
+  to 200). The status line says "Focus: getCommand (3 of 16 nodes shown). Press Escape to show all."
+  and the list says what it hides.
+- **Details:** name, status word, `file:line` with a copy button (clipboard API; falls back to selecting
+  the text on file:// pages), kind, why, how sure (with the meaning from `certainty.MEANING`), raw link
+  label, distance, path back to the change (each step clickable; a dropped step shows its name and
+  "left out of this report"), link lines.
 
-### 3.5 Keyboard and accessibility
+### 3.5 Keyboard and screen readers
 
-- Tab order: search, theme toggle, list, graph, details. The graph is **one** tab stop (roving
-  tabindex), so 1,000 nodes don't mean 1,000 tab presses.
-- In the graph: arrow keys move to the nearest node in that direction, `Home` jumps to the changed
-  node, Enter selects, `f` focus, `Esc` clear focus/search, `+`/`-`/`0` zoom/fit, `e` expand ring.
-- Visible focus ring on everything (2px outline, both themes).
-- The left list is a full, screen-reader-friendly alternative to the graph: every fact in the graph is
-  also in the list.
-- `prefers-reduced-motion`: no animated pan/zoom.
+- The list (buttons in `<details>` sections) is the main path for screen readers: every fact is there.
+- The graph is **one** tab stop: `role="application"` with `aria-activedescendant` on the current node
+  and an `aria-live` line that reads the node. Arrow keys move to the nearest visible node in that
+  direction, Home goes to the change, F focus, E expand, Escape back to all, +/-/0 zoom and fit.
+- Visible focus outline in both themes; `prefers-reduced-motion` respected.
 
 ### 3.6 Light and dark
 
-- CSS variables for every colour. `@media (prefers-color-scheme: dark)` sets the dark values.
-- A toggle (auto / light / dark) sets `data-theme` on `<html>`, and remembers it in `localStorage`
-  inside a `try` (file:// may block it; then it just doesn't remember). Nothing is written into the
-  file itself, so determinism is kept.
+CSS variables with light values, `prefers-color-scheme: dark` values, and a toggle (auto / light / dark)
+that sets `data-theme` and remembers it in `localStorage` (inside `try`; nothing is written to the file).
 
 ### 3.7 Self-contained, offline, deterministic
 
-- One file: CSS in `<style>`, JS in `<script>`, data in `<script type="application/json" id="data">`.
-- Data is `json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)` with `<`, `>`,
-  `&` also escaped as `\u003c`, `\u003e`, `\u0026`, so no data can close the script tag.
-- `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';
-  script-src 'unsafe-inline'; img-src data:">`: even a bug can't load anything from the network.
-- No external URLs at all. The only `http://` string allowed is the SVG namespace
-  `http://www.w3.org/2000/svg` used by `createElementNS` (it is an identifier, not a request).
-- No timestamp, no absolute path, no hostname, no random ids. Written with `\n` line endings and UTF-8.
-- Size: about 60 KB of code + the data (about 250 KB for 1,000 nodes).
+- `<meta charset>` first, then the CSP:
+  `default-src 'none'; script-src 'sha256-…'; style-src 'sha256-…'; base-uri 'none'; form-action 'none'`.
+  The hashes are computed in `html.py` from the inlined JS and CSS (deterministic). No `unsafe-inline`,
+  no `img-src`, no inline `style=` attributes. Also `<meta name="referrer" content="no-referrer">`.
+- Data block: `<script type="application/json">` with sorted keys, ASCII only, `<`, `>`, `&` written as
+  JSON unicode escapes (backslash-u003c and so on), and every `/` next to another `/` written as `\/`, so the file never contains `//`
+  outside the one allowed string.
+- The only URL-like string is the SVG namespace `http://www.w3.org/2000/svg` in `report.js` (an
+  identifier for `createElementNS`, not a request). Inline SVG in the markup has no `xmlns`/`xlink`.
+  `report.js` has no `//` comments, so the scan stays simple.
+- `write_html(data, out, root)` refuses to write inside `<root>/.aerotrace/` or onto a folder, and its
+  message says when it replaced an existing file.
 
-## 4. Performance (1,000+ nodes)
+## 4. Performance
 
-Approach:
+Measured in headless Chrome (Playwright, `tests/ui/test_ui_browser.py`) on `samples.big(n)` (random
+edges, so this is a worst case for crossings):
 
-- Lay out all nodes once (O(n log n)), draw only the visible ones.
-- Edges batched into a few `<path>` elements; event handling by delegation on the SVG (one listener).
-- Search over precomputed lowercase strings, debounced 80 ms; list results capped at 200 with a "+N
-  more" line.
-- Labels by level of detail; no CSS filters or shadows on nodes.
-- No layout reads inside loops (no forced reflow); one DOM append per render via `DocumentFragment`.
+| data                          | file size | first render | expand all | search (Enter) | arrow key |
+|-------------------------------|-----------|--------------|------------|----------------|-----------|
+| 1,000 nodes / ~3,000 edges    | 428 KB    | 22-37 ms     | 11-31 ms   | 12 ms          | -         |
+| 5,000 nodes / ~15,000 edges   | 2.0 MB    | 61-65 ms     | 32-41 ms   | 65 ms          | 46 ms     |
 
-Budgets (headless Chromium on a laptop), measured from script start to first frame:
+"First render" is from script start to the first frame (`data-render-ms`), so it includes JSON parsing.
+Python renders 5,000 nodes in about 50 ms. Size budget (tested in plain pytest): ≤ 500 KB at 1,000 nodes,
+≤ 2.5 MB at 5,000 (the review suggested about 2 MB; 5,000 lands at 2.0 MB, and the budget leaves room for
+longer real names and reasons).
 
-| data                         | first render | expand all | search keystroke |
-|------------------------------|--------------|------------|------------------|
-| 1,000 nodes / 3,000 edges    | < 300 ms     | < 1 s      | < 50 ms          |
-| 5,000 nodes / 15,000 edges   | < 1 s        | < 3 s      | < 100 ms         |
+## 5. Tests
 
-Measuring: `report.js` writes the time into `document.documentElement.dataset.renderMs` after the
-first frame (runtime only, never in the file). `tests/ui/make_big_check.py` makes deterministic large
-inputs (fixed seed `random.Random(9)`, in tests only). The check opens the file in headless Chromium
-(Playwright MCP from the coordinator, or the `webapp-testing` Playwright scripts if installed locally)
-and reads `renderMs`, then clicks "expand all" and types in search. Results go in the PR description.
-This is a manual/dev check, not a pytest test, because CI has no browser and we don't add one.
+Plain pytest (default run, no browser, no network): 71 tests in `tests/ui/`.
 
-## 5. Test plan
+1. **Terminal goldens** for 7 cases in Unicode and ASCII, plus a colour golden. ASCII output is checked to
+   be pure ASCII.
+2. **Mode picking**: `style_for` for TTY, pipe, `NO_COLOR=1`, `NO_COLOR=""` (does not count), latin-1,
+   ascii, `TERM=dumb`, unknown codec.
+3. **No colour-only meaning**: colour output with escapes stripped equals the plain output; every item
+   has a status word.
+4. **Headline rules**: only exact breaks count in "can break N"; probable-only breaks say "may not build
+   or link"; direct counts first; skipped parts give ℹ️ never ✅; no_index never looks like a pass;
+   capped lists say what they left out; control characters are replaced.
+5. **Contract**: wrong format/version, break with certainty unknown, unknown status without unknown
+   certainty, missing ids in sections/edges/via, duplicate ids, wrong distances, summary lower than
+   nodes, skipped parts without a count, missing scope, missing message. Each is refused by `check`,
+   and by both renderers.
+6. **HTML golden snapshots** for 7 cases (byte for byte; `UPDATE_GOLDEN=1` rewrites them).
+7. **Determinism**: twice in-process, with dict keys in reverse order, and in subprocesses with
+   `PYTHONHASHSEED` 0, 1 and 12345.
+8. **No external URL**: the output has exactly one copy of the SVG namespace and, apart from it (and the
+   CSP hashes), no `http(s):`, `data:`, `javascript:`, `//`, `url(`, `@import`, `<link`, `<img`, `src=`,
+   `xlink`, `fetch(`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `navigator.` (except
+   `navigator.clipboard`), `innerHTML`, `eval(` and similar; every `href` starts with `#`. The assets have
+   no `//`.
+9. **CSP**: charset first, CSP second, hashes match the inlined script and style, no `unsafe`.
+10. **Hostile names** (`</script>`, `operator<<`, quotes, `onmouseover=`, `<img onerror>`, non-ASCII,
+    `http://`): exactly two script tags, no injected tags or `on*` attributes, data decodes back to the
+    exact names.
+11. **Size budget** and **`write_html`** (refuses `.aerotrace/`, says when it replaced a file).
 
-All new tests are plain pytest, no browser, no network.
+Browser tests (`@pytest.mark.browser`, skipped by default like `realrepo`; run with
+`uv run --with playwright pytest -m browser tests/ui`): hostile page runs nothing
+(`window.__pwned` stays unset) and requests nothing but itself, no console errors or CSP violations,
+keyboard (Home, arrows, F, Escape, `/`, Enter) works, render time budgets (1,000 nodes ≤ 300 ms, 5,000
+≤ 1 s). Uses Playwright's Chromium if installed, else a local Chrome.
 
-1. **Terminal goldens** (`tests/ui/test_terminal.py`, goldens in `tests/golden/ui/`):
-   - `check-v1-sample.json` -> `check.txt` (Unicode, no colour), `check.nocolor.txt` (ASCII),
-     `check.ansi.txt` (colour; escapes visible in the golden).
-   - `check-v1-nothing.json` -> `nothing.txt`, `nothing.nocolor.txt`.
-   - `check-v1-noindex.json` -> `noindex.txt`.
-   - variants: breaks=0/affected>0, unknown-only, tests `null`, `--limit` cap text.
-   - The mock-ups in section 2 are these goldens.
-2. **Mode picking**: `style_for` with fake streams for each row of the table in section 2 (TTY,
-   pipe, NO_COLOR=1, NO_COLOR="" which per no-color.org does not count, latin-1 encoding, TERM=dumb).
-3. **No colour-only meaning**: strip ANSI from the colour output and assert it equals the no-colour
-   output; assert every item line has a status word.
-4. **HTML golden snapshot**: `check-v1-sample.json` -> `tests/golden/ui/check.html`, compared byte for
-   byte. An `UPDATE_GOLDEN=1` switch rewrites it, so reviewers see the diff.
-5. **Determinism**: render twice in-process; render in two subprocesses with different
-   `PYTHONHASHSEED`; render the same data with dict keys in a different insertion order. All must give
-   identical bytes.
-6. **No external URL**: scan the HTML for `http://`, `https://`, `//` in `src`/`href`, `url(`,
-   `@import`, `<link`, `<img`, `<iframe`, `fetch(`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
-   `import(`, `sendBeacon`, `navigator.` network APIs. Allowlist: exactly the SVG namespace string.
-   Also assert the CSP meta tag is present and is the first thing in `<head>`.
-7. **Escaping**: names with `</script>`, `<!--`, `&amp;`, quotes, `operator<<`, and non-ASCII must
-   come out escaped in the data block, and the HTML must still parse (stdlib `html.parser`, no errors,
-   one `<script type="application/json">`).
-8. **Contract checks**: unknown `format`, `version` 2, missing ids, ids in sections not in nodes ->
-   a clear error, no half output.
-9. **Accessibility (static)**: the legend contains all six status words; the status table (colour,
-   shape, icon, word) is defined once in Python and passed to the JS inside the data block, and a test
-   asserts every status has all four. The JS draws a node only from that table, so there is no
-   colour-only path.
-10. **Manual, recorded in the PR**: Playwright run of the 1,000 and 5,000 node files (timings),
-    keyboard-only walk-through, light/dark screenshots via `emulate_media`, network log shows zero
-    requests.
+Manual checks done with the Playwright MCP: light and dark screenshots, theme toggle, focus, search,
+details pane, network log empty.
 
-Gate before each commit: `uv run ruff check . && uv run ruff format --check . && uv run pytest`;
-before the PR also `uv run pytest -m realrepo -rxX` (must stay at the same 3 known failures).
+## 6. README draft
 
-## 6. README draft (`docs/launch/README.draft.md`)
+`docs/launch/README.draft.md`: one-line pitch, demo video placeholder, one install command (the same
+`uv tool install` line as README.md and `install.py`), `{{BENCH_HEADLINE}}` on its own line for item 8,
+how it works in 3 steps, the three assistants exactly as `mcp/install.py` writes them, honest limits,
+Apache-2.0.
 
-Sections: one-line pitch; demo video placeholder (`<!-- DEMO VIDEO: docs/launch/demo.mp4 -->`); one
-install command (`uv tool install git+https://github.com/aayushswami123/aerotrace`, same as today's
-README and the `install.py` hint); `{{BENCH_HEADLINE}}` exactly as written, on its own line, for item 8;
-how it works in 3 steps (index with libclang -> diff mapped to functions and data -> ranked answer with
-certainty and blind spots); supported assistants exactly as `mcp/install.py` implements them
-(`--client claude` -> `.mcp.json`, `cursor` -> `.cursor/mcp.json`, `codex` -> `~/.codex/config.toml` or
-`$CODEX_HOME`); honest limits (C/C++ only, needs `compile_commands.json`, macros and types not
-followed, function pointers matched by type, Linux/macOS tested); license Apache-2.0.
+## 7. Not in this PR
 
-## 7. Work order
-
-1. This plan (now). Review.
-2. `ui/schema.py` + fixture JSONs + terminal renderer + goldens.
-3. HTML renderer + assets + golden/determinism/no-URL/escaping tests.
-4. Big-data generator + Playwright timing check; tune.
-5. README draft.
-6. PR to `launch-candidate`. Screenshots later, once Part C exists and runs on Redis.
+- `aerotrace check` itself and its CLI flags (Part C). Part C calls `ui.render_text`, `ui.style_for`,
+  `ui.write_html` and `ui.check`, and should add a contract test of its own output.
+- Screenshots on a real Redis change (needs Part C).
 
 ## 8. Risks
 
-- **R1. Product rule 7 ("no dashboards or web UI").** A static, offline file is not a server, but the
-  owner should say yes. If not, the HTML part is dropped and the terminal part stands alone.
-- **R2. Grey "no effect" could read as "safe".** A wrong safe is the worst bug. Grey is only for nodes
-  Part C explicitly checked (for example callees of a changed function, for orientation). The label
-  says "NO EFFECT FOUND", the details pane repeats the blind spots, and Part C may send none at all.
-- **R3. Contract drift with Part C.** Mitigated by the versioned JSON, the shared fixture file, and the
-  renderer refusing unknown versions. Part C should add its own test that its output passes
-  `ui.schema.check`.
-- **R4. "Breaks" vs "affected" is Part C's call.** The renderer can't fix a wrong status. The mock-ups
-  assume `calls_removed` and "does not compile now" sites are BREAKS; Part C should confirm.
-- **R5. Emoji width.** `⚠️` is two columns in most terminals and one in some. Nothing is aligned after
-  it on the headline line, and item lines don't use emoji, so misalignment can't hurt.
-- **R6. Yellow on light terminals** can be faint. It is only on the icon and word, which are bold and
-  also spelled out, so the text still reads.
-- **R7. Very large changes** (10,000+ nodes) make a big file and a slow first paint. Part C caps at
-  5,000 nodes and reports `omitted`; the HTML header shows it.
-- **R8. Browsers.** Tested in Chromium. Firefox and Safari are a manual check (CSP meta on file:// and
-  `localStorage` behave a bit differently). Only ES2018 features, no modules.
-- **R9. Golden HTML churn.** Any CSS/JS edit changes the snapshot. That is intended (reviewers see it),
-  but the golden is regenerated with one command to keep it cheap.
+- **R1. Grey "no effect" could read as safe.** Labelled "NO EFFECT FOUND", used only for nodes Part C
+  explicitly checked; Part C may send none.
+- **R2. Contract drift with Part C.** Versioned JSON, a shared fixture file, strict `check()`.
+- **R3. Emoji width** varies by terminal; nothing is aligned after the headline emoji, and item lines use
+  one-column symbols.
+- **R4. Yellow on light terminals** can be faint; it is only on a bold word that is also spelled out.
+- **R5. Very large changes**: Part C caps at 5,000 nodes and reports `omitted`; the header and status
+  line show it.
+- **R6. Browsers**: tested in Chrome/Chromium. Firefox and Safari are a manual check (file:// and
+  `localStorage` differ a little). ES5-style JS plus a few ES2015 APIs (typed arrays, `classList`).
+- **R7. Golden churn**: any CSS/JS edit changes the HTML goldens. Intended; one command regenerates them.
+
+## 9. Review (independent reviewer, "go with changes") and what was done
+
+| # | point | done |
+|---|-------|------|
+| 1 | MUST: "breaks" = will not build or link only; only Part C sets it; can be probable; headline counts only exact; reject breaks+unknown | Sections 1.1, 1.2, 2.1. `summary.breaks_exact` / `breaks_probable`; "MAY BREAK" word; `test_only_exact_breaks_count_in_the_headline`, `test_break_can_not_be_unknown`. |
+| 2 | MUST: separate "is the link real?" from "is the effect real?" | Section 1.1. `certainty` = link, `status` = effect, `link` = raw label. Unknown status and certainty must go together. |
+| 3 | MUST: never a wrong ✅; DiffImpact gaps in `change`; "new" status; blind-spot scope | `change.not_followed` (outside, not_indexed, deleted, mismatched, unreadable, new_files), `new_functions` and status `new`, `summary.not_followed`, `scope: change/index`, ℹ️ headline. `check` refuses gaps without a count. Truncation is `proof.stopped_early`. |
+| 4 | MUST: proof line must not overclaim | Now `index: N files, N functions; followed callers up to N steps (stopped early: yes/no)`. The exact/probable/unknown counts were dropped from it. |
+| 5 | MUST: ids; via is a name; removed key; cap drops edges/via | Section 1.2. `via` id + `via_name`; `removed:{file}:{line}:{name}`; `check` refuses dangling ids. |
+| 6 | SHOULD: CSP with hashes, base-uri, form-action, no img-src; charset first; href only `#`; only SVG namespace; no xlink; no `//` comments | Section 3.7; `test_csp_hashes_and_order`, `test_no_external_urls`, `test_assets_have_no_line_comments_or_urls`. |
+| 7 | SHOULD: escape every Python-rendered field and attribute; test it | `html.escape(quote=True)` everywhere; `test_hostile_names_stay_text` and the browser hostile test. |
+| 8 | SHOULD: screen readers | Section 3.5: list is the main path; graph is one `role="application"` stop with `aria-activedescendant` and a live line; list says what is hidden in focus/search. |
+| 9 | SHOULD: bubbles say what is inside; deep BREAKS/UNKNOWN show their chain | Section 3.4. |
+| 10 | SHOULD: simpler drawing; index edges; size budget | Section 3.3; size budget tested (≤ 2.5 MB at 5,000; measured 2.0 MB). |
+| 11 | SHOULD: HTML for no_index, index_error, nothing_to_check, 0 nodes | Goldens for all four; `test_empty_states_have_no_graph_and_no_all_clear`. |
+| 12 | SHOULD: `@pytest.mark.browser` Playwright test; Part C contract test later | `tests/ui/test_ui_browser.py`, marker registered, skipped by default. Part C note in sections 1.2 and 7. |
+| 13 | NIT: clipboard fallback; allowlist `navigator.clipboard` | Done (selects the text when the clipboard API fails). |
+| 14 | NIT: R1 resolved | Owner asked for `--html`; noted in section 0. |
+| 15 | NIT: direct counts first | "(2 direct, 4 further up)". |
+| 16 | NIT: refuse `--html` inside `.aerotrace/`; say when overwriting | `write_html`; tested. |
