@@ -146,3 +146,19 @@ user).
 1. Install the hook by default with `install --client claude`, or behind `--hook`? Plan: by default
    (the item says "also sets up the hook").
 2. Small-refresh limit of 20 files inside the hook: OK?
+
+## 11. Review (coordinator) and build results
+
+Decisions: install adds the hook by default (said in its output and the README); small refresh up to 20
+files, beyond that allow + "index is stale (N files changed); run `aerotrace index`".
+
+- Input format checked with a dump hook on Claude Code 2.1.319: fields as in section 1 (plus
+  `prompt_id`, `permission_mode`, `tool_use_id`). `additionalContext` reaches the model as
+  "PreToolUse:Edit hook additional context: ..." (no fallback needed). stream-json does not repeat it;
+  the session transcript (`~/.claude/projects/<dir>/<session>.jsonl`, an `attachment` entry) has it, so
+  the e2e test reads the transcript.
+- Code: `analysis/rules.py` (rules, levels, text), `hooks/claude.py` (hook layer), `cli.py`
+  (`aerotrace hook on|off|status|run`), `mcp/install.py` (`hook_plan`).
+- Timing, `aerotrace hook run` as a process, warm index, Redis 8.10.3, 5 runs each (min / median):
+  body-only edit of `getCommand` 0.95 / 0.96 s; signature change of `getGenericCommand` 1.12 / 1.12 s;
+  `client.argc` int -> long in `server.h` 1.41 / 1.42 s. Python start + import: 0.05 s. All under 2 s.

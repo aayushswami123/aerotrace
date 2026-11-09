@@ -439,21 +439,48 @@ def cmd_mcp(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hook(args: argparse.Namespace) -> int:
+    from aerotrace.hooks import claude
+
+    if args.action == "run":
+        return claude.main()
+    root = find_root(args.root)
+    off = root / claude.OFF_FILE
+    if args.action == "off":
+        off.parent.mkdir(parents=True, exist_ok=True)
+        off.write_text("The AeroTrace edit check is off. Run `aerotrace hook on` to turn it back on.\n")
+        print("The AeroTrace edit check is off for this repo.")
+    elif args.action == "on":
+        off.unlink(missing_ok=True)
+        print("The AeroTrace edit check is on for this repo.")
+    settings = root / ".claude" / "settings.json"
+    installed = settings.is_file() and " hook run" in settings.read_text(encoding="utf-8", errors="replace")
+    if args.action == "status":
+        print(f"Edit check: {'off' if off.exists() else 'on'}.")
+    if not installed:
+        print("The hook is not in .claude/settings.json yet: run `aerotrace install --client claude`.")
+    return 0
+
+
 def cmd_install(args: argparse.Namespace) -> int:
     from aerotrace.mcp import install
 
     root = find_root(args.root)
     try:
-        p = install.plan(args.client, root)
+        plans = [install.plan(args.client, root)]
+        if args.client == "claude":
+            plans.append(install.hook_plan(root))
     except install.InstallError as e:
         _err(f"error: {e}")
         return 2
     if args.dry_run:
-        print(f"Would write {p.path}:\n{p.content}")
+        for p in plans:
+            print(f"Would write {p.path}:\n{p.content}")
         return 0
-    install.apply(p)
-    print(f"Added AeroTrace to {p.path}")
-    print(p.note)
+    for p in plans:
+        install.apply(p)
+        print(f"Added AeroTrace to {p.path}")
+        print(p.note)
     try:
         from aerotrace.index import store
 
@@ -614,6 +641,12 @@ def build_parser() -> argparse.ArgumentParser:
     ins.add_argument("--client", required=True, choices=["claude", "cursor", "codex"])
     ins.add_argument("--dry-run", action="store_true", help="show what would be written, change nothing")
     ins.set_defaults(func=cmd_install)
+
+    hk = with_root(
+        sub.add_parser("hook", help="the Claude Code edit check: on, off, status (run = what Claude calls)")
+    )
+    hk.add_argument("action", choices=["on", "off", "status", "run"])
+    hk.set_defaults(func=cmd_hook)
 
     s = with_root(sub.add_parser("status", help="what is in the index and whether it is up to date"))
     s.add_argument("--json", action="store_true")

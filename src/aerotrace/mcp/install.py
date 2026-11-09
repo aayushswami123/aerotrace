@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import sys
 import tomllib
@@ -123,6 +124,50 @@ def plan(client: str, root: Path, home: Path | None = None) -> Plan:
         note = "Start Codex inside any C/C++ repo; it runs AeroTrace in that folder."
         return Plan(client, path, _merge_toml(path, command), note)
     raise InstallError(f"unknown client '{client}'; choose one of: {', '.join(CLIENTS)}")
+
+
+HOOK_MATCHER = "Edit|MultiEdit|Write"
+HOOK_TIMEOUT = 30  # seconds; a backstop only, the hook keeps its own 5 s budget
+
+
+def _is_ours(h: object) -> bool:
+    return isinstance(h, dict) and isinstance(h.get("command"), str) and h["command"].endswith(" hook run")
+
+
+def hook_plan(root: Path) -> Plan:
+    """Add the PreToolUse guardrail hook to <repo>/.claude/settings.json, keeping everything else."""
+    path = root / ".claude" / "settings.json"
+    command = " ".join(shlex.quote(c) for c in [*launch_command()[:-1], "hook", "run"])
+    data: dict = {}
+    if path.is_file():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8") or "{}")
+        except ValueError as e:
+            raise InstallError(
+                f"{path} is not valid JSON ({e}); fix it or remove it, then run this again"
+            ) from e
+    hooks = data.get("hooks", {}) if isinstance(data, dict) else None
+    pre = hooks.get("PreToolUse", []) if isinstance(hooks, dict) else None
+    if not isinstance(pre, list) or not all(isinstance(g, dict) for g in pre):
+        raise InstallError(f"{path} does not look like a Claude Code settings file; leaving it alone")
+    kept = []
+    for g in pre:
+        inner = g.get("hooks")
+        if isinstance(inner, list) and any(_is_ours(h) for h in inner):
+            rest = [h for h in inner if not _is_ours(h)]
+            if not rest:
+                continue
+            g = {**g, "hooks": rest}
+        kept.append(g)
+    kept.append(
+        {"matcher": HOOK_MATCHER, "hooks": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT}]}
+    )
+    data.setdefault("hooks", {})["PreToolUse"] = kept
+    note = (
+        "Added the AeroTrace edit check (a PreToolUse hook): before Claude edits C/C++ code it is told what "
+        "the edit may break. It warns only; `aerotrace hook off` turns it off."
+    )
+    return Plan("claude", path, json.dumps(data, indent=2) + "\n", note)
 
 
 def apply(p: Plan) -> None:
