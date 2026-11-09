@@ -80,7 +80,9 @@ action = "block"                     # warn | block (default warn)
   level is at least `level`. If any firing rule says `block`, the edit is denied with the high-level
   list plus "blocked by rule '<name>' in .aerotrace/rules.toml".
 - `level = "low"` + `block` = protected path: any edit to it is denied, even with no effects found.
-  A check that could not run never blocks, even on a protected path (section 6).
+  A protected path (`level = "low"` + `block`) is blocked even when the check could not run (no index,
+  timeout, error): protecting a path does not depend on the index. Rules with a higher level never block
+  a check that could not run (changed after review).
 - Invalid TOML, unknown key, wrong type, bad action: the whole file is ignored, defaults used, and the
   agent gets one line "AeroTrace ignored .aerotrace/rules.toml: <reason>". Never block.
 
@@ -162,3 +164,13 @@ files, beyond that allow + "index is stale (N files changed); run `aerotrace ind
 - Timing, `aerotrace hook run` as a process, warm index, Redis 8.10.3, 5 runs each (min / median):
   body-only edit of `getCommand` 0.95 / 0.96 s; signature change of `getGenericCommand` 1.12 / 1.12 s;
   `client.argc` int -> long in `server.h` 1.41 / 1.42 s. Python start + import: 0.05 s. All under 2 s.
+
+## 12. Changes after review of #50
+
+1. CRLF: the hook reads the file with `newline=""`, so the patch matches the disk byte for byte; an
+   `old_string` written with plain newlines also matches CRLF lines. `check`'s own CRLF bug: #51.
+2. A protected path (`level = "low"` + `block`) blocks even when the check can't run.
+3. Install treats only its own exact command as AeroTrace's hook; a user hook that looks alike is kept.
+4. Timeout during a small refresh: `store.write_index` writes a temporary file and renames it into place
+   (`os.replace`), and parse-cache entries are written the same way, so exiting mid-refresh can't leave
+   a half-written index (at most a stray temporary file under `.aerotrace/`).

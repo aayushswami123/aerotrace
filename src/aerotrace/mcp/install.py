@@ -130,8 +130,9 @@ HOOK_MATCHER = "Edit|MultiEdit|Write"
 HOOK_TIMEOUT = 30  # seconds; a backstop only, the hook keeps its own 5 s budget
 
 
-def _is_ours(h: object) -> bool:
-    return isinstance(h, dict) and isinstance(h.get("command"), str) and h["command"].endswith(" hook run")
+def _is_ours(h: object, command: str) -> bool:
+    """Only our own exact command counts as ours; any other hook is the user's and is kept."""
+    return isinstance(h, dict) and h.get("command") == command
 
 
 def hook_plan(root: Path) -> Plan:
@@ -153,8 +154,8 @@ def hook_plan(root: Path) -> Plan:
     kept = []
     for g in pre:
         inner = g.get("hooks")
-        if isinstance(inner, list) and any(_is_ours(h) for h in inner):
-            rest = [h for h in inner if not _is_ours(h)]
+        if isinstance(inner, list) and any(_is_ours(h, command) for h in inner):
+            rest = [h for h in inner if not _is_ours(h, command)]
             if not rest:
                 continue
             g = {**g, "hooks": rest}

@@ -45,7 +45,9 @@ action = "block"          # warn (default) | block
 ```
 
 If the index is missing or far out of date, the check fails, or `rules.toml` is invalid, the edit is
-never blocked: Claude is told "AeroTrace couldn't check this edit (reason)". `aerotrace hook off` /
+never blocked: Claude is told "AeroTrace couldn't check this edit (reason)". The one exception is a
+protected path (a `level = "low"` block rule): it stays blocked, since protecting a path does not need
+the index. `aerotrace hook off` /
 `aerotrace hook on` turn it off and on for the repo; `aerotrace hook status` shows the state.
 
 The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_users`, `tests_for_change`,

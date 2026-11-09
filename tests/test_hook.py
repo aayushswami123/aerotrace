@@ -213,11 +213,60 @@ def test_protected_path_blocks_even_a_quiet_edit(repo):
     assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
 
 
-def test_failed_check_never_blocks_even_on_protected_path(repo, monkeypatch):
-    write_rules(repo, '[[rule]]\npaths = ["src/*"]\nlevel = "low"\naction = "block"\n')
+def test_failed_check_blocks_only_on_a_protected_path(repo, monkeypatch):
+    # a level-"low" block rule protects the path whatever the index says (review of #50)
+    write_rules(repo, '[[rule]]\nname = "p"\npaths = ["src/*"]\nlevel = "low"\naction = "block"\n')
     monkeypatch.setattr(claude, "check_edit", lambda *a, **k: (_ for _ in ()).throw(claude.Skip("x")))
     out = run(event(repo, "Edit", "src/calc.c", old_string=ADD, new_string=ADD3))
+    h = out["hookSpecificOutput"]
+    assert h["permissionDecision"] == "deny"
+    assert "src/calc.c is protected. AeroTrace couldn't check this edit (x)." in h["permissionDecisionReason"]
+    # a rule that needs a level never blocks when the level is not known
+    write_rules(repo, '[[rule]]\npaths = ["src/*"]\nlevel = "medium"\naction = "block"\n')
+    out = run(event(repo, "Edit", "src/calc.c", old_string=ADD, new_string=ADD3))
     assert "permissionDecision" not in out["hookSpecificOutput"]
+
+
+def test_protected_path_blocks_without_an_index_and_on_timeout(repo_factory, monkeypatch):
+    root = repo_factory("testimpact").resolve()
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    (root / ".aerotrace").mkdir()
+    write_rules(root, '[[rule]]\npaths = ["src/calc.c"]\nlevel = "low"\naction = "block"\n')
+    ev = event(root, "Edit", "src/calc.c", old_string=ADD, new_string=ADD3)
+    h = run(ev)["hookSpecificOutput"]
+    assert h["permissionDecision"] == "deny" and "no index yet" in h["permissionDecisionReason"]
+    monkeypatch.setattr(claude, "check_edit", lambda *a, **k: time.sleep(1))
+    h = run(ev, timeout=0.1)["hookSpecificOutput"]
+    assert h["permissionDecision"] == "deny" and "longer than 0.1 s" in h["permissionDecisionReason"]
+
+
+def to_crlf(repo, rel):
+    p = repo / rel
+    p.write_bytes(p.read_bytes().replace(b"\n", b"\r\n"))
+
+
+def test_crlf_file_patch_matches_the_disk(repo):
+    to_crlf(repo, "src/calc.c")
+    before = (repo / "src/calc.c").read_bytes()
+    t = text(run(event(repo, "Edit", "src/calc.c", old_string=ADD, new_string=ADD3)))
+    assert t.startswith("AeroTrace: this edit breaks code") and "removed by the patch" not in t
+    assert "[breaks, exact] twice (src/calc.c:22)" in t
+    new = before.decode().replace(ADD, ADD3)
+    t = text(run(event(repo, "Write", "src/calc.c", content=new)))
+    assert t.startswith("AeroTrace: this edit breaks code") and "removed by the patch" not in t
+    assert "[breaks, exact] twice (src/calc.c:22)" in t
+    assert (repo / "src/calc.c").read_bytes() == before
+    patch = claude.make_patch("src/calc.c", before.decode(), new)
+    assert "-int add(int a, int b) { return a + b; }\r\n" in patch
+
+
+def test_crlf_multiline_old_string_written_with_plain_newlines(repo):
+    to_crlf(repo, "src/calc.c")
+    old = "int calc_mode = 0;\n\n" + ADD
+    t = text(
+        run(event(repo, "Edit", "src/calc.c", old_string=old, new_string="int calc_mode = 0;\n\n" + ADD3))
+    )
+    assert "add (src/calc.c:5)" in t
 
 
 def test_invalid_rules_warn_and_never_block(repo):
@@ -293,6 +342,12 @@ def test_install_merges_settings_and_does_not_duplicate(tmp_path, monkeypatch):
         "matcher": "Edit|MultiEdit|Write",
         "hooks": [{"type": "command", "command": "'/opt/aero tools/aerotrace' hook run", "timeout": 30}],
     }
+    # a user's own hook is never taken for ours, even if its command looks alike
+    mine = {"type": "command", "command": "/usr/local/bin/myhook hook run"}
+    s.write_text(json.dumps({"hooks": {"PreToolUse": [{"matcher": "Edit", "hooks": [mine]}]}}))
+    install.apply(install.hook_plan(tmp_path))
+    pre = json.loads(s.read_text())["hooks"]["PreToolUse"]
+    assert pre[0] == {"matcher": "Edit", "hooks": [mine]} and len(pre) == 2
     s.write_text("{nope")
     with pytest.raises(install.InstallError):
         install.hook_plan(tmp_path)

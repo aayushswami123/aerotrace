@@ -180,28 +180,43 @@ def _cwd(event: dict) -> str:
     return event["cwd"] if isinstance(event.get("cwd"), str) else os.getcwd()
 
 
-def handle(event: dict, root: Path, rules: rules_mod.Rules, rules_warning: str) -> dict | None:
-    """The JSON to print for one hook event (None = print nothing). Raises on internal errors."""
-    from aerotrace.analysis.diff import CODE_EXTS
-
+def target(event: dict, root: Path) -> tuple[str, dict, Path, str] | None:
+    """(tool, tool_input, absolute path, repo-relative path) of an edit we look at, else None."""
     tool = event.get("tool_name")
     inp = event.get("tool_input")
     if tool not in TOOLS or not isinstance(inp, dict) or not isinstance(inp.get("file_path"), str):
         return None
-    cwd = _cwd(event)
     path = Path(inp["file_path"])
-    path = (Path(cwd) / path if not path.is_absolute() else path).resolve()
+    path = (Path(_cwd(event)) / path if not path.is_absolute() else path).resolve()
     try:
         rel = path.relative_to(root).as_posix()
     except ValueError:
         return None
     if (root / OFF_FILE).exists() or rel.startswith(".aerotrace/"):
         return None
+    return tool, inp, path, rel
+
+
+def read_disk(path: Path) -> str | None:
+    """The file exactly as on disk (CRLF kept, so the patch matches it); None when it does not exist."""
+    if not path.is_file():
+        return None
+    with path.open(encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def handle(tool: str, inp: dict, path: Path, rel: str, root: Path, rules: rules_mod.Rules,
+           rules_warning: str) -> dict | None:  # fmt: skip
+    """The JSON to print for one edit (None = print nothing). Raises Skip or on internal errors."""
+    from aerotrace.analysis.diff import CODE_EXTS
+
     try:
-        before = path.read_text(encoding="utf-8") if path.is_file() else None
-    except (OSError, UnicodeDecodeError):
-        return warn(_join(rules_warning, couldnt("the file could not be read")))
+        before = read_disk(path)
+    except (OSError, UnicodeDecodeError) as e:
+        raise Skip("the file could not be read") from e
     after = new_text(tool, inp, before or "")
+    if after is None and before and "\r\n" in before:  # the agent sees CRLF lines as plain lines
+        after = new_text(tool, crlf_input(tool, inp), before)
     if after is None or after == before:
         return warn(rules_warning) if rules_warning else None
     if path.suffix.lower() not in CODE_EXTS:
@@ -219,30 +234,61 @@ def handle(event: dict, root: Path, rules: rules_mod.Rules, rules_warning: str) 
     return out
 
 
+def crlf_input(tool: str, inp: dict) -> dict:
+    def fix(v: object) -> object:
+        return v.replace("\r\n", "\n").replace("\n", "\r\n") if isinstance(v, str) else v
+
+    if tool == "Edit":
+        return {**inp, "old_string": fix(inp.get("old_string")), "new_string": fix(inp.get("new_string"))}
+    if tool == "MultiEdit" and isinstance(inp.get("edits"), list):
+        edits = [
+            {**e, "old_string": fix(e.get("old_string")), "new_string": fix(e.get("new_string"))}
+            if isinstance(e, dict)
+            else e
+            for e in inp["edits"]
+        ]
+        return {**inp, "edits": edits}
+    return inp
+
+
 def answer(event: dict, timeout: float | None = None) -> dict | None:
-    """`handle` with a deadline and every failure turned into allow + a short note."""
+    """`handle` with a deadline. Every failure allows the edit with a short note, except on a path a
+    `level = "low"` block rule protects: protecting a path does not depend on the index."""
     box: dict = {}
     try:
         root = find_root(_cwd(event))
+        what = target(event, root)
+        if what is None:
+            return None
         rules, rules_warning = rules_mod.load_rules(root)
     except Exception as e:
         return warn(couldnt(f"internal error: {type(e).__name__}: {e}"))
     if timeout is None:
         timeout = rules.timeout_seconds
+    rel = what[3]
+
+    def failed(reason: str) -> dict:
+        note = _join(rules_warning, couldnt(reason))
+        stop = rules_mod.blocking(rules, rel, "low")
+        if stop:
+            return deny(rules_mod.blocked_text(f"AeroTrace: {rel} is protected. {note}", stop))
+        return warn(note)
 
     def work() -> None:
         try:
-            box["out"] = handle(event, root, rules, rules_warning)
+            box["out"] = handle(*what, root, rules, rules_warning)
         except Skip as e:
-            box["out"] = warn(couldnt(str(e)))
-        except Exception as e:  # never block on our own failure
-            box["out"] = warn(couldnt(f"internal error: {type(e).__name__}: {e}"))
+            box["out"] = failed(str(e))
+        except Exception as e:  # never block on our own failure (unless the path is protected)
+            box["out"] = failed(f"internal error: {type(e).__name__}: {e}")
 
     t = threading.Thread(target=work, daemon=True)
     t.start()
     t.join(timeout)
     if t.is_alive():
-        return warn(couldnt(f"it took longer than {timeout:g} s"))
+        # The index is written to a temporary file and renamed into place (store.write_index), so
+        # exiting while a refresh runs can't leave a half-written index.
+        return failed(f"it took longer than {timeout:g} s")
     return box.get("out")
 
 
