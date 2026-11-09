@@ -232,8 +232,10 @@ def cmd_find(args: argparse.Namespace) -> int:
 def _read_patch(name: str) -> str:
     """The patch file (or stdin for '-') as it is: line endings are kept, so a CRLF patch still fits a CRLF
     file (#51)."""
-    data = sys.stdin.buffer.read() if name == "-" else Path(name).read_bytes()
-    return data.decode("utf-8", "surrogateescape")
+    if name == "-":
+        buf = getattr(sys.stdin, "buffer", None)  # a text-only stdin (tests) has no bytes underneath
+        return buf.read().decode("utf-8", "surrogateescape") if buf is not None else sys.stdin.read()
+    return Path(name).read_bytes().decode("utf-8", "surrogateescape")
 
 
 def cmd_walk(args: argparse.Namespace) -> int:
