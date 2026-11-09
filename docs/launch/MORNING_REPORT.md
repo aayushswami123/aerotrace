@@ -1,3 +1,33 @@
+# Status update: 2026-11-09 (day session)
+
+Merged into launch-candidate since the night report: #42 (MCP rebuild, fixes #43), #48 (`aerotrace check`,
+item 5 part C, fixes #13 #44 #45), #50 (Claude Code hook, item 7), #53 (small accuracy benchmark).
+Items 1-5 and 7 are done. Total merged into launch-candidate: 10 PRs. `main` untouched.
+
+- Hook (#50): under 2 s on Redis (0.96-1.42 s); a real `claude -p` session showed the warning ($0.03).
+- Accuracy (small sample, #53): callers 73/73, field users 30/30; 1 miss (#52), 0 false alarms.
+  Small sample (25 functions, 10 fields), truth built by an AI agent: please spot-check the 21 listed
+  entries. Not a headline yet.
+- Real-change screenshots: docs/launch/screenshots/ (Redis checkStringLength signature change: 2 exact
+  breaks, matches grep).
+- New issues: #46 (os.chdir in in-process parses), #49 (changed function that won't build shown at
+  distance 1), #51 (check --patch on CRLF files), #52 (`x++` on a field not counted as a read).
+- UX notes: the pointer step is described one hop off ("calls appendCommand, which calls
+  checkStringLength (a call through a function pointer...)": the pointer is between call and
+  appendCommand); the "1696 files not in compile_commands.json" limit line is noisy for Redis (bundled
+  deps tests); HTML graph labels are tiny.
+
+**Needs you now:**
+- GitHub refuses to start macOS CI jobs: "recent account payments have failed or your spending limit
+  needs to be increased" (Billing & plans). Linux CI still runs.
+- **My mistake:** I merged #53 while its macOS jobs had not run (billing). Its Linux jobs and lint passed,
+  and it only adds docs and scripts.
+
+Not done (cost): the 120 agent benchmark runs (~$2,400), coverage-based test recording (item 6 part 2),
+the parser-gaps PR, the full launch checks. Launch verdict unchanged: not ready (see below).
+
+---
+
 # Morning report: night of 2026-11-08
 
 Short version: items 1-4 are merged into `launch-candidate`; item 5 (Part C) is built locally but not

@@ -1,0 +1,43 @@
+⚠️  This change can break 2 things you didn't touch.
+    19 may be affected (19 further up) and 3 parts of the change could not be followed.
+    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).
+
+What changed (1)
+  ◆ CHANGED    checkStringLength  src/t_string.c:26  (signature changed: now takes 4 parameters (was 3))
+
+Functions (21)
+  ✖ BREAKS     setrangeCommand  src/t_string.c:580
+               passes 3 arguments; checkStringLength now takes 4 (and 4 other links). Link: exact.
+  ✖ BREAKS     appendCommand  src/t_string.c:1369
+               passes 3 arguments; checkStringLength now takes 4 (and 2 other links). Link: exact.
+  ▲ AFFECTED   loadSingleAppendOnlyFile  src/aof.c:1810
+               calls appendCommand, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ▲ AFFECTED   call  src/server.c:3992
+               calls appendCommand, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ▲ AFFECTED   loadAppendOnlyFiles  src/aof.c:2113
+               calls loadSingleAppendOnlyFile, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ▲ AFFECTED   RM_Call  src/module.c:6859
+               calls call, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ▲ AFFECTED   execCommand  src/multi.c:127
+               calls call, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ▲ AFFECTED   scriptCall  src/script.c:638
+               calls call, which calls checkStringLength (a call through a function pointer of the matching type) (and 1 other link). Link: probable.
+  ... and 13 more (13 AFFECTED). Raise --limit or use --html to see all.
+
+Tests: not known yet (no test map in the index).
+
+Blind spots in this change (3)
+  ? Signature effects follow callers 2 steps further up; more exist.
+  ? Stopped at depth 5; more callers exist further up.
+  ? Uses in code that is not compiled with these flags (other #if branches) are not checked.
+
+Limits of the index (5)
+  ? 1 source file had parse errors; links in them may be missing.
+  ? 1696 C/C++ source files are not in compile_commands.json and were not analysed (deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c, ...).
+  ? Only one build configuration was analysed; code under other #ifdef settings is not seen.
+  ? Some headers were not found: release.h (1 file). Code that needs them may be missing links.
+  ? Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.
+
+Link: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).
+
+index: 215 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)

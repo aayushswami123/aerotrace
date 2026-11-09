@@ -1,5 +1,6 @@
-# Screenshots (SAMPLE DATA)
+# Screenshots
 
-These show the launch UI on its sample file `tests/fixtures/ui/check-v1-sample.json`, NOT a real Redis
-analysis. `aerotrace check` (Part C) is not merged yet, so no real-change screenshot exists.
-Redis names appear in the sample, but the results are invented to show every section.
+- `html-report-redis-*.png`, `terminal-redis-checkStringLength.txt`: REAL output of
+  `aerotrace check --patch redis-checkStringLength.patch` on pinned Redis 8.10.3 (adds a parameter to
+  `checkStringLength` without updating callers). The 2 breaks match grep (3 call sites in 2 functions).
+- `html-report-sample-*.png`, `terminal-sample*.txt`: the UI's invented sample data (`tests/fixtures/ui/check-v1-sample.json`).

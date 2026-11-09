@@ -1,0 +1,11 @@
+--- a/src/t_string.c
++++ b/src/t_string.c
+@@ -23,7 +23,7 @@
+  * String Commands
+  *----------------------------------------------------------------------------*/
+ 
+-static int checkStringLength(client *c, long long size, long long append) {
++static int checkStringLength(client *c, long long size, long long append, int strict) {
+     if (mustObeyClient(c))
+         return C_OK;
+     /* 'uint64_t' cast is there just to prevent undefined behavior on overflow */
