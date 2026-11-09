@@ -10,6 +10,7 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import os
+import re
 from pathlib import Path
 
 from clang import cindex
@@ -553,24 +554,62 @@ def parse_unit(unit: CompileUnit, root: Path, excludes: list[str], extra_args: l
         os.chdir(old_cwd)
 
 
+_UNKNOWN_FLAG = re.compile(
+    r"^(?:unknown argument|unsupported option|unknown target CPU|unknown target ABI)\b.*?'([^']+)'"
+)
+_MISSING_HEADER = re.compile(r"^'(.+)' file not found")
+
+
+def without_machine_flags(args: list[str]) -> tuple[list[str], list[str]]:
+    """Drop target-specific `-m...` flags (and `-march`/`-mcpu` values). Returns (kept, dropped)."""
+    kept: list[str] = []
+    dropped: list[str] = []
+    for a in args:
+        (dropped if a.startswith("-m") and a not in ("-m32", "-m64") else kept).append(a)
+    return kept, dropped
+
+
 def _collect_unit(
     unit: CompileUnit, root: Path, excludes: list[str], extra_args: list[str], rel_src: str, result: dict
 ) -> dict:
+    result["ignored_flags"] = []
+    result["dropped_flags"] = []
+    result["missing_headers"] = []
     try:
         tu = _get_index().parse(unit.file, args=unit.args + extra_args)
-    except cindex.TranslationUnitLoadError as e:
-        result["error_count"] = 1
-        result["errors"] = [f"{rel_src}: libclang could not load this file ({e})"]
-        result["deps"] = {rel_src: file_hash(unit.file)}
-        return result
+    except cindex.TranslationUnitLoadError:
+        # Usually a flag clang refuses for this target (-mfloat-abi=hard on the host). Try once without them.
+        kept, dropped = without_machine_flags(unit.args)
+        try:
+            if not dropped:
+                raise
+            tu = _get_index().parse(unit.file, args=kept + extra_args)
+            result["dropped_flags"] = sorted(set(dropped))
+        except cindex.TranslationUnitLoadError as e:
+            result["error_count"] = 1
+            result["errors"] = [f"{rel_src}: libclang could not load this file ({e})"]
+            result["deps"] = {rel_src: file_hash(unit.file)}
+            return result
 
+    ignored: set[str] = set()
+    missing: set[str] = set()
     for d in tu.diagnostics:
-        if d.severity >= cindex.Diagnostic.Error:
-            result["error_count"] += 1
-            if len(result["errors"]) < MAX_ERRORS_KEPT:
-                loc = d.location
-                where = (rel_to(loc.file.name, root) or loc.file.name) if loc.file else rel_src
-                result["errors"].append(f"{where}:{loc.line}: {d.spelling}")
+        if d.severity < cindex.Diagnostic.Error:
+            continue
+        m = _UNKNOWN_FLAG.match(d.spelling)
+        if m and not d.location.file:  # a flag clang does not know (GCC-only); it does not stop the parse
+            ignored.add(m.group(1))
+            continue
+        h = _MISSING_HEADER.match(d.spelling)
+        if h:
+            missing.add(h.group(1))
+        result["error_count"] += 1
+        if len(result["errors"]) < MAX_ERRORS_KEPT:
+            loc = d.location
+            where = (rel_to(loc.file.name, root) or loc.file.name) if loc.file else rel_src
+            result["errors"].append(f"{where}:{loc.line}: {d.spelling}")
+    result["ignored_flags"] = sorted(ignored)
+    result["missing_headers"] = sorted(missing)
 
     col = Collector(root, excludes)
     col.collect(tu.cursor)

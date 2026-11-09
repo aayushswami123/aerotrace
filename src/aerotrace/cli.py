@@ -50,13 +50,28 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         return 1
     print(f"repo      {root}")
     try:
-        db = compdb.find_compdb(root)
+        found = compdb.find_compdbs(root, Path(args.build_dir).resolve() if args.build_dir else None)
     except FileNotFoundError as e:
-        db = None
         print(f"flags     {e}")
-    print(
-        f"flags     {db.relative_to(root) if db else 'no compile_commands.json found; flags will be guessed'}"
-    )
+        return 1
+    if not found:
+        print("flags     no compile_commands.json found; flags will be guessed")
+        print(f"          {compdb.build_system_hint(root)}")
+    else:
+        flags = compdb.load_compdb(found[0], root, [])
+        print(f"flags     {flags.path}: {len(flags.units)} source files")
+        for p in found[1:]:
+            print(f"          also found {compdb.rel_to(p, root) or p} (not used; pick with --build-dir)")
+        if flags.targets:
+            print(f"target    {', '.join(flags.targets)} (from the compiler name)")
+        if flags.not_in_compdb:
+            print(
+                f"missing   {len(flags.not_in_compdb)} source files are not in it: {', '.join(flags.not_in_compdb[:5])}"
+            )
+        if flags.response_files or flags.response_files_skipped:
+            print(
+                f"rsp       {flags.response_files} response files read, {len(flags.response_files_skipped)} skipped"
+            )
     print(
         f"headers   {len(compdb.system_include_args('c'))} C and {len(compdb.system_include_args('c++'))} C++ folders"
     )
@@ -64,14 +79,24 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def cmd_index(args: argparse.Namespace) -> int:
-    from aerotrace.index.build import build_index
+    from aerotrace.index.build import build_index, remembered
+    from aerotrace.toolchain.compdb import build_system_hint
 
     root = find_root(args.root)
+    build_dir = Path(args.build_dir).resolve() if args.build_dir else None
+    excludes = args.exclude
+    last_dir, last_excludes = remembered(root)
+    if build_dir is None and last_dir is not None and (last_dir / "compile_commands.json").is_file():
+        build_dir = last_dir
+        _err(f"note: using the build folder from the last index ({last_dir}); pass --build-dir to change it.")
+    if not excludes and last_excludes:
+        excludes = last_excludes
+        _err(f"note: excluding {', '.join(last_excludes)} as in the last index; pass --exclude to change it.")
     try:
         report = build_index(
             root,
-            build_dir=Path(args.build_dir).resolve() if args.build_dir else None,
-            excludes=args.exclude,
+            build_dir=build_dir,
+            excludes=excludes,
             jobs=args.jobs,
             use_cache=not args.no_cache,
             log=_err,
@@ -82,18 +107,47 @@ def cmd_index(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(report.__dict__, indent=2, sort_keys=True))
         return 0
+    for line in flags_summary(report.__dict__):
+        _err(line)
     for f, errs in sorted(report.errors_by_file.items())[: args.show_errors]:
         _err(f"parse errors in {f}:")
         for e in errs[:3]:
             _err(f"  {e}")
     if report.flags_source == "guessed":
-        _err("note: flags were guessed. For accurate results, point AeroTrace at a compile_commands.json")
-        _err("      (CMake: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON; Make: run your build under `bear`).")
+        _err("note: flags were guessed. For accurate results, point AeroTrace at a compile_commands.json.")
+        _err(f"      {build_system_hint(root)}")
     if report.clashes:
         _err(
             f"note: {report.clashes} functions share a clang ID with another definition; they are kept apart."
         )
     return 0
+
+
+def flags_summary(r: dict) -> list[str]:
+    """Notes about the compile flags, from a build report."""
+    out: list[str] = []
+    if r.get("alternatives"):
+        out.append(f"note: also found {', '.join(r['alternatives'])}; pick another with --build-dir.")
+    if r.get("targets"):
+        out.append(f"note: cross-compiling for {', '.join(r['targets'])} (from the compiler name).")
+    if r.get("not_in_compdb"):
+        n = r["not_in_compdb"]
+        out.append(
+            f"note: {len(n)} source file(s) are not in compile_commands.json and were skipped: {', '.join(n[:5])}"
+        )
+    if r.get("response_files_skipped"):
+        out.append(f"note: could not read response file(s): {', '.join(r['response_files_skipped'][:5])}")
+    if r.get("ignored_flags"):
+        top = sorted(r["ignored_flags"].items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+        out.append("note: libclang ignored flags it does not know: " + ", ".join(f for f, _ in top))
+    if r.get("machine_flags_dropped"):
+        out.append(
+            f"note: {r['machine_flags_dropped']} file(s) only parsed after dropping their -m target flags."
+        )
+    if r.get("missing_headers"):
+        top = sorted(r["missing_headers"].items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+        out.append("note: headers not found: " + ", ".join(f"{h} ({n} files)" for h, n in top))
+    return out
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -279,6 +333,7 @@ def build_parser() -> argparse.ArgumentParser:
         return sp
 
     d = with_root(sub.add_parser("doctor", help="check libclang, compile flags and headers"))
+    d.add_argument("--build-dir", help="folder holding compile_commands.json")
     d.set_defaults(func=cmd_doctor)
 
     i = with_root(sub.add_parser("index", help="build or refresh the index in .aerotrace/"))

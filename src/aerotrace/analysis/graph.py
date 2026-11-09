@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from dataclasses import dataclass, field
 
@@ -248,5 +249,38 @@ def index_limits(conn: sqlite3.Connection) -> list[str]:
         notes.append(
             f"{n_err} source file{'s' if n_err != 1 else ''} had parse errors; links in them may be missing."
         )
+    notes += flag_limits(meta)
     notes.append("Only one build configuration was analysed; code under other #ifdef settings is not seen.")
+    return notes
+
+
+def _names(items: list[str], n: int = 3) -> str:
+    return ", ".join(items[:n]) + (", ..." if len(items) > n else "")
+
+
+def flag_limits(meta: dict[str, str]) -> list[str]:
+    """Plain-English limits that come from the compile flags (see `aerotrace doctor` for details)."""
+    notes: list[str] = []
+    alternatives = json.loads(meta.get("compdb_alternatives") or "[]")
+    if alternatives:
+        notes.append(
+            f"Used {meta.get('compdb_path')}; {len(alternatives)} other compile_commands.json "
+            f"({_names(alternatives)}) were not used. Pick one with --build-dir."
+        )
+    outside = json.loads(meta.get("not_in_compdb") or "[]")
+    if outside:
+        notes.append(
+            f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
+            f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
+        )
+    missing = json.loads(meta.get("missing_headers") or "[]")
+    if missing:
+        shown = ", ".join(f"{h} ({n} file{'s' if n != 1 else ''})" for h, n in missing[:3])
+        notes.append(f"Some headers were not found: {shown}. Code that needs them may be missing links.")
+    dropped = int(meta.get("machine_flags_dropped") or 0)
+    if dropped:
+        notes.append(
+            f"{dropped} file{'s were' if dropped != 1 else ' was'} parsed without their -m target flags, "
+            "so #ifdefs that depend on the target may differ from the real build."
+        )
     return notes

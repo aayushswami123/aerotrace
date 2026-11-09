@@ -44,8 +44,24 @@ To see which functions a diff *removed*, it reads the old version of each change
 deleted function and the code that still calls it are reported. Changes it can't follow (macros, types,
 files outside the index) are listed at the end, never dropped.
 
+### Compile flags
+
 For accurate results, give AeroTrace your build's `compile_commands.json`
 (CMake: `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`; Make: run the build under [`bear`](https://github.com/rizsotto/Bear)).
+AeroTrace looks in the repo root, `build*/`, `cmake-build-*/` and `out/*/`, or use `--build-dir`. It remembers
+the folder, so later re-indexing (also by the MCP server) uses the same flags. When the file changes, the
+index is rebuilt.
+
+It handles what real builds contain:
+
+- **Cross compilers.** `arm-none-eabi-gcc` means AeroTrace parses for `arm-none-eabi`, so `-mcpu=...` works
+  and target `#ifdef`s match the real build. The compiler is never run; only its name is read.
+- **GCC-only flags** that clang does not know are ignored and listed, not counted as errors.
+- **Response files** (`@flags.rsp`) are read when they are inside the repo or the build folder.
+
+`aerotrace doctor` shows which database is used, other databases it found, the target, and source files
+the build does not list. Every answer's limits mention files left out, headers that were not found, and
+other databases, so a wrong setup is never silent.
 
 ## What the labels mean
 

@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import sqlite3
+from collections import Counter
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
@@ -20,12 +21,14 @@ from aerotrace.toolchain import libclang
 from aerotrace.toolchain.compdb import (
     SOURCE_EXTS,
     CompileUnit,
+    find_compdbs,
     find_units,
+    fingerprint,
     system_include_args,
     unit_language,
 )
 
-PARSER_VERSION = "3"  # bump when parse output changes, so old cache entries are ignored
+PARSER_VERSION = "4"  # bump when parse output changes, so old cache entries are ignored
 
 
 @dataclass
@@ -46,6 +49,13 @@ class BuildReport:
     edges: int = 0
     blind_spots: int = 0
     clashes: int = 0
+    alternatives: list[str] = field(default_factory=list)  # other compile databases found, not used
+    targets: list[str] = field(default_factory=list)  # cross-compile targets taken from compiler names
+    response_files_skipped: list[str] = field(default_factory=list)
+    not_in_compdb: list[str] = field(default_factory=list)  # repo sources the database does not list
+    ignored_flags: dict[str, int] = field(default_factory=dict)  # flag clang does not know -> files
+    machine_flags_dropped: int = 0  # files parsed again without -m flags after libclang refused them
+    missing_headers: dict[str, int] = field(default_factory=dict)  # header -> files that could not find it
 
 
 # ---------------------------------------------------------------- cache
@@ -93,6 +103,11 @@ def _work(job: tuple) -> dict:
     return parse_mod.parse_unit(unit, Path(root), excludes, extra)
 
 
+def _top(counts: dict[str, int], n: int = 10) -> list[list]:
+    """The `n` most common entries, most common first, ties by name: [[name, count], ...]."""
+    return [[k, v] for k, v in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:n]]
+
+
 # ---------------------------------------------------------------- entry point
 
 
@@ -122,6 +137,10 @@ def build_index(
         units=len(flags.units),
         multi_config_files=sum(1 for u in flags.units if u.configs > 1),
         unsafe_flags_removed=flags.unsafe_flags_removed,
+        alternatives=flags.alternatives,
+        targets=flags.targets,
+        response_files_skipped=flags.response_files_skipped,
+        not_in_compdb=flags.not_in_compdb,
     )
     where = f"from {flags.path}" if flags.path else "guessed (no compile_commands.json found)"
     log(f"{len(flags.units)} source files, flags {where}")
@@ -160,10 +179,17 @@ def build_index(
             pool.shutdown()
 
     ordered = [results[u.file] for u in flags.units]  # units are sorted by path
+    ignored: Counter[str] = Counter()
+    missing: Counter[str] = Counter()
     for res in ordered:
         if res["error_count"]:
             report.files_with_errors += 1
             report.errors_by_file[res["file"]] = res["errors"]
+        ignored.update(res.get("ignored_flags", []))
+        missing.update(res.get("missing_headers", []))
+        report.machine_flags_dropped += bool(res.get("dropped_flags"))
+    report.ignored_flags = dict(sorted(ignored.items()))
+    report.missing_headers = dict(sorted(missing.items()))
 
     graph = merge(ordered)
     report.functions = len(graph.functions)
@@ -209,6 +235,17 @@ def build_index(
         "units": str(report.units),
         "files_with_errors": str(report.files_with_errors),
         "multi_config_files": str(report.multi_config_files),
+        # how this index was built, so a refresh uses the same settings
+        "build_dir": str(build_dir) if build_dir else "",
+        "excludes": json.dumps(sorted(excludes)),
+        "compdb_hash": flags.hash,
+        # what the flags could not cover (shown as limits of every answer)
+        "compdb_alternatives": json.dumps(report.alternatives),
+        "targets": json.dumps(report.targets),
+        "not_in_compdb": json.dumps(report.not_in_compdb),
+        "missing_headers": json.dumps(_top(report.missing_headers)),
+        "ignored_flags": json.dumps(_top(report.ignored_flags)),
+        "machine_flags_dropped": str(report.machine_flags_dropped),
     }
     store.write_index(root, graph, [files[k] for k in sorted(files)], meta)
     log(
@@ -218,6 +255,35 @@ def build_index(
     return report
 
 
+def remembered(root: Path) -> tuple[Path | None, list[str]]:
+    """(build dir, excludes) the current index was built with, or (None, []) when there is no index."""
+    try:
+        conn = store.connect(root)
+    except FileNotFoundError:
+        return None, []
+    try:
+        meta = store.read_meta(conn)
+    finally:
+        conn.close()
+    build_dir = Path(meta["build_dir"]) if meta.get("build_dir") else None
+    return build_dir, json.loads(meta.get("excludes") or "[]")
+
+
+def flags_changed(root: Path, meta: dict[str, str], build_dir: Path | None) -> str:
+    """Why the compile flags no longer match the index ("" when they still do)."""
+    try:
+        found = find_compdbs(root, build_dir)
+    except FileNotFoundError:
+        return f"compile_commands.json is gone from {build_dir}"
+    if not found:
+        return "compile_commands.json was removed" if meta.get("compdb_hash") else ""
+    if fingerprint(found[0]) != meta.get("compdb_hash"):
+        return (
+            "compile_commands.json changed" if meta.get("compdb_hash") else "a compile_commands.json appeared"
+        )
+    return ""
+
+
 def fresh_index(
     root: Path,
     *,
@@ -225,9 +291,10 @@ def fresh_index(
     want: list[str] | tuple[str, ...] = (),
     log: Callable[[str], None] = lambda _msg: None,
 ) -> tuple[sqlite3.Connection, str]:
-    """Open the index, building or refreshing it first when files changed. Returns (connection, note),
-    where the note says in one line what was done ("" when nothing was).
+    """Open the index, building or refreshing it first when files or compile flags changed. Returns
+    (connection, note), where the note says in one line what was done ("" when nothing was).
 
+    A refresh uses the build dir and excludes the index was built with, unless `build_dir` is given.
     `want` lists repo-relative source files the caller needs in the index (for example files a diff
     touches). When flags are guessed, a new source file is picked up by re-indexing.
     """
@@ -238,19 +305,28 @@ def fresh_index(
         return store.connect(
             root
         ), f"(Built the index: {report.functions} functions from {report.units} files.)"
+    meta = store.read_meta(conn)
+    excludes = json.loads(meta.get("excludes") or "[]")
+    if build_dir is None and meta.get("build_dir"):
+        build_dir = Path(meta["build_dir"])
+        if not (build_dir / "compile_commands.json").is_file():
+            build_dir = None  # it is gone; find a database the usual way (flags_changed explains)
+    why_flags = flags_changed(root, meta, build_dir)
     changed = store.changed_files(conn, root)
     missing: list[str] = []
-    if want and store.read_meta(conn).get("flags_source") == "guessed":
+    if want and meta.get("flags_source") == "guessed":
         known = store.indexed_paths(conn)
         missing = sorted(
             p
             for p in want
             if p not in known and Path(p).suffix.lower() in SOURCE_EXTS and (root / p).is_file()
         )
-    if not changed and not missing:
+    if not changed and not missing and not why_flags:
         return conn, ""
     conn.close()
-    build_index(root, build_dir=build_dir, log=log)
+    build_index(root, build_dir=build_dir, excludes=excludes, log=log)
+    if why_flags:
+        return store.connect(root), f"(Re-indexed: {why_flags}.)"
     stale = changed + missing
     shown = ", ".join(stale[:3]) + (" ..." if len(stale) > 3 else "")
     return store.connect(root), f"(Re-indexed {len(stale)} changed file(s): {shown}.)"
