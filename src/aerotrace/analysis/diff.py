@@ -540,7 +540,7 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
 
 
 def load_git(
-    root: Path, ref: str = "HEAD", outliner: Outliner | None = None
+    root: Path, ref: str = "HEAD", outliner: Outliner | None = None, every: bool = False
 ) -> tuple[list[FileDiff], str, dict[str, Outline | None]]:
     """The working tree compared with where HEAD left `ref`, including new files git does not track yet.
     Returns (file diffs, a short description of the base, outlines of the old versions of changed code
@@ -567,7 +567,10 @@ def load_git(
     old_paths = [
         fd.old_path
         for fd in diffs
-        if fd.old_path and fd.removed and not fd.binary and Path(fd.old_path).suffix.lower() in CODE_EXTS
+        if fd.old_path
+        and (fd.removed or every)
+        and not fd.binary
+        and Path(fd.old_path).suffix.lower() in CODE_EXTS
     ]
     outliner = outliner or Outliner(root)
     return diffs, desc, {rel: outliner.at(base.sha, rel) for rel in sorted(set(old_paths))}

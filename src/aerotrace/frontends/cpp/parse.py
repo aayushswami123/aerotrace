@@ -1216,6 +1216,8 @@ def _outline_function(c: Cursor, data: bytes) -> dict:
     body = next((ch for ch in c.get_children() if ch.kind == K.COMPOUND_STMT), None)
     end = body.extent.start.offset if body is not None else c.extent.end.offset
     head = data[start:end].decode("utf-8", "surrogateescape") if 0 <= start <= end <= len(data) else ""
+    if body is not None and ";" in head:
+        proto = False  # a K&R definition, `int f(x) int x; {`: clang types it as a prototype, callers don't
     for i, prm in enumerate(params):
         if prm["name"]:
             head = re.sub(rf"\b{re.escape(prm['name'])}\b", f"${i}", head)
@@ -1278,7 +1280,8 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
       canonical, line, line_end, position (in its record), decl (hash of the declaration text), init
       (hash of the initializer, "" when there is none)}.
     - "errors": count; "diagnostics": errors in this file [{line, text}]; "protos": prototypes seen in
-      other files of the translation unit, {qualified_name: [signature, ...]}.
+      other files of the translation unit, {qualified_name: [signature, ...]}; "noproto": names declared
+      there without a prototype (`int f();` in C).
 
     None when libclang could not load it. `path` is the file's absolute path."""
     old_cwd = os.getcwd()
@@ -1297,6 +1300,7 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
         target = os.path.realpath(path)
         out: dict = {"functions": [], "declarations": [], "variables": []}
         protos: dict[str, set[str]] = {}
+        noproto: set[str] = set()
         real: dict[str, bool] = {}
 
         def is_target(name: str) -> bool:
@@ -1316,6 +1320,8 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
                     if c.kind in FUNC_KINDS and not c.is_definition() and c.spelling:
                         qn = "::".join([*_scope_parts(c), c.spelling])
                         protos.setdefault(qn, set()).add(_outline_function(c, b"")["signature"])
+                        if c.type.kind == TypeKind.FUNCTIONNOPROTO:
+                            noproto.add(qn)
                     elif c.kind in DESCEND_KINDS:
                         visit(c)
                     continue
@@ -1345,6 +1351,7 @@ def function_outline(path: str, content: str, args: list[str], directory: str) -
         )
         out["diagnostics"] = [{"line": n, "text": t} for n, t in mine]
         out["protos"] = {k: sorted(v) for k, v in sorted(protos.items())}
+        out["noproto"] = sorted(noproto)
         return out
     finally:
         os.chdir(old_cwd)

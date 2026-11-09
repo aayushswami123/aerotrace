@@ -36,6 +36,7 @@ class Outline:
     errors: int  # parse errors (the outline may be incomplete)
     diagnostics: list[dict] = field(default_factory=list)  # errors in this file: {line, text}
     protos: dict[str, list[str]] = field(default_factory=dict)  # prototypes in other files of the TU
+    noproto: list[str] = field(default_factory=list)  # names declared there without a prototype
 
 
 def _drop_language(args: list[str]) -> list[str]:
