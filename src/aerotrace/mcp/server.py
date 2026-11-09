@@ -16,7 +16,7 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from aerotrace import __version__
-from aerotrace.analysis import data, diff, graph, render, render_data, signature, symbols
+from aerotrace.analysis import data, diff, graph, render, render_data, signature, symbols, testimpact
 from aerotrace.index import store
 from aerotrace.index.build import fresh_index
 from aerotrace.index.history import Outliner
@@ -38,6 +38,7 @@ Use it BEFORE you edit C or C++ code:
 - Before renaming, removing or retyping a struct field or a global, call `data_users`: every function that
   reads or writes it, initializers that set it, code that still uses a removed field, and where its address
   goes. Fields are tracked per struct type, not per object.
+- To pick tests to run for a change, call `tests_for_change` (same inputs as `diff_impact`).
 - Use `callers` / `callees` to follow the code, and `find` when you are not sure of a name.
 - Labels: no label = a direct call; [virtual] = may land on this override; [via_pointer] = matched by
   function-pointer type; [ambiguous] = several functions share this name; [data] = reads data the changed
@@ -166,6 +167,36 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
                     return _with_note(msg, note)
             res = data.data_users_of(conn, found[0], depth, writer.id if writer else None)
             return _with_note(render_data.data_text(res, limit, show_all, render_data.MCP_MORE), note)
+
+    @server.tool()
+    def tests_for_change(
+        base: str = "HEAD", patch: str = "", symbol: str = "", depth: int = 8, limit: int = 30
+    ) -> str:
+        """Which tests to run for a change, why, and how sure (exact / probable), plus the changed code no
+        known test reaches. Same inputs as `diff_impact` (no arguments = your uncommitted edits), or
+        `symbol` for one function. It never runs tests. "Not known" means AeroTrace can't tell, not that
+        the code is untested."""
+        if symbol:
+            conn, note = state.open()
+            with closing(conn):
+                fn, msg = resolve(conn, symbol)
+                if fn is None:
+                    return _with_note(msg, note)
+                res = testimpact.for_function(conn, root, fn, depth)
+                return _with_note(render.tests_text(res, limit), note)
+        outliner = Outliner(root, build_dir)
+        try:
+            if patch:
+                mode, desc, diffs, old = "patch", None, diff.load_patch(root, patch), {}
+            else:
+                mode = "git"
+                diffs, desc, old = diff.load_git(root, base, outliner)
+        except (GitError, ValueError) as e:
+            return f"Could not read the change: {e}"
+        conn, note = state.open(diff.wanted(diffs, mode))
+        with closing(conn):
+            d = diff.analyse(conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now)
+            return _with_note(render.tests_text(testimpact.for_diff(conn, root, d, depth), limit), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:

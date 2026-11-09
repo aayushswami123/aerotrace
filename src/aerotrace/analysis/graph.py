@@ -34,6 +34,7 @@ class Hit:
     confidence: str  # weakest link on the best path found
     via: str | None  # the function one step closer to the start (its qualified name)
     lines: list[int]  # where, in the closer function or in this one, the link is
+    via_id: str | None = None  # the id behind `via` (a function id, or a label key for seeds)
 
 
 @dataclass
@@ -127,7 +128,7 @@ def walk_many(
     fns = symbols.get_many(conn, list(best))
     names = {i: f.qualified_name for i, f in fns.items()} | (labels or {})
     hits = [
-        Hit(fns[i], d, c, names.get(v) if v else None, sorted(ls))
+        Hit(fns[i], d, c, names.get(v) if v else None, sorted(ls), v)
         for i, (d, c, v, ls) in best.items()
         if d > 0 and i in fns
     ]
