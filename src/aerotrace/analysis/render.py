@@ -9,6 +9,8 @@ from aerotrace.analysis.diff import DiffImpact, ranges
 from aerotrace.analysis.graph import CONFIDENCE_MEANING, CONFIDENCE_ORDER, Hit, Impact, Walk
 from aerotrace.analysis.signature import IGNORING, USE_WORDS, USES, SignatureImpact, Site, UpstreamGroup
 from aerotrace.analysis.symbols import Fn
+from aerotrace.analysis.testimpact import KIND_WORDS, KINDS, TestImpact
+from aerotrace.analysis.testimpact import commands as test_commands
 
 
 def _hit_line(h: Hit, show_via: bool) -> str:
@@ -577,4 +579,120 @@ def signature_json(r: SignatureImpact, limit: int | None = 50, show_all: bool = 
         },
         "truncated_at_depth": r.truncated,
         "blind_spots": r.blind_spots,
+    }
+
+
+# ---------------------------------------------------------------- test impact
+
+
+def _tests_summary(r: TestImpact) -> str:
+    parts = [_n(r.changed_fns, "function") + " changed"]
+    if r.changed_decls:
+        parts.append(_n(r.changed_decls, "declaration") + " changed")
+    return f"Tests {r.title}: {', '.join(parts)} in {_n(r.files, 'C/C++ file')}."
+
+
+def _entries_line(r: TestImpact) -> str:
+    if not r.entries:
+        return (
+            "Test entry points in the index: none (looked for GoogleTest, Unity, CMocka, and test programs "
+            "with main)."
+        )
+    parts = [f"{r.entries[k]} {KIND_WORDS[k]}" for k in KINDS if r.entries[k] and k != "main"]
+    if r.entries["main"]:
+        parts.append(_n(r.entries["main"], "test program") + " with main")
+    return f"Test entry points in the index: {', '.join(parts)}."
+
+
+def _reaches(names: list[str], n: int = 3) -> str:
+    return ", ".join(names[:n]) + (f" and {len(names) - n} more" if len(names) > n else "")
+
+
+def _no_tests_sentence(r: TestImpact) -> str:
+    seen = (
+        "no C/C++ test that AeroTrace can see calls it"
+        if r.entries
+        else "AeroTrace found no C/C++ test entry points"
+    )
+    return (
+        f"No tests to list. This does not mean no test runs this code: {seen}, and tests written as "
+        "scripts (Tcl, Python, shell) are not seen without coverage."
+    )
+
+
+def tests_text(r: TestImpact, limit: int = 50) -> str:
+    lines = [_tests_summary(r)]
+    if r.ignored:
+        lines.append(
+            f"({_n(r.ignored, 'other file')} in the change {'is' if r.ignored == 1 else 'are'} not C or C++.)"
+        )
+    lines.append("Coverage: not recorded." if r.coverage == "not_recorded" else f"Coverage: {r.coverage}.")
+    lines.append(_entries_line(r))
+    if r.no_test_reaches:
+        lines += ["", f"No test reaches this code ({len(r.no_test_reaches)}):"]
+        lines += _cap([f"  - {n.what}  {n.where}  ({n.why})" for n in r.no_test_reaches], limit)
+    if r.not_known:
+        lines += ["", f"Not known which tests reach this code ({len(r.not_known)}):"]
+        lines += _cap(
+            [
+                f"  - {n.what}" + (f"  {n.where}" if n.where != n.what else "") + f"  ({n.why})"
+                for n in r.not_known
+            ],
+            limit,
+        )
+    lines.append("")
+    if r.tests:
+        shown = r.tests[:limit]
+        width = max(len(t.test) for t in shown)
+        lines.append(f"Run these tests ({len(r.tests)}, most certain first):")
+        lines += [
+            f"  - {t.level:<8}  {t.test:<{width}}  reaches {_reaches(t.reaches)} ({t.reason})" for t in shown
+        ]
+        if len(r.tests) > limit:
+            lines.append(f"  ... and {len(r.tests) - limit} more (raise `limit` to see them).")
+        cmds = test_commands(r)
+        if cmds:
+            lines.append("How to run them:")
+            lines += [f"  - {c}" for c in cmds]
+    elif r.changed_fns or r.changed_decls or r.not_known:
+        lines.append(_no_tests_sentence(r))
+    else:
+        lines.append("No C/C++ function or declaration changed, so there is nothing to link to tests.")
+    if r.limits:
+        lines += ["", "Limits of this answer:"]
+        lines += [f"  - {n}" for n in r.limits]
+    return "\n".join(lines)
+
+
+def tests_json(r: TestImpact, limit: int = 50) -> dict:
+    def nk(items: list) -> list[dict]:
+        return [{"what": n.what, "where": n.where, "why": n.why} for n in items[:limit]]
+
+    return {
+        "title": r.title,
+        "changed_functions": r.changed_fns,
+        "changed_declarations": r.changed_decls,
+        "files": r.files,
+        "coverage": {"state": r.coverage},
+        "entry_points": {k: r.entries[k] for k in KINDS if r.entries[k]},
+        "no_test_reaches": nk(r.no_test_reaches),
+        "not_known": nk(r.not_known),
+        "not_known_total": len(r.not_known),
+        "tests": [
+            {
+                "id": t.test,
+                "kind": t.kind,
+                "file": t.file,
+                "level": t.level,
+                "reason": t.reason,
+                "reaches": t.reaches,
+                "source": "static",
+            }
+            for t in r.tests[:limit]
+        ],
+        "tests_total": len(r.tests),
+        "commands": test_commands(r),
+        "unindexed_test_files": r.unindexed_tests[:limit],
+        "truncated_at_depth": r.truncated,
+        "limits": r.limits,
     }

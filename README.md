@@ -23,8 +23,8 @@ aerotrace install --client codex    # adds it to ~/.codex/config.toml (Codex, ev
 
 Add `--dry-run` to see the change first. Only the `aerotrace` entry is added or replaced; other servers are kept.
 
-The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_users`, `callers`, `callees`,
-`find` and `index_status`. The first question
+The agent gets these tools: `impact`, `diff_impact`, `signature_impact`, `data_users`, `tests_for_change`,
+`callers`, `callees`, `find` and `index_status`. The first question
 builds the index. After that, files you edit are re-indexed before each answer.
 
 ## Use it from the terminal
@@ -41,7 +41,14 @@ aerotrace find src/server.c:4221
 aerotrace diff                 # what your uncommitted edits could break (new files included)
 aerotrace diff main            # everything on this branch, compared with where it left main
 aerotrace diff --patch fix.diff   # a change that is not applied yet
+aerotrace tests                # which tests to run for your edits (same inputs as diff, or --symbol FN)
 ```
+
+`tests` finds C/C++ test entry points in the index (GoogleTest `TEST`/`TEST_F` and fixture `SetUp`,
+Unity `RUN_TEST`, CMocka `cmocka_unit_test`, and `main` in test files) and links them to the changed code
+through callers. Each test is `exact` (only direct calls) or `probable` (a pointer, virtual or data link),
+with the reason. Changed code no C/C++ test calls is listed as "Not known", never as untested: tests
+written as scripts (such as Redis's and SQLite's Tcl tests) are not seen by static links.
 
 `diff` maps changed lines to functions, globals and fields, then lists everything upstream of them.
 To see which functions a diff *removed*, it reads the old version of each changed file from git, so a

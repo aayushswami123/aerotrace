@@ -751,4 +751,27 @@ FACTS = [
         max_lines=60,
         text_must_not=("ignore",),
     ),
+    # ------------------------------------------------------------ test impact (static links only)
+    Fact(
+        id="redis-tests-psetexCommand-not-known",
+        why="Redis's tests are Tcl scripts (tests/unit/expire.tcl tests PSETEX), which static links can't "
+        "see, and nothing in C calls psetexCommand: the command table stores it. So the answer must be "
+        "'Not known', never 'no test reaches it', and no C test may be listed. The C unit tests in "
+        "redisTests[] (sdsTest, ...) sit inside #ifdef REDIS_TEST, which this build does not define, so "
+        "they are not test entry points; main in server.c is the server, not a test program.",
+        kind="tests",
+        query=f"psetexCommand@{T}",
+        proof=(
+            Line(T, 456, "void psetexCommand(client *c) {"),
+            Line("src/commands.def", 13093, ",psetexCommand,"),
+            Line("tests/unit/expire.tcl", 96, 'test "PSETEX can set sub-second expires" {'),
+            Line("src/sds.c", 1290, "#ifdef REDIS_TEST"),
+            Line("src/sds.c", 1307, "int sdsTest(int argc, char **argv, int flags) {"),
+            Line(S, 8025, '{"sds", sdsTest},'),
+            Line(S, 8051, "int main(int argc, char **argv) {"),
+        ),
+        not_known=("psetexCommand",),
+        exact=True,  # no tests listed
+        must_not=(Fn("sdsTest", "src/sds.c"), Fn("main", S)),
+    ),
 ]
