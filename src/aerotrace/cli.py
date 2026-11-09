@@ -229,6 +229,13 @@ def cmd_find(args: argparse.Namespace) -> int:
     return 0 if fns else 1
 
 
+def _read_patch(name: str) -> str:
+    """The patch file (or stdin for '-') as it is: line endings are kept, so a CRLF patch still fits a CRLF
+    file (#51)."""
+    data = sys.stdin.buffer.read() if name == "-" else Path(name).read_bytes()
+    return data.decode("utf-8", "surrogateescape")
+
+
 def cmd_walk(args: argparse.Namespace) -> int:
     from aerotrace.analysis import graph, render
 
@@ -276,7 +283,7 @@ def cmd_diff(args: argparse.Namespace) -> int:
     outliner = Outliner(root, build_dir)
     try:
         if args.patch:
-            text = sys.stdin.read() if args.patch == "-" else Path(args.patch).read_text(encoding="utf-8")
+            text = _read_patch(args.patch)
             mode, base, diffs, old = "patch", None, diff.load_patch(root, text), {}
         else:
             mode = "git"
@@ -321,7 +328,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     try:
         text = None
         if args.patch:
-            text = sys.stdin.read() if args.patch == "-" else Path(args.patch).read_text(encoding="utf-8")
+            text = _read_patch(args.patch)
         data, note = check.check_change(
             root,
             lambda want: fresh_index(root, build_dir=build_dir, want=want),
@@ -407,7 +414,7 @@ def cmd_tests(args: argparse.Namespace) -> int:
         outliner = Outliner(root, build_dir)
         try:
             if args.patch:
-                text = sys.stdin.read() if args.patch == "-" else Path(args.patch).read_text(encoding="utf-8")
+                text = _read_patch(args.patch)
                 mode, base, diffs, old = "patch", None, diff.load_patch(root, text), {}
             else:
                 mode = "git"

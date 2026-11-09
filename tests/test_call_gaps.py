@@ -1,11 +1,13 @@
 """Calls the parser could not link, or linked wrongly: they must show up as callers or as UNKNOWN, never
 as a quiet "no callers" (#33, #32, #49, #51, #31, #21, #39, #40)."""
 
+import json
 import subprocess
 
 import pytest
 
-from aerotrace.analysis import diff, graph, render, signature, symbols
+from aerotrace.analysis import check, diff, graph, render, signature, symbols
+from aerotrace.cli import main
 from aerotrace.index import store
 from aerotrace.index.build import build_index, fresh_index
 from aerotrace.index.history import Outliner
@@ -104,3 +106,46 @@ def test_body_change_of_an_override_adds_no_extra_callers(repo_factory, monkeypa
     got = {h.fn.name: h.confidence for h in res.affected}
     # must not: on_box calls Box::area by name (no dispatch), it never reached Big::area
     assert got.get("use_area") == "virtual" and "on_box" not in got
+
+
+# ------------------------------------------------ #51: CRLF files
+
+
+def crlf_repo(repo_factory):
+    root = repo_factory("testimpact")
+    p = root / "src/calc.c"
+    p.write_bytes(p.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    build_index(root, jobs=1)
+    lines = p.read_bytes().split(b"\r\n")
+    n = lines.index(b"int add(int a, int b) { return a + b; }") + 1
+    patch = (
+        b"--- a/src/calc.c\r\n+++ b/src/calc.c\r\n"
+        + f"@@ -{n} +{n} @@\r\n".encode()
+        + b"-int add(int a, int b) { return a + b; }\r\n"
+        + b"+int add(int a, int b, int c) { return a + b + c; }\r\n"
+    )
+    return root, patch
+
+
+@pytest.mark.parametrize("ends", ["crlf", "lf"])
+def test_crlf_patch_matches_the_changed_function(repo_factory, ends):
+    root, patch = crlf_repo(repo_factory)
+    if ends == "lf":  # an agent writes the patch with LF line ends for a CRLF file
+        patch = patch.replace(b"\r\n", b"\n")
+    diffs = diff.load_patch(root, patch.decode())
+    conn, _ = fresh_index(root, want=diff.wanted(diffs, "patch"))
+    res = check.run(conn, root, diffs, mode="patch", outliner=Outliner(root))
+    c = check.to_contract(conn, res, "aerotrace test")
+    conn.close()
+    assert c["change"]["not_followed"]["outside"] == []
+    assert [n["name"] for n in c["nodes"] if n["distance"] == 0] == ["add"]
+    assert c["summary"]["breaks_exact"] >= 4
+
+
+def test_cli_check_keeps_crlf_in_the_patch_file(repo_factory, tmp_path, capsys):
+    root, patch = crlf_repo(repo_factory)
+    (tmp_path / "p.diff").write_bytes(patch)
+    main(["check", "--root", str(root), "--patch", str(tmp_path / "p.diff"), "--json"])
+    c = json.loads(capsys.readouterr().out)
+    assert c["change"]["not_followed"]["outside"] == [] and c["change"]["not_followed"]["mismatched"] == []
+    assert [n["name"] for n in c["nodes"] if n["distance"] == 0] == ["add"]
