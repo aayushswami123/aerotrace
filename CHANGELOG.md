@@ -7,6 +7,21 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Cross builds: the target comes from the compiler name (`arm-none-eabi-gcc` -> `--target=arm-none-eabi`),
+  so ARM-only flags parse and target `#ifdef`s are right. The compiler is never run.
+- GCC-only flags clang does not know no longer count as parse errors. If libclang refuses a file, it is
+  parsed again without its `-m` target flags, and the answer says so.
+- `@file` response files in compile commands are read (only inside the repo or the build folder).
+- Answers now say when other `compile_commands.json` files were found, which source files the build does
+  not list, and which headers were not found. `aerotrace doctor --build-dir` shows the same.
+- Specific advice on how to get a `compile_commands.json` for CMake, Meson, Bazel, Make or Visual Studio.
+
+### Fixed
+
+- Re-indexing (by the MCP server or `aerotrace index`) now keeps the `--build-dir` and `--exclude` the
+  index was built with. Before, it fell back to guessed flags when the database was outside the repo.
+- The index is rebuilt when `compile_commands.json` changes, not only when source files change.
+
 - `aerotrace diff [BASE]` and the `diff_impact` MCP tool: what a whole change could break. Compares the
   working tree (uncommitted and new files included) with a commit, or with where the branch left `main`.
   `--patch FILE` checks a change that is not applied yet, after making sure it matches the files on disk.
