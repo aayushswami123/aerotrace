@@ -15,9 +15,11 @@ from pathlib import Path
 from mcp.server import MCPServer
 
 from aerotrace import __version__
-from aerotrace.analysis import graph, render, symbols
+from aerotrace.analysis import diff, graph, render, symbols
 from aerotrace.index import store
-from aerotrace.index.build import build_index
+from aerotrace.index.build import fresh_index
+from aerotrace.index.history import Outliner
+from aerotrace.toolchain.git import GitError
 
 log = logging.getLogger("aerotrace.mcp")
 
@@ -28,10 +30,13 @@ and its answers are deterministic.
 
 Use it BEFORE you edit C or C++ code:
 - Before changing a function, call `impact` on it. Read the affected callers and the "Limits of this answer".
+- After editing, or before applying a patch, call `diff_impact` to check the whole change: changed and
+  deleted functions, changed globals and fields, and everything upstream of them.
 - Use `callers` / `callees` to follow the code, and `find` when you are not sure of a name.
 - Labels: no label = a direct call; [virtual] = may land on this override; [via_pointer] = matched by
   function-pointer type; [ambiguous] = several functions share this name; [data] = reads data the changed
-  function writes. Treat labelled links as real possibilities, not proof.
+  function writes; [uses_changed] = uses a global or field whose declaration changed; [calls_removed] =
+  still calls a function the change removes. Treat labelled links as real possibilities, not proof.
 - If a name matches several functions, ask again with `name@path/to/file.c` or `file.c:LINE`.
 """
 
@@ -44,24 +49,10 @@ class IndexState:
         self.build_dir = build_dir
         self._lock = threading.Lock()
 
-    def open(self) -> tuple[sqlite3.Connection, str]:
+    def open(self, want: list[str] | tuple[str, ...] = ()) -> tuple[sqlite3.Connection, str]:
         """(connection, note for the agent about what happened to the index, or "")."""
         with self._lock:
-            note = ""
-            try:
-                conn = store.connect(self.root)
-            except FileNotFoundError:
-                report = build_index(self.root, build_dir=self.build_dir, log=log.info)
-                note = f"(Built the index: {report.functions} functions from {report.units} files.)"
-                return store.connect(self.root), note
-            changed = store.changed_files(conn, self.root)
-            if changed:
-                conn.close()
-                build_index(self.root, build_dir=self.build_dir, log=log.info)
-                shown = ", ".join(changed[:3]) + (" ..." if len(changed) > 3 else "")
-                note = f"(Re-indexed {len(changed)} changed file(s): {shown}.)"
-                conn = store.connect(self.root)
-            return conn, note
+            return fresh_index(self.root, build_dir=self.build_dir, want=want, log=log.info)
 
 
 def _with_note(text: str, note: str) -> str:
@@ -89,6 +80,29 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
             if fn is None:
                 return _with_note(msg, note)
             return _with_note(render.impact_text(graph.impact(conn, fn, depth), limit), note)
+
+    @server.tool()
+    def diff_impact(base: str = "HEAD", patch: str = "", depth: int = 5, limit: int = 40) -> str:
+        """What a whole change could break. With no arguments: your uncommitted edits compared with HEAD
+        (new files included). `base="main"`: everything on this branch plus uncommitted edits, compared with
+        where the branch left main. `patch="<unified diff>"`: a change you have NOT applied yet; its old
+        side must match the files on disk. Lists changed and removed functions, changed globals and fields,
+        every affected caller, and the changes it could not follow."""
+        outliner = Outliner(root, build_dir)
+        try:
+            if patch:
+                mode, desc, diffs, old = "patch", None, diff.load_patch(root, patch), {}
+            else:
+                mode = "git"
+                diffs, desc, old = diff.load_git(root, base, outliner)
+        except (GitError, ValueError) as e:
+            return f"Could not read the change: {e}"
+        conn, note = state.open(diff.wanted(diffs, mode))
+        with closing(conn):
+            res = diff.analyse(
+                conn, root, diffs, mode=mode, base=desc, depth=depth, old=old, now=outliner.now
+            )
+            return _with_note(render.diff_text(res, limit), note)
 
     @server.tool()
     def callers(symbol: str, depth: int = 3, limit: int = 40) -> str:
