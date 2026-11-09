@@ -154,10 +154,8 @@ def cmd_status(args: argparse.Namespace) -> int:
     from aerotrace.index import store
 
     root = find_root(args.root)
-    try:
-        conn = store.connect(root)
-    except FileNotFoundError as e:
-        _err(str(e))
+    conn = _open(args)
+    if conn is None:
         return 2
     meta = store.read_meta(conn)
     counts = {
@@ -180,11 +178,18 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def _open(args: argparse.Namespace):
+    """The index, rebuilt first when it was made by another AeroTrace version (it is only a cache)."""
     from aerotrace.index import store
+    from aerotrace.index.build import fresh_index
 
     root = find_root(args.root)
     try:
         return store.connect(root)
+    except store.IndexVersionError as e:
+        _err(f"note: {e.reason}; rebuilding it now.")
+        conn, note = fresh_index(root)
+        _err(note)
+        return conn
     except FileNotFoundError as e:
         _err(str(e))
         return None

@@ -256,17 +256,15 @@ def build_index(
 
 
 def remembered(root: Path) -> tuple[Path | None, list[str]]:
-    """(build dir, excludes) the current index was built with, or (None, []) when there is no index."""
-    try:
-        conn = store.connect(root)
-    except FileNotFoundError:
-        return None, []
-    try:
-        meta = store.read_meta(conn)
-    finally:
-        conn.close()
+    """(build dir, excludes) the current index was built with, or (None, []) when there is no index.
+    Read from an index of any version, so an upgrade keeps the user's --build-dir and --exclude."""
+    meta = store.peek_meta(root)
     build_dir = Path(meta["build_dir"]) if meta.get("build_dir") else None
-    return build_dir, json.loads(meta.get("excludes") or "[]")
+    try:
+        excludes = json.loads(meta.get("excludes") or "[]")
+    except ValueError:
+        excludes = []
+    return build_dir, excludes
 
 
 def flags_changed(root: Path, meta: dict[str, str], build_dir: Path | None) -> str:
@@ -300,6 +298,13 @@ def fresh_index(
     """
     try:
         conn = store.connect(root)
+    except store.IndexVersionError as e:
+        old_dir, excludes = remembered(root)  # rebuild with the settings the old index was made with
+        if build_dir is None and old_dir is not None and (old_dir / "compile_commands.json").is_file():
+            build_dir = old_dir
+        report = build_index(root, build_dir=build_dir, excludes=excludes, log=log)
+        note = f"(Rebuilt the index: {e.reason}. Now {report.functions} functions from {report.units} files.)"
+        return store.connect(root), note
     except FileNotFoundError:
         report = build_index(root, build_dir=build_dir, log=log)
         return store.connect(

@@ -188,20 +188,57 @@ def write_index(root: Path, graph: Graph, files: list[dict], meta: dict[str, str
     return final
 
 
+class IndexVersionError(FileNotFoundError):
+    """The index was made by another AeroTrace version (another index format), or can't be read at all.
+    It is a local cache, so the answer is always to rebuild it."""
+
+    def __init__(self, root: Path, found: str | None):
+        self.found = found
+        if found is None:
+            what = "can't be read (it is damaged or from a very old AeroTrace)"
+        elif found.isdigit() and int(found) < int(SCHEMA_VERSION):
+            what = (
+                f"was made by an older AeroTrace (index format {found}; this version uses {SCHEMA_VERSION})"
+            )
+        else:
+            what = f"was made by a newer AeroTrace (index format {found}; this version uses {SCHEMA_VERSION})"
+        self.reason = f"the index in {root} {what}"
+        super().__init__(f"{self.reason}. Rebuild it with `aerotrace index`.")
+
+
 def connect(root: Path) -> sqlite3.Connection:
-    """Open the index read-only. Raises FileNotFoundError when there is none."""
+    """Open the index read-only. Raises FileNotFoundError when there is none, and IndexVersionError (a
+    FileNotFoundError) when it has another format or can't be read."""
     path = db_path(root)
     if not path.is_file():
         raise FileNotFoundError(f"no AeroTrace index in {root}. Run `aerotrace index` first.")
     conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-    version = conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()
+    try:
+        version = conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()
+    except sqlite3.DatabaseError:
+        conn.close()
+        raise IndexVersionError(root, None) from None
     if version is None or version[0] != SCHEMA_VERSION:
         conn.close()
-        raise FileNotFoundError(
-            f"the index in {root} is from another AeroTrace version. Run `aerotrace index`."
-        )
+        raise IndexVersionError(root, version[0] if version else None)
     return conn
+
+
+def peek_meta(root: Path) -> dict[str, str]:
+    """The meta table of whatever index is there, any version; {} when it can't be read. Used to rebuild an
+    old index with the settings it was made with."""
+    path = db_path(root)
+    if not path.is_file():
+        return {}
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            return {k: v for k, v in conn.execute("SELECT key, value FROM meta")}
+        finally:
+            conn.close()
+    except sqlite3.DatabaseError:
+        return {}
 
 
 def read_meta(conn: sqlite3.Connection) -> dict[str, str]:

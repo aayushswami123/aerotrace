@@ -203,3 +203,45 @@ def test_pointer_calls_only_match_functions_of_the_same_type(c_conn):
         ("dispatch", "call through a pointer to 'void (void)'; may reach 2 functions of that type"),
     ]
     assert not any(src.startswith("apply@") for src, _, _, _ in edges(c_conn, "calls"))
+
+
+def _age_index(root, version="2"):
+    raw = sqlite3.connect(store.db_path(root))
+    raw.execute("UPDATE meta SET value = ? WHERE key = 'schema_version'", (version,))
+    raw.commit()
+    raw.close()
+
+
+def test_an_old_index_is_rebuilt_with_a_clear_note_and_its_settings(repo_factory, capsys):
+    from aerotrace.cli import main
+    from aerotrace.index.build import fresh_index
+
+    root = repo_factory("c_multi")
+    build_index(root, jobs=1, excludes=["prog_b/util.c"])
+    _age_index(root)
+    conn, note = fresh_index(root)  # what the MCP server and `diff` do
+    assert note.startswith("(Rebuilt the index: the index in ")
+    assert "was made by an older AeroTrace (index format 2; this version uses 3)" in note
+    assert store.read_meta(conn)["excludes"] == '["prog_b/util.c"]'  # the old settings are kept
+    conn.close()
+    _age_index(root)
+    assert main(["callers", "add", "--root", str(root), "--depth", "1"]) == 0  # CLI queries rebuild too
+    out = capsys.readouterr()
+    assert "rebuilding it now" in out.err and out.out.startswith("Callers of add")
+
+
+def test_a_newer_or_damaged_index_is_rebuilt_not_a_crash(repo_factory):
+    from aerotrace.index.build import fresh_index
+
+    root = repo_factory("c_multi")
+    build_index(root, jobs=1)
+    _age_index(root, "99")
+    conn, note = fresh_index(root)
+    assert "was made by a newer AeroTrace (index format 99" in note
+    conn.close()
+    store.db_path(root).write_bytes(b"not a database")
+    with pytest.raises(store.IndexVersionError, match="can't be read"):
+        store.connect(root)
+    conn, note = fresh_index(root)
+    assert "can't be read" in note and store.read_meta(conn)["schema_version"] == store.SCHEMA_VERSION
+    conn.close()
