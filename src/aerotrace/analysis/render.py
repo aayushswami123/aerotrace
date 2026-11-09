@@ -587,6 +587,8 @@ def signature_json(r: SignatureImpact, limit: int | None = 50, show_all: bool = 
 
 def _tests_summary(r: TestImpact) -> str:
     parts = [_n(r.changed_fns, "function") + " changed"]
+    if r.removed_fns:
+        parts.append(_n(r.removed_fns, "function") + " removed")
     if r.changed_decls:
         parts.append(_n(r.changed_decls, "declaration") + " changed")
     return f"Tests {r.title}: {', '.join(parts)} in {_n(r.files, 'C/C++ file')}."
@@ -609,15 +611,19 @@ def _reaches(names: list[str], n: int = 3) -> str:
 
 
 def _no_tests_sentence(r: TestImpact) -> str:
-    seen = (
-        "no C/C++ test that AeroTrace can see calls it"
-        if r.entries
-        else "AeroTrace found no C/C++ test entry points"
-    )
-    return (
-        f"No tests to list. This does not mean no test runs this code: {seen}, and tests written as "
-        "scripts (Tcl, Python, shell) are not seen without coverage."
-    )
+    """Why nothing is listed, true for this case: what was followed and found nothing, and what was not
+    followed at all."""
+    why = []
+    if any(n.followed for n in r.not_known):
+        why.append(
+            "no C/C++ test that AeroTrace can see calls the changed functions"
+            if r.entries
+            else "the index has no C/C++ test entry points"
+        )
+    if any(not n.followed for n in r.not_known):
+        why.append("who uses the changes outside functions, or in files it could not read, was not followed")
+    why.append("tests written as scripts (Tcl, Python, shell) are not seen without coverage")
+    return f"No tests to list. This does not mean no test runs this code: {'; '.join(why)}."
 
 
 def tests_text(r: TestImpact, limit: int = 50) -> str:
@@ -654,7 +660,7 @@ def tests_text(r: TestImpact, limit: int = 50) -> str:
         if cmds:
             lines.append("How to run them:")
             lines += [f"  - {c}" for c in cmds]
-    elif r.changed_fns or r.changed_decls or r.not_known:
+    elif r.changed_fns or r.removed_fns or r.changed_decls or r.not_known:
         lines.append(_no_tests_sentence(r))
     else:
         lines.append("No C/C++ function or declaration changed, so there is nothing to link to tests.")
@@ -671,6 +677,7 @@ def tests_json(r: TestImpact, limit: int = 50) -> dict:
     return {
         "title": r.title,
         "changed_functions": r.changed_fns,
+        "removed_functions": r.removed_fns,
         "changed_declarations": r.changed_decls,
         "files": r.files,
         "coverage": {"state": r.coverage},
@@ -686,6 +693,7 @@ def tests_json(r: TestImpact, limit: int = 50) -> dict:
                 "level": t.level,
                 "reason": t.reason,
                 "reaches": t.reaches,
+                **({"gtest_filter": t.gtest_filter} if t.gtest_filter else {}),
                 "source": "static",
             }
             for t in r.tests[:limit]

@@ -475,8 +475,8 @@ def _check_tests(conn: sqlite3.Connection, root: Path, fact: Fact) -> list[str]:
     if res.no_test_reaches:
         problems.append(f"'No test reaches' from static links alone: {[n.what for n in res.no_test_reaches]}")
     entries = testimpact.find_entries(conn, root)
-    names = symbols.get_many(conn, list(entries))
-    as_entry = {(names[i].qualified_name, names[i].file) for i in entries if i in names}
+    names = symbols.get_many(conn, list(entries.by_fn))
+    as_entry = {(names[i].qualified_name, names[i].file) for i in entries.by_fn if i in names}
     problems += [f"false claim: {m} is a test entry point" for m in fact.must_not if _key(m) in as_entry]
     text = render.tests_text(res)
     if re.search(r"no tests? (are |is )?affected|\b0 tests\b", text, re.I):
