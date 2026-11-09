@@ -227,10 +227,15 @@ def test_initial_value_change_affects_readers(repo):
 def test_definition_that_no_longer_matches_its_prototype_is_a_break(repo):
     # the changed function itself does not compile: it is a break, never only a note (review of #48)
     _, c = run_patch(repo, {A: [("int scale(int a, int b) {", "int scale(long a, int b) {")]})
-    scale = next(n for n in c["nodes"] if n["name"] == "scale")
-    assert (scale["status"], scale["certainty"]) == ("breaks", "exact")
+    scale = next(n for n in c["nodes"] if n["name"] == "scale" and n["status"] == "breaks")
+    assert scale["certainty"] == "exact"
     assert "conflicting types" in scale["why"]
-    assert check.exit_code(c) == 1
+    assert check.exit_code(c) == 1 and c["summary"]["breaks_exact"] >= 1
+    # #49: it is still listed as the change itself (distance 0, no link), saying it does not build
+    [change] = [n for n in c["nodes"] if n["name"] == "scale" and n["distance"] == 0]
+    assert change["status"] == "changed" and change["link"] is None
+    assert "does not compile" in change["why"]
+    assert scale["distance"] == 1 and scale["id"] == change["id"] + "#breaks"
 
 
 def test_caller_edited_by_the_patch_but_still_broken_is_a_break(repo):
