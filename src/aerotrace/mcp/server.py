@@ -154,6 +154,7 @@ def create_server(root: Path, build_dir: Path | None = None) -> MCPServer:
                     f"Files with parse errors: {meta['files_with_errors']}.",
                     f"Call sites through pointers: {ptr} (matched by type where possible).",
                     f"libclang: {meta['libclang']}.",
+                    *(f"Note: {n}" for n in graph.flag_limits(meta)),
                 ]
             )
             return _with_note(text, note)

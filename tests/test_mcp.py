@@ -172,3 +172,12 @@ async def test_diff_impact_sees_uncommitted_edits_and_patches(repo_factory, monk
     assert edited.startswith("(Re-indexed 1 changed file(s): lib/shared.c.)")
     assert "add  lib/shared.c:5" in edited and "[data] via add" in edited
     assert bad.startswith("Could not read the change:")
+
+
+@pytest.mark.anyio
+async def test_status_explains_flag_problems(repo_factory):
+    root = repo_factory("c_multi")
+    (root / "lib" / "extra.c").write_text("int extra(void) { return 1; }\n")  # not in compile_commands.json
+    async with Client(create_server(root)) as client:
+        status = text_of(await client.call_tool("index_status", {}))
+    assert "Note: 1 C/C++ source file is not in compile_commands.json" in status and "lib/extra.c" in status
