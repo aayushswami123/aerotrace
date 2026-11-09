@@ -245,3 +245,72 @@ def test_a_newer_or_damaged_index_is_rebuilt_not_a_crash(repo_factory):
     conn, note = fresh_index(root)
     assert "can't be read" in note and store.read_meta(conn)["schema_version"] == store.SCHEMA_VERSION
     conn.close()
+
+
+# ---------------------------------------------------------------- progress, stopping, crashes
+
+
+@pytest.mark.parametrize(("jobs", "isolate"), [(1, False), (1, True), (2, False)])
+def test_build_reports_progress_file_by_file(tmp_path, jobs, isolate):
+    from conftest import make_repo
+
+    root = make_repo(tmp_path / "p", "c_multi")
+    plain = make_repo(tmp_path / "q", "c_multi")
+    calls = []
+    report = build_index(root, jobs=jobs, isolate=isolate, progress=calls.append)
+    build_index(plain, jobs=1)
+    phases = [p.phase for p in calls]
+    assert phases[:2] == ["flags", "cache"] and phases[-1] == "save"
+    assert phases.count("parse") == report.units  # one call per parsed file
+    assert [p.done for p in calls] == sorted(p.done for p in calls)  # never goes down
+    assert calls[-1].done == calls[-1].total == report.units
+    # neither the callback nor the process pool changes the index
+    assert store.dump_canonical(store.connect(root)) == store.dump_canonical(store.connect(plain))
+
+    warm = []
+    build_index(root, jobs=jobs, isolate=isolate, progress=warm.append)
+    assert "parse" not in [p.phase for p in warm]
+    assert warm[-1].reused == warm[-1].total == report.units
+
+
+def test_stopped_build_writes_nothing(repo_factory):
+    import threading
+
+    from aerotrace.index.build import BuildStopped
+
+    root = repo_factory("c_multi")
+    stop = threading.Event()
+    stop.set()
+    with pytest.raises(BuildStopped):
+        build_index(root, jobs=2, stop=stop)
+    assert not (root / ".aerotrace" / "index.db").exists()
+
+
+def crash_on_b(job):
+    """A parse worker that dies on b.c (it runs in a child process)."""
+    unit = job[0]
+    if unit.file.endswith("b.c"):
+        os._exit(3)
+    return {"file": unit.file}
+
+
+def test_parser_crash_names_the_files_and_keeps_finished_results(tmp_path):
+    from aerotrace.index.build import ParserCrashed, _parse_in_pool
+    from aerotrace.toolchain import libclang
+    from aerotrace.toolchain.compdb import CompileUnit
+
+    units = [CompileUnit(file=str(tmp_path / f"{c}.c"), directory=str(tmp_path)) for c in "abcdef"]
+    done = []
+    with pytest.raises(ParserCrashed) as e:
+        _parse_in_pool(
+            tmp_path,
+            [(u, "key", []) for u in units],
+            [],
+            2,
+            libclang.configure(),
+            lambda u, key, res: done.append(res["file"]),
+            None,
+            work=crash_on_b,
+        )
+    assert "b.c" in e.value.files
+    assert all(not f.endswith("b.c") for f in done)  # what did finish was handed back (and cached)

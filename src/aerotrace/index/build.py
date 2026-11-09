@@ -6,9 +6,11 @@ import hashlib
 import json
 import os
 import sqlite3
+import threading
 from collections import Counter
 from collections.abc import Callable
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, field
 from multiprocessing import get_context
 from pathlib import Path
@@ -56,6 +58,41 @@ class BuildReport:
     ignored_flags: dict[str, int] = field(default_factory=dict)  # flag clang does not know -> files
     machine_flags_dropped: int = 0  # files parsed again without -m flags after libclang refused them
     missing_headers: dict[str, int] = field(default_factory=dict)  # header -> files that could not find it
+
+
+@dataclass(frozen=True)
+class Progress:
+    """How far a build is. `done` counts files finished (reused from the cache or parsed)."""
+
+    phase: str  # "flags", "cache", "parse", "save"
+    done: int
+    total: int
+    reused: int
+
+
+class NoSourcesError(SystemExit):
+    """There is nothing to index. A SystemExit, so the CLI prints the message and stops as before."""
+
+
+class SetupError(FileNotFoundError):
+    """Something the build needs is missing (found before building). The message says what to do."""
+
+
+class LibclangLoadError(RuntimeError):
+    """libclang could not be loaded."""
+
+
+class ParserCrashed(RuntimeError):
+    """A parser process died (a libclang crash, or the system killed it for memory)."""
+
+    def __init__(self, unfinished: list[str]):
+        self.unfinished = len(unfinished)  # files not parsed; the one that crashed is among them
+        self.files = unfinished[:5]  # the first few, sorted
+        super().__init__(f"a parser process crashed; {self.unfinished} files were not parsed")
+
+
+class BuildStopped(Exception):
+    """The build was asked to stop (the server is shutting down)."""
 
 
 # ---------------------------------------------------------------- cache
@@ -119,15 +156,31 @@ def build_index(
     jobs: int | None = None,
     use_cache: bool = True,
     log: Callable[[str], None] = lambda _msg: None,
+    progress: Callable[[Progress], None] = lambda _p: None,
+    isolate: bool = False,
+    stop: threading.Event | None = None,
 ) -> BuildReport:
+    """Build and store the index. `progress` is called as files finish (from this thread; keep it quick).
+    `isolate` parses in child processes even with one job, so a libclang crash cannot take this process
+    down. Setting `stop` makes the build give up soon with BuildStopped, writing nothing."""
     root = Path(os.path.realpath(root))
     excludes = list(excludes or [])
-    choice = libclang.configure()
-    clang = libclang.clang_version()
+
+    def check_stop() -> None:
+        if stop is not None and stop.is_set():
+            raise BuildStopped()
+
+    try:
+        choice = libclang.configure()
+        clang = libclang.clang_version()
+    except FileNotFoundError:
+        raise
+    except Exception as e:  # clang.cindex.LibclangError, or OSError from dlopen
+        raise LibclangLoadError(str(e).strip().splitlines()[0] if str(e).strip() else type(e).__name__) from e
 
     flags = find_units(root, build_dir, excludes)
     if not flags.units:
-        raise SystemExit(f"no C or C++ source files found under {root}")
+        raise NoSourcesError(f"no C or C++ source files found under {root}")
     report = BuildReport(
         root=str(root),
         flags_source=flags.source,
@@ -146,6 +199,10 @@ def build_index(
     log(f"{len(flags.units)} source files, flags {where}")
     log(f"libclang: {clang} ({choice.source})")
 
+    total = len(flags.units)
+    progress(Progress("flags", 0, total, 0))
+    check_stop()
+
     cache_dir = store.ensure_index_dir(root) / "cache"
     results: dict[str, dict] = {}
     todo: list[tuple[CompileUnit, str, list[str]]] = []
@@ -159,24 +216,30 @@ def build_index(
         else:
             todo.append((u, key, extra))
     log(f"cache: {report.cache_hits} reused, {len(todo)} to parse")
+    done = report.cache_hits
+    progress(Progress("cache", done, total, report.cache_hits))
+    check_stop()
+
+    def finished(u: CompileUnit, key: str, res: dict) -> None:
+        nonlocal done
+        results[u.file] = res
+        _cache_save(_cache_file(cache_dir, u), key, res)
+        done += 1
+        progress(Progress("parse", done, total, report.cache_hits))
 
     jobs = max(1, min(jobs or os.cpu_count() or 1, len(todo) or 1))
-    job_args = [(u, str(root), excludes, extra) for u, _, extra in todo]
-    if jobs == 1:
-        outputs = map(_work, job_args)
-        pool = None
-    else:
-        pool = ProcessPoolExecutor(
-            jobs, mp_context=get_context("spawn"), initializer=_init_worker, initargs=(choice,)
-        )
-        outputs = pool.map(_work, job_args, chunksize=4)
-    try:
-        for (u, key, _), res in zip(todo, outputs, strict=True):
-            results[u.file] = res
-            _cache_save(_cache_file(cache_dir, u), key, res)
-    finally:
-        if pool is not None:
-            pool.shutdown()
+    if todo and jobs == 1 and not isolate:
+        for u, key, extra in todo:
+            check_stop()
+            finished(u, key, _work((u, str(root), excludes, extra)))
+    elif todo:
+        _parse_in_pool(root, todo, excludes, jobs, choice, finished, stop)
+
+    missing = [u.file for u in flags.units if u.file not in results]
+    if missing:  # never write an index with files left out
+        raise RuntimeError(f"{len(missing)} files have no parse result, for example {missing[0]}")
+    check_stop()
+    progress(Progress("save", total, total, report.cache_hits))
 
     ordered = [results[u.file] for u in flags.units]  # units are sorted by path
     ignored: Counter[str] = Counter()
@@ -255,6 +318,64 @@ def build_index(
     return report
 
 
+def _parse_in_pool(
+    root: Path,
+    todo: list[tuple[CompileUnit, str, list[str]]],
+    excludes: list[str],
+    jobs: int,
+    choice: libclang.LibclangChoice,
+    finished: Callable[[CompileUnit, str, dict], None],
+    stop: threading.Event | None,
+    work: Callable[[tuple], dict] = _work,
+) -> None:
+    """Parse `todo` in `jobs` child processes, calling `finished` for each file as it is done."""
+    pool = ProcessPoolExecutor(
+        jobs, mp_context=get_context("spawn"), initializer=_init_worker, initargs=(choice,)
+    )
+    futures: dict[Future, tuple[CompileUnit, str]] = {
+        pool.submit(work, (u, str(root), excludes, extra)): (u, key) for u, key, extra in todo
+    }
+    pending = set(futures)
+    clean = False
+    try:
+        while pending:
+            if stop is not None and stop.is_set():
+                raise BuildStopped()
+            ready, pending = wait(pending, timeout=0.5, return_when=FIRST_COMPLETED)
+            crashed = False
+            for fut in sorted(ready, key=lambda f: futures[f][0].file):  # same order every time
+                try:
+                    res = fut.result()
+                except BrokenProcessPool:
+                    crashed = True
+                    continue
+                finished(*futures[fut], res)
+            if crashed:
+                # keep what the other parsers finished, so a retry starts from there
+                for fut in sorted(pending, key=lambda f: futures[f][0].file):
+                    if fut.done() and not fut.cancelled() and fut.exception() is None:
+                        finished(*futures[fut], fut.result())
+                raise ParserCrashed(
+                    sorted(
+                        parse_mod.rel_to(futures[f][0].file, root) or futures[f][0].file
+                        for f in futures
+                        if not (f.done() and not f.cancelled() and f.exception() is None)
+                    )
+                )
+        clean = True
+    finally:
+        if clean:
+            pool.shutdown()
+        else:  # stopped or crashed: end the parsers now and drop queued work
+            # (shutdown() forgets the processes, so take them first; there is no public way to do this)
+            procs = list((getattr(pool, "_processes", None) or {}).values())
+            for proc in procs:
+                proc.terminate()
+            pool.shutdown(wait=False, cancel_futures=True)
+            for proc in procs:
+                proc.join(5)
+
+
 def remembered(root: Path) -> tuple[Path | None, list[str]]:
     """(build dir, excludes) the current index was built with, or (None, []) when there is no index.
     Read from an index of any version, so an upgrade keeps the user's --build-dir and --exclude."""
@@ -282,15 +403,46 @@ def flags_changed(root: Path, meta: dict[str, str], build_dir: Path | None) -> s
     return ""
 
 
-def fresh_index(
-    root: Path,
-    *,
-    build_dir: Path | None = None,
-    want: list[str] | tuple[str, ...] = (),
-    log: Callable[[str], None] = lambda _msg: None,
-) -> tuple[sqlite3.Connection, str]:
-    """Open the index, building or refreshing it first when files or compile flags changed. Returns
-    (connection, note), where the note says in one line what was done ("" when nothing was).
+@dataclass(frozen=True)
+class RefreshPlan:
+    """Why the index must be (re)built, and with which settings."""
+
+    kind: str  # "new", "version", "flags", "files"
+    reason: str  # short, for progress messages: "no index yet", "3 changed file(s): a.c, b.c, c.c"
+    build_dir: Path | None
+    excludes: list[str]
+    detail: str = ""  # the full reason for the note (version and flags)
+    missing: tuple[str, ...] = ()  # wanted source files that are not in the index yet
+    changed: tuple[str, ...] = ()  # indexed files that changed or are gone
+
+    def note(self, report: BuildReport) -> str:
+        """One line for the agent about what was done."""
+        if self.kind == "new":
+            return f"(Built the index: {report.functions} functions from {report.units} files.)"
+        if self.kind == "version":
+            return f"(Rebuilt the index: {self.detail}. Now {report.functions} functions from {report.units} files.)"
+        if self.kind == "flags":
+            return f"(Re-indexed: {self.detail}.)"
+        return f"(Re-indexed {self.reason}.)"
+
+
+def _check_setup(build_dir: Path | None) -> None:
+    """Fail early, with what to do, when something the build needs is missing."""
+    env = os.environ.get(libclang.ENV_VAR)
+    if env and not Path(env).is_file():
+        raise SetupError(f"{libclang.ENV_VAR} points to {env}, which does not exist. Fix or unset it.")
+    if build_dir is not None and not (build_dir / "compile_commands.json").is_file():
+        raise SetupError(
+            f"no compile_commands.json in {build_dir}. Fix --build-dir, or create it "
+            f"(CMake: cmake -B {build_dir} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON)."
+        )
+
+
+def index_plan(
+    root: Path, *, build_dir: Path | None = None, want: list[str] | tuple[str, ...] = ()
+) -> RefreshPlan | None:
+    """None when the index is fresh; otherwise why and how to rebuild it. Raises SetupError when a rebuild
+    is needed but cannot work (see _check_setup). Opens and closes its own connection.
 
     A refresh uses the build dir and excludes the index was built with, unless `build_dir` is given.
     `want` lists repo-relative source files the caller needs in the index (for example files a diff
@@ -302,36 +454,60 @@ def fresh_index(
         old_dir, excludes = remembered(root)  # rebuild with the settings the old index was made with
         if build_dir is None and old_dir is not None and (old_dir / "compile_commands.json").is_file():
             build_dir = old_dir
-        report = build_index(root, build_dir=build_dir, excludes=excludes, log=log)
-        note = f"(Rebuilt the index: {e.reason}. Now {report.functions} functions from {report.units} files.)"
-        return store.connect(root), note
+        _check_setup(build_dir)
+        why = "the old index can't be used (another AeroTrace version, or damaged)"
+        return RefreshPlan("version", why, build_dir, excludes, detail=e.reason)
     except FileNotFoundError:
-        report = build_index(root, build_dir=build_dir, log=log)
-        return store.connect(
-            root
-        ), f"(Built the index: {report.functions} functions from {report.units} files.)"
-    meta = store.read_meta(conn)
-    excludes = json.loads(meta.get("excludes") or "[]")
-    if build_dir is None and meta.get("build_dir"):
-        build_dir = Path(meta["build_dir"])
-        if not (build_dir / "compile_commands.json").is_file():
-            build_dir = None  # it is gone; find a database the usual way (flags_changed explains)
-    why_flags = flags_changed(root, meta, build_dir)
-    changed = store.changed_files(conn, root)
-    missing: list[str] = []
-    if want and meta.get("flags_source") == "guessed":
-        known = store.indexed_paths(conn)
-        missing = sorted(
-            p
-            for p in want
-            if p not in known and Path(p).suffix.lower() in SOURCE_EXTS and (root / p).is_file()
-        )
+        _check_setup(build_dir)
+        return RefreshPlan("new", "no index yet", build_dir, [])
+    try:
+        meta = store.read_meta(conn)
+        excludes = json.loads(meta.get("excludes") or "[]")
+        if build_dir is None and meta.get("build_dir"):
+            build_dir = Path(meta["build_dir"])
+            if not (build_dir / "compile_commands.json").is_file():
+                build_dir = None  # it is gone; find a database the usual way (flags_changed explains)
+        why_flags = flags_changed(root, meta, build_dir)
+        changed = store.changed_files(conn, root)
+        missing: list[str] = []
+        if want and meta.get("flags_source") == "guessed":
+            known = store.indexed_paths(conn)
+            missing = sorted(
+                p
+                for p in want
+                if p not in known and Path(p).suffix.lower() in SOURCE_EXTS and (root / p).is_file()
+            )
+    finally:
+        conn.close()
     if not changed and not missing and not why_flags:
-        return conn, ""
-    conn.close()
-    build_index(root, build_dir=build_dir, excludes=excludes, log=log)
+        return None
+    _check_setup(build_dir)
     if why_flags:
-        return store.connect(root), f"(Re-indexed: {why_flags}.)"
+        return RefreshPlan("flags", why_flags, build_dir, excludes, detail=why_flags, missing=tuple(missing))
     stale = changed + missing
     shown = ", ".join(stale[:3]) + (" ..." if len(stale) > 3 else "")
-    return store.connect(root), f"(Re-indexed {len(stale)} changed file(s): {shown}.)"
+    return RefreshPlan(
+        "files",
+        f"{len(stale)} changed file(s): {shown}",
+        build_dir,
+        excludes,
+        missing=tuple(missing),
+        changed=tuple(changed),
+    )
+
+
+def fresh_index(
+    root: Path,
+    *,
+    build_dir: Path | None = None,
+    want: list[str] | tuple[str, ...] = (),
+    log: Callable[[str], None] = lambda _msg: None,
+) -> tuple[sqlite3.Connection, str]:
+    """Open the index, building or refreshing it first when files or compile flags changed. Returns
+    (connection, note), where the note says in one line what was done ("" when nothing was).
+    See index_plan for the details."""
+    plan = index_plan(root, build_dir=build_dir, want=want)
+    if plan is None:
+        return store.connect(root), ""
+    report = build_index(root, build_dir=plan.build_dir, excludes=plan.excludes, log=log)
+    return store.connect(root), plan.note(report)
