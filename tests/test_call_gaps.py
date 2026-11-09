@@ -199,3 +199,23 @@ def test_broken_constructor_and_operator_calls_are_calls(gaps):
     assert [tuple(r) for r in gaps.execute(sql)] == [
         ("unresolved_call", "G: a call that does not compile; no constructor of G was found in the repo")
     ]
+
+
+# ------------------------------------------------ #40: a header function compiled as C and as C++
+
+
+def test_header_function_compiled_as_c_and_cpp_gives_both_copies(gaps):
+    by_line = symbols.find(gaps, "include/ring.h:7")
+    assert sorted(f.language for f in by_line) == ["C", "C++"]
+    assert {f.qualified_name for f in by_line} == {"ring_full"}
+    # the choices can be told apart, and each one can be asked for
+    text = render.candidates_text("include/ring.h:7", by_line)
+    assert "compiled as C)" in text and "compiled as C++)" in text
+    callers = {}
+    for f in by_line:
+        assert f.id in text
+        [again] = symbols.find(gaps, f.id)
+        callers[f.language] = {h.fn.name for h in graph.walk(gaps, again, "callers", 1).hits}
+    assert callers == {"C": {"c_push"}, "C++": {"cpp_push"}}
+    # must not: a plain function on a line still gives one answer
+    assert [f.name for f in symbols.find(gaps, "src/ring.c:3")] == ["c_push"]

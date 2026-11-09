@@ -97,7 +97,13 @@ def candidates_text(query: str, fns: list[Fn], limit: int = 20) -> str:
     if not fns:
         return f"No function matches '{query}'. Try `find` with part of the name, or `file.c:LINE`."
     lines = [f"'{query}' matches {len(fns)} functions. Ask again with one of these:"]
-    lines += [f"  - {f.qualified_name}@{f.file}  ({f.where})" for f in fns[:limit]]
+    shown = Counter(f"{f.qualified_name}@{f.file}" for f in fns)
+    for f in fns[:limit]:
+        name = f"{f.qualified_name}@{f.file}"
+        if shown[name] > 1:  # copies of one header function (C and C++): only the clang ID tells them apart
+            lines.append(f"  - {f.id}  ({f.where}, compiled as {f.language})")
+        else:
+            lines.append(f"  - {name}  ({f.where})")
     if len(fns) > limit:
         lines.append(f"  ... and {len(fns) - limit} more.")
     return "\n".join(lines)

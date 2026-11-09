@@ -26,6 +26,11 @@ class Fn:
     clash: bool
 
     @property
+    def language(self) -> str:
+        """'C++' when clang's ID shows C++ (parameter types are part of it), else 'C'."""
+        return "C++" if "#" in self.id or "@S@" in self.id or "@N@" in self.id else "C"
+
+    @property
     def where(self) -> str:
         return f"{self.file}:{self.line_start}"
 
@@ -85,11 +90,17 @@ def find(conn: sqlite3.Connection, query: str) -> list[Fn]:
                 ORDER BY line_end - line_start, file""",
             (m["file"], f"%/{m['file']}", int(m["line"]), int(m["line"])),
         ).fetchall()
-        # the innermost function in each matching file; several files can share a name (prog_a/util.c, prog_b/util.c)
-        innermost: dict[str, Fn] = {}
+        # the innermost function in each matching file; several files can share a name (prog_a/util.c,
+        # prog_b/util.c). A header function compiled as C and as C++ has two copies there: both (#40).
+        innermost: dict[str, list[Fn]] = {}
         for r in rows:
-            innermost.setdefault(r["file"], _row(r))
-        return sorted(innermost.values(), key=lambda f: (f.file, f.line_start))
+            fn = _row(r)
+            got = innermost.setdefault(fn.file, [fn])
+            if fn not in got and (fn.line_start, fn.line_end) == (got[0].line_start, got[0].line_end):
+                got.append(fn)
+        return sorted(
+            (f for fs in innermost.values() for f in fs), key=lambda f: (f.file, f.line_start, f.id)
+        )
     file = None
     if "@" in q and not q.startswith("c:"):
         q, file = q.rsplit("@", 1)
