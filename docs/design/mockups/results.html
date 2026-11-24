@@ -15,7 +15,8 @@
   .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
   .seg button + button { border-left: 1px solid var(--border-strong); }
   #legend { font-size: var(--text-sm); color: var(--text-2); margin-bottom: var(--space-3); }
-  #chart { width: 100%; }
+  #chart { width: 100%; position: relative; }
+  #chart::after { content: "SAMPLE VALUES"; position: absolute; inset: 0; display: grid; place-items: center; font: 600 64px/1 var(--font-mono); letter-spacing: 0.1em; color: var(--breaks); opacity: 0.12; transform: rotate(-12deg); pointer-events: none; }
   .also { margin-top: var(--space-7); border-top: 1px solid var(--border); padding-top: var(--space-5); }
   .also ul { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: grid; gap: var(--space-2); }
   .also li a { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text); font-size: var(--text-sm); }
@@ -33,7 +34,7 @@
 <div class="wrap">
   <header class="hero">
     <div class="caps">Recall · False alarms · Time · Tokens</div>
-    <h1 style="margin-top:var(--space-3)">Which code breaks when you change C? We checked 28 real changes against the compiler.</h1>
+    <h1 style="margin-top:var(--space-3)">[Sample headline] Which code breaks when you change C? We checked N real changes against the compiler.</h1>
     <p>Each tool was asked what a change breaks, the way an agent would use it. The answers were scored against what the compiler and the source actually say. Higher recall is better; it means fewer missed breaks.</p>
   </header>
 
@@ -48,23 +49,23 @@
   <div id="chart"></div>
 
   <section class="wl">
-    <div class="card"><h3>Wins <span class="dim mono" style="font-size:12px">5 of 28</span></h3><ul><li>Calls through command tables (<span class="mono">cmd-&gt;proc</span>)</li><li>Struct fields with common names</li></ul></div>
-    <div class="card"><h3>Ties <span class="dim mono" style="font-size:12px">19 of 28</span></h3><ul><li>Direct calls: clangd finds them too</li></ul></div>
-    <div class="card"><h3>Losses <span class="dim mono" style="font-size:12px">4 of 28</span></h3><ul><li>Macros that build function names</li><li>ripgrep is faster on every case</li></ul></div>
+    <div class="card"><h3>Wins <span class="dim mono" style="font-size:12px">x of N</span></h3><ul><li>Calls through command tables (<span class="mono">cmd-&gt;proc</span>)</li><li>Struct fields with common names</li></ul></div>
+    <div class="card"><h3>Ties <span class="dim mono" style="font-size:12px">y of N</span></h3><ul><li>Direct calls: clangd finds them too</li></ul></div>
+    <div class="card"><h3>Losses <span class="dim mono" style="font-size:12px">z of N</span></h3><ul><li>Macros that build function names</li></ul><p class="dim" style="font-size:12px;margin:8px 0 0">Also: ripgrep is faster on every case (time is not counted as a win or loss).</p></div>
   </section>
 
   <section class="also">
     <div class="caps">Also run</div>
     <ul>
       <li><a href="#">False alarms per tool, every case <span data-i="arrow"></span></a></li>
-      <li><a href="#">Raw outputs for all 112 runs (bench/results/…/raw) <span data-i="arrow"></span></a></li>
+      <li><a href="#">Raw outputs for all N runs (bench/results/…/raw) <span data-i="arrow"></span></a></li>
       <li><a href="#">Agent case studies: not run yet <span data-i="arrow"></span></a></li>
     </ul>
   </section>
 
   <footer class="foot">
-    <b>How each tool was run.</b> AeroTrace 0.1.0 (<span class="mono">aerotrace check --patch case.diff --json</span>). clangd 19.1.7, find-references on each changed symbol, same <span class="mono">compile_commands.json</span>. cscope 15.9 (<span class="mono">-L3</span> callers query). ripgrep 14.1 (<span class="mono">rg -w name</span>). Truth: <span class="mono">clang -fsyntax-only</span> on the patched code, plus hand checks with source lines.<br>
-    <b>Code.</b> Redis 8.10.3, SQLite 3.54.1 amalgamation, curl 8.x (pinned, sha256 checked). <b>Machine.</b> Apple M1 Pro, macOS 26. <b>Time</b> is the median of 3 runs. <b>Tokens</b> are Claude tokens in each tool's answer.<br>
+    <b>How each tool was run.</b> AeroTrace &lt;version&gt; (<span class="mono">aerotrace check --patch case.diff --json</span>). clangd &lt;version&gt;, find-references on each changed symbol, same <span class="mono">compile_commands.json</span>. cscope &lt;version&gt; (<span class="mono">-L3</span> callers query). ripgrep &lt;version&gt; (<span class="mono">rg -w name</span>). Truth: <span class="mono">clang -fsyntax-only</span> on the patched code, plus hand checks with source lines.<br>
+    <b>Code.</b> Redis 8.10.3, SQLite 3.54.1 amalgamation, curl &lt;pinned version&gt; (sha256 checked). <b>Machine.</b> &lt;machine&gt;. <b>Time</b> is the median of 3 runs. <b>Tokens</b> are Claude tokens in each tool's answer.<br>
     Reproduce (from an AeroTrace checkout): <span class="mono">uv run python -m bench accuracy</span>. Scripts: <a href="#">bench/accuracy/</a>. Results: <a href="#">results.json</a>.
   </footer>
   <p class="refnote">Influenced by: Supermemory's benchmark chart (value above each bar, time and tokens under each group, an "Also run" row), Footer.design "Small type" (quiet 12 px footnote). Made our own: other tools are outlined light-grey bars and AeroTrace is the only solid one, there is an Easy / Hard split, and a Wins / Ties / Losses row so losses are as easy to find as wins.</p>

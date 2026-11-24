@@ -11,7 +11,7 @@ meaning, and a dark dot-grid graph canvas. When two references pull different wa
 
 | source | how | what we could see |
 |---|---|---|
-| Refero (refero.design) | browser | The home page, the "Styles" list and the general screen feed are public. **Search needs a login, so it was skipped**, as the brief says. The "Black with one accent" style matches our direction. |
+| Refero (refero.design) | browser | The home page, the "Styles" list and the general screen feed are public. **Search needs a login, so it was skipped**, as the owner asked. The "Black with one accent" style matches our direction. |
 | Supermemory research page (supermemory.ai/research) | browser | The benchmark chart: small-caps metric line, a "Show competitors" box, product name and value above each bar, grey bars for others, time and tokens under each group, an "Also run" row. |
 | CTA Gallery (cta.gallery) | fetch | Public. Index only: categories, and entries from dev tools (Tines, Bannerbear). For a future landing page only. |
 | Footer.design | fetch | Public. A filterable gallery ("Small type", "Typographic"). For the results page footer only. |

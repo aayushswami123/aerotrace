@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -31,7 +32,6 @@ TEXT = [
     "unknown",
     "no-effect",
     "changed",
-    "ok",
 ]
 BACKGROUNDS = ["bg", "surface", "surface-2"]
 SOFT = {"breaks": "breaks-soft", "may": "may-soft", "affected": "affected-soft", "unknown": "unknown-soft"}
@@ -90,16 +90,49 @@ def test_chart_and_graph_marks_contrast(theme: str) -> None:
     assert _ratio(t["graph-no-effect"], t["graph-bg"]) >= 3
 
 
+# Any way a page could pull something from another host: attributes (quoted or not, srcset too), CSS
+# url() and @import, and JS fetch/import/XHR/EventSource/WebSocket/sendBeacon with an absolute URL.
+_ABS = r"""(?:https?:|wss?:)?//[^\s"')]"""
 REMOTE = re.compile(
-    r"""(?:src|href)\s*=\s*["']\s*(?:https?:)?//|url\(\s*["']?\s*(?:https?:)?//|@import\s+(?:url\()?\s*["']?\s*(?:https?:)?//""",
+    rf"""(?:\b(?:src|href|srcset|action|poster|data)\s*=\s*["']?\s*{_ABS})"""
+    rf"""|(?:url\(\s*["']?\s*{_ABS})"""
+    rf"""|(?:@import\s+(?:url\()?\s*["']?\s*{_ABS})"""
+    rf"""|(?:\b(?:fetch|import|importScripts|EventSource|WebSocket|sendBeacon|open)\s*\(\s*["'`]\s*{_ABS})"""
+    rf"""|(?:\bfrom\s+["']{_ABS})""",
     re.I,
 )
+WEB_SUFFIXES = {".html", ".css", ".js", ".mjs", ".svg"}
 
 
 def _web_files() -> list[Path]:
-    out = [p for p in WEB.rglob("*") if p.suffix in {".html", ".css", ".js"}]
-    out += [p for p in DESIGN.rglob("*") if p.suffix in {".html", ".css", ".js"}]
+    out = [p for p in WEB.rglob("*") if p.suffix in WEB_SUFFIXES]
+    out += [p for p in DESIGN.rglob("*") if p.suffix in WEB_SUFFIXES]
     return sorted(out)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '<script src="https://cdn.example/x.js">',
+        "<img src=https://example.com/a.png>",
+        '<img srcset="//example.com/a.png 2x">',
+        '@import url("https://fonts.googleapis.com/css");',
+        "background: url(//example.com/a.png)",
+        'fetch("https://example.com/api")',
+        "import x from 'https://esm.sh/x'",
+        'import("https://example.com/m.js")',
+        'new WebSocket("wss://example.com")',
+    ],
+)
+def test_remote_pattern_catches(text: str) -> None:
+    assert REMOTE.search(text)
+
+
+@pytest.mark.parametrize(
+    "text", ['<a href="#top">', 'url("fonts/a.woff2")', 'fetch("/api/overview")', "x // comment"]
+)
+def test_remote_pattern_allows_local(text: str) -> None:
+    assert not REMOTE.search(text)
 
 
 def test_nothing_loads_from_the_internet() -> None:
@@ -114,42 +147,73 @@ def test_nothing_loads_from_the_internet() -> None:
 def test_fonts_are_bundled_with_licences() -> None:
     fonts = WEB / "fonts"
     css = TOKENS.read_text(encoding="utf-8")
-    for url in re.findall(r'url\("(fonts/[^"]+)"\)', css):
+    urls = re.findall(r'url\("(fonts/[^"]+\.woff2)"\)', css)
+    assert len(urls) == 6, urls  # Inter and JetBrains Mono, 400 / 500 / 600
+    for url in urls:
         assert (WEB / url).is_file(), url
-    assert (fonts / "Inter-LICENSE.txt").is_file()
-    assert (fonts / "JetBrainsMono-OFL.txt").is_file()
+    for name, copyright_ in (
+        ("Inter-LICENSE.txt", "The Inter Project Authors"),
+        ("JetBrainsMono-OFL.txt", "The JetBrains Mono Project Authors"),
+    ):
+        text = (fonts / name).read_text("utf-8")
+        assert "SIL Open Font License, Version 1.1" in text and copyright_ in text, name
+        assert "Reserved Font Name" not in text.split("PREAMBLE")[0], f"{name} reserves a font name"
+
+
+_MOCK_SCRIPT = re.compile(r'<script\s+src="(?:mockups/)?mock\.js"\s*>\s*</script>')
 
 
 def test_every_mockup_is_marked_as_sample() -> None:
     pages = [*sorted(MOCKUPS.glob("*.html")), DESIGN / "components.html"]
-    assert pages
-    missing = [
-        p.name
-        for p in pages
-        if 'src="mock.js"' not in p.read_text("utf-8") and 'src="mockups/mock.js"' not in p.read_text("utf-8")
-    ]
-    assert not missing, "these pages don't load mock.js (banner + data-sample): " + ", ".join(missing)
+    assert len(pages) >= 8
+    for p in pages:
+        html = re.sub(
+            r"<!--.*?-->", "", p.read_text("utf-8"), flags=re.S
+        )  # a commented-out tag doesn't count
+        assert _MOCK_SCRIPT.search(html), f"{p.name} doesn't load mock.js (sample strip, banner, data-sample)"
     js = (MOCKUPS / "mock.js").read_text("utf-8")
     assert 'setAttribute("data-sample", "true")' in js
     assert "MOCKUP · sample numbers, not results" in js
+    assert "every number on this page is a made-up sample" in js
+
+
+def test_mockup_screenshots_are_not_reused_elsewhere() -> None:
+    """A mockup image copied anywhere else in the repo (README, launch, blog drafts) fails."""
+    shots = MOCKUPS / "screenshots"
+    mock = {hashlib.sha256(p.read_bytes()).hexdigest(): p.name for p in shots.glob("*.png")}
+    assert mock
+    reused = []
+    for p in ROOT.rglob("*"):
+        if p.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"} or shots in p.parents:
+            continue
+        if any(part in {".git", ".venv", "node_modules", ".claude"} for part in p.relative_to(ROOT).parts):
+            continue
+        if hashlib.sha256(p.read_bytes()).hexdigest() in mock:
+            reused.append(str(p.relative_to(ROOT)))
+    assert not reused, "mockup screenshots copied to: " + ", ".join(reused)
 
 
 def test_launch_screenshots_never_come_from_mockups() -> None:
-    """Every launch image must be listed in MANIFEST.json, made from a real results.json, not a mockup."""
-    if not LAUNCH_SHOTS.exists():
-        return
-    images = sorted(
-        p.name for p in LAUNCH_SHOTS.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+    """Every launch image must be in MANIFEST.json, made from a results.json that is in the repo."""
+    images = (
+        sorted(
+            p.name for p in LAUNCH_SHOTS.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+        )
+        if LAUNCH_SHOTS.exists()
+        else []
     )
     if not images:
-        return
+        pytest.skip("no launch screenshots yet")
     manifest_path = LAUNCH_SHOTS / "MANIFEST.json"
     assert manifest_path.is_file(), "docs/launch/screenshots/ has images but no MANIFEST.json"
     entries = {e["file"]: e for e in json.loads(manifest_path.read_text("utf-8"))["images"]}
+    real = {
+        hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT / "bench" / "results").rglob("results.json")
+    }
     for name in images:
         assert name in entries, f"{name} is not in MANIFEST.json"
         e = entries[name]
         assert "mockups" not in e["page"] and "components.html" not in e["page"], (
             f"{name} was taken from a mockup"
         )
-        assert re.fullmatch(r"[0-9a-f]{64}", e.get("data_sha256", "")), f"{name} has no data_sha256"
+        assert e.get("data_sha256") in real, f"{name}: data_sha256 matches no bench/results/*/results.json"

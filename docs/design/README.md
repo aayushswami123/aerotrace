@@ -35,8 +35,9 @@ tables, chips, the legend and the graph. Words come from `ui/schema.py` `node_wo
 | NO EFFECT FOUND | dim grey `--no-effect` | small dot with – | checked, nothing found. **Never** say "safe". |
 | CHANGED / NEW / REMOVED | accent | diamond with ■ / + / ✕ | part of the change itself |
 
-Green (`--ok`) is used only for "the check finished with nothing to report" banners, never on a node.
-That keeps green from reading as "safe".
+There is **no green** anywhere. A check that found nothing uses the neutral info style and says what was
+checked and what was not ("No effect found in the 96 files checked; 8 files were not checked"). Green
+would read as "safe", which AeroTrace never claims (product rule 5).
 
 Contrast, measured from `tokens.css` (WCAG 2.1): every text token is at least **4.8:1** on `--bg`,
 `--surface` and `--surface-2` in both themes; status text on its `-soft` chip background is at least
@@ -45,7 +46,7 @@ Contrast, measured from `tokens.css` (WCAG 2.1): every text token is at least **
 In the benchmark chart AeroTrace is the only solid bar (accent). Other tools are light grey fills with a
 darker outline (`--chart-other-*`), so blue is clearly the strongest bar. The exact value sits above every
 bar in mono, and a short tool name sits under it, so the chart never depends on telling greys apart.
-The check script will become `tests/ui/test_tokens.py`.
+`tests/ui/test_design.py` checks these numbers on every test run.
 
 The graph canvas is **always dark** (`--graph-*`), in both themes, so dots and lines read the same way in
 every screenshot.
@@ -53,7 +54,8 @@ every screenshot.
 ## Type
 
 - **Inter** for UI text. **JetBrains Mono** for every number, code snippet, file:line, id and command.
-  Both are bundled as woff2 subsets (pending owner decision 3); system fonts are the fallback.
+  Both are bundled as woff2 subsets (about 134 KB for six files, see `src/aerotrace/ui/web/fonts/`);
+  system fonts are the fallback.
 - Scale: 12 / 13 / 15 / 18 / 24 / 32 px. Body is 15, tables 13.
 - Numbers use `font-variant-numeric: tabular-nums` so columns line up.
 - Small caps labels (`RECALL · FALSE ALARMS · TIME · TOKENS`): 12 px, uppercase, `letter-spacing: 0.08em`,

@@ -21,8 +21,9 @@ Rule 7 becomes: **only a local, offline, read-only UI.**
   and a Host header check.
 - Offline: every font, script and image is bundled in the package. No CDN, no remote fonts, no
   telemetry. A Content-Security-Policy blocks anything else.
-- Read-only: only `GET`. It reads `.aerotrace/` and, for code snippets, files listed in the index. It
-  never writes outside `.aerotrace/`, never runs `aerotrace check` or the user's build.
+- Read-only: only `GET`, and the server writes nothing at all. It reads `.aerotrace/` (index and saved
+  checks), `bench/results/` if the repo has one, and, for code snippets, only files listed in the index
+  that resolve to a path inside the repo root. It never runs `aerotrace check` or the user's build.
 - No analysis in the UI. It shows what `analysis/` produced and decides nothing.
 - Hosted or cloud UIs, accounts and team features stay out of scope.
 

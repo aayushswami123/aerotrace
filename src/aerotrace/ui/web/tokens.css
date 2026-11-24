@@ -89,7 +89,6 @@
   --unknown-soft: #eff1f3;
   --no-effect: #6b6b72;       /* NO EFFECT FOUND (never "safe") */
   --changed: #3451d1;         /* CHANGED / NEW / REMOVED: the accent */
-  --ok: #1d7a4a;              /* only for "all checks done", never for a node */
 
   /* Benchmark chart: AeroTrace is the only solid bar (accent). Other tools are light fills with a darker
      outline; the outline is the 3:1 edge against --surface, and the number above each bar names the value. */
@@ -145,7 +144,6 @@
   --unknown-soft: #222730;
   --no-effect: #9099a6;
   --changed: #8ea2ff;
-  --ok: #4fd18b;
 
   --chart-other-fill: #252a32;
   --chart-other-stroke: #858d99;
