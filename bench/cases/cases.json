@@ -1,0 +1,1731 @@
+{
+ "seed": "aerotrace-bench-cases-1/",
+ "cap": 40,
+ "kinds": {
+  "add_param": {
+   "difficulty": "easy",
+   "edit": "add an int parameter to the definition and every prototype; call sites unchanged",
+   "why": "direct callers stop compiling; the classic signature change"
+  },
+  "remove_fn": {
+   "difficulty": "easy",
+   "edit": "delete the definition (prototypes in headers stay)",
+   "why": "callers fail to compile, or, when a prototype stays in a header, only at link"
+  },
+  "int_to_void": {
+   "difficulty": "easy",
+   "edit": "change the return type from int to void (definition, prototypes, return statements)",
+   "why": "only callers that use the value break; callers that ignore it still build"
+  },
+  "ptr_param": {
+   "difficulty": "hard",
+   "edit": "add an int parameter to a function that is also stored as a pointer",
+   "why": "the break is where the function is put in a table or assigned, not at a call"
+  },
+  "ptr_remove": {
+   "difficulty": "hard",
+   "edit": "delete a function that is reached only through a pointer (no direct calls)",
+   "why": "nothing calls it by name; only the table or assignment that names it breaks"
+  },
+  "field_rename": {
+   "difficulty": "hard",
+   "edit": "rename a struct field (add the suffix _renamed)",
+   "why": "every reader and writer breaks; grep must tell this field from same-named ones"
+  },
+  "field_type": {
+   "difficulty": "hard",
+   "edit": "change an integer field to a pointer type",
+   "why": "arithmetic and integer uses break, some uses still build and may behave differently"
+  },
+  "global_rename": {
+   "difficulty": "hard",
+   "edit": "rename a file-scope variable",
+   "why": "every use breaks; globals are often used far from where they are defined"
+  },
+  "macro_arity": {
+   "difficulty": "hard",
+   "edit": "add a parameter to a function-like macro",
+   "why": "every use of the macro breaks; macros are a common gap for tools that read the code after the preprocessor"
+  },
+  "behaviour": {
+   "difficulty": "might_break",
+   "edit": "change what the function returns in one case; signature unchanged",
+   "why": "nothing fails to build; callers that use the value may behave differently"
+  }
+ },
+ "cases": [
+  {
+   "id": "redis-01",
+   "repo": "redis",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "src/t_hash.c:hashTemplateLpGetTemplateId",
+   "edit": "add an int parameter to the definition and every prototype; call sites unchanged",
+   "why_this_kind": "direct callers stop compiling; the classic signature change",
+   "file": "src/t_hash.c",
+   "line": 1001,
+   "ret": "static uint64_t",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 4
+   }
+  },
+  {
+   "id": "redis-02",
+   "repo": "redis",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "src/bitops.c:redisPopCountAarch64",
+   "edit": "delete the definition (prototypes in headers stay)",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "src/bitops.c",
+   "line": 168,
+   "ret": "long long",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-03",
+   "repo": "redis",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "src/bitops.c:checkSignedBitfieldOverflow",
+   "edit": "change the return type from int to void (definition, prototypes, return statements)",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "src/bitops.c",
+   "line": 616,
+   "ret": "int",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-04",
+   "repo": "redis",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "src/socket.c:connSocketGetType",
+   "edit": "add an int parameter to a function that is also stored as a pointer",
+   "why_this_kind": "the break is where the function is put in a table or assigned, not at a call",
+   "file": "src/socket.c",
+   "line": 380,
+   "ret": "static const char *",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 2
+   }
+  },
+  {
+   "id": "redis-05",
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "src/sentinel.c:dictInstancesValDestructor",
+   "edit": "delete a function that is reached only through a pointer (no direct calls)",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "src/sentinel.c",
+   "line": 397,
+   "ret": "void",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 2
+   }
+  },
+  {
+   "id": "redis-06",
+   "repo": "redis",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "redisServer.aof_rewrite_perc",
+   "edit": "rename a struct field (add the suffix _renamed)",
+   "why_this_kind": "every reader and writer breaks; grep must tell this field from same-named ones",
+   "file": "src/server.h",
+   "type": "int",
+   "counts": {
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-07",
+   "repo": "redis",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "redisServer.stat_current_cow_peak",
+   "edit": "change an integer field to a pointer type",
+   "why_this_kind": "arithmetic and integer uses break, some uses still build and may behave differently",
+   "file": "src/server.h",
+   "type": "size_t",
+   "counts": {
+    "mentions": 9
+   }
+  },
+  {
+   "id": "redis-08",
+   "repo": "redis",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "src/bitops.c:bitsinbyte",
+   "edit": "rename a file-scope variable",
+   "why_this_kind": "every use breaks; globals are often used far from where they are defined",
+   "file": "src/bitops.c",
+   "line": 53,
+   "counts": {
+    "mentions": 8
+   }
+  },
+  {
+   "id": "redis-09",
+   "repo": "redis",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "src/zmalloc.c:MALLOC_MIN_SIZE",
+   "edit": "add a parameter to a function-like macro",
+   "why_this_kind": "every use of the macro breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "src/zmalloc.c",
+   "line": 56,
+   "params": 1,
+   "counts": {
+    "mentions": 6
+   }
+  },
+  {
+   "id": "redis-10",
+   "repo": "redis",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "src/fast_float_strtod.c:read8_to_u64",
+   "edit": "change what the function returns in one case; signature unchanged",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently",
+   "file": "src/fast_float_strtod.c",
+   "line": 320,
+   "ret": "static inline uint64_t",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "sqlite-01",
+   "repo": "sqlite",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "sqlite3.c:sqlite3PagerPagecount",
+   "edit": "add an int parameter to the definition and every prototype; call sites unchanged",
+   "why_this_kind": "direct callers stop compiling; the classic signature change",
+   "file": "sqlite3.c",
+   "line": 62938,
+   "ret": "SQLITE_PRIVATE void",
+   "counts": {
+    "calls": 4,
+    "values": 0,
+    "mentions": 6
+   }
+  },
+  {
+   "id": "sqlite-02",
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "sqlite3.c:jsonBlobAppendOneByte",
+   "edit": "delete the definition (prototypes in headers stay)",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "sqlite3.c",
+   "line": 214984,
+   "ret": "static void",
+   "counts": {
+    "calls": 4,
+    "values": 0,
+    "mentions": 5
+   }
+  },
+  {
+   "id": "sqlite-03",
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "sqlite3.c:pagerIsSuperJrnlName",
+   "edit": "change the return type from int to void (definition, prototypes, return statements)",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "sqlite3.c",
+   "line": 60257,
+   "ret": "static int",
+   "counts": {
+    "calls": 3,
+    "values": 0,
+    "mentions": 4
+   }
+  },
+  {
+   "id": "sqlite-04",
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:sqlite3_db_cacheflush",
+   "edit": "add an int parameter to a function that is also stored as a pointer",
+   "why_this_kind": "the break is where the function is put in a table or assigned, not at a call",
+   "file": "sqlite3.c",
+   "line": 189289,
+   "ret": "SQLITE_API int",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 5
+   }
+  },
+  {
+   "id": "sqlite-05",
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:sqlite3_create_collation16",
+   "edit": "delete a function that is reached only through a pointer (no direct calls)",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "sqlite3.c",
+   "line": 192201,
+   "ret": "SQLITE_API int",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 6
+   }
+  },
+  {
+   "id": "sqlite-06",
+   "repo": "sqlite",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "sqlite3.pSavepoint",
+   "edit": "rename a struct field (add the suffix _renamed)",
+   "why_this_kind": "every reader and writer breaks; grep must tell this field from same-named ones",
+   "file": "sqlite3.c",
+   "type": "Savepoint *",
+   "counts": {
+    "mentions": 14
+   }
+  },
+  {
+   "id": "sqlite-07",
+   "repo": "sqlite",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "Parse.eOrconf",
+   "edit": "change an integer field to a pointer type",
+   "why_this_kind": "arithmetic and integer uses break, some uses still build and may behave differently",
+   "file": "sqlite3.c",
+   "type": "u8",
+   "counts": {
+    "mentions": 3
+   }
+  },
+  {
+   "id": "sqlite-08",
+   "repo": "sqlite",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:sqlite3OpcodeProperty",
+   "edit": "rename a file-scope variable",
+   "why_this_kind": "every use breaks; globals are often used far from where they are defined",
+   "file": "sqlite3.c",
+   "line": 24500,
+   "counts": {
+    "mentions": 11
+   }
+  },
+  {
+   "id": "sqlite-09",
+   "repo": "sqlite",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:AtomicLoad",
+   "edit": "add a parameter to a function-like macro",
+   "why_this_kind": "every use of the macro breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "sqlite3.c",
+   "line": 15115,
+   "params": 1,
+   "counts": {
+    "mentions": 21
+   }
+  },
+  {
+   "id": "sqlite-10",
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "sqlite3.c:sqlite3BtreeCursor",
+   "edit": "change what the function returns in one case; signature unchanged",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently",
+   "file": "sqlite3.c",
+   "line": 77526,
+   "ret": "SQLITE_PRIVATE int",
+   "counts": {
+    "calls": 4,
+    "values": 0,
+    "mentions": 6
+   }
+  },
+  {
+   "id": "curl-01",
+   "repo": "curl",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "lib/select.c:Curl_pollset_check",
+   "edit": "add an int parameter to the definition and every prototype; call sites unchanged",
+   "why_this_kind": "direct callers stop compiling; the classic signature change",
+   "file": "lib/select.c",
+   "line": 695,
+   "ret": "void",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 4
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-02",
+   "repo": "curl",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "lib/mime.c:mime_is_too_deep",
+   "edit": "delete the definition (prototypes in headers stay)",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "lib/mime.c",
+   "line": 1126,
+   "ret": "static bool",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 3
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-03",
+   "repo": "curl",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "lib/cf-socket.c:socket_close",
+   "edit": "change the return type from int to void (definition, prototypes, return statements)",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "lib/cf-socket.c",
+   "line": 535,
+   "ret": "static int",
+   "counts": {
+    "calls": 5,
+    "values": 0,
+    "mentions": 6
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-04",
+   "repo": "curl",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "lib/http2.c:on_stream_close",
+   "edit": "add an int parameter to a function that is also stored as a pointer",
+   "why_this_kind": "the break is where the function is put in a table or assigned, not at a call",
+   "file": "lib/http2.c",
+   "line": 1340,
+   "ret": "static int",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 2
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-05",
+   "repo": "curl",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "lib/http_proxy.c:http_proxy_cf_destroy",
+   "edit": "delete a function that is reached only through a pointer (no direct calls)",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "lib/http_proxy.c",
+   "line": 696,
+   "ret": "static void",
+   "counts": {
+    "calls": 0,
+    "values": 1,
+    "mentions": 2
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-06",
+   "repo": "curl",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "connectdata.proxy_ntlm_state",
+   "edit": "rename a struct field (add the suffix _renamed)",
+   "why_this_kind": "every reader and writer breaks; grep must tell this field from same-named ones",
+   "file": "lib/urldata.h",
+   "type": "curlntlm",
+   "counts": {
+    "mentions": 6
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-07",
+   "repo": "curl",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "UserDefined.upkeep_interval_ms",
+   "edit": "change an integer field to a pointer type",
+   "why_this_kind": "arithmetic and integer uses break, some uses still build and may behave differently",
+   "file": "lib/urldata.h",
+   "type": "timediff_t",
+   "counts": {
+    "mentions": 7
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-08",
+   "repo": "curl",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "lib/socks.c:cf_socks_statename",
+   "edit": "rename a file-scope variable",
+   "why_this_kind": "every use breaks; globals are often used far from where they are defined",
+   "file": "lib/socks.c",
+   "line": 72,
+   "counts": {
+    "mentions": 2
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-09",
+   "repo": "curl",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "lib/mime.h:Curl_mime_set_subparts",
+   "edit": "add a parameter to a function-like macro",
+   "why_this_kind": "every use of the macro breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "lib/mime.h",
+   "line": 167,
+   "params": 3,
+   "counts": {
+    "mentions": 4
+   },
+   "compiled": "to confirm after configure"
+  },
+  {
+   "id": "curl-10",
+   "repo": "curl",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "lib/curl_share.c:share_in_use",
+   "edit": "change what the function returns in one case; signature unchanged",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently",
+   "file": "lib/curl_share.c",
+   "line": 163,
+   "ret": "static bool",
+   "counts": {
+    "calls": 2,
+    "values": 0,
+    "mentions": 3
+   },
+   "compiled": "to confirm after configure"
+  }
+ ],
+ "pools": {
+  "redis": {
+   "add_param": 5296,
+   "remove_fn": 5296,
+   "int_to_void": 5296,
+   "ptr_param": 5296,
+   "ptr_remove": 5296,
+   "field_rename": 659,
+   "field_type": 659,
+   "global_rename": 270,
+   "macro_arity": 340,
+   "behaviour": 5296
+  },
+  "sqlite": {
+   "add_param": 4822,
+   "remove_fn": 4822,
+   "int_to_void": 4822,
+   "ptr_param": 4822,
+   "ptr_remove": 4822,
+   "field_rename": 228,
+   "field_type": 228,
+   "global_rename": 30,
+   "macro_arity": 755,
+   "behaviour": 4822
+  },
+  "curl": {
+   "add_param": 2661,
+   "remove_fn": 2661,
+   "int_to_void": 2661,
+   "ptr_param": 2661,
+   "ptr_remove": 2661,
+   "field_rename": 196,
+   "field_type": 196,
+   "global_rename": 180,
+   "macro_arity": 471,
+   "behaviour": 2661
+  }
+ },
+ "skipped": [
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/keymeta.c:keyMetaClassRelease",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:moduleDefragValue",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:RM_DictIteratorReseekC",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "remove_fn",
+   "id": "src/setproctitle.c:spt_copyargs",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "int_to_void",
+   "id": "src/module.c:RM_BlockedClientMeasureTimeEnd",
+   "reason": "0 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "int_to_void",
+   "id": "src/zmalloc.c:zfree",
+   "reason": "over 40 mentions (769)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/dict.c:_dictInit",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/evict.c:overMaxmemoryAfterAlloc",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/script_lua.c:luaCreateArray",
+   "reason": "0 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/sentinel.c:rewriteConfigSentinelOption",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/resp_parser.c:parseLong",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/db.c:delexGetKeys",
+   "reason": "0 value uses, 0 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/module.c:moduleHoldsTimer",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/call_reply.c:callReplyGetPrivateData",
+   "reason": "0 value uses, 5 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/expire.c:getSlaveKeyWithExpireCount",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/debug.c:openDirectLogFiledes",
+   "reason": "0 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/zipmap.c:zipmapValidateIntegrity",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/gcra.c:gcraSetValueCommand",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/t_stream.c:xpendingCommand",
+   "reason": "0 value uses, 0 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/script.c:scriptFlagsToCmdFlags",
+   "reason": "0 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/eval.c:ldbCatStackValueRec",
+   "reason": "0 value uses, 4 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/t_list.c:listTypePop",
+   "reason": "0 value uses, 5 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/aof.c:aofManifestCreate",
+   "reason": "0 value uses, 6 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/acl.c:ACLUserCheckCmdWithUnrestrictedKeyAccess",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/cluster.c:isReplicaAvailable",
+   "reason": "0 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/acl.c:ACLFreeSelector",
+   "reason": "0 value uses, 3 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/networking.c:clientSetinfoCommand",
+   "reason": "0 value uses, 0 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/module.c:createModuleConfig",
+   "reason": "0 value uses, 4 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/db.c:genericGetKeys",
+   "reason": "0 value uses, 11 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/acl.c:ACLFreeLogEntry",
+   "reason": "1 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/config.c:queueLoadModule",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/module.c:modulesCron",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/config.c:configNeedsApply",
+   "reason": "0 value uses, 3 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/sparsearray.c:arReallocAndTrack",
+   "reason": "0 value uses, 4 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/geohash.c:geohashDecodeWGS84",
+   "reason": "0 value uses, 0 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/replication.c:replicationResurrectCachedMaster",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/util.c:trimDoubleString",
+   "reason": "0 value uses, 3 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/t_zset.c:zslDelete",
+   "reason": "0 value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/geo.c:sort_gp_asc",
+   "reason": "1 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "field_rename",
+   "id": "redisServer.aof_dirname",
+   "reason": "45 uses (want 3 to 40)"
+  },
+  {
+   "repo": "redis",
+   "kind": "field_type",
+   "id": "redisServer.el_cron_duration",
+   "reason": "type 'monotime' is not a plain integer"
+  },
+  {
+   "repo": "redis",
+   "kind": "macro_arity",
+   "id": "src/anet.c:UNUSED",
+   "reason": "433 uses (want 2 to 40)"
+  },
+  {
+   "repo": "redis",
+   "kind": "macro_arity",
+   "id": "src/sha256.c:ROTLEFT",
+   "reason": "0 uses (want 2 to 40)"
+  },
+  {
+   "repo": "redis",
+   "kind": "behaviour",
+   "id": "src/cluster_legacy.c:clusterNodeTimedOut",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "behaviour",
+   "id": "src/unix.c:connUnixSyncRead",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:fts3WriteSegdir",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:sqlite3_prepare_v2",
+   "reason": "over 40 mentions (96)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:fts5IterSetOutputs_Full",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:nodeWrite",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:winHandleOpen",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:codeRowTrigger",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:sqlite3BtreeCursorHintFlags",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:avgFinalize",
+   "reason": "also used as a value (2)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:fts5Porter_MGt1_and_S_or_T",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:rtreeCheckReset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:sqlite3_deserialize",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3_malloc64",
+   "reason": "over 40 mentions (239)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3PagerExclusiveLock",
+   "reason": "returns 'SQLITE_PRIVATE int', not int"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3changegroup_delete",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5TokendataIterAppendMap",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts3RollbackMethod",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5ValueClampedInt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3DbpageRegister",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3DbpageRegister",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3PcacheShutdown",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3rbu_close",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts3AppendToNode",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:proxyCreateConchPathname",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:jsonbPayloadSizeInline",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5CreateMethod",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3VdbeChangeP4",
+   "reason": "returns 'SQLITE_PRIVATE void', not int"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3_strglob",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:rbuObjIterGetBindlist",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5ExprSynonymList",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3session_changeset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3SelectWalkFail",
+   "reason": "also used as a value (5)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:memsys5Realloc",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuGetUpdateStmt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rebuildPage",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5PorterCb",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5DecodeFunction",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3TreeViewTrigger",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuStep",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sessionBufferGrow",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3BtreeNext",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:bytecodevtabCursorClear",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuBadControlError",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3PagerIswriteable",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:winFileControl",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:vdbeRecordCompareDebug",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:markImmutableExprStep",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:subjournalPage",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:btreeBeginTrans",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3VtabSync",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3rebaser_create",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:fts3GobbleInt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3RowSetTest",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3VdbeHasSubProgram",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3Fts5IndexBeginWrite",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3changeset_apply_v2",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:geopolySkipSpace",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3Fts5BufferAppendString",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:codeDeferredSeek",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:xFree",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3QuoteValue",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3Fts5ParserTrace",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:autoIncrementEnd",
+   "reason": "0 value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3TreeViewExpr",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "macro_arity",
+   "id": "sqlite3.c:CHECK_PAGE",
+   "reason": "1 uses (want 2 to 40)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:sqlite3LimitWhere",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:sqlite3Fts3SegReaderFinish",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:memsys3OutOfMemory",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/url.c:url_match_ssl_config",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/multi.c:protocol_doing",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/url.c:Curl_conn_meta_get",
+   "reason": "over 40 mentions (116)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/telnet.c:telrcv",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/request.c:Curl_req_want_send",
+   "reason": "returns 'bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/idn.c:win32_idn_to_ascii",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/setopt.c:cookielist",
+   "reason": "also used as a value (2)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/url.c:Curl_conn_meta_remove",
+   "reason": "returns 'void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:auth_basic",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/escape.c:curl_free",
+   "reason": "over 40 mentions (67)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:cr_in_read",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi_ev.c:mev_sh_entry_dtor",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_output_basic",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/select.c:Curl_pollset_check",
+   "reason": "already used by another case"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks5_recv_resp1",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:cr_buf_read",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http1.c:trim_line",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:Curl_ftp_parselist_geterror",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/bufq.c:chunk_reset",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_init",
+   "reason": "returns 'curl_mime *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_init",
+   "reason": "returns 'curl_mime *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/tftp.c:tftp_set_timeouts",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cf-ip-happy.c:cf_ip_attempt_new",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/netrc.c:netrc_scan_end_entry",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_creader_def_total_length",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:Curl_cookie_list",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http_chunks.c:add_chunk",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_share.c:share_destroy",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi.c:Curl_multi_xfer_ulbuf_borrow",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi.c:multistate_protoconnecting",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:h2_client_new",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi_ntfy.c:Curl_mntfy_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/imap.c:is_custom_fetch_listing_match",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_trc.c:Curl_trc_smtp",
+   "reason": "0 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_trc.c:Curl_trc_smtp",
+   "reason": "0 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:Curl_ftp_parselist_data_free",
+   "reason": "returns 'void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/select.c:Curl_waitfds_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:Curl_cookie_init",
+   "reason": "returns 'struct CookieInfo *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks_failed",
+   "reason": "returns 'static CURLproxycode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks_proxy_ctx_free",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftp.c:ftp_need_type",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_fnmatch.c:charclass",
+   "reason": "returns 'static char_class', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/telnet.c:telnet_negotiate",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http_aws_sigv4.c:get_payload_hash",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_cwriter_count",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_share.c:curl_share_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:parse_unix_group",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/dynhds.c:Curl_dynhds_to_nva",
+   "reason": "returns 'nghttp2_nv *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_cwriter_create",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:set_auto_referer",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cf-https-connect.c:cf_hc_get_httpsrr_alpn",
+   "reason": "returns 'static enum alpnid', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_addrinfo.c:Curl_looks_like_ipv6",
+   "reason": "returns 'bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/progress.c:Curl_pgrsRecvPause",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/protocol.c:two_letter_scheme",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cw-pause.c:cw_pause_buf_free",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:parse_domain",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/u32_ptrset.c:Curl_u32_ptrset_count",
+   "reason": "0 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mprintf.c:alloc_fits",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:Curl_http2_upgrade",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftp.c:ftp_has_ctrl",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/openldap.c:oldap_connect",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cfilters.c:Curl_conn_get_max_concurrent",
+   "reason": "returns 'size_t', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_header",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/openldap.c:oldap_perform_sasl",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_header_a",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/smtp.c:cr_eob_total_length",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/formdata.c:free_chain",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks_gssapi.c:socks5_gss_negotiate_enc",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:mime_rewind",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/hash.c:compare_socket",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:cf_h2_ctx_free",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_filename",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_filename",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/idn.c:win32_ascii_to_idn",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ftplistparser.c:Curl_wildcard_init",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/url.c:Curl_parse_login_details",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi_ev.c:mev_sh_entry_get",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http_proxy.c:Curl_cf_http_proxy_insert_after",
+   "reason": "never used as a value"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/sha256.c:Sigma0",
+   "reason": "1 uses (want 2 to 40)"
+  }
+ ]
+}
