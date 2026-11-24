@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Graph · AeroTrace (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>
+  .gwrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  /* Toolbar: one row, never wraps. The verdict shrinks with an ellipsis; chips show counts only when tight. */
+  .gbar { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4); height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: nowrap; white-space: nowrap; }
+  .gbar .verdict { font-weight: var(--weight-semibold); font-size: var(--text-sm); min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+  .gbar .src { flex: 0 10 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .gbar .sp { flex: 1 1 0; min-width: var(--space-2); }
+  .gbar .chips { display: flex; gap: 6px; flex: none; }
+  .search { display: flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 var(--space-2) 0 var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); color: var(--text-3); font-size: var(--text-sm); width: 168px; flex: none; }
+  .search svg { width: 14px; height: 14px; flex: none; }
+  .search kbd { margin-left: auto; }
+  @media (max-width: 1360px) { .gbar .chips .w { display: none; } .gbar .src { display: none; } }
+  /* Canvas area and panel side by side, so "bottom-right of the canvas" is never under the panel. */
+  .body2 { flex: 1; display: flex; min-height: 0; }
+  .stage { position: relative; flex: 1; background: var(--graph-bg); overflow: hidden; cursor: grab; }
+  .stage.drag { cursor: grabbing; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .glass { position: absolute; background: rgb(21 24 29 / 0.92); border: 1px solid #2a2f38; border-radius: var(--radius-lg); color: #d7dce4; }
+  .legend { left: var(--space-4); bottom: var(--space-4); padding: var(--space-3) var(--space-4); font: 11px/1.35 var(--font-mono); display: grid; gap: 7px; max-width: 300px; }
+  .legend .r { display: grid; grid-template-columns: 14px auto; gap: 2px 8px; align-items: start; }
+  .legend svg { width: 14px; height: 14px; }
+  .legend .m { grid-column: 2; color: #9099a6; font-family: var(--font-sans); font-size: 11px; }
+  .legend .e { display: inline-block; width: 18px; border-top: 1.5px solid #8c96a5; vertical-align: middle; margin-right: 6px; }
+  .legend .lines { display: flex; gap: 12px; margin-top: 2px; color: #b4bac4; }
+  .tools { right: var(--space-4); bottom: var(--space-4); display: flex; flex-direction: column; padding: 4px; gap: 2px; }
+  .tools button { width: 32px; height: 32px; border: 0; background: transparent; color: #d7dce4; border-radius: var(--radius-md); cursor: pointer; font: 600 15px/1 var(--font-mono); display: grid; place-items: center; }
+  .tools button:hover { background: #2a2f38; }
+  .tools svg { width: 16px; height: 16px; }
+  .hint { position: absolute; left: 50%; top: var(--space-3); transform: translateX(-50%); font: 11px/1 var(--font-mono); color: #9099a6; background: rgb(21 24 29 / 0.92); border: 1px solid #2a2f38; padding: 6px 10px; border-radius: var(--radius-full); white-space: nowrap; }
+  .body2 .panel { position: relative; flex: none; box-shadow: none; }
+  .refbar { flex: none; padding: 8px var(--space-4); font-size: var(--text-xs); color: var(--text-3); background: var(--surface); border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-current="graph"></aside>
+  <main class="main">
+    <div class="gwrap">
+      <div class="gbar">
+        <span class="chip breaks" data-s="breaks">BREAKS</span>
+        <span class="verdict">Breaks 4 places, 1 may break, 19 affected</span>
+        <span class="fl src">working tree vs HEAD</span>
+        <span class="sp"></span>
+        <div class="chips" role="group" aria-label="Show on the graph">
+          <button class="chip filter breaks" aria-pressed="true" data-s="breaks" data-f="breaks"><span class="w">BREAKS </span><span class="c">4</span></button>
+          <button class="chip filter may" aria-pressed="true" data-s="may" data-f="may"><span class="w">MAY BREAK </span><span class="c">1</span></button>
+          <button class="chip filter affected" aria-pressed="false" data-s="affected" data-f="affected"><span class="w">AFFECTED </span><span class="c">19</span></button>
+          <button class="chip filter unknown" aria-pressed="false" data-s="unknown" data-f="unknown"><span class="w">UNKNOWN </span><span class="c">7</span></button>
+          <button class="chip filter" aria-pressed="false" data-s="no_effect" data-f="no_effect"><span class="w">NO EFFECT </span><span class="c">212</span></button>
+        </div>
+        <div class="search"><span data-i="search"></span>Find a function<kbd>/</kbd></div>
+      </div>
+      <div class="body2">
+        <div class="stage" id="stage">
+          <canvas id="cv" aria-label="Impact graph. Every node is also listed in the side panel's path and on the check's list view."></canvas>
+          <div class="hint" id="hint" hidden></div>
+          <div class="glass legend" id="legend" aria-label="Legend">
+            <div class="r"><span data-s="changed" style="color:var(--graph-changed)"></span><span>CHANGED</span></div>
+            <div class="r"><span data-s="breaks" style="color:var(--graph-breaks)"></span><span>BREAKS</span><span class="m">won't build or link</span></div>
+            <div class="r"><span data-s="may" style="color:var(--graph-may)"></span><span>MAY BREAK</span><span class="m">may not build; one step is a guess</span></div>
+            <div class="r"><span data-s="affected" style="color:var(--graph-affected)"></span><span>AFFECTED</span><span class="m">builds, but behaviour may change</span></div>
+            <div class="r"><span data-s="unknown" style="color:var(--graph-unknown)"></span><span>UNKNOWN</span><span class="m">AeroTrace couldn't follow it</span></div>
+            <div class="lines"><span><i class="e"></i>exact</span><span><i class="e" style="border-top-style:dashed"></i>probable</span><span><i class="e" style="border-top-style:dotted;border-top-width:2px"></i>unknown</span></div>
+          </div>
+          <div class="glass tools" id="tools" aria-label="View">
+            <button aria-label="Zoom in" id="zin">+</button><button aria-label="Zoom out" id="zout">−</button>
+            <button aria-label="Fit to screen (0)" data-i="fit" id="zfit"></button><button aria-label="Focus on selected (F)" data-i="focus"></button>
+          </div>
+        </div>
+        <aside class="panel" aria-label="Details for scanCommand">
+          <header>
+            <div style="flex:1;min-width:0">
+              <span class="chip breaks" data-s="breaks">BREAKS</span>
+              <h2 class="mono" style="margin:10px 0 4px;font-size:var(--text-lg)" id="ptitle">scanCommand</h2>
+              <div class="fl" id="pfile">src/db.c:1189 <button class="btn ghost icon sm" style="height:22px;width:22px;vertical-align:middle" aria-label="Copy file and line" data-i="copy"></button></div>
+            </div>
+            <button class="btn ghost icon sm" aria-label="Close panel (Esc)" data-i="close"></button>
+          </header>
+          <div class="body">
+            <section>
+              <div class="caps" style="margin-bottom:6px">Why</div>
+              <div>Passes 3 arguments; <span class="mono">scanGenericCommand</span> now takes 4.</div>
+            </section>
+            <section>
+              <div class="caps" style="margin-bottom:6px">Code</div>
+              <div class="snippet" role="region" aria-label="Code around line 1192">
+                <div><span class="ln">1189</span>void scanCommand(client *c) {</div>
+                <div><span class="ln">1190</span>    unsigned long cursor;</div>
+                <div><span class="ln">1191</span>    if (parseScanCursorOrReply(c,c->argv[1],&amp;cursor) == C_ERR) return;</div>
+                <div class="hit"><span class="ln">1192</span>    scanGenericCommand(c,NULL,cursor);</div>
+                <div><span class="ln">1193</span>}</div>
+              </div>
+            </section>
+            <section>
+              <div class="caps" style="margin-bottom:6px">How sure</div>
+              <dl class="kv">
+                <dt>Certainty</dt><dd><b>exact</b>: the compiler resolved every step</dd>
+                <dt>Link</dt><dd class="mono">exact · direct call</dd>
+                <dt>Distance</dt><dd class="mono">1</dd>
+              </dl>
+            </section>
+            <section>
+              <div class="caps" style="margin-bottom:6px">Path from the change</div>
+              <ol class="path">
+                <li><i></i><a href="#" class="mono">scanGenericCommand</a> <span class="fl">src/db.c:1012 · changed</span></li>
+                <li><i style="border-color:var(--breaks)"></i><span class="mono">scanCommand</span> <span class="fl">src/db.c:1192 · calls it</span></li>
+              </ol>
+            </section>
+          </div>
+        </aside>
+      </div>
+      <div class="refbar">Influenced by: Refero "Black with one accent" (dark canvas, one accent), Sentry and Raycast detail panels (stacked labelled sections), Linear (keyboard first). Made our own: only BREAKS and MAY BREAK are shown at first, the rest are counted groups, and the legend says in words what each status means.</div>
+    </div>
+  </main>
+</div>
+<script>
+// Mockup renderer. SAMPLE data. Shows: default view (CHANGED, BREAKS, MAY BREAK), counted groups that
+// open on click, deterministic ring layout, and greedy label placement with collision checks.
+(function () {
+  var css = getComputedStyle(document.documentElement);
+  function v(n) { return css.getPropertyValue(n).trim(); }
+  var COL = { changed: v("--graph-changed"), breaks: v("--graph-breaks"), may: v("--graph-may"), affected: v("--graph-affected"), unknown: v("--graph-unknown"), no_effect: v("--graph-no-effect") };
+  var MONO = v("--font-mono");
+  var WORD = { affected: "AFFECTED", unknown: "UNKNOWN", no_effect: "NO EFFECT FOUND" };
+
+  // ---- sample check ----
+  var names = ["dictScan", "scanCallback", "keyIsExpired", "lookupKeyRead", "hashTypeScan", "zsetScan", "setTypeScan",
+    "addReplyArrayLen", "listpackScan", "kvstoreScan", "moduleScanCallback", "rdbSaveKeyScan", "activeExpireCycle",
+    "dbScanPattern", "stringmatchlen", "sdsnewlen", "freeScanData", "scanDatabaseForReadyKeys", "clusterScanSlots",
+    "evictionPoolPopulate", "trackingScan", "objectTypeName", "getKeysFromCommand", "luaScanHelper", "notifyKeyspaceEvent", "incrRefCount"];
+  var nodes = [{ id: 0, st: "changed", d: 0, name: "scanGenericCommand" }];
+  [["breaks", "scanCommand"], ["breaks", "sscanCommand"], ["breaks", "hscanCommand"], ["breaks", "zscanCommand"], ["may", "RM_Scan"]]
+    .forEach(function (x) { nodes.push({ st: x[0], d: 1, name: x[1] }); });
+  var used = 0;
+  function add(st, d, n) { for (var i = 0; i < n; i++) nodes.push({ st: st, d: d, name: st === "no_effect" ? "" : names[used++ % names.length] }); }
+  add("affected", 1, 3); add("affected", 2, 8); add("affected", 3, 8);
+  add("unknown", 1, 1); add("unknown", 2, 3); add("unknown", 3, 3);
+  add("no_effect", 1, 2); add("no_effect", 2, 60); add("no_effect", 3, 150);
+  nodes.forEach(function (n, i) { n.id = i; });
+  var COUNTS = {}; nodes.forEach(function (n) { COUNTS[n.st] = (COUNTS[n.st] || 0) + 1; });
+
+  var show = { changed: true, breaks: true, may: true, affected: false, unknown: false, no_effect: false };
+  var view = { s: 1, x: 0, y: 0 }, selected = 1;
+  var cv = document.getElementById("cv"), stage = document.getElementById("stage"), hint = document.getElementById("hint");
+
+  function layout(w, h) {
+    var vis = nodes.filter(function (n) { return show[n.st]; });
+    var maxd = vis.reduce(function (m, n) { return Math.max(m, n.d); }, 0);
+    var R = Math.min(w, h) / (2 * (Math.max(maxd, 1) + 1.15));
+    var pos = {};
+    var order = { breaks: 0, may: 1, affected: 2, unknown: 3, no_effect: 4, changed: 0 };
+    for (var d = 0; d <= maxd; d++) {
+      var ring = vis.filter(function (n) { return n.d === d; });
+      ring.sort(function (a, b) { return order[a.st] - order[b.st] || a.id - b.id; });
+      ring.forEach(function (n, i) {
+        var a = d === 0 ? 0 : -Math.PI / 2 + (i + 0.5) * (2 * Math.PI / ring.length) + d * 0.35;
+        pos[n.id] = { x: Math.cos(a) * R * d, y: Math.sin(a) * R * d, a: a, n: n };
+      });
+    }
+    // parent: the visible node one ring in with the closest angle (sample stand-in for the real `via`)
+    vis.forEach(function (n) {
+      if (n.d === 0) return;
+      var best = null, bd = 9;
+      vis.forEach(function (p) {
+        if (p.d !== n.d - 1) return;
+        var diff = p.d === 0 ? 0 : Math.abs(Math.atan2(Math.sin(pos[p.id].a - pos[n.id].a), Math.cos(pos[p.id].a - pos[n.id].a)));
+        if (diff < bd) { bd = diff; best = p; }
+      });
+      pos[n.id].parent = best ? best.id : 0;
+    });
+    return { vis: vis, pos: pos, R: R, maxd: maxd };
+  }
+
+  var hits = [];
+  function rectsOverlap(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+  function blocked() {
+    // Screen rects of the overlays, so labels never sit under them.
+    var sr = stage.getBoundingClientRect(), out = [];
+    ["legend", "tools", "hint"].forEach(function (id) {
+      var el = document.getElementById(id); if (el.hidden) return;
+      var r = el.getBoundingClientRect();
+      out.push({ x: r.left - sr.left - 6, y: r.top - sr.top - 6, w: r.width + 12, h: r.height + 12 });
+    });
+    return out;
+  }
+
+  function draw() {
+    var dpr = window.devicePixelRatio || 1, w = stage.clientWidth, h = stage.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr; var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = v("--graph-dot");
+    for (var x = 12; x < w; x += 24) for (var y = 12; y < h; y += 24) g.fillRect(x, y, 1.5, 1.5);
+    var L = layout(w, h - 60), cx = w / 2 + view.x, cy = (h - 40) / 2 + view.y, s = view.s;
+    function sx(p) { return cx + p.x * s; } function sy(p) { return cy + p.y * s; }
+    g.strokeStyle = "rgba(140,150,165,0.10)"; g.lineWidth = 1;
+    for (var k = 1; k <= L.maxd; k++) { g.beginPath(); g.arc(cx, cy, L.R * k * s, 0, Math.PI * 2); g.stroke(); }
+    L.vis.forEach(function (n) {
+      var p = L.pos[n.id]; if (n.d === 0) return; var q = L.pos[p.parent];
+      g.beginPath(); g.moveTo(sx(q), sy(q)); g.lineTo(sx(p), sy(p));
+      g.strokeStyle = n.st === "breaks" ? "rgba(255,107,94,0.6)" : n.st === "may" ? "rgba(251,191,36,0.6)" : v("--graph-edge");
+      g.setLineDash(n.st === "may" ? [5, 4] : n.st === "unknown" ? [1.5, 3] : []);
+      g.lineWidth = n.st === "breaks" || n.st === "may" ? 1.6 : 1; g.stroke(); g.setLineDash([]);
+    });
+    // hint text first, so its box is known before labels are placed
+    var groups = ["affected", "unknown", "no_effect"].filter(function (st) { return !show[st]; });
+    var hidN = groups.reduce(function (a, st) { return a + COUNTS[st]; }, 0);
+    hint.hidden = !hidN; hint.textContent = hidN + " nodes are in groups. Click a group to open it.";
+    var occupied = blocked(); hits = [];
+    L.vis.forEach(function (n) {
+      var p = L.pos[n.id], X = sx(p), Y = sy(p), sh = window.MOCK_SHAPES[n.st];
+      var sc = n.st === "no_effect" ? 0.42 : n.st === "changed" ? 1.15 : 0.62;
+      g.save(); g.translate(X, Y); g.scale(sc, sc); g.fillStyle = COL[n.st];
+      g.fill(new Path2D(sh[0]));
+      if (n.st !== "no_effect") { g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.lineCap = "round"; g.stroke(new Path2D(sh[1])); }
+      g.restore();
+      var r = 14 * sc + 2; occupied.push({ x: X - r, y: Y - r, w: 2 * r, h: 2 * r });
+      hits.push({ x: X, y: Y, r: r + 3, id: n.id });
+      if (n.id === selected) { g.strokeStyle = "#ffffff"; g.lineWidth = 1.5; g.beginPath(); g.arc(X, Y, 13, 0, Math.PI * 2); g.stroke(); }
+    });
+    // counted groups for hidden statuses, in a row under the rings
+    g.font = "600 11px " + MONO;
+    var widths = groups.map(function (st) { return g.measureText(COUNTS[st] + " " + WORD[st]).width + 44; });
+    var gw = widths.reduce(function (a, b) { return a + b + 10; }, -10);
+    var gy = Math.min(h - 32, cy + L.R * (L.maxd + 0.9) * s), gx = cx - gw / 2;
+    // keep the groups clear of the legend and the zoom tools: one row between them if it fits,
+    // otherwise a right-aligned column stacked above the zoom tools
+    var ov = blocked(), lg = ov[0], tl = ov[1], spots = [];
+    var left = lg.x + lg.w + 8, right = tl.x - 8;
+    if (gy + 19 > lg.y && gx < left) gx = left;
+    if (gx + gw <= right || gy + 19 < tl.y) {
+      widths.forEach(function (bw) { spots.push([gx, gy]); gx += bw + 10; });
+    } else {
+      widths.forEach(function (bw, i) { spots.push([tl.x + tl.w - 6 - bw, tl.y - 4 - (widths.length - i) * 38 + 15]); });
+    }
+    groups.forEach(function (st, i) {
+      var bw = widths[i], bx = spots[i][0], gy = spots[i][1], by = gy - 15;
+      g.fillStyle = "rgba(21,24,29,0.95)"; g.strokeStyle = COL[st]; g.lineWidth = 1; g.setLineDash([3, 3]);
+      g.beginPath(); g.roundRect(bx, by, bw, 30, 15); g.fill(); g.stroke(); g.setLineDash([]);
+      g.save(); g.translate(bx + 18, gy); g.scale(0.5, 0.5); g.fillStyle = COL[st]; g.fill(new Path2D(window.MOCK_SHAPES[st][0]));
+      g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.stroke(new Path2D(window.MOCK_SHAPES[st][1])); g.restore();
+      g.fillStyle = "#d7dce4"; g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(COUNTS[st] + " " + WORD[st], bx + 32, gy + 0.5);
+      occupied.push({ x: bx - 4, y: by - 4, w: bw + 8, h: 38 });
+      hits.push({ group: st, x: bx, y: by, w: bw, h: 30 });
+    });
+    // labels: by priority, 9 candidate spots each; the first spot that hits nothing wins, else hidden
+    var prio = { changed: 0, breaks: 1, may: 2, unknown: 3, affected: 4, no_effect: 9 };
+    var want = L.vis.filter(function (n) { return n.name; }).sort(function (a, b) {
+      return (b.id === selected) - (a.id === selected) || prio[a.st] - prio[b.st] || a.id - b.id;
+    });
+    var hidden = 0;
+    want.forEach(function (n) {
+      var p = L.pos[n.id], X = sx(p), Y = sy(p);
+      g.font = (n.st === "changed" ? "600 12px " : "11px ") + MONO;
+      var tw = g.measureText(n.name).width, th = 14, o = n.st === "changed" ? 20 : 12;
+      var ca = Math.cos(p.a), sa = Math.sin(p.a);
+      var cands = [
+        [X + ca * o + (ca >= 0 ? 0 : -tw), Y + sa * o - th / 2],
+        [X + o, Y - th / 2], [X - o - tw, Y - th / 2], [X - tw / 2, Y - o - th], [X - tw / 2, Y + o],
+        [X + o * 0.7, Y - o * 0.7 - th], [X + o * 0.7, Y + o * 0.7], [X - o * 0.7 - tw, Y - o * 0.7 - th], [X - o * 0.7 - tw, Y + o * 0.7],
+      ];
+      if (n.st === "changed") cands.unshift([X - tw / 2, Y + o]);
+      var spot = null;
+      for (var i = 0; i < cands.length && !spot; i++) {
+        var rr = { x: cands[i][0] - 3, y: cands[i][1] - 1, w: tw + 6, h: th + 2 };
+        if (rr.x < 4 || rr.y < 4 || rr.x + rr.w > w - 4 || rr.y + rr.h > h - 4) continue;
+        if (!occupied.some(function (o2) { return rectsOverlap(rr, o2); })) spot = rr;
+      }
+      if (!spot) { hidden++; return; }
+      occupied.push(spot);
+      g.fillStyle = "rgba(11,13,16,0.78)"; g.fillRect(spot.x, spot.y, spot.w, spot.h);
+      g.fillStyle = n.st === "breaks" ? "#ffb3ab" : n.st === "may" ? "#fcd57a" : "#c7cede";
+      g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(n.name, spot.x + 3, spot.y + spot.h / 2 + 0.5);
+    });
+    if (hidden) {
+      g.font = "11px " + MONO; g.fillStyle = "#9099a6"; g.textAlign = "left"; g.textBaseline = "alphabetic";
+      g.fillText(hidden + " labels hidden so none overlap. Zoom in to see them.", 16, 24);
+    }
+  }
+
+  function setShow(st, on) {
+    show[st] = on;
+    var b = document.querySelector('[data-f="' + st + '"]'); if (b) b.setAttribute("aria-pressed", on);
+    draw();
+  }
+  document.querySelectorAll("[data-f]").forEach(function (b) {
+    b.addEventListener("click", function () { setShow(b.dataset.f, b.getAttribute("aria-pressed") !== "true"); });
+  });
+  var down = null, moved = false;
+  cv.addEventListener("mousedown", function (e) { down = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; moved = false; stage.classList.add("drag"); });
+  window.addEventListener("mousemove", function (e) {
+    if (!down) return; var dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; view.x = down.vx + dx; view.y = down.vy + dy; if (moved) draw();
+  });
+  window.addEventListener("mouseup", function (e) {
+    stage.classList.remove("drag"); if (!down) return; down = null; if (moved) return;
+    var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    for (var i = hits.length - 1; i >= 0; i--) {
+      var t = hits[i];
+      if (t.group && x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h) { setShow(t.group, true); return; }
+      if (!t.group && Math.hypot(x - t.x, y - t.y) <= t.r && nodes[t.id].name) {
+        selected = t.id; document.getElementById("ptitle").textContent = nodes[t.id].name; draw(); return;
+      }
+    }
+  });
+  cv.addEventListener("wheel", function (e) { e.preventDefault(); view.s = Math.max(0.4, Math.min(4, view.s * (e.deltaY < 0 ? 1.1 : 0.9))); draw(); }, { passive: false });
+  document.getElementById("zin").onclick = function () { view.s = Math.min(4, view.s * 1.2); draw(); };
+  document.getElementById("zout").onclick = function () { view.s = Math.max(0.4, view.s / 1.2); draw(); };
+  document.getElementById("zfit").onclick = function () { view = { s: 1, x: 0, y: 0 }; draw(); };
+  var q = new URLSearchParams(location.search);
+  if (q.get("open")) q.get("open").split(",").forEach(function (st) { show[st] = true; var b = document.querySelector('[data-f="' + st + '"]'); if (b) b.setAttribute("aria-pressed", "true"); });
+  window.addEventListener("load", draw); window.addEventListener("resize", draw);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroTrace benchmark (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script><script src="chart.js"></script>
+<style>
+  body { background: var(--surface); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-9); }
+  .hero h1 { font-size: 2.25rem; letter-spacing: -0.02em; line-height: 1.15; max-width: 720px; }
+  .hero p { color: var(--text-2); font-size: 1.0625rem; max-width: 640px; margin-top: var(--space-4); }
+  .controls { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; margin: var(--space-7) 0 var(--space-5); }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-md); overflow: hidden; }
+  .seg button { border: 0; background: transparent; padding: 0 var(--space-4); height: 32px; font: var(--weight-medium) var(--text-sm) var(--font-sans); color: var(--text-2); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .seg button + button { border-left: 1px solid var(--border-strong); }
+  #legend { font-size: var(--text-sm); color: var(--text-2); margin-bottom: var(--space-3); }
+  #chart { width: 100%; }
+  .also { margin-top: var(--space-7); border-top: 1px solid var(--border); padding-top: var(--space-5); }
+  .also ul { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: grid; gap: var(--space-2); }
+  .also li a { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text); font-size: var(--text-sm); }
+  .also li a:hover { border-color: var(--accent); text-decoration: none; }
+  .also svg { width: 16px; height: 16px; color: var(--accent); }
+  .wl { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-7); }
+  .wl .card h3 { display: flex; gap: var(--space-2); align-items: baseline; }
+  .wl ul { padding-left: 1.1em; margin: 0; color: var(--text-2); font-size: var(--text-sm); }
+  .foot { margin-top: var(--space-8); font-size: var(--text-xs); color: var(--text-3); line-height: 1.7; border-top: 1px solid var(--border); padding-top: var(--space-5); }
+  .foot b { color: var(--text-2); font-weight: var(--weight-medium); }
+  @media (max-width: 760px) { .wrap { padding: var(--space-6) var(--space-4); } .hero h1 { font-size: 1.6rem; } .wl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="caps">Recall · False alarms · Time · Tokens</div>
+    <h1 style="margin-top:var(--space-3)">Which code breaks when you change C? We checked 28 real changes against the compiler.</h1>
+    <p>Each tool was asked what a change breaks, the way an agent would use it. The answers were scored against what the compiler and the source actually say. Higher recall is better; it means fewer missed breaks.</p>
+  </header>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Which cases">
+      <button aria-pressed="true" data-v="all">All cases</button><button aria-pressed="false" data-v="easy">Easy</button><button aria-pressed="false" data-v="hard">Hard</button>
+    </div>
+    <button class="toggle" role="switch" aria-checked="true" id="others"><span class="sw"></span>Show other tools</button>
+    <span class="dim" style="font-size:var(--text-sm);margin-left:auto">Recall, % of real breaks found</span>
+  </div>
+  <div id="legend"></div>
+  <div id="chart"></div>
+
+  <section class="wl">
+    <div class="card"><h3>Wins <span class="dim mono" style="font-size:12px">5 of 28</span></h3><ul><li>Calls through command tables (<span class="mono">cmd-&gt;proc</span>)</li><li>Struct fields with common names</li></ul></div>
+    <div class="card"><h3>Ties <span class="dim mono" style="font-size:12px">19 of 28</span></h3><ul><li>Direct calls: clangd finds them too</li></ul></div>
+    <div class="card"><h3>Losses <span class="dim mono" style="font-size:12px">4 of 28</span></h3><ul><li>Macros that build function names</li><li>ripgrep is faster on every case</li></ul></div>
+  </section>
+
+  <section class="also">
+    <div class="caps">Also run</div>
+    <ul>
+      <li><a href="#">False alarms per tool, every case <span data-i="arrow"></span></a></li>
+      <li><a href="#">Raw outputs for all 112 runs (bench/results/…/raw) <span data-i="arrow"></span></a></li>
+      <li><a href="#">Agent case studies: not run yet <span data-i="arrow"></span></a></li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <b>How each tool was run.</b> AeroTrace 0.1.0 (<span class="mono">aerotrace check --patch case.diff --json</span>). clangd 19.1.7, find-references on each changed symbol, same <span class="mono">compile_commands.json</span>. cscope 15.9 (<span class="mono">-L3</span> callers query). ripgrep 14.1 (<span class="mono">rg -w name</span>). Truth: <span class="mono">clang -fsyntax-only</span> on the patched code, plus hand checks with source lines.<br>
+    <b>Code.</b> Redis 8.10.3, SQLite 3.54.1 amalgamation, curl 8.x (pinned, sha256 checked). <b>Machine.</b> Apple M1 Pro, macOS 26. <b>Time</b> is the median of 3 runs. <b>Tokens</b> are Claude tokens in each tool's answer.<br>
+    Reproduce (from an AeroTrace checkout): <span class="mono">uv run python -m bench accuracy</span>. Scripts: <a href="#">bench/accuracy/</a>. Results: <a href="#">results.json</a>.
+  </footer>
+  <p class="refnote">Influenced by: Supermemory's benchmark chart (value above each bar, time and tokens under each group, an "Also run" row), Footer.design "Small type" (quiet 12 px footnote). Made our own: other tools are outlined light-grey bars and AeroTrace is the only solid one, there is an Easy / Hard split, and a Wins / Ties / Losses row so losses are as easy to find as wins.</p>
+</div>
+<script>
+  var state = { view: "all", others: true };
+  function render() { MOCK_CHART(document.getElementById("chart"), { view: state.view, others: state.others, legend: "legend" }); }
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.onclick = function () { document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", x === b); }); state.view = b.dataset.v; render(); };
+  });
+  document.getElementById("others").onclick = function () { state.others = !state.others; this.setAttribute("aria-checked", state.others); render(); };
+  var q = new URLSearchParams(location.search);
+  if (q.get("view")) { state.view = q.get("view"); document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.v === state.view); }); }
+  window.addEventListener("load", render); window.addEventListener("resize", render);
+</script>
+</body>
+</html>

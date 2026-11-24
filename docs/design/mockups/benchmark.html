@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Benchmark · AeroTrace (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script><script src="chart.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-current="benchmark"></aside>
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div>
+          <div class="caps">Recall · False alarms · Time · Tokens</div>
+          <h1 style="margin-top:6px">Benchmark</h1>
+          <div class="sub">From <span class="mono">bench/results/2026-12-01-abc1234/results.json</span> · 28 cases · Apple M1 Pro</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:center">
+          <button class="toggle" role="switch" aria-checked="true" id="others"><span class="sw"></span>Show other tools</button>
+          <a class="btn sm" href="results.html">Open the full page <span data-i="arrow"></span></a>
+        </div>
+      </div>
+      <div class="card">
+        <div id="legend" style="font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)"></div>
+        <div id="chart"></div>
+      </div>
+      <h2 style="margin-top:var(--space-6)">Every case</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Case</th><th>Kind</th><th class="num">Real breaks</th><th class="num">AeroTrace</th><th class="num">clangd</th><th class="num">cscope</th><th class="num">ripgrep</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">redis-01 scanGenericCommand +arg</td><td>direct calls · easy</td><td class="num">4</td><td class="num">4 / 0 fa</td><td class="num">4 / 0 fa</td><td class="num">4 / 1 fa</td><td class="num">4 / 6 fa</td></tr>
+            <tr><td class="mono">redis-07 redisCommand.proc type</td><td>function pointer · hard</td><td class="num">212</td><td class="num">209 / 0 fa</td><td class="num">1 / 0 fa</td><td class="num">0 / 0 fa</td><td class="num">3 / 9 fa</td></tr>
+            <tr><td class="mono">curl-05 CURL_EASY_MACRO rename</td><td>macro · hard</td><td class="num">9</td><td class="num">5 / 0 fa</td><td class="num">9 / 0 fa</td><td class="num">2 / 0 fa</td><td class="num">9 / 4 fa</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim" style="font-size:var(--text-sm);margin-top:var(--space-3)">Showing 3 of 28. <a href="#">Show all</a> · "fa" = false alarms.</p>
+      <p class="refnote">Influenced by: Supermemory's benchmark chart (small-caps metric line, show-others toggle), Vercel analytics tables (right-aligned mono numbers, "showing 3 of 28"). Made our own: other tools are outlined light bars, and each table cell shows found and false alarms together so neither hides the other.</p>
+    </div>
+  </main>
+</div>
+<script>
+  var others = true;
+  function render() { MOCK_CHART(document.getElementById("chart"), { view: "all", others: others, legend: "legend" }); }
+  document.getElementById("others").onclick = function () { others = !others; this.setAttribute("aria-checked", others); render(); };
+  window.addEventListener("load", render); window.addEventListener("resize", render);
+</script>
+</body>
+</html>
