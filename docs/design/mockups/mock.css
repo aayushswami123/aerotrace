@@ -31,6 +31,9 @@ p { margin: 0 0 var(--space-3); }
 .refnote { margin-top: var(--space-7); padding-top: var(--space-4); border-top: 1px dashed var(--border-strong); font-size: var(--text-xs); color: var(--text-3); max-width: 760px; }
 b, strong { font-weight: var(--weight-semibold); }
 
+.mock-strip { position: sticky; top: 0; z-index: 60; height: 24px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(135deg, #b42318 0 12px, #8f1c13 12px 24px); color: #fff; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; }
+body:has(.mock-strip) .app { height: calc(100vh - 24px); }
+
 /* ---- App shell ---- */
 .app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100vh; }
 .app.collapsed { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }

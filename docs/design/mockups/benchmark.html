@@ -14,7 +14,7 @@
         <div>
           <div class="caps">Recall · False alarms · Time · Tokens</div>
           <h1 style="margin-top:6px">Benchmark</h1>
-          <div class="sub">From <span class="mono">bench/results/2026-12-01-abc1234/results.json</span> · 28 cases · Apple M1 Pro</div>
+          <div class="sub">From <span class="mono">bench/results/2026-12-01-abc1234/results.json</span> · N cases · &lt;machine&gt;</div>
         </div>
         <div style="display:flex;gap:var(--space-3);align-items:center">
           <button class="toggle" role="switch" aria-checked="true" id="others"><span class="sw"></span>Show other tools</button>
@@ -23,7 +23,7 @@
       </div>
       <div class="card">
         <div id="legend" style="font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)"></div>
-        <div id="chart"></div>
+        <div id="chart" style="position:relative"></div><style>#chart::after{content:"SAMPLE VALUES";position:absolute;inset:0;display:grid;place-items:center;font:600 56px/1 var(--font-mono);letter-spacing:.1em;color:var(--breaks);opacity:.12;transform:rotate(-12deg);pointer-events:none}</style>
       </div>
       <h2 style="margin-top:var(--space-6)">Every case</h2>
       <div class="tablewrap">

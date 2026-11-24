@@ -72,6 +72,11 @@
         '</button><button class="btn ghost icon sm" aria-label="Switch theme">' + navIcon("sun") +
         '</button><span class="dim" style="margin-left:auto;font-size:12px"><kbd>?</kbd> keys</span></div>';
     }
+    var strip = document.createElement("div");
+    strip.className = "mock-strip";
+    strip.setAttribute("role", "note");
+    strip.textContent = "MOCKUP · every number on this page is a made-up sample, not a result";
+    document.body.insertBefore(strip, document.body.firstChild);
     var b = document.createElement("div");
     b.className = "mock-banner";
     b.textContent = "MOCKUP · sample numbers, not results";

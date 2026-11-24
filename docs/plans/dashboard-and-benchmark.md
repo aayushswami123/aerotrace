@@ -21,11 +21,14 @@ and colours. See `docs/design/README.md`.
   no remote fonts, no remote images. A Content-Security-Policy (`default-src 'self'`) stops that even if
   there were a bug.
 - **Read-only.** The server only answers `GET`. It never writes into the user's source tree, never runs
-  their build, and never runs `aerotrace check` for them. It reads `.aerotrace/` and nothing else.
+  their build, and never runs `aerotrace check` for them. It writes nothing at all. It reads only three
+  things: `.aerotrace/` (index and saved checks), source lines for a snippet (only files listed in the
+  index, resolved and kept inside the repo root, see 6), and `bench/results/` when the repo has one.
 - **No analysis in the UI.** The dashboard shows what `analysis/` put in the JSON. It does not decide
   what breaks. (Same rule as `docs/plans/launch-ui.md` section 0.)
 - **Deterministic.** Same index and same saved checks give the same API answers (sorted, no machine
-  paths). The run date shown on the Changes page is stored *next to* each check, not inside it (see 3.3).
+  paths). Dates are the one exception, and they are kept apart: the "last indexed" date and each
+  check's run date come from `/api/runinfo`, never from an analysis endpoint (see 3.1, 3.3).
 
 **Product rule 7 (decided).** CLAUDE.md now says "only a local, offline, read-only UI", and ADR
 `docs/decisions/0008-local-dashboard.md` records why. Both are in this PR.
@@ -67,8 +70,8 @@ owner merges.
 | **Plain JS (ES modules), no framework, no build step** | Same approach as the existing `--html` report. No Node needed to install, build or run AeroTrace. Small (target under 150 KB of JS for the whole app). `// @ts-check` with JSDoc types for editor checks. | Hand-written DOM code for lists and panels. That's fine for 5 pages. If it gets painful, Preact (4 KB, vendored) is the fallback. It needs no build step either. |
 | **Canvas 2D for the graph** | 5,000 nodes and 10,000 edges as DOM or SVG elements would stutter. Canvas draws them in one pass, batched by colour. Measured target: at least 50 fps panning at 5,000 nodes on an M1 laptop, at least 30 fps on a 2018-era Linux laptop. | Hit-testing and text labels are our job (a simple grid index for clicks; labels only above a zoom level). Screen readers can't see canvas, so every node is also in an accessible list (same as the existing report). |
 | **WebGL** (not now) | Only if canvas misses the fps target at 5,000+ nodes in Phase 4 measurements. | Extra code. We'll decide on measured numbers. |
-| **Layout: rings by distance, no physics** | The brief asks for rings around the changed function. A ring layout is fast (O(n log n)), and it's **deterministic**: same check, same picture. Force layouts move every time and cost a lot at 5,000 nodes. | Ring layouts can get crowded. We collapse far rings (see 4.3) and sort each ring by parent angle so edges stay short. |
-| **Fonts: bundled, OFL** | Brief: no web fonts from the internet. To get the same look on macOS, Linux and in screenshots, we bundle subsets: **Inter** (UI) and **JetBrains Mono** (numbers, code, file:line), woff2, about 120 KB total. Both use the SIL Open Font License. | About 120 KB in the wheel. **Decided: bundle them.** Licence files ship next to the fonts. |
+| **Layout: rings by distance, no physics** | The owner's brief for this project asks for rings around the changed function. A ring layout is fast (O(n log n)), and it's **deterministic**: same check, same picture. Force layouts move every time and cost a lot at 5,000 nodes. | Ring layouts can get crowded. We collapse far rings (see 4.3) and sort each ring by parent angle so edges stay short. |
+| **Fonts: bundled, OFL** | The owner's brief: no web fonts from the internet. To get the same look on macOS, Linux and in screenshots, we bundle subsets: **Inter** (UI) and **JetBrains Mono** (numbers, code, file:line), woff2, about 134 KB total (133,840 bytes). Both use the SIL Open Font License. | About 134 KB in the wheel. **Decided: bundle them.** Licence files ship next to the fonts. |
 | **Playwright for browser tests** | Already used for the `browser` marker (`uv run --with playwright`). It stays a dev-only tool, not a runtime dependency. | Downloads a browser once per dev machine and CI runner. |
 
 Nothing here adds a runtime dependency. Dev-only: Playwright (already used), and for the benchmark,
@@ -84,11 +87,14 @@ Nothing here adds a runtime dependency. Dev-only: Playwright (already used), and
 - files: count of `files` rows, split into `is_unit` (parsed) and headers.
 - functions, variables, edges: row counts.
 - blind spots: `blind_spots` grouped by `kind`, with counts.
-- last indexed: the index file's modification time, shown as a date. It's display-only, so it doesn't
-  touch the determinism rule for analysis answers. (The `meta` table has no build date, on purpose.)
+- last indexed: **not** in `/api/overview`. The page gets it from `/api/runinfo`, which holds only
+  display facts that change from run to run (the index file's modification time, run dates of saved
+  checks). Analysis endpoints stay timestamp-free, as rule 1 asks. (The `meta` table has no build date,
+  on purpose.)
 - coverage line ("checked X of Y files in this build"): reuses `build_coverage()`, which is being added
-  on `feat/check-output-polish`. **That branch must merge first.** Otherwise the Overview page has no
-  coverage line, and I'll show "coverage needs AeroTrace 0.1.0 or newer" rather than make up a number.
+  in the owner's uncommitted work on `feat/check-output-polish` (not on any remote branch yet). The
+  Overview page needs it to be merged first. Until then the page shows no coverage line and says
+  "Coverage isn't available in this version", rather than make up a number.
 
 No schema change. No `SCHEMA_VERSION` bump.
 
@@ -133,6 +139,7 @@ rather than a guess.
 | `/api/checks/<id>/graph` | nodes with ring, angle order and collapsed groups, ready to draw (layout is computed in Python so it can be tested and is deterministic) |
 | `/api/checks/<id>/node/<node_id>` | details: file:line, code snippet (up to 15 lines read from the file, the only source read), why, how sure, path back to the change |
 | `/api/benchmark` | the latest `bench/results/*/results.json` if the repo has one, else `null` |
+| `/api/runinfo` | display-only dates: index modification time, run date of each saved check. Not an analysis answer. |
 
 The code snippet is the only time the server reads a source file. It's read-only and limited to files
 listed in the index, so a crafted URL can't read `/etc/passwd`.
@@ -202,11 +209,23 @@ shows them all.
   (or `--port`), prints the URL, and opens the browser with `webbrowser.open` unless `--no-open`. `Ctrl+C`
   stops it.
 - Security on localhost:
-  - A random token is put in the URL on start (`http://127.0.0.1:PORT/?t=...`) and stored as a
-    same-site cookie. API calls without it get 403. This stops other local web pages from reading your
-    code through the server.
-  - The `Host` header must be `127.0.0.1:PORT` or `localhost:PORT` (stops DNS rebinding).
-  - CSP `default-src 'self'`, `X-Content-Type-Options: nosniff`, no CORS headers.
+  - A random token (`secrets.token_urlsafe(32)`) is put in the URL on start (`http://127.0.0.1:PORT/?t=...`).
+    The first page load sets it as a cookie (`HttpOnly; SameSite=Strict; Path=/`) and removes it from
+    the address bar with `history.replaceState`. API calls without it get 403. The token is compared with
+    `hmac.compare_digest`. This stops other local web pages from reading your code through the server.
+  - The `Host` header must be `127.0.0.1:PORT` or `localhost:PORT` (stops DNS rebinding). If an `Origin`
+    header is sent it must be the same origin, and `Sec-Fetch-Site` must be `same-origin` or `none`.
+  - Every path part is checked against an allow-list before use: check ids match `^[0-9]{1,6}-[0-9a-f]{8}$`
+    or `^[A-Za-z0-9._-]{1,80}\.json$`, node ids must exist in that check. Nothing from the URL is joined
+    into a file path.
+  - Snippets: the file must be listed in the index (`files` table), **not** taken from a check JSON, which
+    can be hand-made. The path is resolved (`Path.resolve`, following symlinks) and must stay under the repo
+    root; system headers and anything outside are refused.
+  - Headers: CSP `default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`,
+    `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store` on API
+    answers, no CORS headers.
+  - Text from the repo (names, file paths, snippets, `why`) is put into the page with `textContent` only,
+    never `innerHTML`. The graph draws it on canvas. A test loads a check with hostile names (`<img onerror>`).
   - The token is the only random thing, and it never appears in any answer.
 - Files: `src/aerotrace/ui/web/` is already inside `packages = ["src/aerotrace"]`, so hatchling ships it.
   A test checks the built wheel contains `ui/web/index.html` and the fonts.
@@ -221,9 +240,13 @@ shows them all.
 - **Cases:** 20 to 30 real changes, mixing easy (direct calls) and hard (function pointers, struct fields,
   globals, removed functions, macros). Each case is a small patch in `bench/cases/<repo>/<id>.diff` with a
   one-line reason. The list is committed before any tool runs.
-- **Truth:** apply the patch and compile the affected files with the repo's flags
-  (`clang -fsyntax-only` per unit, the same flags as the index, `-ferror-limit=0`). Every compiler error
-  is a "breaks" truth entry with file:line and the error text. "Might break" entries are checked by hand
+- **Truth:** in a temp copy of the pinned repo (never a user's tree), apply the patch, then:
+  1. compile **every unit in the compile database** (not a list AeroTrace picked, which would make the
+     truth depend on the tool) with the same flags, `-ferror-limit=0`;
+  2. **link** the program the same way its Makefile does (`redis-server`, the `sqlite3` shell, `curl`).
+     A removed definition whose prototype stays in a header compiles fine and only fails here.
+  Every compile or link error is a "breaks" truth entry with file:line (for link errors, the call site,
+  found from the object file's relocation and checked by hand) and the error text. "Might break" entries are checked by hand
   against the source, with the lines that prove them. Truth never comes from AeroTrace's output.
 - **Tools**, each run the normal way:
   - AeroTrace: `aerotrace check --patch <case.diff> --json`.
@@ -241,8 +264,9 @@ shows them all.
   shipped CLI or the wheel.
 - **Output:** `bench/results/<YYYY-MM-DD>-<commit>/` with `results.json` (date, machine, OS, CPU,
   tool versions, AeroTrace commit), and `raw/` with every tool's raw output.
-- **Cost:** no model calls in Part A, so $0 apart from token counting (free). The $25 agent pilot is
-  separate and is not part of this project unless you ask.
+- **Cost:** no model calls in this benchmark, so $0 apart from token counting (free). The separate
+  agent-outcome benchmark in `docs/benchmark/protocol.md` (Part B, which pays for model runs) is not part
+  of this project unless you ask.
 
 ## 8. Owner decisions (2026-11-24)
 
@@ -264,12 +288,17 @@ shows them all.
 
 Mockups show sample numbers, so:
 
-- Every mockup page loads `mock.js`, which adds the "MOCKUP · sample numbers, not results" banner and
-  marks the page with `data-sample="true"`.
-- The real screenshot script (Phase 4) refuses to capture any page with `data-sample`, and writes
-  `docs/launch/screenshots/MANIFEST.json` listing each image with the `results.json` sha256 it came from.
-- `tests/ui/test_launch_screenshots.py` fails if any image in `docs/launch/screenshots/` is missing from
-  that manifest, if a manifest entry points at a mockup, or if any mockup page lacks the banner script.
+- Every mockup page loads `mock.js`. It adds a red striped strip **at the top of the page** ("MOCKUP ·
+  every number on this page is a made-up sample"), a corner banner, and `data-sample="true"`. The strip
+  is in the page flow, so cropping the bottom of a screenshot doesn't remove it.
+- The results mockups also have a "SAMPLE VALUES" watermark across the chart, round made-up values
+  (90, 80, 70...), "N cases" instead of a count, and `<version>` / `<machine>` placeholders.
+- The real screenshot script (Phase 4) refuses any page with `data-sample`, and writes
+  `docs/launch/screenshots/MANIFEST.json` listing each image with the sha256 of the `results.json` it
+  came from.
+- `tests/ui/test_design.py` fails if any mockup page doesn't load `mock.js`, if a mockup screenshot is
+  copied anywhere else in the repo (byte match), or if a launch image is missing from the manifest or
+  names a `results.json` that isn't in `bench/results/`.
 
 ## 9. Folder layout (new and changed)
 
@@ -335,7 +364,8 @@ Another session is merging PRs into `launch-candidate` at the same time. So:
 - Before each PR: fetch `launch-candidate` and rebase on it.
 - I only touch dashboard, benchmark, UI and design files: `src/aerotrace/ui/`, `docs/design/`,
   `docs/benchmark/`, `docs/plans/dashboard-and-benchmark.md`, `bench/`, `tests/ui/`, and a new
-  `aerotrace ui` / `aerotrace bench` entry in `cli.py`, kept to a few lines.
+  `aerotrace ui` entry in `cli.py`, kept to a few lines. (The benchmark is not in `cli.py`; it's
+  dev-only in `bench/`.)
 - **Changes I need in code others own, which I'll ask for rather than make:**
   - Saving check runs (3.3) changes `aerotrace check` (`cli.py` `cmd_check`, maybe `analysis/check.py`).
   - The coverage line (3.1) needs `build_coverage()` from `feat/check-output-polish` (`analysis/graph.py`,

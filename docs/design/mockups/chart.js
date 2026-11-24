@@ -6,15 +6,15 @@ window.MOCK_CHART = function (el, opts) {
     metric: { all: "recall", easy: "recall", hard: "recall" },
     groups: {
       all: [
-        { name: "Redis", cases: 10, v: [96, 88, 71, 64], fa: [0, 3, 11, 41], time: ["1.8 s", "9.4 s", "0.6 s", "0.3 s"], tok: ["1.2k", "6.8k", "4.1k", "14.9k"] },
-        { name: "SQLite", cases: 10, v: [91, 84, 58, 49], fa: [2, 4, 19, 77], time: ["2.6 s", "21 s", "0.9 s", "0.4 s"], tok: ["1.6k", "8.2k", "5.0k", "22.4k"] },
-        { name: "curl", cases: 8, v: [93, 93, 77, 70], fa: [1, 1, 6, 23], time: ["1.1 s", "6.0 s", "0.4 s", "0.2 s"], tok: ["0.9k", "4.4k", "2.7k", "9.8k"] },
+        { name: "Redis", cases: 10, v: [90, 80, 70, 60], fa: [10, 20, 30, 40], time: ["1 s", "2 s", "3 s", "4 s"], tok: ["1k", "2k", "3k", "4k"] },
+        { name: "SQLite", cases: 10, v: [90, 80, 60, 50], fa: [10, 20, 30, 40], time: ["1 s", "2 s", "3 s", "4 s"], tok: ["1k", "2k", "3k", "4k"] },
+        { name: "curl", cases: 8, v: [80, 90, 70, 60], fa: [10, 20, 30, 40], time: ["1 s", "2 s", "3 s", "4 s"], tok: ["1k", "2k", "3k", "4k"] },
       ],
       easy: [
-        { name: "Redis", cases: 5, v: [100, 100, 92, 88] }, { name: "SQLite", cases: 5, v: [100, 97, 85, 80] }, { name: "curl", cases: 4, v: [100, 100, 94, 90] },
+        { name: "Redis", cases: 5, v: [100, 100, 90, 90] }, { name: "SQLite", cases: 5, v: [100, 90, 90, 80] }, { name: "curl", cases: 4, v: [90, 100, 90, 80] },
       ],
       hard: [
-        { name: "Redis", cases: 5, v: [92, 74, 44, 37] }, { name: "SQLite", cases: 5, v: [81, 70, 30, 18] }, { name: "curl", cases: 4, v: [83, 88, 58, 49] },
+        { name: "Redis", cases: 5, v: [80, 60, 40, 30] }, { name: "SQLite", cases: 5, v: [80, 70, 30, 20] }, { name: "curl", cases: 4, v: [70, 80, 50, 40] },
       ],
     },
   };
