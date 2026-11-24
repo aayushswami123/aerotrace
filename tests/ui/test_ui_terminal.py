@@ -296,3 +296,29 @@ def test_schema_needs_all_coverage_keys_together() -> None:
     d["proof"]["build_files"] = 3
     with pytest.raises(schema.ContractError):
         schema.check(d)
+
+
+def test_nothing_found_headlines_name_the_files_outside_the_build_first() -> None:
+    seen = set()
+    for make in (samples.nothing, samples.unclear):
+        d = make()
+        d["proof"].update(
+            {
+                "build_files": 3,
+                "build_files_checked": 3,
+                "build_files_with_errors": 0,
+                "outside_build": 5,
+                "outside_build_examples": ["a.c", "b.c", "c.c"],
+            }
+        )
+        lines = terminal.render(d, all_hint="--all lists them").splitlines()
+        seen.add(terminal.headline(d)[0])
+        want = "5 C/C++ files outside this build were not checked: a.c, b.c, c.c, ..."
+        at = next(i for i, line in enumerate(lines) if want in line)
+        assert at < 6 and sum("outside this build" in line for line in lines) == 1
+    assert seen == {"clear", "info"}
+
+
+def test_wrap_hangs_under_the_ascii_no_test_icon() -> None:
+    out = terminal.wrap("  [ ] NO TEST    " + "word " * 20, 40).splitlines()
+    assert all(line.startswith("      ") for line in out[1:])  # under "NO TEST", not at the indent

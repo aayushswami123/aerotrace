@@ -182,7 +182,7 @@ there are more. Deterministic: ties by (file, line, id).
 | `sections.blind_spots` | scope `change`: diff notes (outside, unreadable, address taken, clash, depth reached), Part A notes per changed signature, Part B notes per changed declaration (with its node), #25 note, layout note. Scope `index`: `graph.index_limits`. Deduplicated by text, sorted |
 | `summary` | counted over **all** nodes before the cap: `breaks_exact`, `breaks_probable`, `affected_direct` (distance 1), `affected_further`, `unknown`, `no_effect` (always 0: Part C sends no grey nodes), `not_followed` = entries in `not_followed` + change-scope blind spots |
 | `omitted.nodes` | dropped by the 5,000-node cap (lowest ranked first: affected further up, then unknown); edges and `via` to dropped nodes are removed, `via_name` stays |
-| `proof` | `index_files`, `index_functions` (COUNT from the index), `depth`, `stopped_early` = any walk truncated; optional together: `build_files` (entries in compile_commands.json), `build_files_checked` (parsed), `build_files_with_errors`, `outside_build` (repo sources not in it); `outside_build_files` (sorted paths) only with `--all` |
+| `proof` | `index_files`, `index_functions` (COUNT from the index), `depth`, `stopped_early` = any walk truncated; optional together: `build_files` (entries in compile_commands.json), `build_files_checked` (parsed), `build_files_with_errors`, `outside_build` (repo sources not in it), `outside_build_examples` (first 3 sorted paths); `outside_build_files` (all, sorted) only with `--all` |
 
 Nodes sorted by (status rank, certainty, distance, file, line, id), as the contract says.
 

@@ -238,3 +238,16 @@ async def test_data_users_tool(repo_factory):
     assert "Limits of this answer:" in out
     assert "matches 5 variables" in many
     assert "[probable]" in value and "maybe of another object" in value
+
+
+@pytest.mark.anyio
+async def test_check_names_the_files_outside_the_build(repo_factory):
+    # blind spot: lib/extra.c is not in compile_commands.json, so check can't see it; the agent's answer
+    # must still name it (agents can't pass --all)
+    root = repo_factory("c_multi")
+    (root / "lib" / "extra.c").write_text("int extra(void) { return 1; }\n")
+    patch = "--- a/prog_a/util.c\n+++ b/prog_a/util.c\n@@ -4 +4 @@\n-    count++;\n+    count += 5;\n"
+    async with Client(create_server(root)) as client:
+        out = text_of(await client.call_tool("check", {"patch": patch}))
+    assert "1 C/C++ file outside this build was not checked: lib/extra.c." in out
+    assert "--all" not in out

@@ -162,10 +162,13 @@ def headline(data: dict) -> tuple[str, list[str]]:
     other = change.get("other_files", 0)
     if other:
         lines.append(f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)")
+    if icon == "info":
+        # nothing found here either, so what the build left out is said right away
+        lines += [f"Index limit: {t}" for t in coverage_lines(data)[1:]]
     if icon == "clear":
         lines.append("No other indexed function calls what changed or reads what it writes.")
-        # A pass never hides what the index as a whole can't see.
-        limits = index_limits(data)
+        # A pass never hides what the index as a whole can't see; files outside the build come first.
+        limits = coverage_lines(data)[1:] + index_limits(data)
         lines += [f"Index limit: {t}" for t in limits[:INDEX_LIMITS_UNDER_PASS]]
         if len(limits) > INDEX_LIMITS_UNDER_PASS:
             lines.append(
@@ -185,7 +188,8 @@ def _counts(be: int, bp: int, aff: int, unk: int) -> str:
 
 def coverage_lines(data: dict, all_hint: str = "") -> list[str]:
     """'Checked 117 of 117 files in this build (1 had parse errors).' and, when some repo sources are not
-    in compile_commands.json, one short line saying so. Empty when the JSON has no coverage numbers."""
+    in compile_commands.json, one short line saying so and naming up to 3 of them. Empty when the JSON has
+    no coverage numbers."""
     p = data.get("proof") or {}
     if "build_files" not in p:
         return []
@@ -194,9 +198,13 @@ def coverage_lines(data: dict, all_hint: str = "") -> list[str]:
     out = [f"Checked {p['build_files_checked']:,} of {n_(p['build_files'], 'file')} in this build{err_txt}."]
     outside = p["outside_build"]
     if outside:
-        hint = f" ({all_hint})" if all_hint and "outside_build_files" not in p else ""
+        names = p.get("outside_build_examples") or []
+        more = outside > len(names)
+        listed = ": " + ", ".join(names) + (", ..." if more else "") if names else ""
+        hint = f" ({all_hint})" if all_hint and more and "outside_build_files" not in p else ""
         out.append(
-            f"{n_(outside, 'C/C++ file')} outside this build {'was' if outside == 1 else 'were'} not checked{hint}."
+            f"{n_(outside, 'C/C++ file')} outside this build {'was' if outside == 1 else 'were'} not "
+            f"checked{listed}{hint}."
         )
     return out
 
@@ -360,10 +368,12 @@ def _hang(line: str) -> int:
     """Where continuation lines start: under the text, after the indent and any icon."""
     plain = strip_ansi(line)
     indent = len(plain) - len(plain.lstrip(" "))
-    first = plain[indent:].split(" ", 1)[0]
-    if any(first in pair for pair in ICONS.values()) or first + " " in (u for u, _ in ICONS.values()):
-        rest = plain[indent + len(first) :]
-        return _width(plain[: indent + len(first)]) + len(rest) - len(rest.lstrip(" "))
+    text = plain[indent:]
+    icons = sorted({f.rstrip() for pair in ICONS.values() for f in pair}, key=len, reverse=True)
+    for icon in icons:  # longest first; the ASCII "[ ]" has a space inside
+        if text.startswith(icon + " "):
+            rest = text[len(icon) :]
+            return _width(plain[: indent + len(icon)]) + len(rest) - len(rest.lstrip(" "))
     return indent
 
 
@@ -497,7 +507,8 @@ def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str
     cov = coverage_lines(data, all_hint)
     if cov:
         o.section(cov[0])
-        o.lines += cov[1:]
+        if icon not in ("clear", "info"):  # under "nothing found" it is already right below the headline
+            o.lines += cov[1:]
         outside = data["proof"].get("outside_build_files")
         if outside:
             o.section(f"Files outside this build ({len(outside):,})")

@@ -150,6 +150,12 @@ def check(data: Any) -> dict:
             _int(proof, k, "proof")
         if proof["build_files_checked"] > proof["build_files"]:
             _fail("proof.build_files_checked can't be more than proof.build_files")
+    if "outside_build_examples" in proof:
+        ex = proof["outside_build_examples"]
+        if not isinstance(ex, list) or not all(isinstance(f, str) for f in ex) or ex != sorted(ex):
+            _fail("proof.outside_build_examples must be a sorted list of paths")
+        if len(ex) > min(3, proof.get("outside_build", 0)) or (proof.get("outside_build") and not ex):
+            _fail("proof.outside_build_examples must name up to 3 of the files outside the build")
     if "outside_build_files" in proof:
         files = proof["outside_build_files"]
         if not isinstance(files, list) or not all(isinstance(f, str) for f in files):

@@ -629,7 +629,7 @@ def build_parser() -> argparse.ArgumentParser:
     ck.add_argument("--depth", type=int, default=5, help="how many call steps to follow (default 5)")
     ck.add_argument("--limit", type=int, default=8, help="most lines per list in the text answer (default 8)")
     ck.add_argument(
-        "--all", action="store_true", help="show every result, no caps, and list the files outside the build"
+        "--all", action="store_true", help="no caps on the text lists, and list the files outside the build"
     )
     ck.add_argument("--json", action="store_true", help="print the aerotrace-check JSON (version 1)")
     ck.add_argument("--html", metavar="OUT.html", help="also write an offline HTML report")

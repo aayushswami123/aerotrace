@@ -891,6 +891,9 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
     }
 
 
+OUTSIDE_EXAMPLES = 3  # repo sources outside the build named in every answer (the rest with --all)
+
+
 def to_contract(
     conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int = NODE_CAP, list_outside: bool = False
 ) -> dict:
@@ -985,6 +988,7 @@ def to_contract(
             "stopped_early": res.stopped_early,
             **cov,
             "outside_build": len(outside),
+            "outside_build_examples": outside[:OUTSIDE_EXAMPLES],
             **({"outside_build_files": outside} if list_outside else {}),
         },
     }

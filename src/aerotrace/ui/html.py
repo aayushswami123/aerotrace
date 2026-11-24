@@ -126,7 +126,16 @@ def _header(data: dict) -> str:
     ]
     out += [f"<p>{_e(line)}</p>" for line in lines[1:]]
     if data["status"] == "ok":
-        out += [f'<p class="proof">{_e(line)}</p>' for line in coverage_lines(data)]
+        cov = coverage_lines(data)
+        out += [
+            f'<p class="proof">{_e(line)}</p>' for line in (cov[:1] if icon in ("clear", "info") else cov)
+        ]
+        files = data["proof"].get("outside_build_files")
+        if files:
+            items = "".join(f"<li>{_e(f)}</li>" for f in files)
+            out.append(
+                f"<details><summary>Files outside this build ({len(files):,})</summary><ul>{items}</ul></details>"
+            )
         out.append(f'<p class="proof">{_e(proof_line(data))}</p>')
         left = data["omitted"]["nodes"]
         if left:

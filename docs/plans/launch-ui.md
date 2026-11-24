@@ -200,9 +200,12 @@ followed."). When something breaks, the first line ends with the counts in the w
 (`BREAKS`, `MAY BREAK`, `AFFECTED`, `UNKNOWN`; zero counts left out), so the verdict is complete on one
 line. Before the proof line comes the coverage line, from `proof.build_files*` (only when the JSON has
 them): `Checked 117 of 117 files in this build (1 had parse errors).` If some repo sources are not in
-compile_commands.json, one short line follows: `1,696 C/C++ files outside this build were not checked
-(--all lists them).` (the hint is the CLI's; MCP and HTML show the count only). This line replaces the
-long "not in compile_commands.json" index limit in `check`, so what was not seen is still always said.
+compile_commands.json, one short line follows and names up to 3 of them: `1,696 C/C++ files outside this
+build were not checked: deps/a.c, deps/b.c, deps/c.c, ... (--all lists them).` (the hint is the CLI's;
+MCP and HTML name the same 3). Under a ✅ or ℹ️ "nothing found" headline this line comes right below the
+headline as an "Index limit:", not at the end, because a caller in those files is exactly what a pass
+can miss. This line replaces the long "not in compile_commands.json" index limit in `check`, so what was
+not seen is still always said.
 `aerotrace check --all` removes the caps and lists those files. The proof line at the end says only what
 is true about the run:
 `index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)`.

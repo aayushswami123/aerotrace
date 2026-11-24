@@ -340,7 +340,14 @@ def repo_with_outside_file(repo_factory):
     root = repo_factory("c_check")
     # written after compile_commands.json, so the build does not list it
     (root / "legacy").mkdir()
-    (root / "legacy" / "old.c").write_text('#include "api.h"\nint old_use(void) { return parse(1); }\n')
+    (root / "legacy" / "old.c").write_text(
+        '#include "api.h"\nint old_use(void) { return parse(1) + lonely(2); }\n'
+    )
+    # lonely() is called only from legacy/old.c, which is outside the build
+    api = root / "src" / "api.c"
+    api.write_text(api.read_text() + "\nint lonely(int x) {\n    return x;\n}\n")
+    h = root / "include" / "api.h"
+    h.write_text(h.read_text().replace("int parse(int x);", "int parse(int x);\nint lonely(int x);"))
     git(root, "init", "-q", "-b", "main")
     git(root, "add", "-A")
     git(root, "commit", "-q", "--no-verify", "-m", "init")
@@ -363,9 +370,27 @@ def test_coverage_counts_the_build_and_what_is_outside_it(repo_with_outside_file
     ui = pytest.importorskip("aerotrace.ui")
     text = ui.render_text(c, all_hint="--all lists them")
     assert f"Checked {n_units} of {n_units} files in this build." in text
-    assert "1 C/C++ file outside this build was not checked (--all lists them)." in text
-    assert "(--all" not in ui.render_text(c)  # MCP: no CLI hint
-    assert "outside this build was not checked" in ui.render_html(c)
+    # every file is named (there is only one), so there is nothing more for --all to list
+    assert "1 C/C++ file outside this build was not checked: legacy/old.c." in text
+    assert "outside this build was not checked: legacy/old.c." in ui.render_html(c)
+
+
+def test_a_pass_shows_the_files_outside_the_build_right_below_the_headline(repo_with_outside_file):
+    # blind spot: lonely() has one caller, in legacy/old.c, which the build does not list. AeroTrace can't
+    # see it, so it finds nothing to break; the answer must say, right below the headline, what it missed.
+    _, c = run_patch(
+        repo_with_outside_file,
+        {A: [("int lonely(int x) {\n    return x;", "int lonely(int x) {\n    return x * 2;")]},
+    )
+    assert "old_use" not in nodes(c)
+    ui = pytest.importorskip("aerotrace.ui")
+    lines = ui.render_text(c, all_hint="--all lists them").splitlines()
+    assert lines[0].startswith("✅"), lines[0]
+    top = "\n".join(lines[:6])
+    assert "1 C/C++ file outside this build was not checked: legacy/old.c." in top
+    assert sum("outside this build" in line for line in lines) == 1  # not repeated at the end
+    html = ui.render_html(c)
+    assert html.count("outside this build was not checked: legacy/old.c.") == 1
 
 
 def test_list_outside_names_the_files(repo_with_outside_file):
