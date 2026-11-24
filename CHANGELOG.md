@@ -53,6 +53,22 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- C++ templates: a call whose target depends on the template type (`t.run(5)`, `T::f()`, `f(t)`) can't be
+  linked, because libclang does not show the instantiations. `callers`, `impact`, `signature`, `diff` and
+  `check` for a function with that name now say "UNKNOWN (#33)" and list the template calls, instead of
+  looking complete. An overload set used as a value in a template (`T p = ov;`) takes the address of every
+  candidate (#31).
+- `diff`/`check` in git mode: when a change makes a virtual override stop overriding (new parameters), the
+  callers that dispatched to it through the base are listed again, as `virtual` (#32).
+- `check`: a changed function that no longer builds stays in "What changed" (distance 0), and its break is a
+  separate node, still counted (#49).
+- `check --patch` on CRLF files: the patch is read as it is (no line-end change), and an LF patch fits a
+  CRLF file too, so the changed function is found (#51).
+- A header function compiled as C and as C++: `file:line` now gives both copies, and the choices show the
+  clang ID and the language, so each can be asked for (#40).
+- Comparing a function's address (`proc == f`, `if (f)`) no longer counts as taking it (#12). `(*f)(x)` and
+  `(&f)(x)` are direct calls to `f` (#22).
+
 - A file saved while the index was being built is re-indexed next time. Before, it could look unchanged
   forever and answers missed its new callers (#43). Parse caches are rebuilt once after the upgrade.
 - A call that doesn't compile (wrong number or type of arguments) is a call again: its caller shows up in
@@ -61,8 +77,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
   functions, templates, methods (`k.m(1)`, `p->m(1)`, virtual ones too) and static members. When no overload
   matches, the call is linked to every function of that name, marked `ambiguous`. A bad call through a
   function pointer, a `std::function` or a pointer to member is still a pointer call. A function used as a
-  value where it does not fit (`int x = f;`) is not taken for a call. Not covered yet: C++ constructor calls
-  (`K k(1, 2)`, `new K(1, 2)`, #21) and calls on an object with `operator()` (#39).
+  value where it does not fit (`int x = f;`) is not taken for a call. C++ constructor calls (`K k(1, 2)`,
+  `new K(1, 2)`, #21) and calls on an object with `operator()` (#39) are found from the compile error and
+  linked to every constructor (or `operator()`) of that class in the repo; an inherited one is not seen, and
+  the call is then listed as a blind spot.
 - Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
   clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
   defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace

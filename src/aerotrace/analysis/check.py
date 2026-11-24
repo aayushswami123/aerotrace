@@ -34,6 +34,7 @@ from aerotrace.toolchain.unidiff import FileDiff
 FORMAT = "aerotrace-check"
 VERSION = 1
 NODE_CAP = 5000
+BREAKS_ID = "{}#breaks"  # id of the break of a changed node that does not build (#49)
 STATUSES = ("changed", "new", "removed", "breaks", "affected", "unknown", "no_effect")
 USED_RESULT = {"stored", "compared", "checked", "passed", "returned", "used", "called"}
 CXX_EXTS = {".cc", ".cpp", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".h++", ".ipp", ".tcc"}
@@ -242,13 +243,17 @@ class _Run:
             return (STATUSES.index(n.status), certainty.LEVELS.index(n.certainty), n.distance)
 
         if cur.distance == 0 and node.status == "breaks":
-            # part of the change, and it will not build: the break is what matters (never hide it)
-            node.why = f"{cur.why}; but {node.why}"
-            node.lines = sorted(set(node.lines) | set(cur.lines))
-            self.res.nodes[node.id] = node
+            # part of the change, and it will not build: it stays a changed node, and the break is kept as a
+            # node of its own, so it is still counted (never hide it) (#49)
+            cur.why = f"{cur.why}; but {node.why}"
+            node.id = BREAKS_ID.format(node.id)
+            node.via = None if node.via == cur.id else node.via
+            self.add(node)
             return
         if node.distance == 0 and cur.status == "breaks":
-            cur.why = f"{node.why}; but {cur.why}"
+            del self.res.nodes[cur.id]
+            self.add(node)
+            self.add(cur)
             return
         if rank(node) < rank(cur):
             node.others = cur.others + 1
@@ -836,7 +841,8 @@ def _resolve_via(res: CheckResult) -> None:
     """`via` of walk hits is a qualified name: map it to the node id when exactly one node has that name."""
     by_name: dict[str, list[str]] = {}
     for n in res.nodes.values():
-        by_name.setdefault(n.name, []).append(n.id)
+        if not n.id.endswith(BREAKS_ID.format("")):  # the break of a changed node: point at the change
+            by_name.setdefault(n.name, []).append(n.id)
     for n in res.nodes.values():
         if n.via is None and n.via_name:
             ids = by_name.get(n.via_name, [])
