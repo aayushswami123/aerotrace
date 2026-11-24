@@ -54,6 +54,8 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 
 ## Git workflow
 
+- Before working on a branch or file area, check `docs/COORDINATION.md`. Add your branch when you start it;
+  remove it when it's merged.
 - Never commit to `main`. One branch per feature: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `docs/<topic>`.
 - Commit after each meaningful, working step. Conventional Commits: `feat(mcp): add install command`.
 - Before every commit run `uv run ruff check . && uv run ruff format --check . && uv run pytest`.
