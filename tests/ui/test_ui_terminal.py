@@ -90,7 +90,18 @@ def test_only_exact_breaks_count_in_the_headline() -> None:
         if n["status"] == "breaks":
             n["certainty"] = "probable"
     d["summary"]["breaks_probable"] = 4
-    assert "4 things you didn't touch may not build or link." in terminal.render(d).splitlines()[0]
+    assert (
+        "4 things you didn't touch may not build or link (4 MAY BREAK," in terminal.render(d).splitlines()[0]
+    )
+
+
+def test_headline_counts_use_the_status_words() -> None:
+    first = terminal.render(samples.sample()).splitlines()[0]
+    assert first.endswith(
+        "can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN)."
+    )
+    d = samples.affected_only()
+    assert "BREAKS" not in terminal.render(d).splitlines()[0]  # nothing breaks: no counts in parentheses
 
 
 def test_direct_counts_come_first() -> None:
@@ -202,3 +213,86 @@ class _Stream(io.StringIO):
 )
 def test_style_for(tty: bool, enc: str, env: dict, want: tuple[bool, bool]) -> None:
     assert terminal.style_for(_Stream(tty, enc), env) == want
+
+
+# ---------------------------------------------------------------- wrapping (terminal only)
+
+
+@pytest.mark.parametrize("width", [40, 60, 80])
+def test_wrap_keeps_lines_inside_the_width(width: int) -> None:
+    text = terminal.render(samples.sample(), width=width)
+    for line in text.splitlines():
+        if terminal._width(line) > width:
+            assert " " not in line.strip(), f"line could have been broken: {line!r}"  # one long word only
+
+
+def test_wrap_breaks_at_word_boundaries_and_hangs_under_the_text() -> None:
+    plain = terminal.render(samples.sample())
+    wrapped = terminal.render(samples.sample(), width=60)
+    assert wrapped.split() == plain.split()  # same words, same order: only line breaks moved
+    lines = wrapped.splitlines()
+    body = next(i for i, line in enumerate(lines) if line.lstrip().startswith("calls a getGenericCommand"))
+    indent = len(lines[body]) - len(lines[body].lstrip())
+    assert lines[body + 1].startswith(" " * indent) and not lines[body + 1][indent].isspace()
+
+
+def test_wrap_hangs_notes_under_the_text_after_the_icon() -> None:
+    line = "  ? " + "word " * 30
+    out = terminal.wrap(line.rstrip(), 30).splitlines()
+    assert len(out) > 1 and all(o.startswith("    word") for o in out[1:])
+
+
+def test_no_width_means_no_wrapping() -> None:
+    assert terminal.render(samples.sample()) == terminal.render(samples.sample(), width=None)
+
+
+def test_wrap_does_not_count_colour_codes() -> None:
+    text = terminal.render(samples.sample(), color=True, width=70)
+    assert terminal.strip_ansi(text) == terminal.render(samples.sample(), width=70)
+
+
+# ---------------------------------------------------------------- coverage line
+
+
+def _with_coverage(**kw: object) -> dict:
+    d = samples.sample()
+    d["proof"].update(
+        {"build_files": 117, "build_files_checked": 117, "build_files_with_errors": 1, "outside_build": 1696}
+    )
+    d["proof"].update(kw)
+    return d
+
+
+def test_coverage_line_comes_before_the_proof_line() -> None:
+    lines = terminal.render(_with_coverage(), all_hint="--all lists them").splitlines()
+    assert lines[-4:-1] == [
+        "Checked 117 of 117 files in this build (1 had parse errors).",
+        "1,696 C/C++ files outside this build were not checked (--all lists them).",
+        "",
+    ]
+    assert lines[-1].startswith("index: ")
+
+
+def test_old_json_without_coverage_has_no_coverage_line() -> None:
+    assert "Checked " not in terminal.render(samples.sample())
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"build_files": -1},
+        {"build_files_checked": 118},
+        {"outside_build_files": ["b.c", "a.c"]},
+        {"outside_build_files": ["a.c"]},  # count says 1,696
+    ],
+)
+def test_schema_rejects_bad_coverage(bad: dict) -> None:
+    with pytest.raises(schema.ContractError):
+        schema.check(_with_coverage(**bad))
+
+
+def test_schema_needs_all_coverage_keys_together() -> None:
+    d = samples.sample()
+    d["proof"]["build_files"] = 3
+    with pytest.raises(schema.ContractError):
+        schema.check(d)

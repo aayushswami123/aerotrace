@@ -52,6 +52,8 @@ CHANGE_KEYS = (
     "changed_declarations",
 )
 PROOF_KEYS = ("index_files", "index_functions", "depth")
+# Optional (added in 0.1): how much of the build was checked. All four come together.
+COVERAGE_KEYS = ("build_files", "build_files_checked", "build_files_with_errors", "outside_build")
 
 CERTAINTY_MEANING = {c: MEANING[c] for c in CERTAINTIES}
 
@@ -143,6 +145,17 @@ def check(data: Any) -> dict:
         _int(proof, k, "proof")
     if not isinstance(proof.get("stopped_early"), bool):
         _fail("proof.stopped_early must be true or false")
+    if any(k in proof for k in COVERAGE_KEYS):
+        for k in COVERAGE_KEYS:
+            _int(proof, k, "proof")
+        if proof["build_files_checked"] > proof["build_files"]:
+            _fail("proof.build_files_checked can't be more than proof.build_files")
+    if "outside_build_files" in proof:
+        files = proof["outside_build_files"]
+        if not isinstance(files, list) or not all(isinstance(f, str) for f in files):
+            _fail("proof.outside_build_files must be a list of paths")
+        if len(files) != proof.get("outside_build") or files != sorted(files):
+            _fail("proof.outside_build_files must be sorted and match proof.outside_build")
     if not isinstance(data["omitted"], dict):
         _fail("omitted must be an object")
     _int(data["omitted"], "nodes", "omitted")

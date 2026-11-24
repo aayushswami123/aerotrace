@@ -2,13 +2,16 @@
 
 Meaning never depends on colour: every item has a status word, and colour (only on a TTY) is limited to
 bold, red and yellow on the icon and the word. With NO_COLOR, TERM=dumb or a non-UTF-8 stream the icons
-are plain ASCII. Lines are not wrapped, so the text stays the same everywhere and is easy to grep.
+are plain ASCII. Lines are wrapped at word boundaries only when the caller passes a width (the CLI does
+so on a terminal); in pipes, CI logs and MCP answers lines are not wrapped, so the text stays the same
+everywhere and is easy to grep.
 """
 
 from __future__ import annotations
 
 import codecs
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Mapping
 from typing import TextIO
@@ -150,6 +153,8 @@ def headline(data: dict) -> tuple[str, list[str]]:
         more.append(f"{unk:,} {'is' if unk == 1 else 'are'} unknown")
     if nf and (be or bp or aff or unk):
         more.append(f"{n_(nf, 'part')} of the change could not be followed")
+    if be or bp:
+        first = first[:-1] + f" ({_counts(be, bp, aff, unk)})."
     lines = [first]
     if more:
         lines.append(_cap_first(_join(more)) + ".")
@@ -170,6 +175,30 @@ def headline(data: dict) -> tuple[str, list[str]]:
 
 
 INDEX_LIMITS_UNDER_PASS = 5
+
+
+def _counts(be: int, bp: int, aff: int, unk: int) -> str:
+    """'4 BREAKS, 19 AFFECTED': the status words of the lists below, with their counts."""
+    parts = [(be, "BREAKS"), (bp, "MAY BREAK"), (aff, "AFFECTED"), (unk, "UNKNOWN")]
+    return ", ".join(f"{n:,} {w}" for n, w in parts if n)
+
+
+def coverage_lines(data: dict, all_hint: str = "") -> list[str]:
+    """'Checked 117 of 117 files in this build (1 had parse errors).' and, when some repo sources are not
+    in compile_commands.json, one short line saying so. Empty when the JSON has no coverage numbers."""
+    p = data.get("proof") or {}
+    if "build_files" not in p:
+        return []
+    errs = p["build_files_with_errors"]
+    err_txt = f" ({errs:,} had parse errors)" if errs else ""
+    out = [f"Checked {p['build_files_checked']:,} of {n_(p['build_files'], 'file')} in this build{err_txt}."]
+    outside = p["outside_build"]
+    if outside:
+        hint = f" ({all_hint})" if all_hint and "outside_build_files" not in p else ""
+        out.append(
+            f"{n_(outside, 'C/C++ file')} outside this build {'was' if outside == 1 else 'were'} not checked{hint}."
+        )
+    return out
 
 
 def index_limits(data: dict) -> list[str]:
@@ -311,8 +340,74 @@ def clean(v: object, ascii_only: bool = False) -> object:
     return v
 
 
-def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int = 8) -> str:
-    """The whole terminal answer as one string (no trailing newline)."""
+def _width(s: str) -> int:
+    """Columns `s` takes on a terminal (ANSI codes take none, wide characters two)."""
+    s = strip_ansi(s)
+    return sum(
+        # U+FE0F asks for the emoji form, which terminals draw two columns wide
+        1
+        if c == "\ufe0f"
+        else 0
+        if unicodedata.combining(c)
+        else 2
+        if unicodedata.east_asian_width(c) in "WF"
+        else 1
+        for c in s
+    )
+
+
+def _hang(line: str) -> int:
+    """Where continuation lines start: under the text, after the indent and any icon."""
+    plain = strip_ansi(line)
+    indent = len(plain) - len(plain.lstrip(" "))
+    first = plain[indent:].split(" ", 1)[0]
+    if any(first in pair for pair in ICONS.values()) or first + " " in (u for u, _ in ICONS.values()):
+        rest = plain[indent + len(first) :]
+        return _width(plain[: indent + len(first)]) + len(rest) - len(rest.lstrip(" "))
+    return indent
+
+
+def wrap(text: str, width: int) -> str:
+    """Every line longer than `width` broken at spaces, continuation lines indented under the text.
+    A single word longer than the line (a long path) is never split."""
+    out: list[str] = []
+    for line in text.split("\n"):
+        if _width(line) <= width:
+            out.append(line)
+            continue
+        hang = " " * _hang(line)
+        indent = len(line) - len(line.lstrip(" "))
+        cur, words = line[:indent], line[indent:].split(" ")
+        start = True
+        for w in words:
+            if start:
+                cur, start = cur + w, False
+            elif w == "" or _width(cur) + 1 + _width(w) <= width or cur.strip() == "":
+                cur += " " + w
+            else:
+                out.append(cur.rstrip())
+                cur = hang + w
+        out.append(cur.rstrip())
+    return "\n".join(out)
+
+
+def render(
+    data: dict,
+    *,
+    color: bool = False,
+    unicode: bool = True,
+    limit: int = 8,
+    width: int | None = None,
+    all_hint: str = "",
+) -> str:
+    """The whole terminal answer as one string (no trailing newline). `width` wraps long lines at word
+    boundaries (None = no wrapping). `all_hint` names the option that lists the files outside the build
+    (the CLI passes '--all lists them'; MCP passes nothing)."""
+    text = _render(data, color=color, unicode=unicode, limit=limit, all_hint=all_hint)
+    return wrap(text, width) if width else text
+
+
+def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str) -> str:
     check(data)
     data = clean(data, not unicode)  # type: ignore[assignment]
     o = _Out(color, unicode)
@@ -399,5 +494,13 @@ def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int 
     legend = [f"{c} = {CERTAINTY_MEANING[c]}" for c in CERTAINTIES if c in used and c != "exact"]
     if legend:
         o.section("Link: " + "; ".join(legend) + ".")
+    cov = coverage_lines(data, all_hint)
+    if cov:
+        o.section(cov[0])
+        o.lines += cov[1:]
+        outside = data["proof"].get("outside_build_files")
+        if outside:
+            o.section(f"Files outside this build ({len(outside):,})")
+            o.lines += [f"  {f}" for f in outside]
     o.section(proof_line(data))
     return "\n".join(o.lines)

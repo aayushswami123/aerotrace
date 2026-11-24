@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -310,6 +311,13 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def _isatty(stream: object) -> bool:
+    try:
+        return bool(stream.isatty())  # type: ignore[attr-defined]
+    except (AttributeError, ValueError):
+        return False
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     from aerotrace import ui
     from aerotrace.analysis import check
@@ -329,6 +337,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             patch_text=text,
             build_dir=build_dir,
             depth=args.depth,
+            list_outside=args.all,
         )
     except (GitError, ValueError, OSError) as e:
         _err(f"error: {e}")
@@ -341,7 +350,13 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(json.dumps(data, indent=2))
     else:
         color, uni = ui.style_for(sys.stdout, os.environ)
-        print(ui.render_text(data, color=color, unicode=uni, limit=args.limit))
+        width = shutil.get_terminal_size().columns if _isatty(sys.stdout) else None
+        limit = sys.maxsize if args.all else args.limit
+        print(
+            ui.render_text(
+                data, color=color, unicode=uni, limit=limit, width=width, all_hint="--all lists them"
+            )
+        )
     return check.exit_code(data)
 
 
@@ -613,6 +628,9 @@ def build_parser() -> argparse.ArgumentParser:
     ck.add_argument("--build-dir", help="folder holding compile_commands.json")
     ck.add_argument("--depth", type=int, default=5, help="how many call steps to follow (default 5)")
     ck.add_argument("--limit", type=int, default=8, help="most lines per list in the text answer (default 8)")
+    ck.add_argument(
+        "--all", action="store_true", help="show every result, no caps, and list the files outside the build"
+    )
     ck.add_argument("--json", action="store_true", help="print the aerotrace-check JSON (version 1)")
     ck.add_argument("--html", metavar="OUT.html", help="also write an offline HTML report")
     ck.set_defaults(func=cmd_check)

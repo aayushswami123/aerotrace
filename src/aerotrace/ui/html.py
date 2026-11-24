@@ -25,7 +25,16 @@ from aerotrace.ui.schema import (
     check,
     node_word,
 )
-from aerotrace.ui.terminal import ICONS, clean, detail, headline, not_followed_lines, proof_line, title
+from aerotrace.ui.terminal import (
+    ICONS,
+    clean,
+    coverage_lines,
+    detail,
+    headline,
+    not_followed_lines,
+    proof_line,
+    title,
+)
 
 _PLACEHOLDER = re.compile(r"\{\{([A-Z]+)\}\}")
 _SLASHES = re.compile(r"/(?=/)|(?<=/)/")
@@ -117,6 +126,7 @@ def _header(data: dict) -> str:
     ]
     out += [f"<p>{_e(line)}</p>" for line in lines[1:]]
     if data["status"] == "ok":
+        out += [f'<p class="proof">{_e(line)}</p>' for line in coverage_lines(data)]
         out.append(f'<p class="proof">{_e(proof_line(data))}</p>')
         left = data["omitted"]["nodes"]
         if left:

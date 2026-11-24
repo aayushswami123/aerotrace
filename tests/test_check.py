@@ -330,3 +330,53 @@ def test_output_is_deterministic_and_follows_the_contract(repo):
     ui.check(c1)
     assert "use_parse" in ui.render_text(c1)
     assert "use_parse" in ui.render_html(c1)
+
+
+# ---------------------------------------------------------------- coverage of the build
+
+
+@pytest.fixture
+def repo_with_outside_file(repo_factory):
+    root = repo_factory("c_check")
+    # written after compile_commands.json, so the build does not list it
+    (root / "legacy").mkdir()
+    (root / "legacy" / "old.c").write_text('#include "api.h"\nint old_use(void) { return parse(1); }\n')
+    git(root, "init", "-q", "-b", "main")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(root, jobs=1)
+    return root
+
+
+def test_coverage_counts_the_build_and_what_is_outside_it(repo_with_outside_file):
+    root = repo_with_outside_file
+    _, c = run_patch(root, ADD_PARAM)
+    p = c["proof"]
+    n_units = len(json.loads((root / "compile_commands.json").read_text()))
+    assert (p["build_files"], p["build_files_checked"], p["build_files_with_errors"]) == (n_units, n_units, 0)
+    assert p["outside_build"] == 1
+    assert "outside_build_files" not in p  # only with list_outside
+    # blind spot: the caller in legacy/old.c is outside the build, so it is not listed as a break...
+    assert "old_use" not in nodes(c)
+    # ...and the long index limit is replaced by the coverage line, which still says it was not checked
+    assert not any("not in compile_commands.json" in t for t in blind(c))
+    ui = pytest.importorskip("aerotrace.ui")
+    text = ui.render_text(c, all_hint="--all lists them")
+    assert f"Checked {n_units} of {n_units} files in this build." in text
+    assert "1 C/C++ file outside this build was not checked (--all lists them)." in text
+    assert "(--all" not in ui.render_text(c)  # MCP: no CLI hint
+    assert "outside this build was not checked" in ui.render_html(c)
+
+
+def test_list_outside_names_the_files(repo_with_outside_file):
+    root = repo_with_outside_file
+    diffs = diff.load_patch(root, patch(root, ADD_PARAM))
+    conn, _ = fresh_index(root, want=diff.wanted(diffs, "patch"))
+    res = check.run(conn, root, diffs, mode="patch", outliner=Outliner(root))
+    c = check.to_contract(conn, res, "aerotrace test", list_outside=True)
+    assert c["proof"]["outside_build_files"] == ["legacy/old.c"]
+    ui = pytest.importorskip("aerotrace.ui")
+    ui.check(c)
+    text = ui.render_text(c, all_hint="--all lists them")
+    assert "Files outside this build (1)\n  legacy/old.c" in text
+    assert "(--all lists them)" not in text  # already listed

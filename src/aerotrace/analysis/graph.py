@@ -263,6 +263,30 @@ def _names(items: list[str], n: int = 3) -> str:
     return ", ".join(items[:n]) + (", ..." if len(items) > n else "")
 
 
+def outside_build_note(meta: dict[str, str]) -> str | None:
+    """The limit for repo sources that compile_commands.json does not list (None when there are none)."""
+    outside = json.loads(meta.get("not_in_compdb") or "[]")
+    if not outside:
+        return None
+    return (
+        f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
+        f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
+    )
+
+
+def build_coverage(conn: sqlite3.Connection) -> dict:
+    """How much of the build the index covers: files in compile_commands.json, how many were parsed, how
+    many had parse errors, and the sorted repo sources outside the build."""
+    meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+    parsed = conn.execute("SELECT COUNT(*) FROM files WHERE is_unit = 1").fetchone()[0]
+    return {
+        "build_files": int(meta.get("units") or parsed),
+        "build_files_checked": parsed,
+        "build_files_with_errors": int(meta.get("files_with_errors") or 0),
+        "outside_build": sorted(json.loads(meta.get("not_in_compdb") or "[]")),
+    }
+
+
 def flag_limits(meta: dict[str, str]) -> list[str]:
     """Plain-English limits that come from the compile flags (see `aerotrace doctor` for details)."""
     notes: list[str] = []
@@ -272,12 +296,9 @@ def flag_limits(meta: dict[str, str]) -> list[str]:
             f"Used {meta.get('compdb_path')}; {len(alternatives)} other compile_commands.json "
             f"({_names(alternatives)}) were not used. Pick one with --build-dir."
         )
-    outside = json.loads(meta.get("not_in_compdb") or "[]")
+    outside = outside_build_note(meta)
     if outside:
-        notes.append(
-            f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
-            f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
-        )
+        notes.append(outside)
     missing = json.loads(meta.get("missing_headers") or "[]")
     if missing:
         shown = ", ".join(f"{h} ({n} file{'s' if n != 1 else ''})" for h, n in missing[:3])

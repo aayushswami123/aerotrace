@@ -182,7 +182,7 @@ there are more. Deterministic: ties by (file, line, id).
 | `sections.blind_spots` | scope `change`: diff notes (outside, unreadable, address taken, clash, depth reached), Part A notes per changed signature, Part B notes per changed declaration (with its node), #25 note, layout note. Scope `index`: `graph.index_limits`. Deduplicated by text, sorted |
 | `summary` | counted over **all** nodes before the cap: `breaks_exact`, `breaks_probable`, `affected_direct` (distance 1), `affected_further`, `unknown`, `no_effect` (always 0: Part C sends no grey nodes), `not_followed` = entries in `not_followed` + change-scope blind spots |
 | `omitted.nodes` | dropped by the 5,000-node cap (lowest ranked first: affected further up, then unknown); edges and `via` to dropped nodes are removed, `via_name` stays |
-| `proof` | `index_files`, `index_functions` (COUNT from the index), `depth`, `stopped_early` = any walk truncated |
+| `proof` | `index_files`, `index_functions` (COUNT from the index), `depth`, `stopped_early` = any walk truncated; optional together: `build_files` (entries in compile_commands.json), `build_files_checked` (parsed), `build_files_with_errors`, `outside_build` (repo sources not in it); `outside_build_files` (sorted paths) only with `--all` |
 
 Nodes sorted by (status rank, certainty, distance, file, line, id), as the contract says.
 
@@ -195,7 +195,7 @@ Nodes sorted by (status rank, certainty, distance, file, line, id), as the contr
   change; if it does, the build stops and reports.
   Why not add sections to `diff`: two commands with overlapping long answers confuse agents; `check` is
   the new front door, `diff` stays the stable, smaller answer.
-- **`aerotrace check [BASE] [--patch FILE] [--depth N] [--limit N] [--json] [--html OUT] [--root DIR]
+- **`aerotrace check [BASE] [--patch FILE] [--depth N] [--limit N] [--all] [--json] [--html OUT] [--root DIR]
   [--build-dir DIR]`**: text via `ui.render_text(data, **ui.style_for(sys.stdout, os.environ), limit)`;
   `--json` prints the contract object; `--html` calls `ui.write_html`. Exit codes (UI plan suggestion):
   0 = nothing breaks, 1 = something breaks (exact or probable), 2 = could not check.
