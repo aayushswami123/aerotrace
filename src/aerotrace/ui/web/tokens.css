@@ -1,0 +1,161 @@
+/* AeroTrace design tokens. The one place colours, type, spacing, radius, shadow and motion are defined.
+   Used by the dashboard (aerotrace ui), the benchmark results page and (later) the --html report.
+   Rules: see docs/design/README.md. Contrast is checked by tests/ui/test_tokens.py (planned). */
+
+/* Bundled fonts (SIL OFL 1.1, see fonts/README.md). Nothing is loaded from the internet. */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/Inter-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/Inter-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/Inter-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/JetBrainsMono-Medium.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/JetBrainsMono-SemiBold.woff2") format("woff2"); }
+
+:root {
+  /* ---- Type ---- */
+  /* Inter and JetBrains Mono are bundled; system fonts are the fallback. */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --text-xs: 0.75rem;   /* 12px: captions, chips */
+  --text-sm: 0.8125rem; /* 13px: tables, side panel */
+  --text-md: 0.9375rem; /* 15px: body */
+  --text-lg: 1.125rem;  /* 18px: section titles */
+  --text-xl: 1.5rem;    /* 24px: page titles */
+  --text-2xl: 2rem;     /* 32px: headline numbers */
+  --leading-tight: 1.25;
+  --leading: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --tracking-caps: 0.08em; /* small caps labels: "RECALL · FALSE ALARMS · TIME · TOKENS" */
+
+  /* ---- Spacing (4px base) ---- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;   /* chips, inputs */
+  --radius-md: 8px;   /* buttons, cards */
+  --radius-lg: 12px;  /* panels, dialogs */
+  --radius-full: 999px;
+
+  /* ---- Motion ---- */
+  --duration-fast: 120ms;  /* hover, press */
+  --duration: 200ms;       /* panel slide, toggle */
+  --duration-slow: 320ms;  /* page fade, graph fit */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* ---- Layout ---- */
+  --sidebar-w: 232px;
+  --sidebar-w-collapsed: 56px;
+  --panel-w: 420px;
+  --content-max: 1120px;
+
+  /* ---- Colour: light theme (default) ---- */
+  color-scheme: light;
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f3;
+  --border: #e4e4e2;
+  --border-strong: #c9c9c6;
+  --text: #18181b;
+  --text-2: #4b4b52;
+  --text-3: #6b6b72;          /* smallest allowed text; 4.5:1 on --bg and --surface */
+  --focus: #3451d1;
+
+  --accent: #3451d1;          /* AeroTrace blue */
+  --accent-hover: #2a43b3;
+  --accent-text: #ffffff;
+  --accent-soft: #eef1fd;
+
+  /* Status. Each is always shown with its icon and word, never colour alone. */
+  --breaks: #c0281b;          /* BREAKS */
+  --breaks-soft: #fdeceb;
+  --may: #a14d00;             /* MAY BREAK (text/icon); fill uses --may-fill */
+  --may-fill: #f59e0b;
+  --may-soft: #fef3e2;
+  --affected: #8a5a00;        /* AFFECTED: same family as MAY BREAK, outline style */
+  --affected-soft: #fdf6e7;
+  --unknown: #5c6572;         /* UNKNOWN */
+  --unknown-soft: #eff1f3;
+  --no-effect: #6b6b72;       /* NO EFFECT FOUND (never "safe") */
+  --changed: #3451d1;         /* CHANGED / NEW / REMOVED: the accent */
+  --ok: #1d7a4a;              /* only for "all checks done", never for a node */
+
+  /* Benchmark chart: AeroTrace is the only solid bar (accent). Other tools are light fills with a darker
+     outline; the outline is the 3:1 edge against --surface, and the number above each bar names the value. */
+  --chart-1: var(--accent);
+  --chart-other-fill: #ebebe9;
+  --chart-other-stroke: #8b8b91;
+  --chart-grid: #ececea;
+
+  /* Graph canvas: always dark, in both themes. */
+  --graph-bg: #0b0d10;
+  --graph-dot: #1e232b;
+  --graph-edge: #3a414d;
+  --graph-edge-hi: #c7cede;
+  --graph-label: #d7dce4;
+  --graph-breaks: #ff6b5e;
+  --graph-may: #fbbf24;
+  --graph-affected: #f2c56b;
+  --graph-unknown: #8c96a5;
+  --graph-changed: #8ea2ff;
+  --graph-no-effect: #7a8390;
+
+  /* ---- Shadow ---- */
+  --shadow-1: 0 1px 2px rgb(16 18 22 / 0.06);
+  --shadow-2: 0 2px 8px rgb(16 18 22 / 0.08), 0 1px 2px rgb(16 18 22 / 0.06);
+  --shadow-3: 0 12px 32px rgb(16 18 22 / 0.14), 0 2px 6px rgb(16 18 22 / 0.08);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0f12;
+  --surface: #15181d;
+  --surface-2: #1c2027;
+  --border: #2a2f38;
+  --border-strong: #3c4350;
+  --text: #eceef1;
+  --text-2: #b4bac4;
+  --text-3: #9099a6;
+  --focus: #8ea2ff;
+
+  --accent: #8ea2ff;
+  --accent-hover: #a8b7ff;
+  --accent-text: #0d0f12;
+  --accent-soft: #1d2340;
+
+  --breaks: #ff7a6e;
+  --breaks-soft: #3a1714;
+  --may: #fbbf24;
+  --may-fill: #fbbf24;
+  --may-soft: #3a2a0c;
+  --affected: #f2c56b;
+  --affected-soft: #2f2510;
+  --unknown: #a3adbb;
+  --unknown-soft: #222730;
+  --no-effect: #9099a6;
+  --changed: #8ea2ff;
+  --ok: #4fd18b;
+
+  --chart-other-fill: #252a32;
+  --chart-other-stroke: #858d99;
+  --chart-grid: #232831;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 2px 8px rgb(0 0 0 / 0.45);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 0ms; --duration: 0ms; --duration-slow: 0ms; }
+}
