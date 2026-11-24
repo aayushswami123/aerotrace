@@ -220,7 +220,22 @@ def test_doctor_reports_target_and_left_out_files(tmp_path, capsys):
     assert main(["doctor", "--root", str(root)]) == 0
     out = capsys.readouterr().out
     assert "target    arm-none-eabi" in out
-    assert "1 source files are not in it: legacy/old_driver.c" in out
+    assert (
+        "1 C/C++ source file is not in compile_commands.json, so it was not analysed (legacy/old_driver.c)"
+        in out
+    )
+
+
+def test_files_outside_the_build_are_grouped_by_top_folder():
+    from aerotrace.analysis.graph import outside_build
+
+    files = [f"deps/lib/t{i}.c" for i in range(1650)] + [f"src/m{i}.c" for i in range(40)]
+    files += ["tests/a.c", "tools/b.c", "utils/c.c", "x.c", "y.c", "z.c"]
+    got = outside_build(sorted(files))
+    assert got.startswith("1,696 C/C++ source files are not in compile_commands.json")
+    assert "(1,650 under deps/, 40 under src/, 3 in the top folder, 3 in 3 other folders;" in got
+    assert "tests/a.c" not in got  # a short line, not every path
+    assert "often bundled libraries, tests or examples" in got  # a hint, never a claim about the files
 
 
 @pytest.mark.parametrize(

@@ -20,7 +20,7 @@ Limits of this answer:
   - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
   - 2 function(s) in test files are passed as pointers in ways not recognised as test registrations, so if they are tests they are not listed: sub (tests/calc_test.cpp:11), sub (tests/test_layouts.c:30).
   - Test styles read: GoogleTest TEST/TEST_F/TEST_P/TYPED_TEST(_P) and fixture SetUp/TearDown, Unity RUN_TEST and generated runners, CMocka cmocka_unit_test* and group setup, main in test files. Other frameworks (Catch2, doctest, Check, CppUTest, ...) are not seen.
-  - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).
+  - 1 C/C++ source file is not in compile_commands.json, so it was not analysed (tests/extra_test.cc).
   - Only one build configuration was analysed; code under other #ifdef settings is not seen.
   - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.
 ----
@@ -39,6 +39,6 @@ Limits of this answer:
   - 1 test source file is not in the index, so its tests are not seen: tests/extra_test.cc.
   - 2 function(s) in test files are passed as pointers in ways not recognised as test registrations, so if they are tests they are not listed: sub (tests/calc_test.cpp:11), sub (tests/test_layouts.c:30).
   - Test styles read: GoogleTest TEST/TEST_F/TEST_P/TYPED_TEST(_P) and fixture SetUp/TearDown, Unity RUN_TEST and generated runners, CMocka cmocka_unit_test* and group setup, main in test files. Other frameworks (Catch2, doctest, Check, CppUTest, ...) are not seen.
-  - 1 C/C++ source file is not in compile_commands.json and was not analysed (tests/extra_test.cc).
+  - 1 C/C++ source file is not in compile_commands.json, so it was not analysed (tests/extra_test.cc).
   - Only one build configuration was analysed; code under other #ifdef settings is not seen.
   - Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.

@@ -66,9 +66,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         if flags.targets:
             print(f"target    {', '.join(flags.targets)} (from the compiler name)")
         if flags.not_in_compdb:
-            print(
-                f"missing   {len(flags.not_in_compdb)} source files are not in it: {', '.join(flags.not_in_compdb[:5])}"
-            )
+            from aerotrace.analysis.graph import outside_build
+
+            print(f"missing   {outside_build(flags.not_in_compdb)}")
         if flags.response_files or flags.response_files_skipped:
             print(
                 f"rsp       {flags.response_files} response files read, {len(flags.response_files_skipped)} skipped"
@@ -132,10 +132,9 @@ def flags_summary(r: dict) -> list[str]:
     if r.get("targets"):
         out.append(f"note: cross-compiling for {', '.join(r['targets'])} (from the compiler name).")
     if r.get("not_in_compdb"):
-        n = r["not_in_compdb"]
-        out.append(
-            f"note: {len(n)} source file(s) are not in compile_commands.json and were skipped: {', '.join(n[:5])}"
-        )
+        from aerotrace.analysis.graph import outside_build
+
+        out.append(f"note: {outside_build(r['not_in_compdb'])}")
     if r.get("response_files_skipped"):
         out.append(f"note: could not read response file(s): {', '.join(r['response_files_skipped'][:5])}")
     if r.get("ignored_flags"):

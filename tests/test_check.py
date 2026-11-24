@@ -330,3 +330,29 @@ def test_output_is_deterministic_and_follows_the_contract(repo):
     ui.check(c1)
     assert "use_parse" in ui.render_text(c1)
     assert "use_parse" in ui.render_html(c1)
+
+
+def why(contract, name):
+    return next(n["why"] for n in contract["nodes"] if n["name"] == name)
+
+
+@pytest.mark.parametrize(
+    "edits",
+    [
+        {
+            A: [("    return n;\n}\n\nlong cmd_append", "    return n + 1;\n}\n\nlong cmd_append")]
+        },  # body only
+        {
+            A: [("long cmd_check_len(long n) {", "long cmd_check_len(long n, int k) {")],
+            H: [("long cmd_check_len(long n);", "long cmd_check_len(long n, int k);")],
+        },
+    ],
+    ids=["body", "signature"],
+)
+def test_pointer_step_is_named_exactly(repo, edits):
+    # Like Redis `call -> appendCommand -> checkStringLength`: the pointer step is run_cmd -> cmd_append,
+    # not cmd_append -> cmd_check_len (a direct call).
+    _, c = run_patch(repo, edits)
+    w = why(c, "run_cmd")
+    assert "the link run_cmd -> cmd_append is a call through a function pointer" in w, w
+    assert "pointer" not in why(c, "cmd_append")
