@@ -58,6 +58,7 @@ def main() -> None:
     g = d["groups"]
     lines = []
     lines += summary(g, "all/easy", "Easy cases, all repos")
+    lines += summary(g, "all/hard_without_curl-09", "Hard cases without curl-09 (extra view)")
     lines += summary(g, "all/hard", "Hard cases, all repos")
     lines += summary(g, "all/all", "Easy and hard together (build breaks only)")
     lines += summary(g, "all/might_break", "Might-break cases (hand-checked truth)")

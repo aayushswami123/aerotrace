@@ -147,6 +147,9 @@ def main() -> None:
             g = {t: agg(sel, t) for t in TOOLS}
             g["aerotrace_anywhere"] = agg(sel, "aerotrace", "anywhere")
             groups[f"{repo}/{level}"] = g
+    sel = [r for r in rows if r["level"] == "hard" and r["id"] != "curl-09"]  # extra view, see RESULTS.md
+    groups["all/hard_without_curl-09"] = {t: agg(sel, t) for t in TOOLS}
+    groups["all/hard_without_curl-09"]["aerotrace_anywhere"] = agg(sel, "aerotrace", "anywhere")
     out = {"protocol": "docs/benchmark/accuracy-cases-protocol.md", "groups": groups, "cases": rows}
     (run / "results.json").write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
     g = groups["all/all"]

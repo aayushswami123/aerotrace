@@ -45,8 +45,9 @@ For each case:
 1. Clone the baseline with `cp -cpR`. That's copy-on-write on APFS, and `-p` keeps file times, so `make`
    rebuilds only what the patch touches.
 2. Apply `bench/cases/patches/<id>.diff` with `patch -p1`.
-3. Rebuild with `make -k -j1` (Redis, curl), or by compiling both SQLite files and linking only if both
-   compile.
+3. Rebuild with `make -k -j1`: Redis `redis-server`; curl `-C lib libcurl.la`, then `-C src curl` (not
+   the default target, which also builds the test-only `libcurlu`/`libcurltool` with `-DUNITTESTS`).
+   For SQLite, compile both files and link only if both compile.
 4. Parse every `error:` line and every `Undefined symbols` entry, then delete the clone.
 
 Builds are serial (`-j1`) on purpose: parallel compilers mix their error lines, which once gave

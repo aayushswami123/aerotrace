@@ -98,5 +98,10 @@ changed. Only how answers and truth are read changed.
 3. **Tables after an inline struct type** (`} const maybe_feature[] = {`) were not seen as tables, so
    their rows got `@lineN` sites. They are tables now.
 
-Each fix makes the truth and the answers use the same names. None of them was chosen by looking at
+4. **curl's truth build target.** The default `make` also builds the test-only `libcurlu` and
+   `libcurltool` with `-DUNITTESTS`, code that is not in the build the tools were given. The truth is now
+   built from `libcurl` and the `curl` program only, as `CASES.md` defines. Found in review; it removed
+   one break site (curl-01, inside `#ifdef UNITTESTS`).
+
+Each fix makes the truth and the answers describe the same build and use the same names. None was chosen by looking at
 which tool it helps.

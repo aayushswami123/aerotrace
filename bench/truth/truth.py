@@ -52,8 +52,15 @@ def build_cmd(repo: str, work: Path) -> tuple[list[str], str]:
             'if [ $a -eq 0 ] && [ $b -eq 0 ]; then /usr/bin/cc shell.o sqlite3.o -o sqlite3; else echo "LINK SKIPPED"; fi'
         )
         return ["/bin/sh", "-c", sh], "."
+    # Only libcurl and the curl program: the default `make` also builds the test-only libcurlu and
+    # libcurltool (with -DUNITTESTS), which are not part of the build the tools are given.
     cflags = (work / "curl" / "cflags.txt").read_text().strip()
-    return ["make", "-k", "-j1", f"CFLAGS={cflags}"], "."
+    sh = (
+        f'make -k -j1 -C lib CFLAGS="{cflags}" libcurl.la; a=$?; '
+        f'make -k -j1 -C src CFLAGS="{cflags}" curl; b=$?; '
+        'if [ $a -ne 0 ]; then echo "LINK SKIPPED"; fi; exit $((a + b))'
+    )
+    return ["/bin/sh", "-c", sh], "."
 
 
 SEARCH_DIRS = {

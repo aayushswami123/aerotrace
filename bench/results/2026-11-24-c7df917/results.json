@@ -2204,24 +2204,20 @@
       "answer_sites": 28,
       "false_alarms": 24,
       "found": 4,
-      "missed": [
-       "lib/dynhds.c:dynhds_set"
-      ],
-      "truth_sites": 5
+      "missed": [],
+      "truth_sites": 4
      },
      "breaks_beyond_text_cap": 0,
      "false_alarms": 0,
      "found": 4,
-     "missed": [
-      "lib/dynhds.c:dynhds_set"
-     ],
+     "missed": [],
      "omitted": {
       "nodes": 0
      },
      "seconds": 0.6591,
      "text_sha256": "45e25702be28191f4e8d33ca33c83ab6cf15deec65bfa4c3816c30b89254a188",
      "tokens": null,
-     "truth_sites": 5
+     "truth_sites": 4
     },
     "clangd": {
      "answer": [
@@ -2233,13 +2229,11 @@
      "answer_sites": 4,
      "false_alarms": 0,
      "found": 4,
-     "missed": [
-      "lib/dynhds.c:dynhds_set"
-     ],
+     "missed": [],
      "seconds": 0.0009,
      "text_sha256": "57a7b6c180c224325270a85fda52ef959134f7d664a010660cfac2315bf2715f",
      "tokens": null,
-     "truth_sites": 5
+     "truth_sites": 4
     },
     "cscope": {
      "answer": [
@@ -2254,13 +2248,13 @@
       "lib/vquic/cf-ngtcp2-proxy.c:cb_h3_proxy_recv_header"
      ],
      "answer_sites": 9,
-     "false_alarms": 4,
-     "found": 5,
+     "false_alarms": 5,
+     "found": 4,
      "missed": [],
      "seconds": 0.0079,
      "text_sha256": "9d0b94caba7591151be68d89ba5b04011f7c551736356f12ce7f1641563051cf",
      "tokens": null,
-     "truth_sites": 5
+     "truth_sites": 4
     },
     "ripgrep": {
      "answer": [
@@ -2275,19 +2269,18 @@
       "lib/vquic/cf-ngtcp2-proxy.c:cb_h3_proxy_recv_header"
      ],
      "answer_sites": 9,
-     "false_alarms": 4,
-     "found": 5,
+     "false_alarms": 5,
+     "found": 4,
      "missed": [],
      "seconds": 0.0256,
      "text_sha256": "d9e303e723b07ed862b87dbe310f1b5d0c574805371feca2117742baca727411",
      "tokens": null,
-     "truth_sites": 5
+     "truth_sites": 4
     }
    },
    "truth": [
     "lib/dynhds.c:Curl_dynhds_cadd",
     "lib/dynhds.c:Curl_dynhds_h1_add_line",
-    "lib/dynhds.c:dynhds_set",
     "lib/http.c:Curl_http_req_to_h2",
     "lib/http_proxy.c:dynhds_add_custom"
    ]
@@ -5185,9 +5178,9 @@
     "found": 116,
     "median_seconds": 1.0477,
     "precision": 0.9915,
-    "recall": 0.2495,
+    "recall": 0.25,
     "tokens_total": null,
-    "truth_sites": 465
+    "truth_sites": 464
    },
    "aerotrace_anywhere": {
     "cases": 27,
@@ -5195,9 +5188,9 @@
     "found": 118,
     "median_seconds": 1.0477,
     "precision": 0.0326,
-    "recall": 0.2538,
+    "recall": 0.2543,
     "tokens_total": null,
-    "truth_sites": 465
+    "truth_sites": 464
    },
    "clangd": {
     "cases": 27,
@@ -5205,29 +5198,29 @@
     "found": 124,
     "median_seconds": 0.0034,
     "precision": 0.8986,
-    "recall": 0.2667,
+    "recall": 0.2672,
     "tokens_total": null,
-    "truth_sites": 465
+    "truth_sites": 464
    },
    "cscope": {
     "cases": 27,
-    "false_alarms": 85,
-    "found": 125,
+    "false_alarms": 86,
+    "found": 124,
     "median_seconds": 0.0082,
-    "precision": 0.5952,
-    "recall": 0.2688,
+    "precision": 0.5905,
+    "recall": 0.2672,
     "tokens_total": null,
-    "truth_sites": 465
+    "truth_sites": 464
    },
    "ripgrep": {
     "cases": 27,
-    "false_alarms": 99,
-    "found": 125,
+    "false_alarms": 100,
+    "found": 124,
     "median_seconds": 0.0242,
-    "precision": 0.558,
-    "recall": 0.2688,
+    "precision": 0.5536,
+    "recall": 0.2672,
     "tokens_total": null,
-    "truth_sites": 465
+    "truth_sites": 464
    }
   },
   "all/easy": {
@@ -5237,9 +5230,9 @@
     "found": 25,
     "median_seconds": 1.1299,
     "precision": 0.9615,
-    "recall": 0.9615,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 26
+    "truth_sites": 25
    },
    "aerotrace_anywhere": {
     "cases": 9,
@@ -5247,9 +5240,9 @@
     "found": 25,
     "median_seconds": 1.1299,
     "precision": 0.0205,
-    "recall": 0.9615,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 26
+    "truth_sites": 25
    },
    "clangd": {
     "cases": 9,
@@ -5257,29 +5250,29 @@
     "found": 25,
     "median_seconds": 0.0022,
     "precision": 0.8621,
-    "recall": 0.9615,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 26
+    "truth_sites": 25
    },
    "cscope": {
     "cases": 9,
-    "false_alarms": 11,
-    "found": 26,
+    "false_alarms": 12,
+    "found": 25,
     "median_seconds": 0.008,
-    "precision": 0.7027,
+    "precision": 0.6757,
     "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 26
+    "truth_sites": 25
    },
    "ripgrep": {
     "cases": 9,
-    "false_alarms": 11,
-    "found": 26,
+    "false_alarms": 12,
+    "found": 25,
     "median_seconds": 0.0248,
-    "precision": 0.7027,
+    "precision": 0.6757,
     "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 26
+    "truth_sites": 25
    }
   },
   "all/hard": {
@@ -5332,6 +5325,58 @@
     "recall": 0.2255,
     "tokens_total": null,
     "truth_sites": 439
+   }
+  },
+  "all/hard_without_curl-09": {
+   "aerotrace": {
+    "cases": 17,
+    "false_alarms": 0,
+    "found": 91,
+    "median_seconds": 1.0477,
+    "precision": 1.0,
+    "recall": 0.9579,
+    "tokens_total": null,
+    "truth_sites": 95
+   },
+   "aerotrace_anywhere": {
+    "cases": 17,
+    "false_alarms": 2311,
+    "found": 93,
+    "median_seconds": 1.0477,
+    "precision": 0.0387,
+    "recall": 0.9789,
+    "tokens_total": null,
+    "truth_sites": 95
+   },
+   "clangd": {
+    "cases": 17,
+    "false_alarms": 8,
+    "found": 95,
+    "median_seconds": 0.0041,
+    "precision": 0.9223,
+    "recall": 1.0,
+    "tokens_total": null,
+    "truth_sites": 95
+   },
+   "cscope": {
+    "cases": 17,
+    "false_alarms": 60,
+    "found": 95,
+    "median_seconds": 0.0089,
+    "precision": 0.6129,
+    "recall": 1.0,
+    "tokens_total": null,
+    "truth_sites": 95
+   },
+   "ripgrep": {
+    "cases": 17,
+    "false_alarms": 74,
+    "found": 95,
+    "median_seconds": 0.0225,
+    "precision": 0.5621,
+    "recall": 1.0,
+    "tokens_total": null,
+    "truth_sites": 95
    }
   },
   "all/might_break": {
@@ -5393,9 +5438,9 @@
     "found": 18,
     "median_seconds": 0.6591,
     "precision": 1.0,
-    "recall": 0.0493,
+    "recall": 0.0495,
     "tokens_total": null,
-    "truth_sites": 365
+    "truth_sites": 364
    },
    "aerotrace_anywhere": {
     "cases": 9,
@@ -5403,9 +5448,9 @@
     "found": 19,
     "median_seconds": 0.6591,
     "precision": 0.0374,
-    "recall": 0.0521,
+    "recall": 0.0522,
     "tokens_total": null,
-    "truth_sites": 365
+    "truth_sites": 364
    },
    "clangd": {
     "cases": 9,
@@ -5413,29 +5458,29 @@
     "found": 24,
     "median_seconds": 0.0014,
     "precision": 0.7059,
-    "recall": 0.0658,
+    "recall": 0.0659,
     "tokens_total": null,
-    "truth_sites": 365
+    "truth_sites": 364
    },
    "cscope": {
     "cases": 9,
-    "false_alarms": 28,
-    "found": 25,
+    "false_alarms": 29,
+    "found": 24,
     "median_seconds": 0.008,
-    "precision": 0.4717,
-    "recall": 0.0685,
+    "precision": 0.4528,
+    "recall": 0.0659,
     "tokens_total": null,
-    "truth_sites": 365
+    "truth_sites": 364
    },
    "ripgrep": {
     "cases": 9,
-    "false_alarms": 28,
-    "found": 25,
+    "false_alarms": 29,
+    "found": 24,
     "median_seconds": 0.0287,
-    "precision": 0.4717,
-    "recall": 0.0685,
+    "precision": 0.4528,
+    "recall": 0.0659,
     "tokens_total": null,
-    "truth_sites": 365
+    "truth_sites": 364
    }
   },
   "curl/easy": {
@@ -5445,9 +5490,9 @@
     "found": 10,
     "median_seconds": 0.6591,
     "precision": 1.0,
-    "recall": 0.9091,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 11
+    "truth_sites": 10
    },
    "aerotrace_anywhere": {
     "cases": 3,
@@ -5455,9 +5500,9 @@
     "found": 10,
     "median_seconds": 0.6591,
     "precision": 0.0676,
-    "recall": 0.9091,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 11
+    "truth_sites": 10
    },
    "clangd": {
     "cases": 3,
@@ -5465,29 +5510,29 @@
     "found": 10,
     "median_seconds": 0.0014,
     "precision": 0.7143,
-    "recall": 0.9091,
+    "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 11
+    "truth_sites": 10
    },
    "cscope": {
     "cases": 3,
-    "false_alarms": 9,
-    "found": 11,
+    "false_alarms": 10,
+    "found": 10,
     "median_seconds": 0.0079,
-    "precision": 0.55,
+    "precision": 0.5,
     "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 11
+    "truth_sites": 10
    },
    "ripgrep": {
     "cases": 3,
-    "false_alarms": 9,
-    "found": 11,
+    "false_alarms": 10,
+    "found": 10,
     "median_seconds": 0.0289,
-    "precision": 0.55,
+    "precision": 0.5,
     "recall": 1.0,
     "tokens_total": null,
-    "truth_sites": 11
+    "truth_sites": 10
    }
   },
   "curl/hard": {
