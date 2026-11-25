@@ -314,7 +314,7 @@ def render(d: dict) -> str:
     body = f"""<main class=wrap>
 <header class=hero>
 <p class=caps>Recall · False alarms · Time · Tokens</p>
-<h1>What does a C change break? Four tools, {len(d["cases"])} changes, checked against the compiler.</h1>
+<h1>What does a C change break? Four tools, {len(d["cases"])} changes: {d["build_cases"]} checked against the compiler, {d["might_break"]["cases"]} by hand.</h1>
 <p class=lead>{escape(head1)} {escape(head2)}</p>
 <p class=lead>{escape(head3)}</p>
 {wrong_safe}

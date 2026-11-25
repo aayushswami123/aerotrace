@@ -2,7 +2,7 @@
 <html lang=en>
 <head>
 <meta charset=utf-8>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-2o12ANyPZcikzJKeHWeALr9uWq2x818ButFUzuNTcjM='; script-src 'sha256-M4Hb23UVx2zdv+nXjc70lSTunDK4YYDwTY4nrjTy8BM='; font-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-2o12ANyPZcikzJKeHWeALr9uWq2x818ButFUzuNTcjM='; script-src 'sha256-dXk3iqgdwWe1ESl0UmZSQ9VDdlo3gfJjHKx6+qY2llE='; font-src data:; base-uri 'none'; form-action 'none'">
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>AeroTrace accuracy benchmark</title>
 <style>/* AeroTrace design tokens. The one place colours, type, spacing, radius, shadow and motion are defined.
@@ -252,7 +252,7 @@ table.cases td, table.cases th { white-space: nowrap; }
 <main class=wrap>
 <header class=hero>
 <p class=caps>Recall · False alarms · Time · Tokens</p>
-<h1>What does a C change break? Four tools, 30 changes, checked against the compiler.</h1>
+<h1>What does a C change break? Four tools, 30 changes: 27 checked against the compiler, 3 by hand.</h1>
 <p class=lead>Easy cases (9): every tool found all 25 breaks. Hard cases without the macro case curl-09 (17): AeroTrace found 91 of 95 with 0 false alarms; clangd 95 with 8, cscope 95 with 60, ripgrep 95 with 74.</p>
 <p class=lead>In one line: AeroTrace&#x27;s edge here is few false alarms, not more breaks found. It found fewer breaks than another tool in 5 of 27 build cases, and it takes 329 ms to 6.3 s per check where the others take at most 81 ms.</p>
 <p class="note bad"><b>A wrong "safe" answer in 4 cases.</b> In redis-05, redis-07, curl-05, curl-07 the build fails, but AeroTrace's answer says "None is sure to break". That is the worst kind of answer by AeroTrace's own rules. It is a product bug, reported, not fixed in this run. In curl-09 it claims no break either, but says parts of the change could not be followed.</p>
@@ -391,6 +391,10 @@ table.cases td, table.cases th { white-space: nowrap; }
     var W = chart.clientWidth || 960, narrow = W < 620;
     var maxFa = 0;
     REPOS.forEach(function (r) { tools.forEach(function (t) { maxFa = Math.max(maxFa, v.repos[r][t].false_alarms); }); });
+    var faTop = maxFa <= 4 ? maxFa : Math.ceil(maxFa / 4) * 4;
+    var faTicks = [];
+    if (faTop > 0 && faTop <= 4) for (var q = 0; q <= faTop; q++) faTicks.push(q);
+    else for (var q4 = 0; q4 <= 4; q4++) faTicks.push((faTop * q4) / 4);
     while (chart.firstChild) chart.removeChild(chart.firstChild);
     var H = 230, top = 40;
     var groups = narrow ? REPOS.map(function (r) { return [r]; }) : [REPOS];
@@ -399,16 +403,18 @@ table.cases td, table.cases th { white-space: nowrap; }
       var svg = el("svg", { viewBox: "0 0 " + W + " " + height, role: "img",
         "aria-label": (state.metric === "found" ? "Breaks found" : "False alarms") + " by tool, " + v.label + ", " + rs.map(function (r) { return RNAME[r]; }).join(", ") });
       var AX = 40;  // room for the axis labels
-      for (var k = 0; k <= 4; k++) {
-        var gy = top + H - (H * k) / 4;
+      var ticks = state.metric === "found" ? [0, 25, 50, 75, 100] : (faTop ? faTicks : [0]);
+      var tmax = state.metric === "found" ? 100 : faTop;
+      ticks.forEach(function (tv) {
+        var gy = top + H - (tmax ? (H * tv) / tmax : 0);
         svg.appendChild(el("line", { x1: AX, x2: W, y1: gy, y2: gy, "class": "grid" }));
-        var lab = state.metric === "found" ? (25 * k) + "%" : (maxFa ? n(Math.round((maxFa * k) / 4)) : (k ? "" : "0"));
-        svg.appendChild(el("text", { x: AX - 6, y: gy + 3, "text-anchor": "end", "class": "axis" }, lab));
-      }
+        svg.appendChild(el("text", { x: AX - 6, y: gy + 3, "text-anchor": "end", "class": "axis" },
+          state.metric === "found" ? tv + "%" : n(tv)));
+      });
       svg.appendChild(el("text", { x: 0, y: 12, "class": "axis" },
         state.metric === "found" ? "share of breaks found" : "false alarms"));
       var gw = (W - AX) / rs.length;
-      rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
+      rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, faTop); });
       if (state.metric === "fa" && maxFa === 0) {
         svg.appendChild(el("text", { x: AX + (W - AX) / 2, y: top + H / 2, "text-anchor": "middle", "class": "empty" },
           tools.length === 1 ? "AeroTrace has no false alarms in this view." : "No tool has any false alarms in this view."));

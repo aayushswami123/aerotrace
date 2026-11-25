@@ -67,6 +67,10 @@
     var W = chart.clientWidth || 960, narrow = W < 620;
     var maxFa = 0;
     REPOS.forEach(function (r) { tools.forEach(function (t) { maxFa = Math.max(maxFa, v.repos[r][t].false_alarms); }); });
+    var faTop = maxFa <= 4 ? maxFa : Math.ceil(maxFa / 4) * 4;
+    var faTicks = [];
+    if (faTop > 0 && faTop <= 4) for (var q = 0; q <= faTop; q++) faTicks.push(q);
+    else for (var q4 = 0; q4 <= 4; q4++) faTicks.push((faTop * q4) / 4);
     while (chart.firstChild) chart.removeChild(chart.firstChild);
     var H = 230, top = 40;
     var groups = narrow ? REPOS.map(function (r) { return [r]; }) : [REPOS];
@@ -75,16 +79,18 @@
       var svg = el("svg", { viewBox: "0 0 " + W + " " + height, role: "img",
         "aria-label": (state.metric === "found" ? "Breaks found" : "False alarms") + " by tool, " + v.label + ", " + rs.map(function (r) { return RNAME[r]; }).join(", ") });
       var AX = 40;  // room for the axis labels
-      for (var k = 0; k <= 4; k++) {
-        var gy = top + H - (H * k) / 4;
+      var ticks = state.metric === "found" ? [0, 25, 50, 75, 100] : (faTop ? faTicks : [0]);
+      var tmax = state.metric === "found" ? 100 : faTop;
+      ticks.forEach(function (tv) {
+        var gy = top + H - (tmax ? (H * tv) / tmax : 0);
         svg.appendChild(el("line", { x1: AX, x2: W, y1: gy, y2: gy, "class": "grid" }));
-        var lab = state.metric === "found" ? (25 * k) + "%" : (maxFa ? n(Math.round((maxFa * k) / 4)) : (k ? "" : "0"));
-        svg.appendChild(el("text", { x: AX - 6, y: gy + 3, "text-anchor": "end", "class": "axis" }, lab));
-      }
+        svg.appendChild(el("text", { x: AX - 6, y: gy + 3, "text-anchor": "end", "class": "axis" },
+          state.metric === "found" ? tv + "%" : n(tv)));
+      });
       svg.appendChild(el("text", { x: 0, y: 12, "class": "axis" },
         state.metric === "found" ? "share of breaks found" : "false alarms"));
       var gw = (W - AX) / rs.length;
-      rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
+      rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, faTop); });
       if (state.metric === "fa" && maxFa === 0) {
         svg.appendChild(el("text", { x: AX + (W - AX) / 2, y: top + H / 2, "text-anchor": "middle", "class": "empty" },
           tools.length === 1 ? "AeroTrace has no false alarms in this view." : "No tool has any false alarms in this view."));
