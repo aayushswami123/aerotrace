@@ -37,7 +37,9 @@
     unknown: ["M-10,0A10,10 0 1,0 10,0A10,10 0 1,0 -10,0Z", "M-3,-4C-3,-8 3,-8 3,-4C3,-1 0,-1 0,2M0,5V6"],
     none: ["M-6,0A6,6 0 1,0 6,0A6,6 0 1,0 -6,0Z", "M-3,0H3"],
   };
-  var WORD = { breaks: "BREAKS", may_break: "MAY BREAK", affected: "AFFECTED", unknown: "UNKNOWN", none: "NO EFFECT FOUND" };
+  var WORD = { changed: "CHANGED", breaks: "BREAKS", may_break: "MAY BREAK", affected: "AFFECTED", unknown: "UNKNOWN",
+    none: "NO EFFECT FOUND", no_effect: "NO EFFECT FOUND" };
+  function lvl(group) { return group === "no_effect" ? "none" : group; }
   function statusIcon(level) {
     var p = SHAPES[level] || SHAPES.none, svg = s("svg", { viewBox: "-14 -14 28 28", "aria-hidden": "true" });
     svg.appendChild(s("path", { d: p[0], "class": "st-shape" + (p[2] ? " dash" : "") }));
@@ -45,8 +47,8 @@
     return svg;
   }
   function chip(level, label) {
-    // a count-only chip still names its status for screen readers
-    var word = label === undefined ? null : h("span", { cls: "sr", text: WORD[level] + " " });
+    // a count-only chip still names its status for screen readers (and never says it twice)
+    var word = label === undefined || label === WORD[level] || /[A-Z]{3}/.test(String(label)) ? null : h("span", { cls: "sr", text: WORD[level] + " " });
     return h("span", { cls: "chip " + level }, statusIcon(level), word, label === undefined ? WORD[level] : label);
   }
   var ICONS = {
@@ -256,11 +258,13 @@
       bar.appendChild(listBtn);
       var stage = h("div", { cls: "stage" });
       var legend = h("div", { cls: "glass legend", "data-overlay": "", role: "group", "aria-label": "Legend" });
-      ["changed", "breaks", "may_break", "affected", "unknown"].forEach(function (g) {
-        legend.appendChild(h("div", { cls: "r" }, h("span", { cls: "lg lg-" + g }, statusIcon(g)), h("span", { text: GWORD[g] }),
+      ["changed", "breaks", "may_break", "affected", "unknown", "no_effect"].forEach(function (g) {
+        legend.appendChild(h("div", { cls: "r" }, h("span", { cls: "lg lg-" + g }, statusIcon(lvl(g))), h("span", { text: GWORD[g] }),
           h("span", { cls: "m", text: GMEANS[g] })));
       });
-      var hint = h("div", { cls: "hint", "data-overlay": "", role: "status" });
+      legend.appendChild(h("div", { cls: "lines" }, h("span", null, h("i", { cls: "e" }), "exact"), h("span", null, h("i", { cls: "e dash" }), "probable"),
+        h("span", null, h("i", { cls: "e dot" }), "unknown"), h("span", null, h("i", { cls: "e skip" }), "through hidden steps")));
+      var hint = h("div", { cls: "hint", "data-overlay": "" });
       var tools = h("div", { cls: "glass tools", "data-overlay": "", role: "group", "aria-label": "View" },
         h("button", { type: "button", "aria-label": "Zoom in (+)", text: "+" }), h("button", { type: "button", "aria-label": "Zoom out (-)", text: "−" }),
         h("button", { type: "button", "aria-label": "Fit to screen (0)", text: "⤢" }), h("button", { type: "button", "aria-label": "Focus on the selected node (f)", "aria-pressed": "false", text: "◎" }));
@@ -270,8 +274,17 @@
       var body2 = h("div", { cls: "body2" }, stage, list, panel);
       var notes = [];
       if (d.not_followed) notes.push(h("span", { cls: "chip unknown" }, statusIcon("unknown"), plural(d.not_followed, "part") + " of the change not followed"));
+      if (d.stopped_early) notes.push(h("span", { cls: "chip unknown" }, statusIcon("unknown"), "stopped at depth " + d.depth + "; more callers exist further up"));
       if (d.omitted) notes.push(h("span", { cls: "chip unknown" }, statusIcon("unknown"), n(d.omitted) + " nodes left out (over the 5,000 cap)"));
-      main.replaceChildren(h("div", { cls: "gwrap" }, bar, notes.length ? h("div", { cls: "gnotes" }, notes) : null, body2));
+      var seeNot = null;
+      if (d.blind_spots.length) {
+        var ul = h("ul", { cls: "blind" });
+        d.blind_spots.forEach(function (b) { ul.appendChild(h("li", { cls: b.scope === "change" ? "" : "dim", text: b.text })); });
+        seeNot = h("details", { cls: "gblind" }, h("summary", { text: "What AeroTrace couldn't see (" + d.blind_spots.length + ")" }), ul);
+      }
+      var top = notes.length || seeNot ? h("div", { cls: "gnotes" }, notes, seeNot) : null;
+      main.replaceChildren(h("div", { cls: "gwrap" }, bar, top, body2));
+      if (!document.body.contains(stage)) return;  // a newer page replaced this one while it loaded
 
       function updateHint(v) {
         var off = 0;
@@ -292,10 +305,13 @@
         vis.slice(0, 2000).forEach(function (x) {
           var b = h("button", { type: "button", cls: "linkish", text: x.name });
           b.addEventListener("click", function () { gv.select(x.id); });
-          tbody.appendChild(h("tr", null, h("td", null, chip(x.group === "changed" ? "none" : x.group, x.word)), h("td", null, b),
+          tbody.appendChild(h("tr", null, h("td", null, chip(lvl(x.group), x.word)), h("td", null, b),
             h("td", { cls: "fl", text: x.file + ":" + x.line }), h("td", { cls: "num", text: String(x.ring) })));
         });
-        list.replaceChildren(h("table", null, h("caption", { cls: "dim", text: "Shown: " + plural(vis.length, "node") + (vis.length > 2000 ? " (the first 2,000 are listed)" : "") }),
+        var off = 0;
+        d.nodes.forEach(function (x) { if (!gv.show[x.group]) off++; });
+        list.replaceChildren(h("table", null, h("caption", { cls: "dim", text: "Shown: " + plural(vis.length, "node") + (vis.length > 2000 ? " (the first 2,000 are listed)" : "") +
+          (off && !gv.focus ? ". " + plural(off, "more node") + " are in groups that are off; turn a chip on to list them." : "") }),
           h("thead", null, h("tr", null, h("th", { text: "Status" }), h("th", { text: "Name" }), h("th", { text: "Where" }), h("th", { cls: "num", text: "Distance" }))), tbody));
       }
       chips.querySelectorAll("[data-group]").forEach(function (b) {
@@ -339,8 +355,13 @@
         }
         gv.select(hit.id); gv.center(hit.id, true);
       });
-      function closePanel() { panel.hidden = true; gv.selected = null; gv.draw(); }
+      var returnTo = null;
+      function closePanel() {
+        panel.hidden = true; gv.selected = null; gv.draw();
+        if (returnTo && document.body.contains(returnTo)) returnTo.focus({ preventScroll: true });
+      }
       function openNode(nodeId) {
+        if (panel.hidden) returnTo = document.activeElement;
         panel.hidden = false;
         panel.replaceChildren(h("div", { cls: "pad dim", text: "Loading…" }));
         get("/api/node?check=" + encodeURIComponent(d.id) + "&node=" + encodeURIComponent(nodeId)).then(function (x) {
@@ -348,9 +369,14 @@
           close.addEventListener("click", closePanel);
           var copy = h("button", { type: "button", cls: "btn ghost sm copy", text: x.file + ":" + x.line, "aria-label": "Copy " + x.file + ":" + x.line });
           copy.addEventListener("click", function () { if (navigator.clipboard) navigator.clipboard.writeText(x.file + ":" + x.line); copy.textContent = "Copied"; });
-          var head = h("header", null, h("div", { cls: "grow" }, chip(x.group === "changed" ? "none" : x.group, x.word), h("h2", { cls: "mono pname", text: x.name }), copy), close);
+          var head = h("header", null, h("div", { cls: "grow" }, chip(lvl(x.group), x.word), h("h2", { cls: "mono pname", text: x.name }), copy), close);
           var b = h("div", { cls: "pbody" });
           if (x.why) b.appendChild(h("section", null, h("p", { cls: "caps", text: "Why" }), h("p", { text: x.why })));
+          if (x.blind_spots && x.blind_spots.length) {
+            var bl = h("ul", { cls: "blind" });
+            x.blind_spots.forEach(function (t) { bl.appendChild(h("li", { text: t })); });
+            b.appendChild(h("section", null, h("p", { cls: "caps", text: "What AeroTrace couldn't see here" }), bl));
+          }
           var code = h("section", null, h("p", { cls: "caps", text: "Code" }));
           if (x.snippet) {
             var sn = h("div", { cls: "snippet", role: "region", "aria-label": "Code from " + x.snippet.file });
@@ -373,10 +399,7 @@
           close.focus({ preventScroll: true });
         }, function (e) { panel.replaceChildren(h("div", { cls: "pad" }, errorState("Can't show this node", String(e.message), null, null))); });
       }
-      document.addEventListener("aerotrace:escape", function onEsc() {
-        if (view !== gv) { document.removeEventListener("aerotrace:escape", onEsc); return; }
-        if (!panel.hidden) closePanel(); else if (gv.focus) toggleFocus();
-      });
+      escHandler = function () { if (!panel.hidden) closePanel(); else if (gv.focus) toggleFocus(); };
       graphKeys = function (k) {
         if (k === "f") toggleFocus();
         else if (k === "0") gv.fit();
@@ -466,16 +489,24 @@
 
   // ---------------------------------------------------------------- router
   var main = document.getElementById("main");
+  var generation = 0;
   function route() {
+    var mine = ++generation;
     var parts = (location.hash || "#/overview").slice(2).split("/");
     var name = PAGES[parts[0]] ? parts[0] : "overview";
-    if (name !== "graph") { graphKeys = null; if (view) { view.destroy(); view = null; } }
+    if (name !== "graph") { graphKeys = null; escHandler = null; if (view) { view.destroy(); view = null; } }
     document.querySelectorAll(".nav a").forEach(function (a) {
       if (a.getAttribute("data-page") === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     document.title = "AeroTrace · " + name.charAt(0).toUpperCase() + name.slice(1);
     main.replaceChildren(loading());
-    PAGES[name](main, parts.slice(1)).catch(function (e) {
+    // each page renders into its own holder; only the newest route's holder is put on screen
+    var host = { replaceChildren: function () {
+      if (mine !== generation) { if (view && view.stage && !document.body.contains(view.stage)) { view.destroy(); view = null; } return; }
+      main.replaceChildren.apply(main, arguments);
+    } };
+    PAGES[name](host, parts.slice(1)).catch(function (e) {
+      if (mine !== generation) return;
       var answered = e && e.server;  // the server answered with an error, so it hasn't stopped
       main.replaceChildren(h("div", { cls: "page" }, answered
         ? errorState("This page couldn't load", "The dashboard answered with an error. Rebuilding the index usually fixes it:", "aerotrace index", String(e.message))
@@ -527,6 +558,8 @@
     }
     if (e.key === "g") { pending = "g"; setTimeout(function () { pending = ""; }, 1000); }
   });
+  var escHandler = null;  // one listener; the graph page sets what Esc does there
+  document.addEventListener("aerotrace:escape", function () { if (escHandler) escHandler(); });
   window.addEventListener("hashchange", route);
   route();
 })();

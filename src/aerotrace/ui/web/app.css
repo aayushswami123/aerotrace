@@ -207,3 +207,15 @@ table.bench td .mono { font-size: var(--text-xs); color: var(--text-2); }
 .hbar { height: 10px; border-radius: var(--radius-full); background: var(--surface-2); margin-bottom: 4px; overflow: hidden; }
 .hbar > i { display: block; height: 100%; background: var(--chart-other-fill); box-shadow: inset 0 0 0 1px var(--chart-other-stroke); border-radius: var(--radius-full); }
 .hbar > i.at { background: var(--chart-1); box-shadow: none; }
+
+.gblind { font-size: var(--text-xs); color: var(--text-2); }
+.gblind summary { cursor: pointer; font-weight: var(--weight-medium); padding: 3px 0; }
+ul.blind { margin: var(--space-2) 0 0; padding-left: 1.2em; font-size: var(--text-xs); line-height: 1.6; color: var(--text-2); max-height: 180px; overflow: auto; }
+.pbody ul.blind { max-height: none; }
+.legend .lines { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; color: #b4bac4; }
+.legend .e { display: inline-block; width: 18px; border-top: 1.5px solid #8c96a5; vertical-align: middle; margin-right: 6px; }
+.legend .e.dash { border-top-style: dashed; }
+.legend .e.dot { border-top-style: dotted; border-top-width: 2px; }
+.legend .e.skip { border-top: 2px dotted rgba(140,150,165,0.45); }
+.lg-no_effect { color: var(--graph-no-effect); }
+.chip.changed { color: var(--changed); background: var(--accent-soft); }

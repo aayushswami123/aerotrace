@@ -331,13 +331,32 @@ def graph(root: Path, check_id: str) -> dict:
                     "order": i,
                     "via": n["via"] if n.get("via") in by_id else None,
                     "certainty": n["certainty"],
+                    "change": n["status"] if n["status"] in ("changed", "new", "removed") else None,
                     "file": n["file"],
                     "line": n["line"],
                 }
             )
-    counts: dict[str, int] = {}
+    # each node's own change: follow `via` to ring 0 (with a guard, `via` links are data)
+    pos = {n["id"]: n for n in out}
     for n in out:
-        counts[n["group"]] = counts.get(n["group"], 0) + 1
+        cur, seen = n, set()
+        while cur["via"] and cur["via"] in pos and cur["id"] not in seen:
+            seen.add(cur["id"])
+            cur = pos[cur["via"]]
+        n["root"] = cur["id"] if cur["ring"] == 0 else None
+    # chip counts come from the summary (the node list can be capped), as the contract asks
+    s = data.get("summary") or {}
+    counts = {
+        "changed": sum(1 for n in out if n["group"] == "changed"),
+        "breaks": s.get("breaks_exact", 0),
+        "may_break": s.get("breaks_probable", 0),
+        "affected": s.get("affected_direct", 0) + s.get("affected_further", 0),
+        "unknown": s.get("unknown", 0),
+        "no_effect": s.get("no_effect", 0),
+    }
+    drawn: dict[str, int] = {}
+    for n in out:
+        drawn[n["group"]] = drawn.get(n["group"], 0) + 1
     _, line = _verdict(data)
     return {
         "id": check_id,
@@ -346,9 +365,15 @@ def graph(root: Path, check_id: str) -> dict:
         "source": _run_info(_checks_dir(root) / f"{check_id}.json").get("source"),
         "nodes": out,
         "counts": counts,
+        "in_graph": drawn,
         "omitted": (data.get("omitted") or {}).get("nodes", 0),
         "not_followed": (data.get("summary") or {}).get("not_followed", 0),
-        "blind_spots": [b["text"] for b in (data.get("sections") or {}).get("blind_spots") or []],
+        "blind_spots": [
+            {"text": b["text"], "scope": b.get("scope"), "node": b.get("node")}
+            for b in (data.get("sections") or {}).get("blind_spots") or []
+        ],
+        "stopped_early": bool((data.get("proof") or {}).get("stopped_early")),
+        "depth": (data.get("proof") or {}).get("depth"),
     }
 
 
@@ -407,6 +432,16 @@ def node(root: Path, check_id: str, node_id: str) -> dict:
         "via_name": n.get("via_name"),
         "path": path,
         "snippet": snippet,
+        # what AeroTrace couldn't see about this node: its own blind spots, and lines that name its place
+        "blind_spots": [
+            b["text"]
+            for b in (data.get("sections") or {}).get("blind_spots") or []
+            if b.get("node") == n["id"]
+            or any(
+                re.search(rf"(?<![\w/.]){re.escape(n['file'])}:{ln}(?!\d)", b["text"])
+                for ln in {n["line"], *(n.get("lines") or [])}
+            )
+        ],
         "snippet_note": "Removed by the change, so there is no current code to show."
         if n["status"] == "removed"
         else None,

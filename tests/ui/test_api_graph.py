@@ -92,3 +92,66 @@ def test_packaged_benchmark_is_the_published_run() -> None:
     assert api.benchmark() == json.loads(
         json.dumps(bench_page.published(bench_page.build(RUN)), sort_keys=True)
     )
+
+
+def _resave(root: Path, cid: str, edit) -> None:
+    p = store.index_dir(root) / api.CHECKS_DIR / f"{cid}.json"
+    data = json.loads(p.read_text())
+    edit(data)
+    p.write_text(json.dumps(data))
+
+
+def test_chip_counts_come_from_the_summary(checked: tuple[Path, str]) -> None:
+    root, cid = checked
+    s = api.check(root, cid)["summary"]
+    g = api.graph(root, cid)
+    assert g["counts"]["breaks"] == s["breaks_exact"] and g["counts"]["may_break"] == s["breaks_probable"]
+    assert g["counts"]["affected"] == s["affected_direct"] + s["affected_further"]
+
+
+def test_a_via_loop_does_not_hang(checked: tuple[Path, str]) -> None:
+    root, cid = checked
+
+    def loop(data: dict) -> None:
+        far = [n for n in data["nodes"] if (n.get("distance") or 0) >= 1]
+        if len(far) >= 2:
+            far[0]["via"], far[1]["via"] = far[1]["id"], far[0]["id"]
+
+    _resave(root, cid, loop)
+    g = api.graph(root, cid)  # returns, with or without a root for the looped nodes
+    for n in g["nodes"]:
+        api.node(root, cid, n["id"])  # every node's path walk ends
+
+
+def test_each_node_knows_its_change(checked: tuple[Path, str]) -> None:
+    root, cid = checked
+    g = api.graph(root, cid)
+    rings = {n["id"]: n["ring"] for n in g["nodes"]}
+    for n in g["nodes"]:
+        assert n["root"] is None or rings[n["root"]] == 0
+    assert any(n["root"] for n in g["nodes"] if n["ring"] > 0)
+
+
+def test_node_blind_spots_name_its_place(checked: tuple[Path, str]) -> None:
+    root, cid = checked
+    brk = next(n for n in api.graph(root, cid)["nodes"] if n["group"] == "breaks")
+    note = f"{brk['file']}:{brk['line']} needs a look"
+
+    def add(data: dict) -> None:
+        data["sections"]["blind_spots"].append({"text": note, "scope": "change", "node": None})
+
+    _resave(root, cid, add)
+    assert note in api.node(root, cid, brk["id"])["blind_spots"]
+    assert any(b["text"] == note for b in api.graph(root, cid)["blind_spots"])
+
+
+def test_node_blind_spots_match_whole_line_numbers(checked: tuple[Path, str]) -> None:
+    root, cid = checked
+    brk = next(n for n in api.graph(root, cid)["nodes"] if n["group"] == "breaks")
+    other = f"{brk['file']}:{brk['line']}9 is another line"
+
+    def add(data: dict) -> None:
+        data["sections"]["blind_spots"].append({"text": other, "scope": "change", "node": None})
+
+    _resave(root, cid, add)
+    assert other not in api.node(root, cid, brk["id"])["blind_spots"]

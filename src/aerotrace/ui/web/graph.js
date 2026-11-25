@@ -6,6 +6,8 @@
   "use strict";
   var SHAPES = {
     changed: ["M0,-13L13,0L0,13L-13,0Z", "M-3,-3H3V3H-3Z"],
+    new: ["M0,-13L13,0L0,13L-13,0Z", "M-5,0H5M0,-5V5"],
+    removed: ["M0,-13L13,0L0,13L-13,0Z", "M-5,-5L5,5M5,-5L-5,5"],
     breaks: ["M-10,-10H10V10H-10Z", "M-5,-5L5,5M5,-5L-5,5"],
     may_break: ["M-10,-10H10V10H-10Z", "M-5,-5L5,5M5,-5L-5,5"],
     affected: ["M0,-12L12,10H-12Z", "M0,-4V3M0,6V7"],
@@ -54,7 +56,7 @@
     if (this.focus) {
       keep = {};
       var cur = this.byId[this.focus];
-      while (cur) { keep[cur.id] = true; cur = cur.via ? this.byId[cur.via] : null; }
+      while (cur && !keep[cur.id]) { keep[cur.id] = true; cur = cur.via ? this.byId[cur.via] : null; }
       this.data.nodes.forEach(function (n) { if (n.via === self.focus || n.group === "changed") keep[n.id] = true; });
       return this.data.nodes.filter(function (n) { return keep[n.id]; });
     }
@@ -77,7 +79,7 @@
         shown = ring.filter(function (n) { return n.group === "breaks" || n.group === "may_break"; });  // never folded
         folded = ring.filter(function (n) { return !(n.group === "breaks" || n.group === "may_break"); });
       }
-      var need = (Math.max(shown.length, 1) * 13) / (2 * Math.PI);  // 13 px apart on the ring at zoom 1
+      var need = (Math.max(shown.length, 1) * (d === 0 ? 34 : 13)) / (2 * Math.PI);  // apart on the ring at zoom 1
       r = d === 0 ? (ring.length > 1 ? Math.max(24, need) : 0) : Math.max(r + step, need);
       shown.forEach(function (n, i) {
         var a = -Math.PI / 2 + ((i + 0.5) / shown.length) * 2 * Math.PI + d * 0.35;
@@ -91,12 +93,12 @@
   };
 
   GraphView.prototype._anchor = function (n) {
-    // the nearest drawn node toward the change, for this node's edge
-    var cur = n.via ? this.byId[n.via] : null, guard = 0;
-    while (cur && !this.pos[cur.id] && guard++ < 64) cur = cur.via ? this.byId[cur.via] : null;
-    if (cur && this.pos[cur.id]) return this.pos[cur.id];
-    for (var id in this.pos) if (this.pos[id].n.ring === 0) return this.pos[id];
-    return null;
+    // the nearest drawn node toward this node's own change; `skipped` when steps between are hidden
+    var cur = n.via ? this.byId[n.via] : null, seen = {}, skipped = false;
+    while (cur && !this.pos[cur.id] && !seen[cur.id]) { seen[cur.id] = true; skipped = true; cur = cur.via ? this.byId[cur.via] : null; }
+    if (cur && this.pos[cur.id]) return { p: this.pos[cur.id], skipped: skipped };
+    if (n.root && this.pos[n.root] && n.root !== n.id) return { p: this.pos[n.root], skipped: true };
+    return null;  // no drawn path: no line, rather than a line to the wrong change
   };
 
   GraphView.prototype.resize = function () {
@@ -163,23 +165,26 @@
     var cx = w / 2 + this.view.x, cy = h / 2 + this.view.y;
     Object.keys(rs).forEach(function (k) { g.beginPath(); g.arc(cx, cy, rs[k] * s, 0, 2 * Math.PI); g.stroke(); });
     // edges, batched by style
-    var batches = { breaks: [], may_break: [], unknown: [], other: [] };
+    // line style says how sure the link is: solid exact, dashed probable, dotted unknown;
+    // faint dots when the line skips steps that are hidden right now
+    var STYLE = { exact: [], probable: [5, 4], unknown: [1.5, 3] };
+    var batches = {};
     ids.forEach(function (id) {
       var p = self.pos[id];
       if (!p.n.ring) return;
       var a = self._anchor(p.n);
       if (!a) return;
-      var k = p.n.group === "breaks" || p.n.group === "may_break" ? p.n.group : (p.n.certainty === "unknown" ? "unknown" : "other");
-      batches[k].push([scr[a.n.id], scr[id]]);
+      var colour = p.n.group === "breaks" ? "rgba(255,107,94,0.65)" : p.n.group === "may_break" ? "rgba(251,191,36,0.6)" : c.edge;
+      var key = a.skipped ? "skip" : colour + "|" + (STYLE[p.n.certainty] ? p.n.certainty : "unknown");
+      (batches[key] = batches[key] || { colour: a.skipped ? "rgba(140,150,165,0.35)" : colour,
+        dash: a.skipped ? [1, 4] : STYLE[p.n.certainty] || STYLE.unknown, list: [] }).list.push([scr[a.p.n.id], scr[id]]);
     });
-    [["other", c.edge, [], 1], ["unknown", c.edge, [1.5, 3], 1], ["may_break", "rgba(251,191,36,0.6)", [5, 4], 1.5], ["breaks", "rgba(255,107,94,0.65)", [], 1.6]]
-      .forEach(function (b) {
-        var list = batches[b[0]];
-        if (!list.length) return;
-        g.beginPath();
-        list.forEach(function (e) { g.moveTo(e[0][0], e[0][1]); g.lineTo(e[1][0], e[1][1]); });
-        g.strokeStyle = b[1]; g.setLineDash(b[2]); g.lineWidth = b[3]; g.stroke();
-      });
+    Object.keys(batches).sort().forEach(function (k) {
+      var b = batches[k];
+      g.beginPath();
+      b.list.forEach(function (e) { g.moveTo(e[0][0], e[0][1]); g.lineTo(e[1][0], e[1][1]); });
+      g.strokeStyle = b.colour; g.setLineDash(b.dash); g.lineWidth = /255,107/.test(b.colour) ? 1.6 : 1.2; g.stroke();
+    });
     g.setLineDash([]);
     // nodes
     var many = ids.length > 1500 && s < 0.6;
@@ -189,12 +194,13 @@
       var p = self.pos[id], q = scr[id], n = p.n;
       if (q[0] < -20 || q[1] < -20 || q[0] > w + 20 || q[1] > h + 20) return;
       var sc = SCALE[n.group] * (many ? 0.7 : 1);
+      var shape = n.group === "changed" && n.change && SHAPES[n.change] ? n.change : n.group;
       g.fillStyle = c[n.group];
       if (many) { g.fillRect(q[0] - 3, q[1] - 3, 6, 6); }
       else {
         g.save(); g.translate(q[0], q[1]); g.scale(sc, sc);
-        g.fill(path2d(n.group, 0));
-        if (n.group !== "no_effect") { g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.lineCap = "round"; g.stroke(path2d(n.group, 1)); }
+        g.fill(path2d(shape, 0));
+        if (n.group !== "no_effect") { g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.lineCap = "round"; g.stroke(path2d(shape, 1)); }
         if (n.group === "may_break") { g.setLineDash([4, 3]); g.strokeStyle = c.may_break; g.lineWidth = 2; g.stroke(path2d(n.group, 0)); g.setLineDash([]); }
         g.restore();
       }
@@ -207,9 +213,14 @@
     this.bubbleHits = [];
     g.font = "600 11px " + c.mono;
     this.bubbles.forEach(function (b) {
-      var a = -Math.PI / 4, q = self.toScreen({ x: Math.cos(a) * b.r, y: Math.sin(a) * b.r });
       var text = "+ " + b.count.toLocaleString("en-US") + " more · distance " + b.ring, bw = g.measureText(text).width + 24;
-      var x = q[0] - bw / 2, y = q[1] - 14;
+      var q, x, y, tries = [-0.25, 0.25, 0.75, -0.75, 0, 0.5, 1, -0.5];
+      for (var t = 0; t < tries.length; t++) {
+        var a = tries[t] * Math.PI;
+        q = self.toScreen({ x: Math.cos(a) * b.r, y: Math.sin(a) * b.r });
+        x = q[0] - bw / 2; y = q[1] - 14;
+        if (!occupied.hits({ x: x, y: y, w: bw, h: 28 })) break;
+      }
       g.fillStyle = "rgba(21,24,29,0.95)"; g.strokeStyle = "#3a414d"; g.lineWidth = 1;
       g.beginPath(); g.roundRect(x, y, bw, 28, 14); g.fill(); g.stroke();
       g.fillStyle = "#d7dce4"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, q[0], q[1] + 0.5);
@@ -225,7 +236,7 @@
       return (b.n.id === self.selected) - (a.n.id === self.selected) || (b.n.id === self.hover) - (a.n.id === self.hover) ||
         PRIO[a.n.group] - PRIO[b.n.group] || a.n.ring - b.n.ring || a.n.order - b.n.order;
     });
-    var placed = 0, hidden = 0, budget = 600;
+    var placed = 0, hidden = 0, budget = 600, rects = [];
     want.forEach(function (p) {
       var n = p.n, q = scr[n.id];
       var must = n.id === self.selected || n.id === self.hover || n.group === "changed";
@@ -244,7 +255,10 @@
         if (r.x < 4 || r.y < 4 || r.x + r.w > w - 4 || r.y + r.h > h - 4) continue;
         if (!occupied.hits(r)) spot = r;
       }
+      var forced = false;
+      if (!spot && must) { spot = { x: cands[0][0] - 3, y: cands[0][1] - 1, w: tw + 6, h: th + 2 }; forced = true; }
       if (!spot) { hidden++; return; }
+      rects.push({ x: spot.x, y: spot.y, w: spot.w, h: spot.h, forced: forced });
       occupied.add(spot);
       placed++;
       g.fillStyle = "rgba(11,13,16,0.82)"; g.fillRect(spot.x, spot.y, spot.w, spot.h);
@@ -253,6 +267,7 @@
     });
     this.hits = hits;
     this.stats.labels = placed;
+    this.stats.labelRects = rects;
     this.stats.hiddenLabels = hidden;
     this.stats.frames++;
     this.stats.lastMs = performance.now() - t0;
@@ -308,7 +323,10 @@
     }
   };
 
-  GraphView.prototype.zoom = function (f) { this.view.s = Math.max(0.03, Math.min(6, this.view.s * f)); this.view.x *= f; this.view.y *= f; this.draw(); };
+  GraphView.prototype.zoom = function (f) {
+    var s1 = Math.max(0.03, Math.min(6, this.view.s * f)), k = s1 / this.view.s;
+    this.view.s = s1; this.view.x *= k; this.view.y *= k; this.draw();
+  };
   GraphView.prototype.select = function (id) { this.selected = id; this.draw(); if (this.opts.onSelect) this.opts.onSelect(id); };
   GraphView.prototype.setShow = function (group, on) { this.show[group] = on; this.layout(); };
   GraphView.prototype.setFocus = function (on) { this.focus = on && this.selected ? this.selected : null; this.layout(); this.fit(); };
