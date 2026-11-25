@@ -128,3 +128,20 @@ def test_git_mode_removed_function_in_a_table_is_never_an_all_clear(repo):
     _, c = run_git(repo, {"src/handlers.c": [("int get_keys(int n) { return n + 1; }\n", "")]})
     assert headline(c).startswith(("ℹ", "⚠")), headline(c)  # noqa: RUF001 (the info emoji)
     assert any("get_keys was removed" in b["text"] for b in c["sections"]["blind_spots"])
+
+
+def test_a_static_copy_in_another_file_is_not_a_move(repo):
+    # review of #77: an extern removed, a static of the same name added elsewhere: the table still breaks
+    c = run(
+        repo,
+        {
+            "src/handlers.c": [("int get_keys(int n) { return n + 1; }\n", "")],
+            "src/cmds.c": [
+                (
+                    "struct cmd cmd_table[] = {",
+                    "static int get_keys(int n) { return n; }\n\nstruct cmd cmd_table[] = {",
+                )
+            ],
+        },
+    )
+    assert nodes(c)["cmd_table"][0] == "breaks", nodes(c)

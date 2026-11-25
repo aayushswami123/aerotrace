@@ -404,7 +404,11 @@ class _Run:
     def _moved_to(self, fn: Fn) -> str | None:
         """The file where the patch defines a function of the same name again (it was moved), if any."""
         for a in self.res.diff.added:
-            if a.name in (fn.qualified_name, fn.name) and (fn.linkage != "internal" or a.file == fn.file):
+            same_file = a.file == fn.file
+            # a static copy elsewhere can't stand in for an extern one (and clashes with its prototype)
+            if a.name in (fn.qualified_name, fn.name) and (
+                same_file or (fn.linkage != "internal" and not a.static)
+            ):
                 return a.file
         return None
 
@@ -845,8 +849,8 @@ class _Run:
             elif o is None or n is None:
                 unsure = f"{f} could not be parsed with the change"
             elif o.errors:
-                unsure = (f"{f} already had {o.errors} errors before the change (a missing header?), so a "
-                          "new one may be hidden")  # fmt: skip
+                unsure = (f"{f} already had {_n(o.errors, 'error')} before the change (a missing header?), so "
+                          "a new one may be hidden")  # fmt: skip
             else:
                 unsure = None
             for kind, obj, level, why, nid, name, edge, lines in self.retyped_users[f]:
