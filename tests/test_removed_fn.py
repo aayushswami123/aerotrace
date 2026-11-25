@@ -152,7 +152,7 @@ def test_removing_only_the_prototype_makes_its_callers_may_break(repo, tmp_path,
     texts = [b["text"] for b in c["sections"]["blind_spots"]]
     assert any("prototype of scale" in t for t in texts)  # the limit line stays
     code, first = cli_first_line(repo, text, tmp_path, capsys)
-    assert code == 1 and "can break" in first
+    assert code == 1 and "MAY BREAK" in first
 
 
 # ---------------------------------------------------------------- A-02
@@ -217,14 +217,15 @@ def test_c_prototype_removed_caller_in_another_file_may_break(repo_factory, tmp_
     assert check.exit_code(c) == 1
     assert any("prototype of scale" in b["text"] for b in c["sections"]["blind_spots"])
     code, first = cli_first_line(root, text, tmp_path, capsys)
-    assert code == 1 and "can break" in first
+    assert code == 1 and "MAY BREAK" in first
 
 
-def test_cpp_overload_prototype_removed_caller_may_break(repo_factory):
+def test_cpp_overload_prototype_removed_caller_breaks(repo_factory):
+    # the compiler proves it (no matching function), so it is a sure break, stronger than may-break
     root = repo_of(repo_factory, "cpp_proto_gone")
     text = git_patch(root, {"lib.h": [("int f(const char *s);\n", "")]})
     _, c = check_patch(root, text)
-    assert only(c) == {"main": ("breaks", "probable")}
+    assert only(c) == {"main": ("breaks", "exact")}
     assert check.exit_code(c) == 1
 
 
@@ -249,7 +250,7 @@ def test_function_moved_with_its_prototype_removed_may_break_difflib(repo_factor
     assert check.exit_code(c) == 1
     assert any("prototype of scale" in b["text"] for b in c["sections"]["blind_spots"])
     code, first = cli_first_line(root, text, tmp_path, capsys)
-    assert code == 1 and "can break" in first
+    assert code == 1 and "MAY BREAK" in first
 
 
 NEW_FILE = '--- /dev/null\n+++ b/other.c\n@@ -0,0 +1,4 @@\n+#include "lib.h"\n+int scale(int x) {\n+    return x * 2;\n+}\n'

@@ -239,6 +239,9 @@ class _Run:
             dict(conn.execute("SELECT key, value FROM meta").fetchall())
         )
         self.sig_seen: set[str] = set()
+        self.new_defs: dict[
+            str, list[str]
+        ] = {}  # patch mode: extern functions the patch defines in new files
         # users of a field or global whose type really changed, by file, until their files are compiled
         self.retyped_users: dict[str, list[tuple]] = {}
         self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
@@ -366,6 +369,13 @@ class _Run:
         moved = self._moved_to(fn)
         for s in si.sites:
             level, why = s.certainty, f"calls {fn.name}, which this patch removes"
+            new_file = self._moved_new(fn) if moved is None else None
+            if new_file is not None:
+                level = PROBABLE if level == EXACT else level
+                why = f"calls {fn.name}, which this patch moves to {new_file}, a new file that is not in the build list yet"
+            if new_file is not None:
+                self.blind(f"{fn.name} moved to {new_file}, which is new and not in the build list yet, so "
+                           "AeroTrace can't tell whether it will be built and linked", key)  # fmt: skip
             if moved is not None:
                 self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
                              f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
@@ -400,6 +410,59 @@ class _Run:
                 level, why = self._removed_link(fn)
                 self._var_node(table, "breaks", level, f"its initializer names {fn.name} ({a.file}:{a.line}); "
                                f"{why}", key, fn.qualified_name, [a.line])  # fmt: skip
+
+    def _moved_new(self, fn: Fn) -> str | None:
+        """The one new file of the patch that defines an extern function of this name (a real definition)."""
+        found = self.new_defs.get(fn.qualified_name, [])
+        return found[0] if len(found) == 1 and fn.linkage != "internal" else None
+
+    def find_new_defs(self, outliner: Outliner) -> None:
+        for path in sorted(self.res.diff.new_files):
+            text = outliner.new_overlay.get(path)
+            o = outliner.text(path, text) if text is not None else None
+            for f in o.functions if o is not None else []:
+                if not f.get("static"):
+                    self.new_defs.setdefault(f["qualified_name"], []).append(path)
+
+    def proto_users(self, outliner: Outliner, pairs: list) -> None:
+        """Patch mode: a prototype the patch removes. Callers in files the patch does not compile may have
+        relied on it, so compile those files with the patch. A new error is a break; a file that can't be
+        compiled leaves its callers as may-break. Nothing is flagged when the files still compile."""
+        gone: dict[str, dict] = {}
+        for _, _, o, n in pairs:
+            if o is not None and n is not None:
+                kept = {d["usr"] for d in n.declarations}
+                gone.update({d["usr"]: d for d in o.declarations if d["usr"] not in kept})
+        ids: dict[str, str] = {}  # function id -> name
+        for d in gone.values():
+            for fid in self.lookup._fns_declared(d):
+                ids[fid] = d["qualified_name"]
+        if not ids:
+            return
+        marks = ",".join("?" * len(ids))
+        sites = self.conn.execute(
+            f"""SELECT e.dst, e.src, e.line, f.file FROM edges e JOIN functions f ON f.id = e.src
+                WHERE e.kind = 'calls' AND e.dst IN ({marks}) ORDER BY e.dst, e.src, e.line""",
+            sorted(ids),
+        ).fetchall()
+        by_file: dict[str, list] = {}
+        for r in sites:
+            if r["file"] not in self.compiled:
+                by_file.setdefault(r["file"], []).append(r)
+        for i, f in enumerate(sorted(by_file)):
+            o, n = outliner.before_after(f, self.mode) if i < USER_FILES_COMPILED else (None, None)
+            if o is not None and n is not None and not o.errors:
+                self.errors(f, o, n)
+                continue
+            fns = symbols.get_many(self.conn, sorted({r["src"] for r in by_file[f]}))
+            for r in by_file[f]:
+                name = ids[r["dst"]]
+                self.fn_node(fns[r["src"]], "breaks", PROBABLE, "calls_removed", f"the prototype of {name} was "
+                             f"removed, and {f} could not be compiled with the change", 1, None, name,
+                             [r["line"]])  # fmt: skip
+        shown = sorted(set(ids.values()) - set(self.res.diff.proto_removed))
+        if shown and by_file:
+            self.blind(diff.proto_note(shown))
 
     def _moved_to(self, fn: Fn) -> str | None:
         """The file where the patch defines a function of the same name again (it was moved), if any."""
@@ -959,6 +1022,8 @@ def run(
     )
     res = CheckResult(d)
     r = _Run(conn, root, res, mode)
+    if mode == "patch":
+        r.find_new_defs(outliner)
     r.change_nodes()
     pairs = _file_pairs(root, diffs, d, mode, outliner, old)
     for _, _, _, n in pairs:
@@ -981,6 +1046,8 @@ def run(
         r.signatures(index_path or shown, o, n)
         r.declarations(shown, index_path, o, n)
         r.errors(index_path or shown, o, n)
+    if mode == "patch":
+        r.proto_users(outliner, pairs)
     r.compile_users(outliner)
     r.walk_hits()
     for b in d.blind_spots:

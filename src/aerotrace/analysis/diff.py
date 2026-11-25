@@ -563,6 +563,15 @@ def _lost_dispatch(conn: sqlite3.Connection, fid: str) -> list[tuple[str, str, l
     return out
 
 
+def proto_note(names: list[str]) -> str:
+    shown = ", ".join(names[:5]) + (f" and {len(names) - 5} more" if len(names) > 5 else "")
+    return (
+        f"The prototype of {shown} is removed but the function is still defined. A file that relied on "
+        "that header declaration may no longer compile (call to an undeclared function); AeroTrace does "
+        "not follow which files include the header."
+    )
+
+
 def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
     notes: list[str] = []
     if res.outside:
@@ -575,12 +584,7 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
             "The old version of some files could not be read, so a function removed there would not be listed."
         )
     if res.proto_removed:
-        shown = ", ".join(res.proto_removed[:5]) + (" and more" if len(res.proto_removed) > 5 else "")
-        notes.append(
-            f"The prototype of {shown} is removed but the function is still defined. A file that relied on "
-            "that header declaration may no longer compile (call to an undeclared function); AeroTrace does "
-            "not follow which files include the header."
-        )
+        notes.append(proto_note(res.proto_removed))
     ids = [c.fn.id for c in res.changed]
     taken = 0
     for i in range(0, len(ids), 500):
