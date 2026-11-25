@@ -4,6 +4,7 @@ typedef long timediff_t;
 struct conf {
     int a;
     timediff_t upkeep_ms;
+    int *counter;
 };
 
 struct filter {

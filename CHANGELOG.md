@@ -71,7 +71,13 @@ and versions follow [Semantic Versioning](https://semver.org/).
   - A field or global whose type really changes (for example an integer to `void *`): the files of its
     users are compiled with the change, and a use that no longer builds is a break. Uses that still build
     are affected; uses in files that were not compiled (more than 8 files) are unknown, never "affected".
-    Errors that only newer compilers give (int-conversion, incompatible function pointers) are probable.
+    Errors that only newer compilers give (int-conversion, incompatible function pointers, and clang
+    warnings that GCC 14+ makes errors, such as incompatible pointer types) are probable breaks. A file
+    that already fails to build before the change gives unknown, not "still compiles". An initializer
+    that sets the field is compiled too.
+  - A function the same patch removes and defines again in another file (moved) is not a break.
+  - Git mode: a removed function leaves a blind spot (a table or pointer in another file that names it
+    only fails at link time and is not listed), so the answer is never an all-clear.
   - The headline says "None is sure to break" only when nothing is unknown and every part of the change
     was followed.
 - `check` without `--patch` (the index already has the change): a removed field or global still used in a

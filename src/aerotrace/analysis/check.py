@@ -43,8 +43,11 @@ COMPILER_DEPENDENT = (
     "incompatible integer to pointer conversion",
     "incompatible pointer to integer conversion",
     "incompatible function pointer types",
+    "incompatible pointer types",  # a warning in clang, an error in GCC 14+
+    "implicit declaration of function",
+    "call to undeclared function",
 )
-NEWER_COMPILERS = "an error in clang 16+ and GCC 14+; older compilers only warn"
+NEWER_COMPILERS = "an error in newer compilers (clang 16+, GCC 14+); older ones, or clang for some, only warn"
 USER_FILES_COMPILED = 8  # files of users of a retyped field or global compiled to find what breaks
 IFDEF_NOTE = "Uses in code that is not compiled with these flags (other #if branches) are not checked."
 LINK_LEVEL = {
@@ -345,6 +348,10 @@ class _Run:
             key = f"removed:{r.file}:{r.line_start}:{r.name}"
             self.add(Node(key, r.name, "function", r.file, r.line_start, "removed", EXACT, None,
                           "removed", 0))  # fmt: skip
+            # the index no longer has it, so tables and pointers that name it are not linked any more
+            self.blind(f"{r.name} was removed. A table or pointer in another file that still declares it "
+                       "compiles, and only the link fails: those places are not listed (check --patch lists "
+                       "them before the change).", key)  # fmt: skip
         for a in d.added:
             key = f"new:{a.file}:{a.line_start}:{a.name}"
             self.add(Node(key, a.name, "function", a.file, a.line_start, "new", EXACT, None,
@@ -356,8 +363,13 @@ class _Run:
     def _removed_in_patch(self, fn: Fn, key: str) -> None:
         """Patch mode: the index still has the callers of a function the patch removes."""
         si = signature.signature_impact(self.conn, fn, depth=0)
+        moved = self._moved_to(fn)
         for s in si.sites:
             level, why = s.certainty, f"calls {fn.name}, which this patch removes"
+            if moved is not None:
+                self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
+                             f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
+                continue
             if self.defer(s.caller):
                 continue  # its patched code was compiled: a call that is left shows up as a new error
             if s.caller.id in self.edited:
@@ -379,9 +391,22 @@ class _Run:
                     self.blind(f"{a.file}:{a.line}: {a.in_variable} names {fn.name}, which this patch removes; "
                                "it is not in the index, so it is not listed", key)  # fmt: skip
                     continue
+                moved = self._moved_to(fn)
+                if moved is not None:
+                    self._var_node(table, "affected", PROBABLE, f"its initializer names {fn.name} ({a.file}:"
+                                   f"{a.line}), which this patch moves to {moved}; it should still link", key,
+                                   fn.qualified_name, [a.line])  # fmt: skip
+                    continue
                 level, why = self._removed_link(fn)
                 self._var_node(table, "breaks", level, f"its initializer names {fn.name} ({a.file}:{a.line}); "
                                f"{why}", key, fn.qualified_name, [a.line])  # fmt: skip
+
+    def _moved_to(self, fn: Fn) -> str | None:
+        """The file where the patch defines a function of the same name again (it was moved), if any."""
+        for a in self.res.diff.added:
+            if a.name in (fn.qualified_name, fn.name) and (fn.linkage != "internal" or a.file == fn.file):
+                return a.file
+        return None
 
     def _removed_link(self, fn: Fn) -> tuple[str, str]:
         """How sure it is that a reference to the removed `fn` no longer builds or links, and why."""
@@ -704,7 +729,9 @@ class _Run:
                     elif u.fn.file not in self.compiled:
                         # a real type change: whether this use still builds is known only by compiling it
                         # with the change (benchmark redis-07, curl-07: int to pointer)
-                        self.retyped_users.setdefault(u.fn.file, []).append((u, level, why, nid, name, edge))
+                        self.retyped_users.setdefault(u.fn.file, []).append(
+                            ("fn", u.fn, level, why, nid, name, edge, u.reads + u.writes)
+                        )
                         continue
                     self.fn_node(u.fn, "affected", level, "uses_changed", why, 1, nid, name, lines, edge)
                 elif c.kind == "text":
@@ -714,8 +741,14 @@ class _Run:
                     self.fn_node(u.fn, "affected", PROBABLE, "data", f"reads {name}: {c.words}", 1, nid, name,
                                  u.reads, "reads")  # fmt: skip
             for i in du.initializers:
-                self._var_node(i.variable, "affected", EXACT, f"its initializer sets {name}: {c.words}", nid,
-                               name, [i.line])  # fmt: skip
+                why = f"its initializer sets {name}: {c.words}"
+                if c.kind == "retyped" and not c.same_underlying and i.variable.file not in self.compiled:
+                    # whether `{.x = 1.5}` still builds with the new type is known only by compiling it
+                    self.retyped_users.setdefault(i.variable.file, []).append(
+                        ("var", i.variable, EXACT, why, nid, name, "writes", [i.line])
+                    )
+                    continue
+                self._var_node(i.variable, "affected", EXACT, why, nid, name, [i.line])
             for e in du.escapes:
                 if e.in_variable is not None:
                     self._var_node(e.in_variable, "unknown", UNKNOWN, f"its initializer stores the address of "
@@ -798,26 +831,37 @@ class _Run:
                 self._var_node(g, "breaks", level, f"its initializer {why}", None, None, [d["line"]])
 
     def compile_users(self, outliner: Outliner) -> None:
-        """Compile the files of users of a retyped field or global, before and after the change: a use
-        with a new error breaks, the other uses are affected. A file not compiled (too many, or libclang
-        could not load it) leaves its uses unknown, never affected: AeroTrace can't say they still build."""
+        """Compile the files of users of a retyped field or global (functions and initializers), before
+        and after the change: a use with a new error breaks, the other uses are affected. A file not
+        compiled (too many, or libclang could not load it), or one that already had errors before the
+        change, leaves its uses unknown, never affected: AeroTrace can't say they still build."""
         files = sorted(self.retyped_users, key=lambda f: (-len(self.retyped_users[f]), f))
         for i, f in enumerate(files):
             o, n = outliner.before_after(f, self.mode) if i < USER_FILES_COMPILED else (None, None)
             if o is not None and n is not None:
                 self.errors(f, o, n)
-            for u, level, why, nid, name, edge in self.retyped_users[f]:
-                lines = u.reads + u.writes
-                if o is None or n is None:
-                    left = (
-                        "not compiled (too many files)" if i >= USER_FILES_COMPILED else "could not be parsed"
+            if i >= USER_FILES_COMPILED:
+                unsure = f"{f} was not compiled with the change (too many files)"
+            elif o is None or n is None:
+                unsure = f"{f} could not be parsed with the change"
+            elif o.errors:
+                unsure = (f"{f} already had {o.errors} errors before the change (a missing header?), so a "
+                          "new one may be hidden")  # fmt: skip
+            else:
+                unsure = None
+            for kind, obj, level, why, nid, name, edge, lines in self.retyped_users[f]:
+                if unsure is not None:
+                    status, level, why = (
+                        "unknown",
+                        UNKNOWN,
+                        f"{why}; {unsure}: whether it still builds is not known",
                     )
-                    self.fn_node(u.fn, "unknown", UNKNOWN, "uses_changed", f"{why}; {f} was {left} with the "
-                                 "change, so whether this use still builds is not known", 1, nid, name, lines,
-                                 edge)  # fmt: skip
                 else:
-                    self.fn_node(u.fn, "affected", level, "uses_changed", f"{why}; it still compiles", 1, nid,
-                                 name, lines, edge)  # fmt: skip
+                    status, why = "affected", f"{why}; it still compiles"
+                if kind == "fn":
+                    self.fn_node(obj, status, level, "uses_changed", why, 1, nid, name, lines, edge)
+                else:
+                    self._var_node(obj, status, level, why, nid, name, lines)
         if len(files) > USER_FILES_COMPILED:
             self.blind(f"Uses in {len(files) - USER_FILES_COMPILED} more files of a retyped field or global "
                        "were not compiled with the change; they are listed as unknown.")  # fmt: skip

@@ -12,7 +12,7 @@ from aerotrace.analysis import check, diff
 from aerotrace.index.build import build_index, fresh_index
 from aerotrace.index.history import Outliner
 from aerotrace.ui import terminal
-from test_check import nodes, patch
+from test_check import git, nodes, patch, run_git
 
 
 @pytest.fixture
@@ -75,3 +75,56 @@ def test_uses_in_files_not_compiled_are_unknown_never_affected(repo, monkeypatch
         assert got[name] == ("unknown", "unknown"), (name, got)
     assert any("were not compiled with the change" in b["text"] for b in c["sections"]["blind_spots"])
     assert "None is sure to break" not in headline(c)
+
+
+# ---------------------------------------------------------------- review of #77
+
+
+def test_an_initializer_that_sets_a_retyped_field_is_compiled(repo):
+    c = run(repo, RETYPE)
+    assert nodes(c)["g_conf"] == ("breaks", "probable"), nodes(c)
+
+
+def test_a_file_that_already_fails_gives_unknown_not_still_compiles(repo):
+    # blind spot: broken.c fails before the change (missing header), so a new error may be hidden
+    c = run(repo, RETYPE)
+    by = {n["name"]: n for n in c["nodes"]}
+    assert (by["read_e"]["status"], by["read_e"]["certainty"]) == ("unknown", "unknown"), by["read_e"]
+    assert "already had" in by["read_e"]["why"] and "still compiles" not in by["read_e"]["why"]
+
+
+def test_an_error_only_gcc_14_gives_is_a_probable_break(repo):
+    c = run(repo, {"include/filter.h": [("    int *counter;\n", "    long *counter;\n")]})
+    by = {n["name"]: n for n in c["nodes"]}
+    assert (by["conf_counter"]["status"], by["conf_counter"]["certainty"]) == ("breaks", "probable")
+    assert "GCC 14+" in by["conf_counter"]["why"]
+
+
+def test_a_moved_function_is_not_a_break(repo):
+    c = run(
+        repo,
+        {
+            "src/handlers.c": [("int get_keys(int n) { return n + 1; }\n", "")],
+            "src/cmds.c": [
+                (
+                    "struct cmd cmd_table[] = {",
+                    "int get_keys(int n) { return n + 1; }\n\nstruct cmd cmd_table[] = {",
+                )
+            ],
+        },
+    )
+    got = nodes(c)
+    assert got.get("cmd_table", ("affected",))[0] != "breaks", got
+    assert check.exit_code(c) == 0, c["summary"]
+
+
+def test_git_mode_removed_function_in_a_table_is_never_an_all_clear(repo):
+    # blind spot: in git mode the index no longer links the table to the removed function; the answer
+    # must say so instead of an all-clear
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(repo, jobs=1)
+    _, c = run_git(repo, {"src/handlers.c": [("int get_keys(int n) { return n + 1; }\n", "")]})
+    assert headline(c).startswith(("ℹ", "⚠")), headline(c)  # noqa: RUF001 (the info emoji)
+    assert any("get_keys was removed" in b["text"] for b in c["sections"]["blind_spots"])
