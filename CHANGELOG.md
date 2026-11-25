@@ -62,6 +62,24 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Four wrong "safe" answers found by the benchmark (redis-05, curl-05, redis-07, curl-07), where the build
+  failed but `check` said "None is sure to break":
+  - A removed function still named in a table (a command table, a filter's callbacks) is now a break of
+    that table: it no longer compiles (static) or no longer links (nothing else defines it).
+  - A compile error outside every function in a patched file is a break of the global whose initializer
+    holds it.
+  - A field or global whose type really changes (for example an integer to `void *`): the files of its
+    users are compiled with the change, and a use that no longer builds is a break. Uses that still build
+    are affected; uses in files that were not compiled (more than 8 files) are unknown, never "affected".
+    Errors that only newer compilers give (int-conversion, incompatible function pointers, and clang
+    warnings that GCC 14+ makes errors, such as incompatible pointer types) are probable breaks. A file
+    that already fails to build before the change gives unknown, not "still compiles". An initializer
+    that sets the field is compiled too.
+  - A function the same patch removes and defines again in another file (moved) is not a break.
+  - Git mode: a removed function leaves a blind spot (a table or pointer in another file that names it
+    only fails at link time and is not listed), so the answer is never an all-clear.
+  - The headline says "None is sure to break" only when nothing is unknown and every part of the change
+    was followed.
 - `check` without `--patch` (the index already has the change): a removed field or global still used in a
   file-scope initializer (`{"hz", &server.hz}` in a table, `{.hz = 7}`) is now a break of that global.
   It is exact only when that global is the only one on the line and the index shows its initializer

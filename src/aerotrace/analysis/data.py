@@ -430,6 +430,15 @@ def globals_at(conn: sqlite3.Connection, file: str, line: int) -> list[tuple[Var
     return [(_row(near), certainty.PROBABLE, "probably its initializer (the nearest global above that line)")]
 
 
+def global_named(conn: sqlite3.Connection, qualified_name: str, file: str) -> Var | None:
+    """The global `qualified_name` defined in `file` (one row; the lowest id when names clash)."""
+    r = conn.execute(
+        "SELECT * FROM variables WHERE kind = 'global' AND qualified_name = ? AND file = ? ORDER BY id LIMIT 1",
+        (qualified_name, file),
+    ).fetchone()
+    return _row(r) if r is not None else None
+
+
 def compile_reason(reason: str) -> str:
     """'does not compile now: ...' once, whether or not `reason` already says it."""
     prefix = "does not compile now: "

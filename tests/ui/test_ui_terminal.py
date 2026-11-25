@@ -348,3 +348,20 @@ def test_a_pass_never_drops_an_index_limit(n_spots: int) -> None:
     if "listed below" in text:
         assert "Limits of the index" in text
     assert "...." not in text
+
+
+@pytest.mark.parametrize("key", ["unknown", "not_followed"])
+def test_never_none_is_sure_to_break_when_something_was_not_seen(key: str) -> None:
+    # benchmark redis-05 / curl-05: only AFFECTED nodes, but parts of the change were not followed
+    d = samples.affected_only()
+    assert "None is sure to break." in terminal.render(d).splitlines()[0]
+    if key == "unknown":  # a real unknown node, so the counts match the nodes
+        node = dict(d["nodes"][-1], id="unknown-1", name="maybe", status="unknown", certainty="unknown")
+        d["nodes"].append(node)
+        d["sections"]["functions"].append("unknown-1")
+        d["summary"]["unknown"] = 1
+    else:
+        d["summary"]["not_followed"] = 2
+    first = terminal.render(d).splitlines()[0]
+    assert "None is sure to break" not in first
+    assert "could not check all of it, so something may still break" in first

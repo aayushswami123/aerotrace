@@ -189,7 +189,8 @@ limits are printed right below the headline ("Index limit: ..."), so a pass neve
 |-------------------------------------------------|----------------------------------------------------------------------------------|
 | breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch (N BREAKS, M AFFECTED).`     |
 | only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link (N MAY BREAK, M AFFECTED).`  |
-| affected > 0, no breaks                         | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
+| affected > 0, no breaks, nothing unknown or not followed | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
+| affected > 0, no breaks, but unknown or not followed > 0 | `⚠️  This change may affect N things you didn't touch (...). AeroTrace could not check all of it, so something may still break.` (never a "safe" sentence when something was not seen) |
 | only unknown > 0                                | `⚠️  N things this change reaches are unknown: AeroTrace could not follow them. Check by hand.` |
 | only not_followed > 0                           | `ℹ️  Nothing found that this change can break, but N parts of the change could not be followed.` |
 | everything 0                                    | `✅ Nothing found that this change can break, in the code AeroTrace can see.`     |

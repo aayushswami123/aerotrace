@@ -12,6 +12,8 @@ from pathlib import Path
 
 from facts import Addr, Call, Edit, Fact, Fn, Group, Line
 
+# the whole definition of delexGetKeys in src/db.c (benchmark case redis-05 deletes it)
+FN_DELEX_GET_KEYS = 'int delexGetKeys(struct redisCommand *cmd, robj **argv, int argc, getKeysResult *result) {\n    keyReference *keys;\n    UNUSED(cmd);\n\n    keys = getKeysPrepareResult(result, 1);\n    keys[0].pos = 1; /* We always know the position */\n    result->numkeys = 1;\n    int actual = CMD_KEY_RM;\n    int logical = CMD_KEY_DELETE;\n\n    for (int i = 2; i < argc; i++) {\n        char *arg = argv[i]->ptr;\n        if (!strcasecmp(arg, "ifeq") || !strcasecmp(arg, "ifne") ||\n            !strcasecmp(arg, "ifdeq") || !strcasecmp(arg, "ifdne"))\n        {\n            actual = CMD_KEY_RW;\n        }\n    }\n\n    keys[0].flags = actual | logical;\n\n    return 1;\n}\n'
 T = "src/t_string.c"
 S = "src/server.c"
 
@@ -771,6 +773,75 @@ FACTS = [
         must_not=(Fn("sdsTest", "src/sds.c"), Fn("main", S)),
     ),
     # ------------------------------------------------------------ check (build item 5, part C)
+    Fact(
+        id="redis-check-removed-function-still-in-command-table",
+        why="Benchmark case redis-05 (ptr_remove). The patch deletes the definition of delexGetKeys; its "
+        "prototype stays in server.h. Nothing calls it by name, but the command table names it as the "
+        "DELEX command's getkeys_proc, so redis-server no longer links (undefined symbol delexGetKeys, "
+        "referenced from redisCommandTable). The answer must say the table breaks, never 'None is sure to "
+        "break'.",
+        kind="check",
+        proof=(
+            Line(
+                "src/db.c",
+                3964,
+                "int delexGetKeys(struct redisCommand *cmd, robj **argv, int argc, getKeysResult *result) {",
+            ),
+            Line(
+                "src/server.h",
+                4371,
+                "int delexGetKeys(struct redisCommand *cmd, robj **argv, int argc, getKeysResult *result);",
+            ),
+            Line("src/commands.def", 12798, "struct COMMAND_STRUCT redisCommandTable[] = {"),
+            Line("src/commands.def", 13077, "DELEX_Keyspecs,1,delexGetKeys,2),.args=DELEX_Args},"),
+        ),
+        edits=(Edit("src/db.c", FN_DELEX_GET_KEYS, ""),),
+        breaks=(Fn("redisCommandTable", "src/commands.def", "exact"),),
+        not_clear=True,
+    ),
+    Fact(
+        id="redis-check-int-field-to-pointer-breaks-only-int-uses",
+        why="Benchmark case redis-07 (field_type). redisServer.stat_current_cow_peak changes from size_t to "
+        "void *. updateChildInfo assigns it to and from size_t values (childinfo.c 103, 111, 113, 115), "
+        "which clang 16+ and GCC 14+ reject (int-conversion is an error there). The other users still build: 'x = 0' is a null "
+        "pointer constant (server.c 854, 3157, 7553) and the %zu print is only a warning (6617). So "
+        "updateChildInfo breaks, and resetChildState, initServer, redisFork and genRedisInfoString are "
+        "affected, not breaks.",
+        kind="check",
+        proof=(
+            Line(
+                "src/server.h",
+                2224,
+                "size_t stat_current_cow_peak;   /* Peak size of copy on write bytes. */",
+            ),
+            Line(
+                "src/childinfo.c",
+                103,
+                "if (cow > server.stat_current_cow_peak) server.stat_current_cow_peak = cow;",
+            ),
+            Line("src/childinfo.c", 111, "server.stat_aof_cow_bytes = server.stat_current_cow_peak;"),
+            Line(S, 854, "server.stat_current_cow_peak = 0;"),
+            Line(S, 3157, "server.stat_current_cow_peak = 0;"),
+            Line(S, 6617, '"current_cow_peak:%zu\\r\\n", server.stat_current_cow_peak,'),
+            Line(S, 7553, "server.stat_current_cow_peak = 0;"),
+        ),
+        edits=(
+            Edit(
+                "src/server.h",
+                "    size_t stat_current_cow_peak;   /* Peak size of copy on write bytes. */",
+                "    void * stat_current_cow_peak;   /* Peak size of copy on write bytes. */",
+            ),
+        ),
+        # probable: int-conversion is an error in clang 16+ and GCC 14+, only a warning before
+        breaks=(Fn("updateChildInfo", "src/childinfo.c", "probable"),),
+        must_not=(
+            Fn("resetChildState", S),
+            Fn("initServer", S),
+            Fn("redisFork", S),
+            Fn("genRedisInfoString", S),
+        ),
+        not_clear=True,
+    ),
     Fact(
         id="redis-check-parameter-added-breaks-calls",
         why="A 4th parameter is added to the static checkStringLength. Its three calls pass 3 arguments, so "

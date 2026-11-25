@@ -1386,6 +1386,16 @@ def _get_index() -> cindex.Index:
     return _index
 
 
+# Messages clang gives as warnings (C) that GCC 14+ gives as errors (-Wincompatible-pointer-types,
+# -Wimplicit-function-declaration, -Wint-conversion). Kept in outline diagnostics (#77 review).
+GCC14_ERRORS = (
+    "incompatible pointer types",
+    "incompatible integer to pointer conversion",
+    "incompatible pointer to integer conversion",
+    "implicit declaration of function",
+    "call to undeclared function",
+)
+
 # The working folder is shared by every thread of the process, and libclang resolves relative -I paths and
 # include names against it. Every in-process parse changes it, so they take turns (#46). Index builds parse
 # in child processes and are not slowed down by this.
@@ -1732,8 +1742,18 @@ def _outline_here(
     out["variables"].sort(key=lambda d: (d["line"], d["qualified_name"]))
     errors = [d for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error]
     out["errors"] = len(errors)
+    # warnings in clang that GCC 14+ reports as errors: a change that adds one may break the build there
+    gcc_errors = [
+        d
+        for d in tu.diagnostics
+        if d.severity == cindex.Diagnostic.Warning and d.spelling.startswith(GCC14_ERRORS)
+    ]
     mine = sorted(
-        {(d.location.line, d.spelling) for d in errors if d.location.file and is_target(d.location.file.name)}
+        {
+            (d.location.line, d.spelling)
+            for d in errors + gcc_errors
+            if d.location.file and is_target(d.location.file.name)
+        }
     )
     out["diagnostics"] = [{"line": n, "text": t} for n, t in mine]
     out["protos"] = {k: sorted(v) for k, v in sorted(protos.items())}

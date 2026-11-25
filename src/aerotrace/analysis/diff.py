@@ -62,6 +62,7 @@ class AddedFn:
     file: str
     line_start: int  # in the patched version
     line_end: int
+    static: bool = False  # internal linkage: it can't stand in for a removed function of another file
 
 
 @dataclass
@@ -373,7 +374,13 @@ class _Collect:
                     f["line_start"] <= n <= f["line_end"] for n in added_lines
                 ):
                     res.added.append(
-                        AddedFn(f["qualified_name"], fd.new_path or path, f["line_start"], f["line_end"])
+                        AddedFn(
+                            f["qualified_name"],
+                            fd.new_path or path,
+                            f["line_start"],
+                            f["line_end"],
+                            bool(f.get("static")),
+                        )
                     )
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:

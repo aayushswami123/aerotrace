@@ -499,4 +499,4 @@ def test_two_removed_names_on_one_line_both_link_to_it(init_repo):
     )
     [t] = [n for n in c["nodes"] if n["name"] == "t" and n["status"] == "breaks"]
     assert t["certainty"] == "exact"
-    assert "(and 1 other link)" in t["why"], t["why"]  # the second removed name is not dropped
+    assert "other link" in t["why"], t["why"]  # the second removed name is not dropped

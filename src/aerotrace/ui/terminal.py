@@ -133,9 +133,14 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
         icon, first = "risk", f"{n_(bp, 'thing')} you didn't touch may not build or link."
     elif aff:
         icon = "risk"
-        first = (
-            f"This change may affect {n_(aff, 'thing')} you didn't touch ({aff_txt}). None is sure to break."
+        # "none is sure to break" only when everything was followed: an unknown or a part not followed
+        # may still break (rule 5: never a wrong "safe")
+        tail = (
+            "None is sure to break."
+            if not (unk or nf)
+            else "AeroTrace could not check all of it, so something may still break."
         )
+        first = f"This change may affect {n_(aff, 'thing')} you didn't touch ({aff_txt}). {tail}"
     elif unk:
         icon = "risk"
         first = (
