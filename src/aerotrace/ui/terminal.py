@@ -119,7 +119,10 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
         if data["verdict"] == "unknown":
             lines = [_unknown_first(data), f"No change AeroTrace could check {where}."]
         else:
-            lines = [f"No C or C++ changes to check{(' ' + where) if where else ''}."]
+            # never a green line: nothing was checked
+            lines = ["No C or C++ changes, so there was nothing to check."]
+            if where:
+                lines.append(_cap_first(where[1:-1]) + ".")  # "(compared with HEAD (abc))" -> "Compared ..."
         other = change.get("other_files", 0)
         if gaps:
             if other:
@@ -135,7 +138,7 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
             return "info", lines
         if data.get("message"):
             lines.append(data["message"])
-        return "clear", lines
+        return "info", lines
 
     s = data["summary"]
     be, bp = s["breaks_exact"], s["breaks_probable"]
@@ -282,7 +285,13 @@ def not_followed_lines(data: dict) -> list[str]:
             when, side = ("removed", "old") if git else ("added", "new")
             bits.append(f"{when} {_lines(o['other_side_lines'])} ({side} numbering) outside any function")
         out.append(f"{o['file']}: {'; '.join(bits) or 'changes outside any function'}.")
-    out += [f"{f} was deleted." for f in nf["deleted"]]
+    out += [
+        f"{f} was deleted or renamed; code that still includes or names it is not followed."
+        for f in nf["deleted"]
+    ]
+    out += [
+        f"{f}: a build file changed. AeroTrace does not read build files." for f in nf.get("build_files", [])
+    ]
     out += [
         f"{f}: could not read its old version; removed functions there are not listed."
         for f in nf["unreadable"]

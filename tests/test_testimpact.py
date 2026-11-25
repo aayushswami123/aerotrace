@@ -331,8 +331,8 @@ def test_git_mode_through_the_cli(root, capsys):
     assert out["coverage"] == {"state": "not_recorded"}
     assert (out["changed_functions"], out["removed_functions"]) == (1, 1)
     assert out["tests"] == []
-    # util.c also lost a comment line outside any function: not followed, so "Not known" too
-    assert [n["what"] for n in out["not_known"]] == ["divide", "src/util.c", "test_helper (removed)"]
+    # util.c also lost a comment line outside any function: a comment can't change code (review of #84)
+    assert [n["what"] for n in out["not_known"]] == ["divide", "test_helper (removed)"]
     assert main(["tests", "--root", str(root), "--base", "HEAD"]) == 0
     text = capsys.readouterr().out
     assert text.startswith("Tests compared with HEAD (")

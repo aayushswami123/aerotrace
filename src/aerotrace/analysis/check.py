@@ -25,7 +25,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from aerotrace.analysis import certainty, data, diff, graph, signature, symbols
+from aerotrace.analysis import certainty, data, diff, graph, signature, symbols, unseen
 from aerotrace.analysis import verdict as verdict_mod
 from aerotrace.analysis.certainty import EXACT, PROBABLE, UNKNOWN
 from aerotrace.analysis.diff import DiffImpact
@@ -277,6 +277,9 @@ class _Run:
         # patch mode: id of a function in a patched file -> (its outline entry, errors in that file)
         self.patched_fn: dict[str, tuple[dict, list[dict]]] = {}
         self.outliner: Outliner | None = None
+        # names other code uses that this change alters (removed, made static, retyped): searched for in
+        # code the index did not compile (see unseen.py)
+        self.interface: dict[str, str] = {}
         self.undeclared: set[str] = (
             set()
         )  # patch mode: USRs the patch stops declaring (with their definition)
@@ -441,8 +444,48 @@ class _Run:
             self.add(Node(v.id, v.name, v.kind, v.file, v.line, "changed", EXACT, None,
                           f"declaration changed; used by {_n(v.users, 'function')}", 0))  # fmt: skip
 
+    def _changes_interface(self, fn: Fn) -> None:
+        """`fn` is removed, or its signature changed: code AeroTrace did not compile may still use it."""
+        self.interface[fn.name] = "method" if "::" in fn.qualified_name else "function"
+        virtual = self.conn.execute(
+            "SELECT 1 FROM functions WHERE id = ? AND is_virtual = 1 UNION SELECT 1 FROM edges WHERE "
+            "kind = 'overrides' AND (src = ? OR dst = ?) LIMIT 1",
+            (fn.id, fn.id, fn.id),
+        ).fetchone()
+        if virtual:
+            self.blind(f"{fn.qualified_name} is virtual: overrides in derived classes (and their `override`) are "
+                       "not followed, so they may no longer build.", fn.id,
+                       short=f"overrides of {fn.qualified_name}")  # fmt: skip
+
+    def unseen_uses(self, diffs: list[FileDiff]) -> None:
+        """Places that name a changed function or global where the index has no use of it (an #if branch
+        that is off, a file outside the build, a macro body): not checked."""
+        if not self.interface:
+            return
+        skip: dict[str, set[int]] = {}
+        if self.mode == "patch":
+            for fd in diffs:
+                if fd.old_path:
+                    skip.setdefault(fd.old_path, set()).update(o for o, _ in fd.removed)
+        found = unseen.find(self.conn, self.root, self.interface, skip)
+        by_name: dict[str, list[unseen.Place]] = {}
+        for p in found.places:
+            by_name.setdefault(p.name, []).append(p)
+        for name in sorted(by_name):
+            ps = by_name[name]
+            where = "a file outside the build" if ps[0].outside else "code AeroTrace did not compile"
+            more = f" and {_n(len(ps) - 1, 'more place')}" if len(ps) > 1 else ""
+            first = f"{name} is also named in {ps[0].file}:{ps[0].line} ({where}){more}"
+            listed = ", ".join(f"{p.file}:{p.line}" for p in ps[:5]) + (" ..." if len(ps) > 5 else "")
+            self.blind(f"{first}: {listed}. The index has no use there (an #if branch that is off, a file "
+                       "outside the build, a macro), so those uses are not checked.", short=first)  # fmt: skip
+        if found.capped:
+            self.blind("The repo is too big to search all of it for other uses of what changed, so some may be "
+                       "missed.", short="the repo is too big to search for other uses")  # fmt: skip
+
     def _removed_in_patch(self, fn: Fn, key: str) -> None:
         """Patch mode: the index still has the callers of a function the patch removes."""
+        self._changes_interface(fn)
         si = signature.signature_impact(self.conn, fn, depth=0)
         usr = self._usr(fn)
         moved = self._moved_to(fn)
@@ -624,7 +667,7 @@ class _Run:
             else:
                 ids = self.lookup._fns_declared(index_side)
             if not kinds:
-                if o["head"] != n["head"]:
+                if o["head"] != n["head"]:  # a digest of the head's tokens: spacing and comments don't count
                     for fid in ids:
                         self.blind(
                             f"The head of {n['qualified_name']} ({file}:{n['line_start']}) changed, but its "
@@ -647,6 +690,7 @@ class _Run:
 
     def _signature_effects(self, sc: SigChange, new_outline: Outline) -> None:
         fn, new = sc.fn, sc.new
+        self._changes_interface(fn)
         node = self.res.nodes.get(fn.id)
         if node is not None and node.distance == 0:
             node.why = f"signature changed: {sc.words}"
@@ -850,6 +894,8 @@ class _Run:
         v = c.old if c.kind == "removed" else c.new
         assert v is not None
         name = v["qualified_name"]
+        if v["kind"] == "global" and c.kind in ("removed", "retyped", "text"):
+            self.interface[v["name"]] = "global"  # fields are not searched: their names are everywhere
         du = None
         if c.kind == "removed":
             if self.mode == "patch" and c.var is not None:
@@ -1282,6 +1328,7 @@ def run(
         r.proto_users(outliner, pairs)
     r.compile_users(outliner)
     r.walk_hits()
+    r.unseen_uses(diffs)
     for b in d.blind_spots:
         r.blind(b, unchecked=b not in d.caveats)
     res.parses, res.seconds_parsing = outliner.parses, outliner.seconds
@@ -1346,7 +1393,8 @@ def _not_followed_reasons(change: dict) -> list[str]:
     out += [f"the old version of {f} could not be read" for f in nf.get("unreadable", [])]
     out += [f"{f} is not in the index" for f in nf.get("not_indexed", [])]
     out += [f"{f} is new and not in the build yet" for f in nf.get("new_files", [])]
-    out += [f"{f} was deleted" for f in nf.get("deleted", [])]
+    out += [f"{f} was deleted or renamed" for f in nf.get("deleted", [])]
+    out += [f"a build file changed: {f}" for f in nf.get("build_files", [])]
     return out
 
 
@@ -1379,6 +1427,7 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
             "deleted": list(d.deleted),
             "mismatched": list(d.mismatched),
             "unreadable": list(d.unreadable),
+            "build_files": list(d.build_files),
             "new_files": list(d.new_files),
         },
     }

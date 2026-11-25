@@ -1584,6 +1584,10 @@ def _norm(text: str) -> str:
     return _UNNAMED_AT.sub(lambda m: f"({m.group(1)}{m.group(2) or ''})", " ".join(text.split()))
 
 
+_HEAD_TOKEN = re.compile(r"\w+|[^\s\w]")
+_HEAD_COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.S)
+
+
 def _digest(text: str) -> str:
     return hashlib.sha256(_norm(text).encode("utf-8", "surrogateescape")).hexdigest()[:16]
 
@@ -1674,7 +1678,7 @@ def _outline_function(c: Cursor, data: bytes) -> dict:
         "weak": bool(words & WEAK_WORDS),
         "attrs": attrs and not (words & WEAK_WORDS),  # an attribute that is not provably harmless
         "template": c.kind == K.FUNCTION_TEMPLATE,
-        "head": _digest(head),
+        "head": _digest(" ".join(_HEAD_TOKEN.findall(_HEAD_COMMENT.sub(" ", head)))),  # spacing ignored
     }
 
 
