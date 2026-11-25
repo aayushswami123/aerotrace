@@ -47,7 +47,8 @@ seconds.
     says "None is sure to break". **That is the worst kind of answer by our own rule 5** (a wrong "safe").
     It is a product bug, not a benchmark choice.
   - **An integer field turned into a pointer** (redis-07, curl-07). AeroTrace lists every use as
-    AFFECTED, and the use that fails to build isn't set apart as BREAKS. Its whole answer does include it.
+    AFFECTED, and the use that fails to build isn't set apart as BREAKS. Its whole answer does include it,
+    but its headline again says "None is sure to break", so these are wrong "safe" answers too.
   - **A macro changed in a header** (curl-09). See below.
 - **Time:** AeroTrace takes 0.3 to 6.3 seconds per check (median 1.0 s), most of it parsing the changed
   files with libclang. The others take 1 to 81 ms. One-off setup per repo, on a cold cache: AeroTrace index
@@ -112,11 +113,16 @@ no tool was run again.
 
 ## Bugs found in AeroTrace (for the owner; not fixed here, analysis code belongs to other branches)
 
+**Wrong "safe" answers in 4 build cases:** in redis-05, redis-07, curl-05 and curl-07 the build fails, and
+AeroTrace's answer says "None is sure to break". (Found while building the results page; an earlier
+version of this file said 2.)
+
 1. **A removed function still referenced from a table is reported as "None is sure to break"** (redis-05,
    curl-05). Expected: BREAKS at the table (a compile error when the function is static, a link error
    otherwise). This is a rule-5 problem.
 2. **An integer field changed to a pointer type is reported as AFFECTED, not BREAKS** (redis-07,
-   curl-07). Clang rejects int-to-pointer conversion, so those uses don't build.
+   curl-07), with "None is sure to break" in the headline. Clang rejects int-to-pointer conversion, so
+   those uses don't build. This is a rule-5 problem as well.
 3. **A macro changed in a header is not followed** (curl-09). It is flagged as not followed, so this isn't
    a silent gap. Macros in `.c` files work: redis-09 and sqlite-09 find every break.
 4. **Mixed line numbers:** for a node in a file the patch changes, `lines` can be patched-file numbers
