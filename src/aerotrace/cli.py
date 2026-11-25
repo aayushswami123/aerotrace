@@ -353,6 +353,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         return 2
     if note:
         _err(note)
+    if not args.no_save and data.get("status") in ("ok", "nothing_to_check"):
+        _save_check(root, data, args)
     if args.html:
         _err(ui.write_html(data, Path(args.html), root))
     if args.json:
@@ -367,6 +369,25 @@ def cmd_check(args: argparse.Namespace) -> int:
             )
         )
     return check.exit_code(data)
+
+
+def _save_check(root: Path, data: dict, args: argparse.Namespace) -> None:
+    """Keep this answer for `aerotrace ui` (in .aerotrace/checks/). A failed save never fails the check."""
+    from aerotrace import __version__
+    from aerotrace.ui import saved
+
+    try:
+        first = not saved.checks_dir(root).is_dir()
+        path = saved.save(root, data, saved.source_of(args.base, args.patch), f"aerotrace {__version__}")
+    except Exception as e:  # saving must never change what the check prints or returns
+        why = e.strerror if isinstance(e, OSError) and e.strerror else type(e).__name__
+        _err(f"note: could not save this answer for `aerotrace ui` ({why}).")
+        return
+    if first:
+        _err(
+            f"note: saved this answer in {path.parent.relative_to(root)}/ for `aerotrace ui` "
+            "(--no-save turns this off). .aerotrace/ already keeps itself out of git."
+        )
 
 
 def cmd_signature(args: argparse.Namespace) -> int:
@@ -642,6 +663,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ck.add_argument("--json", action="store_true", help="print the aerotrace-check JSON (version 1)")
     ck.add_argument("--html", metavar="OUT.html", help="also write an offline HTML report")
+    ck.add_argument(
+        "--no-save",
+        action="store_true",
+        help="don't keep this answer in .aerotrace/checks/ (kept by default for `aerotrace ui`, last 50)",
+    )
     ck.set_defaults(func=cmd_check)
 
     ts = with_root(
