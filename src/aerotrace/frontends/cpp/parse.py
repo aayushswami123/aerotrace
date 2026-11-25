@@ -1592,12 +1592,16 @@ INLINE_WORDS = {"inline", "__inline", "__inline__", "constexpr", "consteval"}
 WEAK_WORDS = {"weak", "__weak__", "selectany"}
 
 
-def _head_words(c: Cursor, body: Cursor | None) -> set[str]:
-    """The words of the definition's own head (its specifiers and attributes), from its tokens: comments are
-    not tokens, and nothing above the definition is read."""
-    end = body.extent.start if body is not None else c.extent.end
-    rng = cindex.SourceRange.from_locations(c.extent.start, end)
-    return {t.spelling for t in cindex.TokenGroup.get_tokens(c.translation_unit, rng)}
+_COMMENTS = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
+
+
+def _specifier_words(data: bytes, start: int, name_at: int) -> set[str]:
+    """The words written before a function's name (its storage class, `inline`, attributes), read from the
+    definition's own text with comments removed. Nothing above the definition is read."""
+    if not 0 <= start <= name_at <= len(data):
+        return set()
+    text = _COMMENTS.sub(" ", data[start:name_at].decode("utf-8", "surrogateescape"))
+    return set(re.findall(r"[A-Za-z_]\w*", text))
 
 
 def _body_refs(c: Cursor) -> tuple[list[str], list[str]]:
@@ -1642,7 +1646,7 @@ def _outline_function(c: Cursor, data: bytes) -> dict:
     for i, prm in enumerate(params):
         if prm["name"]:
             head = re.sub(rf"\b{re.escape(prm['name'])}\b", f"${i}", head)
-    words = _head_words(c, body)
+    words = _specifier_words(data, start, c.location.offset)
     in_class = (
         c.kind in METHOD_KINDS
         and c.lexical_parent is not None
@@ -1706,7 +1710,12 @@ def _outline_variable(c: Cursor, kind: str, position: int, data: bytes) -> dict:
 
 
 def function_outline(
-    path: str, content: str, args: list[str], directory: str, others: list[tuple[str, str]] | None = None
+    path: str,
+    content: str,
+    args: list[str],
+    directory: str,
+    others: list[tuple[str, str]] | None = None,
+    ref_lines: frozenset[int] | None = None,
 ) -> dict | None:
     """What one file declares, as `content` gives it (an older version, the file on disk, or a patched
     version in memory). Nothing is stored. Returns:
@@ -1714,8 +1723,8 @@ def function_outline(
     - "functions": definitions, "declarations": prototypes. Each {usr, name, qualified_name, line_start,
       line_end, head_end, signature, returns, params [{name, type, canonical, has_default}], variadic,
       has_prototype, static, extern, inline, weak, attrs, template, head (hash of the head text, parameter
-      names left out)}. Definitions also have refs (USRs the body refers to) and unresolved (names it
-      could not resolve).
+      names left out)}. Definitions that contain a line of `ref_lines` also have refs (USRs the body refers
+      to) and unresolved (names it could not resolve).
     - "variables": globals (extern too) and fields: {usr, name, qualified_name, container, kind, type,
       canonical, line, line_end, position (in its record), decl (hash of the declaration text), init
       (hash of the initializer, "" when there is none)}.
@@ -1726,11 +1735,15 @@ def function_outline(
     None when libclang could not load it. `path` is the file's absolute path. `others`: (absolute path,
     content) of other files of the same version (a patched header), used instead of the files on disk."""
     with _in_folder(directory if os.path.isdir(directory) else os.path.dirname(path) or "."):
-        return _outline_here(path, content, args, others)
+        return _outline_here(path, content, args, others, ref_lines)
 
 
 def _outline_here(
-    path: str, content: str, args: list[str], others: list[tuple[str, str]] | None
+    path: str,
+    content: str,
+    args: list[str],
+    others: list[tuple[str, str]] | None,
+    ref_lines: frozenset[int] | None = None,
 ) -> dict | None:
     """`function_outline` without changing the working folder (the caller holds `_in_folder`)."""
     data = content.encode("utf-8", "surrogateescape")
@@ -1773,7 +1786,11 @@ def _outline_here(
                 continue
             if c.kind in FUNC_KINDS:
                 entry = _outline_function(c, data)
-                if c.is_definition():
+                if (
+                    c.is_definition()
+                    and ref_lines
+                    and any(entry["line_start"] <= n <= entry["line_end"] for n in ref_lines)
+                ):
                     entry["refs"], entry["unresolved"] = _body_refs(c)
                 out["functions" if c.is_definition() else "declarations"].append(entry)
             elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):

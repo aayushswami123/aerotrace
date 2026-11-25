@@ -1096,6 +1096,11 @@ def run(
     if mode == "patch":
         # parse each patched file with the other patched files (a .h and a .c changed together)
         for fd in diffs:
+            if fd.new_path:
+                # the functions on or next to a changed line also list what they refer to
+                outliner.ref_lines[fd.new_path] = frozenset(
+                    [n for n, _ in fd.added] + [g + k for _, g in fd.removed for k in (0, 1)]
+                )
             if fd.new_path and not fd.binary and Path(fd.new_path).suffix.lower() in diff.CODE_EXTS:
                 text = diff.patched_text(root, fd)
                 if text is not None:
