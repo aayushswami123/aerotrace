@@ -1,0 +1,13 @@
+{
+ "aerotrace_commit": "d39d85762cf92ec2a3502150de4e6707eedb5209",
+ "aerotrace_index_seconds": 5.5,
+ "clangd_index_seconds": 2.2,
+ "cscope_db_seconds": 0.4,
+ "repo": "redis",
+ "versions": {
+  "aerotrace": "aerotrace 0.1.0.dev0",
+  "clangd": "Apple clangd version 21.0.0 (clang-2100.1.1.101)",
+  "cscope": "cscope: version 15.9",
+  "rg": "ripgrep 15.2.0"
+ }
+}

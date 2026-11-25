@@ -295,8 +295,8 @@ def ask_aerotrace(base: Path, case: dict) -> dict:
     text = ui.render_text(data, color=False, unicode=False, limit=15)  # what the MCP `check` tool returns
     claimed, anywhere = [], []
     for n in data.get("nodes", []):
-        if n["status"] in ("changed", "new", "removed"):
-            continue
+        if n["status"] in ("changed", "new", "removed", "no_effect"):
+            continue  # the change itself, or "checked, no effect found": not part of what it says may break
         lines = n.get("lines") or [n["line"]]
         for ln in lines:
             anywhere.append([n["file"], ln])

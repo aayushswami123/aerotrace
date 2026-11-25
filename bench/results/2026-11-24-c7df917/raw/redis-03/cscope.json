@@ -1,0 +1,19 @@
+{
+ "command": "cscope -d -L0 checkSignedBitfieldOverflow",
+ "hits": [
+  [
+   "src/bitops.c",
+   616
+  ],
+  [
+   "src/bitops.c",
+   2015
+  ],
+  [
+   "src/bitops.c",
+   2021
+  ]
+ ],
+ "seconds": 0.0078,
+ "text": "src/bitops.c checkSignedBitfieldOverflow 616 int checkSignedBitfieldOverflow(int64_t value, int64_t incr, uint64_t bits, int owtype, int64_t *limit) {\nsrc/bitops.c bitfieldGeneric 2015 overflow = checkSignedBitfieldOverflow(oldval,\nsrc/bitops.c bitfieldGeneric 2021 overflow = checkSignedBitfieldOverflow(newval,\n"
+}

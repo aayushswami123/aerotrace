@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename vfstraceDelete <build files>",
+ "hits": [
+  [
+   "shell.c",
+   18786
+  ],
+  [
+   "shell.c",
+   19506
+  ],
+  [
+   "shell.c",
+   19735
+  ]
+ ],
+ "seconds": 0.0194,
+ "text": "shell.c:18786:static int vfstraceDelete(sqlite3_vfs*, const char *zName, int syncDir);\nshell.c:19506:static int vfstraceDelete(sqlite3_vfs *pVfs, const char *zPath, int dirSync){\nshell.c:19735:  pNew->xDelete = vfstraceDelete;\n"
+}

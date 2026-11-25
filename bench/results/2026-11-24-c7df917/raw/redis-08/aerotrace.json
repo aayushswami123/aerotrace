@@ -1,0 +1,248 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "src/bitops.c",
+   81
+  ],
+  [
+   "src/bitops.c",
+   150
+  ],
+  [
+   "src/bitops.c",
+   174
+  ],
+  [
+   "src/bitops.c",
+   265
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "src/bitops.c",
+   81
+  ],
+  [
+   "src/bitops.c",
+   150
+  ],
+  [
+   "src/bitops.c",
+   174
+  ],
+  [
+   "src/bitops.c",
+   265
+  ],
+  [
+   "src/bitops.c",
+   379
+  ],
+  [
+   "src/bitops.c",
+   1703
+  ],
+  [
+   "src/bitops.c",
+   1714
+  ],
+  [
+   "src/aof.c",
+   1993
+  ],
+  [
+   "src/server.c",
+   4058
+  ],
+  [
+   "src/aof.c",
+   2152
+  ],
+  [
+   "src/aof.c",
+   2182
+  ],
+  [
+   "src/module.c",
+   7165
+  ],
+  [
+   "src/multi.c",
+   227
+  ],
+  [
+   "src/multi.c",
+   229
+  ],
+  [
+   "src/script.c",
+   693
+  ],
+  [
+   "src/server.c",
+   4844
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/bitops.c",
+   "id": "new:src/bitops.c:53:bitsinbyte_renamed",
+   "line": 53,
+   "lines": [],
+   "status": "new"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/bitops.c",
+   "id": "removed:src/bitops.c:53:bitsinbyte",
+   "line": 53,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/bitops.c",
+   "id": "c:@F@redisPopcount",
+   "line": 67,
+   "lines": [
+    81,
+    150
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/bitops.c",
+   "id": "c:@F@redisPopCountAarch64",
+   "line": 168,
+   "lines": [
+    174,
+    265
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/bitops.c",
+   "id": "c:bitops.c@F@redisPopcountAuto",
+   "line": 367,
+   "lines": [
+    379
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/bitops.c",
+   "id": "c:@F@bitcountCommand",
+   "line": 1623,
+   "lines": [
+    1703,
+    1714
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/aof.c",
+   "id": "c:@F@loadSingleAppendOnlyFile",
+   "line": 1810,
+   "lines": [
+    1993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:@F@call",
+   "line": 3992,
+   "lines": [
+    4058
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadAppendOnlyFiles",
+   "line": 2113,
+   "lines": [
+    2152,
+    2182
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_Call",
+   "line": 6859,
+   "lines": [
+    7165
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/multi.c",
+   "id": "c:@F@execCommand",
+   "line": 127,
+   "lines": [
+    227,
+    229
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/script.c",
+   "id": "c:@F@scriptCall",
+   "line": 638,
+   "lines": [
+    693
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@processCommand",
+   "line": 4467,
+   "lines": [
+    4844
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 1.1316,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 9,
+  "breaks_exact": 2,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 5,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 2 things you didn't touch (2 BREAKS, 9 AFFECTED).\n    9 may be affected (9 further up) and 5 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] NEW        bitsinbyte_renamed (global)  src/bitops.c:53  (added (maybe renamed from bitsinbyte))\n  [*] REMOVED    bitsinbyte (global)  src/bitops.c:53  (removed (maybe renamed to bitsinbyte_renamed))\n\nFunctions (11)\n  [x] BREAKS     redisPopcount  src/bitops.c:67\n                 uses bitsinbyte, which this change removes (and 3 other links). Link: exact.\n  [x] BREAKS     redisPopCountAarch64  src/bitops.c:168\n                 uses bitsinbyte, which this change removes (and 3 other links). Link: exact.\n  [~] AFFECTED   redisPopcountAuto  src/bitops.c:367\n                 calls redisPopCountAarch64. Link: exact.\n  [~] AFFECTED   bitcountCommand  src/bitops.c:1623\n                 calls redisPopcountAuto. Link: exact.\n  [~] AFFECTED   loadSingleAppendOnlyFile  src/aof.c:1810\n                 calls bitcountCommand (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   call  src/server.c:3992\n                 calls bitcountCommand (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   loadAppendOnlyFiles  src/aof.c:2113\n                 calls loadSingleAppendOnlyFile (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   RM_Call  src/module.c:6859\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   execCommand  src/multi.c:127\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   scriptCall  src/script.c:638\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   processCommand  src/server.c:4467\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n\nChanges AeroTrace could not follow (1)\n  [?] src/bitops.c: added line 53 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (4)\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 117 of 117 files in this build.\n1,696 C/C++ files outside this build were not checked: deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c and 1,693 more.\n\nindex: 216 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)"
+}

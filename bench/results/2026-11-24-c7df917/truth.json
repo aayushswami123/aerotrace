@@ -12,7 +12,7 @@
     "src/networking.c:addReplySds"
    ],
    "build_exit": 2,
-   "build_seconds": 3.0,
+   "build_seconds": 2.9,
    "difficulty": "easy",
    "errors": [
     {
@@ -138,7 +138,7 @@
     "src/bitops.c:redisPopcountAuto"
    ],
    "build_exit": 2,
-   "build_seconds": 2.8,
+   "build_seconds": 2.9,
    "difficulty": "easy",
    "errors": [
     {
@@ -162,7 +162,7 @@
     "src/bitops.c:bitfieldGeneric"
    ],
    "build_exit": 2,
-   "build_seconds": 2.8,
+   "build_seconds": 2.9,
    "difficulty": "easy",
    "errors": [
     {
@@ -208,7 +208,7 @@
     "src/t_zset.c:@zsetDictType"
    ],
    "build_exit": 2,
-   "build_seconds": 15.5,
+   "build_seconds": 15.2,
    "difficulty": "hard",
    "errors": [
     {
@@ -328,7 +328,7 @@
     "src/commands.def:@redisCommandTable"
    ],
    "build_exit": 2,
-   "build_seconds": 15.4,
+   "build_seconds": 15.0,
    "difficulty": "hard",
    "errors": [],
    "id": "redis-05",
@@ -378,7 +378,7 @@
     "src/config.c:@static_configs"
    ],
    "build_exit": 2,
-   "build_seconds": 16.1,
+   "build_seconds": 15.8,
    "difficulty": "hard",
    "errors": [
     {
@@ -666,7 +666,7 @@
     "src/childinfo.c:updateChildInfo"
    ],
    "build_exit": 2,
-   "build_seconds": 16.7,
+   "build_seconds": 21.0,
    "difficulty": "hard",
    "errors": [
     {
@@ -709,7 +709,7 @@
     "src/bitops.c:redisPopcount"
    ],
    "build_exit": 2,
-   "build_seconds": 3.3,
+   "build_seconds": 3.1,
    "difficulty": "hard",
    "errors": [
     {
@@ -752,7 +752,7 @@
     "src/zmalloc.c:ztrymalloc_usable_internal"
    ],
    "build_exit": 2,
-   "build_seconds": 4.2,
+   "build_seconds": 3.0,
    "difficulty": "hard",
    "errors": [
     {
@@ -792,7 +792,7 @@
   {
    "break_sites": [],
    "build_exit": 0,
-   "build_seconds": 17.8,
+   "build_seconds": 15.8,
    "difficulty": "might_break",
    "errors": [],
    "id": "redis-10",
@@ -888,7 +888,7 @@
     "sqlite3.c:jsonTranslateTextToBlob"
    ],
    "build_exit": 0,
-   "build_seconds": 0.9,
+   "build_seconds": 0.8,
    "difficulty": "easy",
    "errors": [
     {
@@ -979,7 +979,7 @@
     "sqlite3.c:sqlite3_serialize"
    ],
    "build_exit": 0,
-   "build_seconds": 0.6,
+   "build_seconds": 0.8,
    "difficulty": "hard",
    "errors": [
     {
@@ -1183,7 +1183,7 @@
     "shell.c:vfstrace_register"
    ],
    "build_exit": 1,
-   "build_seconds": 1.8,
+   "build_seconds": 1.5,
    "difficulty": "hard",
    "errors": [],
    "id": "sqlite-05",
@@ -1210,7 +1210,7 @@
     "sqlite3.c:sqlite3VdbeExec"
    ],
    "build_exit": 0,
-   "build_seconds": 1.2,
+   "build_seconds": 0.7,
    "difficulty": "hard",
    "errors": [
     {
@@ -1288,7 +1288,7 @@
     "sqlite3.c:codeTriggerProgram"
    ],
    "build_exit": 0,
-   "build_seconds": 0.8,
+   "build_seconds": 0.9,
    "difficulty": "hard",
    "errors": [
     {
@@ -1324,7 +1324,7 @@
     "shell.c:main"
    ],
    "build_exit": 0,
-   "build_seconds": 1.2,
+   "build_seconds": 2.0,
    "difficulty": "hard",
    "errors": [
     {
@@ -1619,7 +1619,7 @@
     "lib/http_proxy.c:dynhds_add_custom"
    ],
    "build_exit": 2,
-   "build_seconds": 49.3,
+   "build_seconds": 49.4,
    "difficulty": "easy",
    "errors": [
     {
@@ -1694,13 +1694,14 @@
   },
   {
    "break_sites": [
-    "src/tool_getparam.c:getparameter",
+    "src/tool_getparam.c:opt_string",
     "src/tool_getparam.c:parse_header",
-    "src/tool_operate.c:create_transfer",
+    "src/tool_getparam.c:parse_quote",
+    "src/tool_operate.c:etag_compare",
     "src/tool_paramhlp.c:get_args"
    ],
    "build_exit": 2,
-   "build_seconds": 2.2,
+   "build_seconds": 2.3,
    "difficulty": "easy",
    "errors": [],
    "id": "curl-02",
@@ -1711,7 +1712,7 @@
      "function": "create_transfer",
      "object": "curl-tool_operate.o",
      "sites": [
-      "src/tool_operate.c:create_transfer"
+      "src/tool_operate.c:etag_compare"
      ],
      "symbol": "add2list"
     },
@@ -1735,7 +1736,9 @@
      "function": "getparameter",
      "object": "curl-tool_getparam.o",
      "sites": [
-      "src/tool_getparam.c:getparameter"
+      "src/tool_getparam.c:opt_string",
+      "src/tool_getparam.c:parse_header",
+      "src/tool_getparam.c:parse_quote"
      ],
      "symbol": "add2list"
     },
@@ -1743,7 +1746,9 @@
      "function": "getparameter",
      "object": "curl-tool_getparam.o",
      "sites": [
-      "src/tool_getparam.c:getparameter"
+      "src/tool_getparam.c:opt_string",
+      "src/tool_getparam.c:parse_header",
+      "src/tool_getparam.c:parse_quote"
      ],
      "symbol": "add2list"
     },
@@ -1751,7 +1756,9 @@
      "function": "parse_header",
      "object": "curl-tool_getparam.o",
      "sites": [
-      "src/tool_getparam.c:parse_header"
+      "src/tool_getparam.c:opt_string",
+      "src/tool_getparam.c:parse_header",
+      "src/tool_getparam.c:parse_quote"
      ],
      "symbol": "add2list"
     },
@@ -1759,7 +1766,9 @@
      "function": "parse_header",
      "object": "curl-tool_getparam.o",
      "sites": [
-      "src/tool_getparam.c:parse_header"
+      "src/tool_getparam.c:opt_string",
+      "src/tool_getparam.c:parse_header",
+      "src/tool_getparam.c:parse_quote"
      ],
      "symbol": "add2list"
     }
@@ -1799,7 +1808,7 @@
     "lib/cw-pause.c:cw_pause_write"
    ],
    "build_exit": 2,
-   "build_seconds": 1.2,
+   "build_seconds": 1.1,
    "difficulty": "hard",
    "errors": [
     {
@@ -1829,7 +1838,7 @@
     "lib/http_proxy.c:@Curl_cft_http_proxy"
    ],
    "build_exit": 2,
-   "build_seconds": 1.2,
+   "build_seconds": 1.1,
    "difficulty": "hard",
    "errors": [
     {
@@ -1862,7 +1871,7 @@
     "lib/setopt.c:setopt_long_http"
    ],
    "build_exit": 2,
-   "build_seconds": 48.6,
+   "build_seconds": 48.4,
    "difficulty": "hard",
    "errors": [
     {
@@ -1910,7 +1919,7 @@
     "lib/url.c:Curl_init_userdefined"
    ],
    "build_exit": 2,
-   "build_seconds": 46.6,
+   "build_seconds": 48.5,
    "difficulty": "hard",
    "errors": [
     {
@@ -1931,8 +1940,8 @@
   },
   {
    "break_sites": [
-    "src/tool_getparam.c:getparameter",
-    "src/tool_libinfo.c:maybe_feature"
+    "src/tool_getparam.c:opt_string",
+    "src/tool_libinfo.c:@maybe_feature"
    ],
    "build_exit": 2,
    "build_seconds": 2.2,
@@ -1946,7 +1955,7 @@
      "function": "getparameter",
      "object": "curl-tool_getparam.o",
      "sites": [
-      "src/tool_getparam.c:getparameter"
+      "src/tool_getparam.c:opt_string"
      ],
      "symbol": "feature_altsvc"
     },
@@ -1954,7 +1963,7 @@
      "function": "maybe_feature",
      "object": "curl-tool_libinfo.o",
      "sites": [
-      "src/tool_libinfo.c:maybe_feature"
+      "src/tool_libinfo.c:@maybe_feature"
      ],
      "symbol": "feature_altsvc"
     }
@@ -2312,7 +2321,7 @@
     "lib/ws.c:ws_send_raw_blocking"
    ],
    "build_exit": 2,
-   "build_seconds": 39.5,
+   "build_seconds": 36.6,
    "difficulty": "hard",
    "errors": [
     {
@@ -10272,7 +10281,7 @@
   {
    "break_sites": [],
    "build_exit": 0,
-   "build_seconds": 8.1,
+   "build_seconds": 8.5,
    "difficulty": "might_break",
    "errors": [],
    "id": "curl-10",

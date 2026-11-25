@@ -1,0 +1,373 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "src/tool_getparam.c",
+   1314
+  ],
+  [
+   "src/tool_getparam.c",
+   1333
+  ],
+  [
+   "src/tool_getparam.c",
+   1335
+  ],
+  [
+   "src/tool_getparam.c",
+   1429
+  ],
+  [
+   "src/tool_getparam.c",
+   1434
+  ],
+  [
+   "src/tool_getparam.c",
+   1437
+  ],
+  [
+   "src/tool_getparam.c",
+   2671
+  ],
+  [
+   "src/tool_getparam.c",
+   2683
+  ],
+  [
+   "src/tool_getparam.c",
+   2707
+  ],
+  [
+   "src/tool_getparam.c",
+   2748
+  ],
+  [
+   "src/tool_getparam.c",
+   2753
+  ],
+  [
+   "src/tool_getparam.c",
+   2888
+  ],
+  [
+   "src/tool_operate.c",
+   933
+  ],
+  [
+   "src/tool_paramhlp.c",
+   683
+  ],
+  [
+   "src/tool_paramhlp.c",
+   685
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "src/tool_getparam.c",
+   1314
+  ],
+  [
+   "src/tool_getparam.c",
+   1333
+  ],
+  [
+   "src/tool_getparam.c",
+   1335
+  ],
+  [
+   "src/tool_getparam.c",
+   1429
+  ],
+  [
+   "src/tool_getparam.c",
+   1434
+  ],
+  [
+   "src/tool_getparam.c",
+   1437
+  ],
+  [
+   "src/tool_getparam.c",
+   2671
+  ],
+  [
+   "src/tool_getparam.c",
+   2683
+  ],
+  [
+   "src/tool_getparam.c",
+   2707
+  ],
+  [
+   "src/tool_getparam.c",
+   2748
+  ],
+  [
+   "src/tool_getparam.c",
+   2753
+  ],
+  [
+   "src/tool_getparam.c",
+   2888
+  ],
+  [
+   "src/tool_operate.c",
+   933
+  ],
+  [
+   "src/tool_paramhlp.c",
+   683
+  ],
+  [
+   "src/tool_paramhlp.c",
+   685
+  ],
+  [
+   "src/tool_getparam.c",
+   3079
+  ],
+  [
+   "src/tool_operate.c",
+   1298
+  ],
+  [
+   "src/tool_operate.c",
+   2523
+  ],
+  [
+   "src/tool_getparam.c",
+   3148
+  ],
+  [
+   "src/tool_getparam.c",
+   3185
+  ],
+  [
+   "src/tool_main.c",
+   198
+  ],
+  [
+   "src/tool_operate.c",
+   1406
+  ],
+  [
+   "src/tool_parsecfg.c",
+   303
+  ],
+  [
+   "src/tool_getparam.c",
+   2286
+  ],
+  [
+   "src/tool_operate.c",
+   1553
+  ],
+  [
+   "src/tool_operate.c",
+   2325
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/tool_paramhlp.c",
+   "id": "removed:src/tool_paramhlp.c:601:add2list",
+   "line": 601,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@parse_header",
+   "line": 1293,
+   "lines": [
+    1314,
+    1333,
+    1335
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@parse_quote",
+   "line": 1419,
+   "lines": [
+    1429,
+    1434,
+    1437
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@opt_string",
+   "line": 2484,
+   "lines": [
+    2671,
+    2683,
+    2707,
+    2748,
+    2753,
+    2888
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@etag_compare",
+   "line": 897,
+   "lines": [
+    933
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_paramhlp.c",
+   "id": "c:@F@get_args",
+   "line": 673,
+   "lines": [
+    683,
+    685
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/tool_getparam.c",
+   "id": "c:@F@getparameter",
+   "line": 2934,
+   "lines": [
+    3079
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@setup_etag_files",
+   "line": 1285,
+   "lines": [
+    1298
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/tool_operate.c",
+   "id": "c:@F@operate",
+   "line": 2423,
+   "lines": [
+    2523
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_getparam.c",
+   "id": "c:@F@parse_args",
+   "line": 3117,
+   "lines": [
+    3148,
+    3185
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_main.c",
+   "id": "c:@F@main",
+   "line": 152,
+   "lines": [
+    198
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@create_single",
+   "line": 1365,
+   "lines": [
+    1406
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_parsecfg.c",
+   "id": "c:@F@parseconfig",
+   "line": 251,
+   "lines": [
+    303
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@opt_file",
+   "line": 2255,
+   "lines": [
+    2286
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@single_transfer",
+   "line": 1517,
+   "lines": [
+    1553
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@transfer_per_config",
+   "line": 2309,
+   "lines": [
+    2325
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.5051,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 10,
+  "breaks_exact": 5,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 1,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 5 things you didn't touch (5 BREAKS, 10 AFFECTED).\n    10 may be affected (10 further up) and 1 part of the change could not be followed.\n    You removed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] REMOVED    add2list  src/tool_paramhlp.c:601  (removed by the patch)\n\nFunctions (15)\n  [x] BREAKS     parse_header  src/tool_getparam.c:1293\n                 calls add2list, which this patch removes (and 3 other links). Link: exact.\n  [x] BREAKS     parse_quote  src/tool_getparam.c:1419\n                 calls add2list, which this patch removes (and 3 other links). Link: exact.\n  [x] BREAKS     opt_string  src/tool_getparam.c:2484\n                 calls add2list, which this patch removes (and 6 other links). Link: exact.\n  [x] BREAKS     etag_compare  src/tool_operate.c:897\n                 calls add2list, which this patch removes (and 1 other link). Link: exact.\n  [x] BREAKS     get_args  src/tool_paramhlp.c:673\n                 calls add2list, which this patch removes (and 2 other links). Link: exact.\n  [~] AFFECTED   getparameter  src/tool_getparam.c:2934\n                 calls opt_string. Link: exact.\n  [~] AFFECTED   setup_etag_files  src/tool_operate.c:1285\n                 calls etag_compare. Link: exact.\n  [~] AFFECTED   operate  src/tool_operate.c:2423\n                 calls get_args. Link: exact.\n  [~] AFFECTED   parse_args  src/tool_getparam.c:3117\n                 calls getparameter. Link: exact.\n  [~] AFFECTED   main  src/tool_main.c:152\n                 calls operate. Link: exact.\n  [~] AFFECTED   create_single  src/tool_operate.c:1365\n                 calls setup_etag_files. Link: exact.\n  [~] AFFECTED   parseconfig  src/tool_parsecfg.c:251\n                 calls getparameter. Link: exact.\n  [~] AFFECTED   opt_file  src/tool_getparam.c:2255\n                 calls parseconfig. Link: exact.\n  [~] AFFECTED   single_transfer  src/tool_operate.c:1517\n                 calls create_single. Link: exact.\n  [~] AFFECTED   transfer_per_config  src/tool_operate.c:2309\n                 calls single_transfer. Link: exact.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

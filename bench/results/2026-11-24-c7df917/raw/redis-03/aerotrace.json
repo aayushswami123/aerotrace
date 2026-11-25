@@ -1,0 +1,296 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "src/bitops.c",
+   2015
+  ],
+  [
+   "src/bitops.c",
+   2021
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "src/bitops.c",
+   2015
+  ],
+  [
+   "src/bitops.c",
+   2021
+  ],
+  [
+   "src/bitops.c",
+   2126
+  ],
+  [
+   "src/bitops.c",
+   2130
+  ],
+  [
+   "src/aof.c",
+   1993
+  ],
+  [
+   "src/server.c",
+   4058
+  ],
+  [
+   "src/aof.c",
+   2152
+  ],
+  [
+   "src/aof.c",
+   2182
+  ],
+  [
+   "src/module.c",
+   7165
+  ],
+  [
+   "src/multi.c",
+   227
+  ],
+  [
+   "src/multi.c",
+   229
+  ],
+  [
+   "src/script.c",
+   693
+  ],
+  [
+   "src/server.c",
+   4844
+  ],
+  [
+   "src/aof.c",
+   1745
+  ],
+  [
+   "src/aof.c",
+   1761
+  ],
+  [
+   "src/debug.c",
+   668
+  ],
+  [
+   "src/networking.c",
+   3559
+  ],
+  [
+   "src/script_lua.c",
+   924
+  ],
+  [
+   "src/server.c",
+   7758
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/bitops.c",
+   "id": "c:@F@checkSignedBitfieldOverflow",
+   "line": 616,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/bitops.c",
+   "id": "c:@F@bitfieldGeneric",
+   "line": 1886,
+   "lines": [
+    2015,
+    2021
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/bitops.c",
+   "id": "c:@F@bitfieldCommand",
+   "line": 2125,
+   "lines": [
+    2126
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/bitops.c",
+   "id": "c:@F@bitfieldroCommand",
+   "line": 2129,
+   "lines": [
+    2130
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:@F@loadSingleAppendOnlyFile",
+   "line": 1810,
+   "lines": [
+    1993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/server.c",
+   "id": "c:@F@call",
+   "line": 3992,
+   "lines": [
+    4058
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/aof.c",
+   "id": "c:@F@loadAppendOnlyFiles",
+   "line": 2113,
+   "lines": [
+    2152,
+    2182
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/module.c",
+   "id": "c:@F@RM_Call",
+   "line": 6859,
+   "lines": [
+    7165
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/multi.c",
+   "id": "c:@F@execCommand",
+   "line": 127,
+   "lines": [
+    227,
+    229
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/script.c",
+   "id": "c:@F@scriptCall",
+   "line": 638,
+   "lines": [
+    693
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:@F@processCommand",
+   "line": 4467,
+   "lines": [
+    4844
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadAOFFile",
+   "line": 1730,
+   "lines": [
+    1745
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadManifestFile",
+   "line": 1752,
+   "lines": [
+    1761
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/debug.c",
+   "id": "c:@F@debugCommand",
+   "line": 420,
+   "lines": [
+    668
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@processCommandAndResetClient",
+   "line": 3555,
+   "lines": [
+    3559
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisGenericCommand",
+   "line": 879,
+   "lines": [
+    924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@loadDataFromDisk",
+   "line": 7703,
+   "lines": [
+    7758
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 1.1399,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 15,
+  "breaks_exact": 1,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 4,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS, 15 AFFECTED).\n    15 may be affected (15 further up) and 4 parts of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    checkSignedBitfieldOverflow  src/bitops.c:616  (signature changed: returns 'void' (was 'int'))\n\nFunctions (16)\n  [x] BREAKS     bitfieldGeneric  src/bitops.c:1886\n                 uses its result (stored); checkSignedBitfieldOverflow now returns void (and 4 other links). Link: exact.\n  [~] AFFECTED   bitfieldCommand  src/bitops.c:2125\n                 calls bitfieldGeneric, which calls checkSignedBitfieldOverflow (and 1 other link). Link: exact.\n  [~] AFFECTED   bitfieldroCommand  src/bitops.c:2129\n                 calls bitfieldGeneric, which calls checkSignedBitfieldOverflow (and 1 other link). Link: exact.\n  [~] AFFECTED   loadSingleAppendOnlyFile  src/aof.c:1810\n                 calls bitfieldCommand, which calls checkSignedBitfieldOverflow (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   call  src/server.c:3992\n                 calls bitfieldCommand, which calls checkSignedBitfieldOverflow (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   loadAppendOnlyFiles  src/aof.c:2113\n                 calls loadSingleAppendOnlyFile (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   RM_Call  src/module.c:6859\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   execCommand  src/multi.c:127\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   scriptCall  src/script.c:638\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   processCommand  src/server.c:4467\n                 calls call (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   loadPreLoadAOFFile  src/aof.c:1730\n                 calls loadAppendOnlyFiles (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   loadPreLoadManifestFile  src/aof.c:1752\n                 calls loadAppendOnlyFiles (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   debugCommand  src/debug.c:420\n                 calls loadAppendOnlyFiles (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   processCommandAndResetClient  src/networking.c:3555\n                 calls processCommand (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   luaRedisGenericCommand  src/script_lua.c:879\n                 calls scriptCall (a call through a function pointer of the matching type). Link: probable.\n  ... and 1 more (1 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (4)\n  [?] Signature effects follow callers 2 steps further up; more exist.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n  [?] checkSignedBitfieldOverflow can be called from outside this repo (other programs or libraries that link it); those calls are not visible.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 117 of 117 files in this build.\n1,696 C/C++ files outside this build were not checked: deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c and 1,693 more.\n\nindex: 216 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)"
+}

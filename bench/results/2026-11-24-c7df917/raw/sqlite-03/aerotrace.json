@@ -1,0 +1,366 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "sqlite3.c",
+   60331
+  ],
+  [
+   "sqlite3.c",
+   61561
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "sqlite3.c",
+   60331
+  ],
+  [
+   "sqlite3.c",
+   61561
+  ],
+  [
+   "sqlite3.c",
+   62004
+  ],
+  [
+   "sqlite3.c",
+   61222
+  ],
+  [
+   "sqlite3.c",
+   64377
+  ],
+  [
+   "sqlite3.c",
+   65820
+  ],
+  [
+   "sqlite3.c",
+   63231
+  ],
+  [
+   "sqlite3.c",
+   64495
+  ],
+  [
+   "sqlite3.c",
+   66458
+  ],
+  [
+   "sqlite3.c",
+   76047
+  ],
+  [
+   "sqlite3.c",
+   77032
+  ],
+  [
+   "sqlite3.c",
+   77304
+  ],
+  [
+   "sqlite3.c",
+   64655
+  ],
+  [
+   "sqlite3.c",
+   64827
+  ],
+  [
+   "sqlite3.c",
+   75555
+  ],
+  [
+   "sqlite3.c",
+   75702
+  ],
+  [
+   "sqlite3.c",
+   76468
+  ],
+  [
+   "sqlite3.c",
+   77077
+  ],
+  [
+   "sqlite3.c",
+   85016
+  ],
+  [
+   "sqlite3.c",
+   104570
+  ],
+  [
+   "sqlite3.c",
+   104575
+  ],
+  [
+   "sqlite3.c",
+   104590
+  ],
+  [
+   "sqlite3.c",
+   189889
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerIsSuperJrnlName",
+   "line": 60257,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@readSuperJournal",
+   "line": 60297,
+   "lines": [
+    60331
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pager_delsuper",
+   "line": 61542,
+   "lines": [
+    61561
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pager_playback",
+   "line": 61831,
+   "lines": [
+    62004
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerUnlockAndRollback",
+   "line": 61199,
+   "lines": [
+    61222
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerSharedLock",
+   "line": 64275,
+   "lines": [
+    64377
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerRollback",
+   "line": 65789,
+   "lines": [
+    65820
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerClose",
+   "line": 63189,
+   "lines": [
+    63231
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerUnlockIfUnused",
+   "line": 64492,
+   "lines": [
+    64495
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerSetJournalMode",
+   "line": 66396,
+   "lines": [
+    66458
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@lockBtree",
+   "line": 76039,
+   "lines": [
+    76047
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@autoVacuumCommit",
+   "line": 76959,
+   "lines": [
+    77032
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeRollback",
+   "line": 77279,
+   "lines": [
+    77304
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@getPageNormal",
+   "line": 64556,
+   "lines": [
+    64655
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerUnrefPageOne",
+   "line": 64820,
+   "lines": [
+    64827
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeOpen",
+   "line": 75289,
+   "lines": [
+    75555
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeClose",
+   "line": 75678,
+   "lines": [
+    75702
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@btreeBeginTrans",
+   "line": 76355,
+   "lines": [
+    76468
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCommitPhaseOne",
+   "line": 77070,
+   "lines": [
+    77077
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_backup_finish",
+   "line": 84986,
+   "lines": [
+    85016
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    104570,
+    104575,
+    104590
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RollbackAll",
+   "line": 189867,
+   "lines": [
+    189889
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 5.1831,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 19,
+  "breaks_exact": 2,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 3,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 2 things you didn't touch (2 BREAKS, 19 AFFECTED).\n    19 may be affected (19 further up) and 3 parts of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    pagerIsSuperJrnlName  sqlite3.c:60257  (signature changed: returns 'void' (was 'int'))\n\nFunctions (21)\n  [x] BREAKS     readSuperJournal  sqlite3.c:60297\n                 uses its result (checked as true/false); pagerIsSuperJrnlName now returns void (and 2 other links). Link: exact.\n  [x] BREAKS     pager_delsuper  sqlite3.c:61542\n                 uses its result (compared); pagerIsSuperJrnlName now returns void (and 2 other links). Link: exact.\n  [~] AFFECTED   pager_playback  sqlite3.c:61831\n                 calls pager_delsuper, which calls pagerIsSuperJrnlName (and 1 other link). Link: exact.\n  [~] AFFECTED   pagerUnlockAndRollback  sqlite3.c:61199\n                 calls pager_playback, which calls pagerIsSuperJrnlName (and 1 other link). Link: exact.\n  [~] AFFECTED   sqlite3PagerSharedLock  sqlite3.c:64275\n                 calls pager_playback, which calls pagerIsSuperJrnlName (and 1 other link). Link: exact.\n  [~] AFFECTED   sqlite3PagerRollback  sqlite3.c:65789\n                 calls pager_playback, which calls pagerIsSuperJrnlName (and 1 other link). Link: exact.\n  [~] AFFECTED   sqlite3PagerClose  sqlite3.c:63189\n                 calls pagerUnlockAndRollback. Link: exact.\n  [~] AFFECTED   pagerUnlockIfUnused  sqlite3.c:64492\n                 calls pagerUnlockAndRollback. Link: exact.\n  [~] AFFECTED   sqlite3PagerSetJournalMode  sqlite3.c:66396\n                 calls sqlite3PagerSharedLock. Link: exact.\n  [~] AFFECTED   lockBtree  sqlite3.c:76039\n                 calls sqlite3PagerSharedLock. Link: exact.\n  [~] AFFECTED   autoVacuumCommit  sqlite3.c:76959\n                 calls sqlite3PagerRollback. Link: exact.\n  [~] AFFECTED   sqlite3BtreeRollback  sqlite3.c:77279\n                 calls sqlite3PagerRollback. Link: exact.\n  [~] AFFECTED   getPageNormal  sqlite3.c:64556\n                 calls pagerUnlockIfUnused. Link: exact.\n  [~] AFFECTED   sqlite3PagerUnrefPageOne  sqlite3.c:64820\n                 calls pagerUnlockIfUnused. Link: exact.\n  [~] AFFECTED   sqlite3BtreeOpen  sqlite3.c:75289\n                 calls sqlite3PagerClose. Link: exact.\n  ... and 6 more (6 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (3)\n  [?] Signature effects follow callers 2 steps further up; more exist.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}

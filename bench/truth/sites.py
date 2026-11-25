@@ -14,7 +14,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "accuracy"))
 from cfuncs import blank_comments_and_strings, functions
 
-INIT_START = re.compile(r"^[A-Za-z_][\w \t\*]*?\b([A-Za-z_]\w*)\s*(?:\[[^\]]*\]\s*)*=\s*\{")
+# `name[] = {` at the start of a line, after a type, or after the `}` that closes an inline struct type
+# (`} const maybe_feature[] = {`).
+INIT_START = re.compile(r"^(?:\}\s*)?(?:[A-Za-z_][\w \t\*]*?\b)?([A-Za-z_]\w*)\s*(?:\[[^\]]*\]\s*)*=\s*\{")
 
 
 class Sites:
@@ -36,8 +38,11 @@ class Sites:
                 if m and (i + 1) not in in_fn and "(" not in lines[i].split("=")[0]:
                     depth, j = 0, i
                     while j < len(lines):
-                        if not lines[j].lstrip().startswith("#"):
-                            depth += lines[j].count("{") - lines[j].count("}")
+                        part = (
+                            lines[j][lines[j].index("=") :] if j == i else lines[j]
+                        )  # braces after `=` only
+                        if not part.lstrip().startswith("#"):
+                            depth += part.count("{") - part.count("}")
                         if depth <= 0 and j >= i and "{" in "".join(lines[i : j + 1]):
                             break
                         j += 1

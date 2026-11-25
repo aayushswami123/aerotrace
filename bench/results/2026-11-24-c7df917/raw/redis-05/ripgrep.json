@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename delexGetKeys <build files>",
+ "hits": [
+  [
+   "src/db.c",
+   3964
+  ],
+  [
+   "src/commands.def",
+   13077
+  ],
+  [
+   "src/server.h",
+   4371
+  ]
+ ],
+ "seconds": 0.0225,
+ "text": "src/db.c:3964:int delexGetKeys(struct redisCommand *cmd, robj **argv, int argc, getKeysResult *result) {\nsrc/commands.def:13077:{MAKE_CMD(\"delex\",\"Conditionally removes the specified key based on value or digest comparison.\",\"O(1) for IFEQ/IFNE, O(N) for IFDEQ/IFDNE where N is the length of the string value.\",\"8.4.0\",CMD_DOC_NONE,NULL,NULL,\"string\",COMMAND_GROUP_STRING,DELEX_History,0,DELEX_Tips,0,delexCommand,-2,CMD_WRITE|CMD_FAST,ACL_CATEGORY_STRING,DELEX_Keyspecs,1,delexGetKeys,2),.args=DELEX_Args},\nsrc/server.h:4371:int delexGetKeys(struct redisCommand *cmd, robj **argv, int argc, getKeysResult *result);\n"
+}

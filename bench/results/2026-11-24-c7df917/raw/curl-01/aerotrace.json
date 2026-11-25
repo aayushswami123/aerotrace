@@ -1,0 +1,648 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "lib/dynhds.c",
+   190
+  ],
+  [
+   "lib/dynhds.c",
+   191
+  ],
+  [
+   "lib/dynhds.c",
+   225
+  ],
+  [
+   "lib/http.c",
+   5039
+  ],
+  [
+   "lib/http.c",
+   5042
+  ],
+  [
+   "lib/http.c",
+   5046
+  ],
+  [
+   "lib/http.c",
+   5050
+  ],
+  [
+   "lib/http.c",
+   5059
+  ],
+  [
+   "lib/http.c",
+   5063
+  ],
+  [
+   "lib/http_proxy.c",
+   167
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "lib/dynhds.c",
+   190
+  ],
+  [
+   "lib/dynhds.c",
+   191
+  ],
+  [
+   "lib/dynhds.c",
+   225
+  ],
+  [
+   "lib/http.c",
+   5039
+  ],
+  [
+   "lib/http.c",
+   5042
+  ],
+  [
+   "lib/http.c",
+   5046
+  ],
+  [
+   "lib/http.c",
+   5050
+  ],
+  [
+   "lib/http.c",
+   5059
+  ],
+  [
+   "lib/http.c",
+   5063
+  ],
+  [
+   "lib/http_proxy.c",
+   167
+  ],
+  [
+   "lib/dynhds.c",
+   230
+  ],
+  [
+   "lib/http1.c",
+   311
+  ],
+  [
+   "lib/http_proxy.c",
+   238
+  ],
+  [
+   "lib/http_proxy.c",
+   253
+  ],
+  [
+   "lib/http_proxy.c",
+   260
+  ],
+  [
+   "lib/http_proxy.c",
+   374
+  ],
+  [
+   "lib/http_proxy.c",
+   390
+  ],
+  [
+   "lib/http_proxy.c",
+   397
+  ],
+  [
+   "lib/http_proxy.c",
+   403
+  ],
+  [
+   "lib/http_proxy.c",
+   407
+  ],
+  [
+   "lib/http_proxy.c",
+   411
+  ],
+  [
+   "lib/http_proxy.c",
+   416
+  ],
+  [
+   "lib/http_proxy.c",
+   421
+  ],
+  [
+   "lib/http_proxy.c",
+   449
+  ],
+  [
+   "lib/dynhds.c",
+   75
+  ],
+  [
+   "lib/dynhds.c",
+   78
+  ],
+  [
+   "lib/dynhds.c",
+   79
+  ],
+  [
+   "lib/dynhds.c",
+   82
+  ],
+  [
+   "lib/dynhds.c",
+   89
+  ],
+  [
+   "lib/dynhds.c",
+   92
+  ],
+  [
+   "lib/dynhds.c",
+   93
+  ],
+  [
+   "lib/dynhds.c",
+   94
+  ],
+  [
+   "lib/dynhds.c",
+   102
+  ],
+  [
+   "lib/dynhds.c",
+   113
+  ],
+  [
+   "lib/dynhds.c",
+   120
+  ],
+  [
+   "lib/dynhds.c",
+   121
+  ],
+  [
+   "lib/dynhds.c",
+   122
+  ],
+  [
+   "lib/dynhds.c",
+   123
+  ],
+  [
+   "lib/dynhds.c",
+   357
+  ],
+  [
+   "lib/dynhds.c",
+   360
+  ],
+  [
+   "lib/dynhds.c",
+   361
+  ],
+  [
+   "lib/dynhds.c",
+   362
+  ],
+  [
+   "lib/dynhds.c",
+   366
+  ],
+  [
+   "lib/dynhds.c",
+   367
+  ],
+  [
+   "lib/dynhds.c",
+   131
+  ],
+  [
+   "lib/http.c",
+   4942
+  ],
+  [
+   "lib/http.c",
+   4943
+  ],
+  [
+   "lib/http.c",
+   5103
+  ],
+  [
+   "lib/http.c",
+   5104
+  ],
+  [
+   "lib/http1.c",
+   337
+  ],
+  [
+   "lib/http_proxy.c",
+   473
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   259
+  ],
+  [
+   "lib/http.c",
+   4810
+  ],
+  [
+   "lib/http.c",
+   4931
+  ],
+  [
+   "lib/http.c",
+   5094
+  ],
+  [
+   "lib/http1.c",
+   46
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   676
+  ],
+  [
+   "lib/http1.c",
+   253
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   801
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_add",
+   "line": 134,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_cadd",
+   "line": 185,
+   "lines": [
+    190,
+    191
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_h1_add_line",
+   "line": 194,
+   "lines": [
+    225
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_req_to_h2",
+   "line": 5002,
+   "lines": [
+    5039,
+    5042,
+    5046,
+    5050,
+    5059,
+    5063
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@dynhds_add_custom",
+   "line": 41,
+   "lines": [
+    167
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_h1_cadd_line",
+   "line": 228,
+   "lines": [
+    230
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http1.c",
+   "id": "c:@F@Curl_h1_req_parse_read",
+   "line": 262,
+   "lines": [
+    311
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@http_proxy_create_CONNECT",
+   "line": 199,
+   "lines": [
+    238,
+    253,
+    260
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@http_proxy_create_CONNECTUDP",
+   "line": 278,
+   "lines": [
+    374,
+    390,
+    397,
+    403,
+    407,
+    411,
+    416,
+    421
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http_proxy.c",
+   "id": "c:@F@Curl_http_proxy_create_tunnel_request",
+   "line": 442,
+   "lines": [
+    449
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_free",
+   "line": 72,
+   "lines": [
+    75,
+    78,
+    79,
+    82
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_reset",
+   "line": 86,
+   "lines": [
+    89,
+    92,
+    93,
+    94
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_count",
+   "line": 100,
+   "lines": [
+    102
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_getn",
+   "line": 110,
+   "lines": [
+    113
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_get",
+   "line": 116,
+   "lines": [
+    120,
+    121,
+    122,
+    123
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_h1_dprint",
+   "line": 352,
+   "lines": [
+    357,
+    360,
+    361,
+    362,
+    366,
+    367
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/dynhds.c",
+   "id": "c:@F@Curl_dynhds_cget",
+   "line": 129,
+   "lines": [
+    131
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_req_free",
+   "line": 4936,
+   "lines": [
+    4942,
+    4943
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_resp_free",
+   "line": 5099,
+   "lines": [
+    5103,
+    5104
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http1.c",
+   "id": "c:@F@Curl_h1_req_write_head",
+   "line": 322,
+   "lines": [
+    337
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http_proxy.c",
+   "id": "c:@F@Curl_http_proxy_inspect_tunnel_response",
+   "line": 461,
+   "lines": [
+    473
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@start_CONNECT",
+   "line": 233,
+   "lines": [
+    259
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_req_make",
+   "line": 4764,
+   "lines": [
+    4810
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_req_make2",
+   "line": 4894,
+   "lines": [
+    4931
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_resp_make",
+   "line": 5071,
+   "lines": [
+    5094
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http1.c",
+   "id": "c:@F@Curl_h1_req_parse_free",
+   "line": 43,
+   "lines": [
+    46
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@H1_CONNECT",
+   "line": 651,
+   "lines": [
+    676
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http1.c",
+   "id": "c:http1.c@F@start_req",
+   "line": 131,
+   "lines": [
+    253
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@cf_h1_proxy_connect",
+   "line": 773,
+   "lines": [
+    801
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.6591,
+ "summary": {
+  "affected_direct": 6,
+  "affected_further": 18,
+  "breaks_exact": 4,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 4,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 4 things you didn't touch (4 BREAKS, 24 AFFECTED).\n    24 may be affected (6 direct, 18 further up) and 4 parts of the change could not be followed.\n    You changed 1 function in 2 C/C++ files (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    Curl_dynhds_add  lib/dynhds.c:134  (signature changed: now takes 6 parameters (was 5))\n\nFunctions (28)\n  [x] BREAKS     Curl_dynhds_cadd  lib/dynhds.c:185\n                 passes 5 arguments; Curl_dynhds_add now takes 6 (and 2 other links). Link: exact.\n  [x] BREAKS     Curl_dynhds_h1_add_line  lib/dynhds.c:194\n                 passes 5 arguments; Curl_dynhds_add now takes 6 (and 2 other links). Link: exact.\n  [x] BREAKS     Curl_http_req_to_h2  lib/http.c:5002\n                 passes 5 arguments; Curl_dynhds_add now takes 6 (and 6 other links). Link: exact.\n  [x] BREAKS     dynhds_add_custom  lib/http_proxy.c:41\n                 passes 5 arguments; Curl_dynhds_add now takes 6 (and 1 other link). Link: exact.\n  [~] AFFECTED   Curl_dynhds_h1_cadd_line  lib/dynhds.c:228\n                 calls Curl_dynhds_h1_add_line, which calls Curl_dynhds_add (and 1 other link). Link: exact.\n  [~] AFFECTED   Curl_h1_req_parse_read  lib/http1.c:262\n                 calls Curl_dynhds_h1_add_line, which calls Curl_dynhds_add (and 1 other link). Link: exact.\n  [~] AFFECTED   http_proxy_create_CONNECT  lib/http_proxy.c:199\n                 calls Curl_dynhds_cadd, which calls Curl_dynhds_add (and 1 other link). Link: exact.\n  [~] AFFECTED   http_proxy_create_CONNECTUDP  lib/http_proxy.c:278\n                 calls Curl_dynhds_cadd, which calls Curl_dynhds_add (and 1 other link). Link: exact.\n  [~] AFFECTED   Curl_http_proxy_create_tunnel_request  lib/http_proxy.c:442\n                 calls http_proxy_create_CONNECT, which calls Curl_dynhds_add (and 1 other link). Link: exact.\n  [~] AFFECTED   Curl_dynhds_free  lib/dynhds.c:72\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  [~] AFFECTED   Curl_dynhds_reset  lib/dynhds.c:86\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  [~] AFFECTED   Curl_dynhds_count  lib/dynhds.c:100\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  [~] AFFECTED   Curl_dynhds_getn  lib/dynhds.c:110\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  [~] AFFECTED   Curl_dynhds_get  lib/dynhds.c:116\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  [~] AFFECTED   Curl_dynhds_h1_dprint  lib/dynhds.c:352\n                 reads data that Curl_dynhds_add writes. Link: probable.\n  ... and 13 more (13 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (4)\n  [?] Curl_dynhds_add can be called from outside this repo (other programs or libraries that link it); those calls are not visible.\n  [?] Signature effects follow callers 2 steps further up; more exist.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

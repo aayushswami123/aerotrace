@@ -1,0 +1,27 @@
+{
+ "command": "textDocument/references at lib/cf-socket.c:535:12",
+ "hits": [
+  [
+   "lib/cf-socket.c",
+   568
+  ],
+  [
+   "lib/cf-socket.c",
+   1126
+  ],
+  [
+   "lib/cf-socket.c",
+   1394
+  ],
+  [
+   "lib/cf-socket.c",
+   1546
+  ],
+  [
+   "lib/cf-socket.c",
+   2383
+  ]
+ ],
+ "seconds": 0.0019,
+ "text": "lib/cf-socket.c:1126: socket_close(data, cf->conn, !ctx->accepted, ctx->sock);\nlib/cf-socket.c:1394: socket_close(data, cf->conn, TRUE, ctx->sock);\nlib/cf-socket.c:1546: socket_close(data, cf->conn, TRUE, ctx->sock);\nlib/cf-socket.c:2383: socket_close(data, cf->conn, TRUE, ctx->sock);\nlib/cf-socket.c:568: return socket_close(data, conn, FALSE, sock);\n"
+}

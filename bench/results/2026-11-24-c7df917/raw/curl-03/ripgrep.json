@@ -1,0 +1,31 @@
+{
+ "command": "rg -n -w --no-heading --with-filename socket_close <build files>",
+ "hits": [
+  [
+   "lib/cf-socket.c",
+   535
+  ],
+  [
+   "lib/cf-socket.c",
+   568
+  ],
+  [
+   "lib/cf-socket.c",
+   1126
+  ],
+  [
+   "lib/cf-socket.c",
+   1394
+  ],
+  [
+   "lib/cf-socket.c",
+   1546
+  ],
+  [
+   "lib/cf-socket.c",
+   2383
+  ]
+ ],
+ "seconds": 0.0289,
+ "text": "lib/cf-socket.c:535:static int socket_close(struct Curl_easy *data, struct connectdata *conn,\nlib/cf-socket.c:568:  return socket_close(data, conn, FALSE, sock);\nlib/cf-socket.c:1126:      socket_close(data, cf->conn, !ctx->accepted, ctx->sock);\nlib/cf-socket.c:1394:      socket_close(data, cf->conn, TRUE, ctx->sock);\nlib/cf-socket.c:1546:      socket_close(data, cf->conn, TRUE, ctx->sock);\nlib/cf-socket.c:2383:  socket_close(data, cf->conn, TRUE, ctx->sock);\n"
+}

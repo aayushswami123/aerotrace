@@ -1,0 +1,19 @@
+{
+ "command": "cscope -d -L0 redisPopCountAarch64",
+ "hits": [
+  [
+   "src/bitops.c",
+   168
+  ],
+  [
+   "src/bitops.c",
+   379
+  ],
+  [
+   "src/bitops.c",
+   2187
+  ]
+ ],
+ "seconds": 0.0081,
+ "text": "src/bitops.c redisPopCountAarch64 168 long long redisPopCountAarch64(void *s, long count) {\nsrc/bitops.c redisPopcountAuto 379 return redisPopCountAarch64((void *)p, count);\nsrc/bitops.c bitopsTest 2187 long long result_aarch64 = redisPopCountAarch64(test_data, sizeof(test_data));\n"
+}

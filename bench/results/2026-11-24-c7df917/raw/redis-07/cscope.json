@@ -1,0 +1,43 @@
+{
+ "command": "cscope -d -L0 stat_current_cow_peak",
+ "hits": [
+  [
+   "src/server.h",
+   2224
+  ],
+  [
+   "src/childinfo.c",
+   103
+  ],
+  [
+   "src/childinfo.c",
+   111
+  ],
+  [
+   "src/childinfo.c",
+   113
+  ],
+  [
+   "src/childinfo.c",
+   115
+  ],
+  [
+   "src/server.c",
+   854
+  ],
+  [
+   "src/server.c",
+   3157
+  ],
+  [
+   "src/server.c",
+   6617
+  ],
+  [
+   "src/server.c",
+   7553
+  ]
+ ],
+ "seconds": 0.0077,
+ "text": "src/server.h <global> 2224 size_t stat_current_cow_peak;\nsrc/childinfo.c updateChildInfo 103 if (cow > server.stat_current_cow_peak) server.stat_current_cow_peak = cow;\nsrc/childinfo.c updateChildInfo 111 server.stat_aof_cow_bytes = server.stat_current_cow_peak;\nsrc/childinfo.c updateChildInfo 113 server.stat_rdb_cow_bytes = server.stat_current_cow_peak;\nsrc/childinfo.c updateChildInfo 115 server.stat_module_cow_bytes = server.stat_current_cow_peak;\nsrc/server.c resetChildState 854 server.stat_current_cow_peak = 0;\nsrc/server.c initServer 3157 server.stat_current_cow_peak = 0;\nsrc/server.c genRedisInfoString 6617 \"current_cow_peak:%zu\\r\\n\", server.stat_current_cow_peak,\nsrc/server.c redisFork 7553 server.stat_current_cow_peak = 0;\n"
+}

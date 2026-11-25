@@ -1,0 +1,31 @@
+{
+ "command": "rg -n -w --no-heading --with-filename http_follow_mode <build files>",
+ "hits": [
+  [
+   "lib/setopt.c",
+   1017
+  ],
+  [
+   "lib/http.c",
+   1163
+  ],
+  [
+   "lib/http.c",
+   1168
+  ],
+  [
+   "lib/http.c",
+   1440
+  ],
+  [
+   "lib/http.c",
+   3455
+  ],
+  [
+   "lib/urldata.h",
+   1033
+  ]
+ ],
+ "seconds": 0.0379,
+ "text": "lib/setopt.c:1017:      s->http_follow_mode = (unsigned char)arg;\nlib/http.c:1163:     (data->set.http_follow_mode == CURLFOLLOW_OBEYCODE)) {\nlib/http.c:1168:  else if(req && (data->set.http_follow_mode != CURLFOLLOW_FIRSTONLY))\nlib/http.c:1440:  if((data->set.http_follow_mode == CURLFOLLOW_FIRSTONLY) &&\nlib/http.c:3455:         data->set.http_follow_mode) {\nlib/urldata.h:1033:  uint8_t http_follow_mode; /* follow HTTP redirects */\n"
+}

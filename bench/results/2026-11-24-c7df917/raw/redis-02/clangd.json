@@ -1,0 +1,11 @@
+{
+ "command": "textDocument/references at src/bitops.c:168:11",
+ "hits": [
+  [
+   "src/bitops.c",
+   379
+  ]
+ ],
+ "seconds": 0.0022,
+ "text": "src/bitops.c:379: return redisPopCountAarch64((void*)p, count);\n"
+}

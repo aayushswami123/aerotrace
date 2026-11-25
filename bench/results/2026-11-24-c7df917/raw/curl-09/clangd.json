@@ -1,0 +1,31 @@
+{
+ "command": "textDocument/references at lib/curl_trc.h:321:9",
+ "hits": [
+  [
+   "lib/connect.c",
+   213
+  ],
+  [
+   "lib/curl_trc.c",
+   273
+  ],
+  [
+   "lib/curl_trc.h",
+   326
+  ],
+  [
+   "lib/curl_trc.h",
+   329
+  ],
+  [
+   "lib/socks.c",
+   1225
+  ],
+  [
+   "lib/vdns/cf-dns.c",
+   136
+  ]
+ ],
+ "seconds": 0.0011,
+ "text": "lib/connect.c:213: if(Curl_trc_is_verbose(data)) {\nlib/curl_trc.c:273: if(Curl_trc_is_verbose(data)) {\nlib/curl_trc.h:326: (Curl_trc_is_verbose(data) &&                       \\\nlib/curl_trc.h:329: (Curl_trc_is_verbose(data) &&          \\\nlib/socks.c:1225: if(Curl_trc_is_verbose(data)) {\nlib/vdns/cf-dns.c:136: if(!Curl_trc_is_verbose(data) ||\n"
+}

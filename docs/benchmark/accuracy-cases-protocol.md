@@ -44,7 +44,7 @@ Two kinds of answer are dropped for every tool:
 
 | tool | how it is asked | what counts as its answer |
 |---|---|---|
-| AeroTrace (this commit) | `aerotrace check --patch <case.diff> --json`, on an index of the unchanged tree built with `aerotrace index` and the build's `compile_commands.json` | **claimed breaks:** nodes with status `breaks` (certainty `exact` or `probable`, that is BREAKS and MAY BREAK). Also reported: **in the answer**, every node of any status (AFFECTED, UNKNOWN too) |
+| AeroTrace (this commit) | `aerotrace check --patch <case.diff> --json`, on an index of the unchanged tree built with `aerotrace index` and the build's `compile_commands.json` | **claimed breaks:** nodes with status `breaks` (certainty `exact` or `probable`, that is BREAKS and MAY BREAK). Also reported: **in the answer**, every node it reports as possibly hit: BREAKS, MAY BREAK, AFFECTED and UNKNOWN (not NO EFFECT FOUND, which means checked and nothing found) |
 | ripgrep 15.2.0 | `rg -n -w <name>` over the build's files (functions, globals, macros: the name; fields: the field name) | every matching line |
 | clangd 21.0.0 (Apple) | `textDocument/references` (declarations not included) at the symbol's definition, with `--background-index` on the build's `compile_commands.json`, after indexing finishes | every reference location |
 | cscope 15.9 | database built with `cscope -b -q -k` over the build's files; query `cscope -d -L0 <name>` ("find this C symbol") | every result line |
@@ -83,3 +83,20 @@ Per case and tool, with T the truth sites and A the answer sites:
   loses or ties.
 - Nothing is dropped after the fact. A case the harness gets wrong is fixed and re-run for **all**
   tools, and the fix is logged in `RESULTS.md`.
+
+## Fixes made after the first scoring (logged as the rules require)
+
+All fixes were applied to every tool and every case, and everything was re-scored. No tool answer
+changed. Only how answers and truth are read changed.
+
+1. **"In the answer" for AeroTrace** first included its NO EFFECT FOUND nodes, which mean "checked,
+   nothing found". That misread the tool, so they are left out now. The field was recomputed from the nodes already
+   saved in each raw answer; AeroTrace was not run again.
+2. **Link-error sites.** The linker names the function after inlining (curl builds with `-O2`, so a
+   static helper's use shows up under its caller). A link error's site is now where the object's
+   source file uses the missing symbol, named by the same site rules as everything else.
+3. **Tables after an inline struct type** (`} const maybe_feature[] = {`) were not seen as tables, so
+   their rows got `@lineN` sites. They are tables now.
+
+Each fix makes the truth and the answers use the same names. None of them was chosen by looking at
+which tool it helps.

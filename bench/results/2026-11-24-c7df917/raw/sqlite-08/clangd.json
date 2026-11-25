@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at shell.c:238:12",
+ "hits": [
+  [
+   "shell.c",
+   39061
+  ],
+  [
+   "shell.c",
+   39311
+  ]
+ ],
+ "seconds": 0.0135,
+ "text": "shell.c:39061: shellCmdLineEdit = 0;\nshell.c:39311: shellCmdLineEdit = booleanValue(cmdline_option_value(argc,argv,++i));\n"
+}

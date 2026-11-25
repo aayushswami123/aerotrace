@@ -1,0 +1,35 @@
+{
+ "command": "rg -n -w --no-heading --with-filename upkeep_interval_ms <build files>",
+ "hits": [
+  [
+   "lib/conncache.c",
+   901
+  ],
+  [
+   "lib/url.c",
+   418
+  ],
+  [
+   "lib/url.c",
+   2621
+  ],
+  [
+   "lib/mqtt.c",
+   840
+  ],
+  [
+   "lib/mqtt.c",
+   844
+  ],
+  [
+   "lib/setopt.c",
+   878
+  ],
+  [
+   "lib/urldata.h",
+   965
+  ]
+ ],
+ "seconds": 0.0287,
+ "text": "lib/conncache.c:901:     admin->set.upkeep_interval_ms) {\nlib/url.c:418:  set->upkeep_interval_ms = CURL_UPKEEP_INTERVAL_DEFAULT;\nlib/url.c:2621:    admin->set.upkeep_interval_ms = data->set.upkeep_interval_ms;\nlib/mqtt.c:840:     data->set.upkeep_interval_ms > 0) {\nlib/mqtt.c:844:    if(diff > data->set.upkeep_interval_ms) {\nlib/setopt.c:878:    return setopt_set_timeout_ms(&s->upkeep_interval_ms, arg);\nlib/urldata.h:965:  timediff_t upkeep_interval_ms; /* Time between calls for connection\n"
+}

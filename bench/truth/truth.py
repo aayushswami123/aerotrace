@@ -31,7 +31,7 @@ HERE = Path(__file__).resolve().parent
 CASES = HERE.parent / "cases"
 sys.path.insert(0, str(HERE.parent / "accuracy"))
 sys.path.insert(0, str(HERE))
-from cfuncs import functions  # noqa: E402
+from cfuncs import blank_comments_and_strings, functions  # noqa: E402
 from sites import Sites  # noqa: E402
 
 ERR = re.compile(r"^(?P<file>[^\s:][^:\n]*):(?P<line>\d+):(?P<col>\d+): (?:fatal )?error: (?P<msg>.*)$", re.M)
@@ -100,6 +100,22 @@ def definer(repo: str, tree: Path, name: str) -> list[str]:
     return sorted(out)
 
 
+def uses_in(tree: Path, files: list[str], sym: str) -> list[str]:
+    """Sites of the lines in `files` that use `sym` (not its own declarations)."""
+    out = set()
+    for rel in files:
+        lines = blank_comments_and_strings((tree / rel).read_text(errors="replace")).split("\n")
+        for i, ln in enumerate(lines):
+            if not re.search(r"(?<![\w.>])" + re.escape(sym) + r"\b", ln):
+                continue
+            if re.match(r"^\s*(?:extern\b|#)", ln):
+                continue  # a declaration or a preprocessor line is not a use
+            if re.match(r"^[A-Za-z_][\w \t\*]*\b" + re.escape(sym) + r"\s*\([^)]*\)\s*;", ln):
+                continue  # a prototype
+            out.add(site_of(tree, rel, i + 1))
+    return sorted(out)
+
+
 def obj_to_source(repo: str, tree: Path, obj: str) -> list[str]:
     stem = Path(obj).name.rsplit(".", 1)[0]
     for prefix in ("libcurl_la-", "curl-", "libcurltool_la-"):
@@ -139,8 +155,12 @@ def parse(repo: str, tree: Path, cwd: Path, out: str, changed: dict[str, list[in
             if ms:
                 sym = ms.group("sym")
             elif mr and sym:
-                srcs = obj_to_source(repo, tree, mr.group("obj"))
-                sites = [f"{s}:{mr.group('fn')}" for s in srcs] or definer(repo, tree, mr.group("fn"))
+                # The linker names the function after inlining (-O2), which may not be the source function.
+                # So the site is where the source of that object uses the missing symbol.
+                srcs = obj_to_source(repo, tree, mr.group("obj")) or [
+                    s.split(":", 1)[0] for s in definer(repo, tree, mr.group("fn"))
+                ]
+                sites = uses_in(tree, srcs, sym)
                 links.append(
                     {"symbol": sym, "function": mr.group("fn"), "object": mr.group("obj"), "sites": sites}
                 )

@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename checkSignedBitfieldOverflow <build files>",
+ "hits": [
+  [
+   "src/bitops.c",
+   616
+  ],
+  [
+   "src/bitops.c",
+   2015
+  ],
+  [
+   "src/bitops.c",
+   2021
+  ]
+ ],
+ "seconds": 0.0248,
+ "text": "src/bitops.c:616:int checkSignedBitfieldOverflow(int64_t value, int64_t incr, uint64_t bits, int owtype, int64_t *limit) {\nsrc/bitops.c:2015:                    overflow = checkSignedBitfieldOverflow(oldval,\nsrc/bitops.c:2021:                    overflow = checkSignedBitfieldOverflow(newval,\n"
+}

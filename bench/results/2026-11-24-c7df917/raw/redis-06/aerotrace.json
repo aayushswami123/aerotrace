@@ -1,0 +1,2092 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "src/aof.c",
+   244
+  ],
+  [
+   "src/aof.c",
+   245
+  ],
+  [
+   "src/aof.c",
+   250
+  ],
+  [
+   "src/aof.c",
+   615
+  ],
+  [
+   "src/aof.c",
+   645
+  ],
+  [
+   "src/aof.c",
+   646
+  ],
+  [
+   "src/aof.c",
+   667
+  ],
+  [
+   "src/aof.c",
+   669
+  ],
+  [
+   "src/aof.c",
+   679
+  ],
+  [
+   "src/aof.c",
+   705
+  ],
+  [
+   "src/aof.c",
+   718
+  ],
+  [
+   "src/aof.c",
+   742
+  ],
+  [
+   "src/aof.c",
+   743
+  ],
+  [
+   "src/aof.c",
+   752
+  ],
+  [
+   "src/aof.c",
+   766
+  ],
+  [
+   "src/aof.c",
+   807
+  ],
+  [
+   "src/aof.c",
+   842
+  ],
+  [
+   "src/aof.c",
+   913
+  ],
+  [
+   "src/aof.c",
+   934
+  ],
+  [
+   "src/aof.c",
+   936
+  ],
+  [
+   "src/aof.c",
+   952
+  ],
+  [
+   "src/aof.c",
+   983
+  ],
+  [
+   "src/aof.c",
+   984
+  ],
+  [
+   "src/aof.c",
+   1035
+  ],
+  [
+   "src/aof.c",
+   1073
+  ],
+  [
+   "src/aof.c",
+   1743
+  ],
+  [
+   "src/aof.c",
+   1744
+  ],
+  [
+   "src/aof.c",
+   1748
+  ],
+  [
+   "src/aof.c",
+   1758
+  ],
+  [
+   "src/aof.c",
+   1760
+  ],
+  [
+   "src/aof.c",
+   1775
+  ],
+  [
+   "src/aof.c",
+   1777
+  ],
+  [
+   "src/aof.c",
+   1820
+  ],
+  [
+   "src/aof.c",
+   2102
+  ],
+  [
+   "src/aof.c",
+   3207
+  ],
+  [
+   "src/aof.c",
+   3208
+  ],
+  [
+   "src/aof.c",
+   3311
+  ],
+  [
+   "src/aof.c",
+   3400
+  ],
+  [
+   "src/aof.c",
+   3496
+  ],
+  [
+   "src/aof.c",
+   3592
+  ],
+  [
+   "src/aof.c",
+   3725
+  ],
+  [
+   "src/aof.c",
+   3874
+  ],
+  [
+   "src/aof.c",
+   3899
+  ],
+  [
+   "src/aof.c",
+   3902
+  ],
+  [
+   "src/config.c",
+   3466
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "src/aof.c",
+   244
+  ],
+  [
+   "src/aof.c",
+   245
+  ],
+  [
+   "src/aof.c",
+   250
+  ],
+  [
+   "src/aof.c",
+   615
+  ],
+  [
+   "src/aof.c",
+   645
+  ],
+  [
+   "src/aof.c",
+   646
+  ],
+  [
+   "src/aof.c",
+   667
+  ],
+  [
+   "src/aof.c",
+   669
+  ],
+  [
+   "src/aof.c",
+   679
+  ],
+  [
+   "src/aof.c",
+   705
+  ],
+  [
+   "src/aof.c",
+   718
+  ],
+  [
+   "src/aof.c",
+   742
+  ],
+  [
+   "src/aof.c",
+   743
+  ],
+  [
+   "src/aof.c",
+   752
+  ],
+  [
+   "src/aof.c",
+   766
+  ],
+  [
+   "src/aof.c",
+   807
+  ],
+  [
+   "src/aof.c",
+   842
+  ],
+  [
+   "src/aof.c",
+   913
+  ],
+  [
+   "src/aof.c",
+   934
+  ],
+  [
+   "src/aof.c",
+   936
+  ],
+  [
+   "src/aof.c",
+   952
+  ],
+  [
+   "src/aof.c",
+   983
+  ],
+  [
+   "src/aof.c",
+   984
+  ],
+  [
+   "src/aof.c",
+   1035
+  ],
+  [
+   "src/aof.c",
+   1073
+  ],
+  [
+   "src/aof.c",
+   1743
+  ],
+  [
+   "src/aof.c",
+   1744
+  ],
+  [
+   "src/aof.c",
+   1748
+  ],
+  [
+   "src/aof.c",
+   1758
+  ],
+  [
+   "src/aof.c",
+   1760
+  ],
+  [
+   "src/aof.c",
+   1775
+  ],
+  [
+   "src/aof.c",
+   1777
+  ],
+  [
+   "src/aof.c",
+   1820
+  ],
+  [
+   "src/aof.c",
+   2102
+  ],
+  [
+   "src/aof.c",
+   3207
+  ],
+  [
+   "src/aof.c",
+   3208
+  ],
+  [
+   "src/aof.c",
+   3311
+  ],
+  [
+   "src/aof.c",
+   3400
+  ],
+  [
+   "src/aof.c",
+   3496
+  ],
+  [
+   "src/aof.c",
+   3592
+  ],
+  [
+   "src/aof.c",
+   3725
+  ],
+  [
+   "src/aof.c",
+   3874
+  ],
+  [
+   "src/aof.c",
+   3899
+  ],
+  [
+   "src/aof.c",
+   3902
+  ],
+  [
+   "src/config.c",
+   3466
+  ],
+  [
+   "src/aof.c",
+   625
+  ],
+  [
+   "src/aof.c",
+   1160
+  ],
+  [
+   "src/aof.c",
+   1283
+  ],
+  [
+   "src/aof.c",
+   1307
+  ],
+  [
+   "src/aof.c",
+   2149
+  ],
+  [
+   "src/aof.c",
+   3285
+  ],
+  [
+   "src/aof.c",
+   3339
+  ],
+  [
+   "src/aof.c",
+   3347
+  ],
+  [
+   "src/aof.c",
+   3540
+  ],
+  [
+   "src/aof.c",
+   3554
+  ],
+  [
+   "src/aof.c",
+   3618
+  ],
+  [
+   "src/aof.c",
+   3662
+  ],
+  [
+   "src/aof.c",
+   3752
+  ],
+  [
+   "src/aof.c",
+   3837
+  ],
+  [
+   "src/config.c",
+   2772
+  ],
+  [
+   "src/debug.c",
+   667
+  ],
+  [
+   "src/server.c",
+   1450
+  ],
+  [
+   "src/server.c",
+   1696
+  ],
+  [
+   "src/server.c",
+   1741
+  ],
+  [
+   "src/server.c",
+   7714
+  ],
+  [
+   "src/server.c",
+   8367
+  ],
+  [
+   "src/aof.c",
+   1132
+  ],
+  [
+   "src/aof.c",
+   1334
+  ],
+  [
+   "src/aof.c",
+   1348
+  ],
+  [
+   "src/aof.c",
+   3461
+  ],
+  [
+   "src/config.c",
+   2761
+  ],
+  [
+   "src/module.c",
+   4656
+  ],
+  [
+   "src/module.c",
+   14648
+  ],
+  [
+   "src/replication.c",
+   1564
+  ],
+  [
+   "src/replication.c",
+   2504
+  ],
+  [
+   "src/replication.c",
+   3732
+  ],
+  [
+   "src/server.c",
+   5208
+  ],
+  [
+   "src/cluster_legacy.c",
+   1095
+  ],
+  [
+   "src/cluster_legacy.c",
+   4378
+  ],
+  [
+   "src/cluster_legacy.c",
+   6700
+  ],
+  [
+   "src/replication.c",
+   1229
+  ],
+  [
+   "src/replication.c",
+   4509
+  ],
+  [
+   "src/replication.c",
+   5388
+  ],
+  [
+   "src/server.c",
+   5028
+  ],
+  [
+   "src/ae.c",
+   335
+  ],
+  [
+   "src/config.c",
+   893
+  ],
+  [
+   "src/config.c",
+   1014
+  ],
+  [
+   "src/config.c",
+   3939
+  ],
+  [
+   "src/server.c",
+   4058
+  ],
+  [
+   "src/ae.c",
+   470
+  ],
+  [
+   "src/config.c",
+   3966
+  ],
+  [
+   "src/config.c",
+   3993
+  ],
+  [
+   "src/config.c",
+   4013
+  ],
+  [
+   "src/config.c",
+   4033
+  ],
+  [
+   "src/connection.h",
+   247
+  ],
+  [
+   "src/connection.h",
+   251
+  ],
+  [
+   "src/connection.h",
+   356
+  ],
+  [
+   "src/connhelpers.h",
+   59
+  ],
+  [
+   "src/module.c",
+   7165
+  ],
+  [
+   "src/multi.c",
+   227
+  ],
+  [
+   "src/multi.c",
+   229
+  ],
+  [
+   "src/replication.c",
+   4127
+  ],
+  [
+   "src/script.c",
+   693
+  ],
+  [
+   "src/server.c",
+   4844
+  ],
+  [
+   "src/unix.c",
+   118
+  ],
+  [
+   "src/unix.c",
+   122
+  ],
+  [
+   "src/ae.c",
+   500
+  ],
+  [
+   "src/cluster.c",
+   423
+  ],
+  [
+   "src/cluster.c",
+   433
+  ],
+  [
+   "src/cluster.c",
+   463
+  ],
+  [
+   "src/cluster.c",
+   478
+  ],
+  [
+   "src/cluster_asm.c",
+   1177
+  ],
+  [
+   "src/cluster_asm.c",
+   1178
+  ],
+  [
+   "src/cluster_legacy.c",
+   1203
+  ],
+  [
+   "src/cluster_legacy.c",
+   1248
+  ],
+  [
+   "src/cluster_legacy.c",
+   1297
+  ],
+  [
+   "src/cluster_legacy.c",
+   1314
+  ],
+  [
+   "src/cluster_legacy.c",
+   1329
+  ],
+  [
+   "src/iothread.c",
+   122
+  ],
+  [
+   "src/iothread.c",
+   206
+  ],
+  [
+   "src/iothread.c",
+   272
+  ],
+  [
+   "src/iothread.c",
+   357
+  ],
+  [
+   "src/module.c",
+   14939
+  ],
+  [
+   "src/module.c",
+   14952
+  ],
+  [
+   "src/module.c",
+   14976
+  ],
+  [
+   "src/module.c",
+   14996
+  ],
+  [
+   "src/networking.c",
+   1678
+  ],
+  [
+   "src/networking.c",
+   1704
+  ],
+  [
+   "src/networking.c",
+   1717
+  ],
+  [
+   "src/networking.c",
+   1947
+  ],
+  [
+   "src/networking.c",
+   3559
+  ],
+  [
+   "src/networking.c",
+   5695
+  ],
+  [
+   "src/replication.c",
+   3153
+  ],
+  [
+   "src/replication.c",
+   3519
+  ],
+  [
+   "src/replication.c",
+   3521
+  ],
+  [
+   "src/replication.c",
+   3547
+  ],
+  [
+   "src/replication.c",
+   3564
+  ],
+  [
+   "src/replication.c",
+   4076
+  ],
+  [
+   "src/replication.c",
+   4151
+  ],
+  [
+   "src/replication.c",
+   4197
+  ],
+  [
+   "src/replication.c",
+   4475
+  ],
+  [
+   "src/script_lua.c",
+   924
+  ],
+  [
+   "src/socket.c",
+   189
+  ],
+  [
+   "src/socket.c",
+   266
+  ],
+  [
+   "src/socket.c",
+   288
+  ],
+  [
+   "src/socket.c",
+   292
+  ],
+  [
+   "src/socket.c",
+   297
+  ],
+  [
+   "src/server.c",
+   85
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/server.h",
+   "id": "new:src/server.h:2319:redisServer::aof_dirname_renamed",
+   "line": 2319,
+   "lines": [],
+   "status": "new"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/server.h",
+   "id": "removed:src/server.h:2319:redisServer::aof_dirname",
+   "line": 2319,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofLoadManifestFromDisk",
+   "line": 242,
+   "lines": [
+    244,
+    245,
+    250
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@writeAofManifestFile",
+   "line": 614,
+   "lines": [
+    615
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofUpgradePrepare",
+   "line": 641,
+   "lines": [
+    645,
+    646,
+    667,
+    669,
+    679
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofDelHistoryFiles",
+   "line": 689,
+   "lines": [
+    705
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofDelTempIncrAofFile",
+   "line": 716,
+   "lines": [
+    718
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofOpenIfNeededOnServerStart",
+   "line": 734,
+   "lines": [
+    742,
+    743,
+    752,
+    766
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@preloadFileIsCurrentAofManifest",
+   "line": 793,
+   "lines": [
+    807
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@aofInstallPreloadFile",
+   "line": 840,
+   "lines": [
+    842
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@aofManifestAddNewIncr",
+   "line": 905,
+   "lines": [
+    913
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@aofRemoveFilesOutsideManifest",
+   "line": 933,
+   "lines": [
+    934,
+    936,
+    952
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofSetupAfterPreloadFile",
+   "line": 969,
+   "lines": [
+    983,
+    984
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@aofFileExist",
+   "line": 1034,
+   "lines": [
+    1035
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@openNewIncrAofForAppend",
+   "line": 1054,
+   "lines": [
+    1073
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadAOFFile",
+   "line": 1730,
+   "lines": [
+    1743,
+    1744,
+    1748
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadManifestFile",
+   "line": 1752,
+   "lines": [
+    1758,
+    1760,
+    1775,
+    1777
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@loadSingleAppendOnlyFile",
+   "line": 1810,
+   "lines": [
+    1820
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@upgradeAofIfNeeded",
+   "line": 2091,
+   "lines": [
+    2102
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@rewriteAppendOnlyFileBackground",
+   "line": 3197,
+   "lines": [
+    3207,
+    3208
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@getAppendOnlyFileSize",
+   "line": 3306,
+   "lines": [
+    3311
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupLinkFile",
+   "line": 3398,
+   "lines": [
+    3400
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@backupSetFailed",
+   "line": 3483,
+   "lines": [
+    3496
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupStartPendingSnapshot",
+   "line": 3569,
+   "lines": [
+    3592
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupSealCommand",
+   "line": 3670,
+   "lines": [
+    3725
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/aof.c",
+   "id": "c:@F@backgroundRewriteDoneHandler",
+   "line": 3847,
+   "lines": [
+    3874,
+    3899,
+    3902
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/config.c",
+   "id": "c:@static_configs",
+   "line": 3398,
+   "lines": [
+    3466
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@persistAofManifest",
+   "line": 619,
+   "lines": [
+    625
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@updateReplOffsetAndResetEndOffset",
+   "line": 1138,
+   "lines": [
+    1160
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@stopAppendOnly",
+   "line": 1260,
+   "lines": [
+    1283
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@startAppendOnly",
+   "line": 1288,
+   "lines": [
+    1307
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@loadAppendOnlyFiles",
+   "line": 2113,
+   "lines": [
+    2149
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@bgrewriteaofCommand",
+   "line": 3272,
+   "lines": [
+    3285
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@getBaseAndIncrAppendOnlyFilesSize",
+   "line": 3331,
+   "lines": [
+    3339,
+    3347
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupHandleSnapshotDone",
+   "line": 3534,
+   "lines": [
+    3540
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupHandleSnapshotFailed",
+   "line": 3550,
+   "lines": [
+    3554
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@backupCron",
+   "line": 3617,
+   "lines": [
+    3618
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupStartCommand",
+   "line": 3636,
+   "lines": [
+    3662
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupAbortCommand",
+   "line": 3746,
+   "lines": [
+    3752
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/aof.c",
+   "id": "c:@F@backupCommand",
+   "line": 3811,
+   "lines": [
+    3837
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/config.c",
+   "id": "c:config.c@F@updateAofAutoGCEnabled",
+   "line": 2769,
+   "lines": [
+    2772
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/debug.c",
+   "id": "c:@F@debugCommand",
+   "line": 420,
+   "lines": [
+    667
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@checkChildrenDone",
+   "line": 1421,
+   "lines": [
+    1450
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@serverCron",
+   "line": 1562,
+   "lines": [
+    1696,
+    1741
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@loadDataFromDisk",
+   "line": 7703,
+   "lines": [
+    7714
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@main",
+   "line": 8051,
+   "lines": [
+    8367
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:@F@updateCurIncrAofEndOffset",
+   "line": 1122,
+   "lines": [
+    1132
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:@F@startAppendOnlyWithRetry",
+   "line": 1331,
+   "lines": [
+    1334
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:@F@applyAppendOnlyConfig",
+   "line": 1346,
+   "lines": [
+    1348
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:aof.c@F@backupStopTempAofIfNeeded",
+   "line": 3451,
+   "lines": [
+    3461
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/config.c",
+   "id": "c:config.c@F@updateAppendonly",
+   "line": 2750,
+   "lines": [
+    2761
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ResetDataset",
+   "line": 4655,
+   "lines": [
+    4656
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/module.c",
+   "id": "c:@F@RM_RdbLoad",
+   "line": 14630,
+   "lines": [
+    14648
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/replication.c",
+   "id": "c:@F@replconfCommand",
+   "line": 1467,
+   "lines": [
+    1564
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/replication.c",
+   "id": "c:@F@readSyncBulkPayload",
+   "line": 2319,
+   "lines": [
+    2504
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:@F@replicationUnsetMaster",
+   "line": 3675,
+   "lines": [
+    3732
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:@F@finishShutdown",
+   "line": 5081,
+   "lines": [
+    5208
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@clusterReset",
+   "line": 1086,
+   "lines": [
+    1095
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@clusterFailoverReplaceYourMaster",
+   "line": 4370,
+   "lines": [
+    4378
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@clusterPromoteSelfToMaster",
+   "line": 6699,
+   "lines": [
+    6700
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@syncCommand",
+   "line": 1209,
+   "lines": [
+    1229
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@replicaofCommand",
+   "line": 4491,
+   "lines": [
+    4509
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@abortFailover",
+   "line": 5378,
+   "lines": [
+    5388
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@prepareForShutdown",
+   "line": 4992,
+   "lines": [
+    5028
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/ae.c",
+   "id": "c:ae.c@F@processTimeEvents",
+   "line": 284,
+   "lines": [
+    335
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/config.c",
+   "id": "c:config.c@F@restoreBackupConfig",
+   "line": 876,
+   "lines": [
+    893
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/config.c",
+   "id": "c:@F@configSetCommand",
+   "line": 905,
+   "lines": [
+    1014
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/config.c",
+   "id": "c:config.c@F@configApply",
+   "line": 3932,
+   "lines": [
+    3939
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/server.c",
+   "id": "c:@F@call",
+   "line": 3992,
+   "lines": [
+    4058
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/ae.c",
+   "id": "c:@F@aeProcessEvents",
+   "line": 365,
+   "lines": [
+    470
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/config.c",
+   "id": "c:@F@moduleSetBoolConfig",
+   "line": 3950,
+   "lines": [
+    3966
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/config.c",
+   "id": "c:@F@moduleSetStringConfig",
+   "line": 3973,
+   "lines": [
+    3993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/config.c",
+   "id": "c:@F@moduleSetEnumConfig",
+   "line": 4000,
+   "lines": [
+    4013
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/config.c",
+   "id": "c:@F@moduleSetNumericConfig",
+   "line": 4020,
+   "lines": [
+    4033
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connShutdown",
+   "line": 246,
+   "lines": [
+    247
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connClose",
+   "line": 250,
+   "lines": [
+    251
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connUnbindEventLoop",
+   "line": 351,
+   "lines": [
+    356
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connhelpers.h",
+   "id": "c:connhelpers.h@F@callHandler",
+   "line": 57,
+   "lines": [
+    59
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/module.c",
+   "id": "c:@F@RM_Call",
+   "line": 6859,
+   "lines": [
+    7165
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/multi.c",
+   "id": "c:@F@execCommand",
+   "line": 127,
+   "lines": [
+    227,
+    229
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@replDataBufReadIntoLastBlock",
+   "line": 4116,
+   "lines": [
+    4127
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/script.c",
+   "id": "c:@F@scriptCall",
+   "line": 638,
+   "lines": [
+    693
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:@F@processCommand",
+   "line": 4467,
+   "lines": [
+    4844
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/unix.c",
+   "id": "c:unix.c@F@connUnixShutdown",
+   "line": 117,
+   "lines": [
+    118
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/unix.c",
+   "id": "c:unix.c@F@connUnixClose",
+   "line": 121,
+   "lines": [
+    122
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/ae.c",
+   "id": "c:@F@aeMain",
+   "line": 497,
+   "lines": [
+    500
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateGetSocket",
+   "line": 402,
+   "lines": [
+    423,
+    433
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateCloseSocket",
+   "line": 450,
+   "lines": [
+    463
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateCloseTimedoutSockets",
+   "line": 469,
+   "lines": [
+    478
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmImportSetFailed",
+   "line": 1148,
+   "lines": [
+    1177,
+    1178
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@freeClusterLink",
+   "line": 1201,
+   "lines": [
+    1203
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:cluster_legacy.c@F@clusterConnAcceptHandler",
+   "line": 1242,
+   "lines": [
+    1248
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@clusterAcceptHandler",
+   "line": 1266,
+   "lines": [
+    1297,
+    1314,
+    1329
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@enqueuePendingClientsToMainThread",
+   "line": 115,
+   "lines": [
+    122
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@unbindClientFromIOThreadEventLoop",
+   "line": 195,
+   "lines": [
+    206
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@fetchClientFromIOThread",
+   "line": 245,
+   "lines": [
+    272
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@assignClientToIOThread",
+   "line": 334,
+   "lines": [
+    357
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ConfigSet",
+   "line": 14935,
+   "lines": [
+    14939
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ConfigSetBool",
+   "line": 14949,
+   "lines": [
+    14952
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ConfigSetEnum",
+   "line": 14965,
+   "lines": [
+    14976
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ConfigSetNumeric",
+   "line": 14993,
+   "lines": [
+    14996
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@acceptCommonHandler",
+   "line": 1666,
+   "lines": [
+    1678,
+    1704,
+    1717
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@unlinkClient",
+   "line": 1903,
+   "lines": [
+    1947
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@processCommandAndResetClient",
+   "line": 3555,
+   "lines": [
+    3559
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@processEventsWhileBlocked",
+   "line": 5671,
+   "lines": [
+    5695
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@syncWithMaster",
+   "line": 3144,
+   "lines": [
+    3153,
+    3519,
+    3521
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@connectWithMaster",
+   "line": 3539,
+   "lines": [
+    3547
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@undoConnectWithMaster",
+   "line": 3563,
+   "lines": [
+    3564
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@rdbChannelFullSyncWithMaster",
+   "line": 4022,
+   "lines": [
+    4076
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@replDataBufReadFromConn",
+   "line": 4140,
+   "lines": [
+    4151,
+    4197
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@rdbChannelAbort",
+   "line": 4430,
+   "lines": [
+    4475
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisGenericCommand",
+   "line": 879,
+   "lines": [
+    924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/socket.c",
+   "id": "c:socket.c@F@connSocketAccept",
+   "line": 182,
+   "lines": [
+    189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/socket.c",
+   "id": "c:socket.c@F@connSocketEventHandler",
+   "line": 247,
+   "lines": [
+    266,
+    288,
+    292,
+    297
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "unknown",
+   "distance": 1,
+   "file": "src/server.c",
+   "id": "c:@server",
+   "line": 85,
+   "lines": [
+    85
+   ],
+   "status": "unknown"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 1.4827,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 87,
+  "breaks_exact": 25,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 10,
+  "unknown": 1
+ },
+ "text": "[!] This change can break 25 things you didn't touch (25 BREAKS, 87 AFFECTED, 1 UNKNOWN).\n    87 may be affected (87 further up), 1 is unknown and 10 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] NEW        redisServer::aof_dirname_renamed (field)  src/server.h:2319  (added (maybe renamed from aof_dirname))\n  [*] REMOVED    redisServer::aof_dirname (field)  src/server.h:2319  (removed (maybe renamed to aof_dirname_renamed))\n\nFunctions (111)\n  [x] BREAKS     aofLoadManifestFromDisk  src/aof.c:242\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     writeAofManifestFile  src/aof.c:614\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofUpgradePrepare  src/aof.c:641\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofDelHistoryFiles  src/aof.c:689\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofDelTempIncrAofFile  src/aof.c:716\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofOpenIfNeededOnServerStart  src/aof.c:734\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     preloadFileIsCurrentAofManifest  src/aof.c:793\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofInstallPreloadFile  src/aof.c:840\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofManifestAddNewIncr  src/aof.c:905\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofRemoveFilesOutsideManifest  src/aof.c:933\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofSetupAfterPreloadFile  src/aof.c:969\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     aofFileExist  src/aof.c:1034\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     openNewIncrAofForAppend  src/aof.c:1054\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     loadPreLoadAOFFile  src/aof.c:1730\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     loadPreLoadManifestFile  src/aof.c:1752\n                 uses redisServer::aof_dirname, which this change removes (and 1 other link). Link: exact.\n  ... and 96 more (87 AFFECTED, 9 BREAKS). Raise --limit or use --html to see all.\n\nData (2)\n  [x] BREAKS     static_configs (global)  src/config.c:3398\n                 its initializer takes the address of redisServer::aof_dirname, which this change removes. Link: exact.\n  [?] UNKNOWN    server (global)  src/server.c:85\n                 is a redisServer; its initializer may set fields by position. Link: unknown.\n\nChanges AeroTrace could not follow (1)\n  [?] src/server.h: added line 2319 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (9)\n  [?] 1 place passes its address on. Reads and writes made through that pointer elsewhere are not listed.\n  [?] Fields are tracked per struct type, not per object: every redisServer's aof_dirname is listed.\n  [?] Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of a struct that contains it, are still listed as unknown. Not checked there: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. {0} (all zero) is not counted.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] The fields of redisServer changed order or number, so its size and layout changed. Code that sets its fields by position, or depends on its size (sizeof, memcpy, file or network formats), is not followed.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: unknown = the data leaves code AeroTrace can follow; what happens next is not known.\n\nChecked 117 of 117 files in this build.\n1,696 C/C++ files outside this build were not checked: deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c and 1,693 more.\n\nindex: 216 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)"
+}

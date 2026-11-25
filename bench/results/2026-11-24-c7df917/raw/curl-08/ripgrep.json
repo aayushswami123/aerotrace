@@ -1,0 +1,23 @@
+{
+ "command": "rg -n -w --no-heading --with-filename feature_altsvc <build files>",
+ "hits": [
+  [
+   "src/tool_libinfo.c",
+   67
+  ],
+  [
+   "src/tool_libinfo.c",
+   89
+  ],
+  [
+   "src/tool_getparam.c",
+   2734
+  ],
+  [
+   "src/tool_libinfo.h",
+   50
+  ]
+ ],
+ "seconds": 0.0263,
+ "text": "src/tool_libinfo.c:67:bool feature_altsvc = FALSE;\nsrc/tool_libinfo.c:89:  { \"alt-svc\",        &feature_altsvc,      CURL_VERSION_ALTSVC },\nsrc/tool_getparam.c:2734:    if(!feature_altsvc)\nsrc/tool_libinfo.h:50:extern bool feature_altsvc;\n"
+}

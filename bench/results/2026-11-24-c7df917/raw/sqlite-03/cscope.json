@@ -1,0 +1,23 @@
+{
+ "command": "cscope -d -L0 pagerIsSuperJrnlName",
+ "hits": [
+  [
+   "sqlite3.c",
+   60257
+  ],
+  [
+   "sqlite3.c",
+   60331
+  ],
+  [
+   "sqlite3.c",
+   60720
+  ],
+  [
+   "sqlite3.c",
+   61561
+  ]
+ ],
+ "seconds": 0.008,
+ "text": "sqlite3.c <global> 60257 static int pagerIsSuperJrnlName(const char *zSuper){\nsqlite3.c <global> 60331 || !pagerIsSuperJrnlName(zOut)\nsqlite3.c <global> 60720 assert( zSuper==0 || pagerIsSuperJrnlName(zSuper) );\nsqlite3.c <global> 61561 if( NEVER(pagerIsSuperJrnlName(zSuper)==0) ){\n"
+}

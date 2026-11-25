@@ -1,0 +1,2370 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "sqlite3.c",
+   215580
+  ],
+  [
+   "sqlite3.c",
+   215587
+  ],
+  [
+   "sqlite3.c",
+   215588
+  ],
+  [
+   "sqlite3.c",
+   215595
+  ],
+  [
+   "sqlite3.c",
+   215781
+  ],
+  [
+   "sqlite3.c",
+   215788
+  ],
+  [
+   "sqlite3.c",
+   215801
+  ],
+  [
+   "sqlite3.c",
+   215808
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "sqlite3.c",
+   215580
+  ],
+  [
+   "sqlite3.c",
+   215587
+  ],
+  [
+   "sqlite3.c",
+   215588
+  ],
+  [
+   "sqlite3.c",
+   215595
+  ],
+  [
+   "sqlite3.c",
+   215781
+  ],
+  [
+   "sqlite3.c",
+   215788
+  ],
+  [
+   "sqlite3.c",
+   215801
+  ],
+  [
+   "sqlite3.c",
+   215808
+  ],
+  [
+   "sqlite3.c",
+   215834
+  ],
+  [
+   "sqlite3.c",
+   214959
+  ],
+  [
+   "sqlite3.c",
+   214965
+  ],
+  [
+   "sqlite3.c",
+   214975
+  ],
+  [
+   "sqlite3.c",
+   214978
+  ],
+  [
+   "sqlite3.c",
+   215002
+  ],
+  [
+   "sqlite3.c",
+   215023
+  ],
+  [
+   "sqlite3.c",
+   215028
+  ],
+  [
+   "sqlite3.c",
+   215031
+  ],
+  [
+   "sqlite3.c",
+   215035
+  ],
+  [
+   "sqlite3.c",
+   215040
+  ],
+  [
+   "sqlite3.c",
+   215047
+  ],
+  [
+   "sqlite3.c",
+   215050
+  ],
+  [
+   "sqlite3.c",
+   215051
+  ],
+  [
+   "sqlite3.c",
+   215092
+  ],
+  [
+   "sqlite3.c",
+   215098
+  ],
+  [
+   "sqlite3.c",
+   215100
+  ],
+  [
+   "sqlite3.c",
+   215887
+  ],
+  [
+   "sqlite3.c",
+   215909
+  ],
+  [
+   "sqlite3.c",
+   215916
+  ],
+  [
+   "sqlite3.c",
+   215924
+  ],
+  [
+   "sqlite3.c",
+   215945
+  ],
+  [
+   "sqlite3.c",
+   215946
+  ],
+  [
+   "sqlite3.c",
+   215975
+  ],
+  [
+   "sqlite3.c",
+   215982
+  ],
+  [
+   "sqlite3.c",
+   215991
+  ],
+  [
+   "sqlite3.c",
+   215992
+  ],
+  [
+   "sqlite3.c",
+   216013
+  ],
+  [
+   "sqlite3.c",
+   216020
+  ],
+  [
+   "sqlite3.c",
+   216027
+  ],
+  [
+   "sqlite3.c",
+   216034
+  ],
+  [
+   "sqlite3.c",
+   216042
+  ],
+  [
+   "sqlite3.c",
+   216055
+  ],
+  [
+   "sqlite3.c",
+   216056
+  ],
+  [
+   "sqlite3.c",
+   216096
+  ],
+  [
+   "sqlite3.c",
+   216105
+  ],
+  [
+   "sqlite3.c",
+   216106
+  ],
+  [
+   "sqlite3.c",
+   216143
+  ],
+  [
+   "sqlite3.c",
+   216404
+  ],
+  [
+   "sqlite3.c",
+   216497
+  ],
+  [
+   "sqlite3.c",
+   216609
+  ],
+  [
+   "sqlite3.c",
+   216610
+  ],
+  [
+   "sqlite3.c",
+   216613
+  ],
+  [
+   "sqlite3.c",
+   216616
+  ],
+  [
+   "sqlite3.c",
+   217036
+  ],
+  [
+   "sqlite3.c",
+   217039
+  ],
+  [
+   "sqlite3.c",
+   217044
+  ],
+  [
+   "sqlite3.c",
+   217045
+  ],
+  [
+   "sqlite3.c",
+   217048
+  ],
+  [
+   "sqlite3.c",
+   217117
+  ],
+  [
+   "sqlite3.c",
+   217120
+  ],
+  [
+   "sqlite3.c",
+   217510
+  ],
+  [
+   "sqlite3.c",
+   217515
+  ],
+  [
+   "sqlite3.c",
+   217569
+  ],
+  [
+   "sqlite3.c",
+   217573
+  ],
+  [
+   "sqlite3.c",
+   217577
+  ],
+  [
+   "sqlite3.c",
+   217634
+  ],
+  [
+   "sqlite3.c",
+   217733
+  ],
+  [
+   "sqlite3.c",
+   217736
+  ],
+  [
+   "sqlite3.c",
+   218080
+  ],
+  [
+   "sqlite3.c",
+   218681
+  ],
+  [
+   "sqlite3.c",
+   218740
+  ],
+  [
+   "sqlite3.c",
+   219165
+  ],
+  [
+   "sqlite3.c",
+   219390
+  ],
+  [
+   "sqlite3.c",
+   105042
+  ],
+  [
+   "sqlite3.c",
+   214608
+  ],
+  [
+   "sqlite3.c",
+   214640
+  ],
+  [
+   "sqlite3.c",
+   215156
+  ],
+  [
+   "sqlite3.c",
+   215299
+  ],
+  [
+   "sqlite3.c",
+   215316
+  ],
+  [
+   "sqlite3.c",
+   216480
+  ],
+  [
+   "sqlite3.c",
+   216898
+  ],
+  [
+   "sqlite3.c",
+   217149
+  ],
+  [
+   "sqlite3.c",
+   217180
+  ],
+  [
+   "sqlite3.c",
+   217372
+  ],
+  [
+   "sqlite3.c",
+   217969
+  ],
+  [
+   "sqlite3.c",
+   218324
+  ],
+  [
+   "sqlite3.c",
+   218345
+  ],
+  [
+   "sqlite3.c",
+   218347
+  ],
+  [
+   "sqlite3.c",
+   218439
+  ],
+  [
+   "sqlite3.c",
+   218477
+  ],
+  [
+   "sqlite3.c",
+   218509
+  ],
+  [
+   "sqlite3.c",
+   218537
+  ],
+  [
+   "sqlite3.c",
+   218573
+  ],
+  [
+   "sqlite3.c",
+   218806
+  ],
+  [
+   "sqlite3.c",
+   218984
+  ],
+  [
+   "sqlite3.c",
+   219184
+  ],
+  [
+   "sqlite3.c",
+   219222
+  ],
+  [
+   "sqlite3.c",
+   219269
+  ],
+  [
+   "sqlite3.c",
+   219294
+  ],
+  [
+   "sqlite3.c",
+   219495
+  ],
+  [
+   "sqlite3.c",
+   90271
+  ],
+  [
+   "sqlite3.c",
+   94174
+  ],
+  [
+   "sqlite3.c",
+   105924
+  ],
+  [
+   "sqlite3.c",
+   217915
+  ],
+  [
+   "sqlite3.c",
+   217937
+  ],
+  [
+   "sqlite3.c",
+   218398
+  ],
+  [
+   "sqlite3.c",
+   218791
+  ],
+  [
+   "sqlite3.c",
+   218831
+  ],
+  [
+   "sqlite3.c",
+   218834
+  ],
+  [
+   "sqlite3.c",
+   218920
+  ],
+  [
+   "sqlite3.c",
+   219009
+  ],
+  [
+   "sqlite3.c",
+   219012
+  ],
+  [
+   "sqlite3.c",
+   85710
+  ],
+  [
+   "sqlite3.c",
+   85739
+  ],
+  [
+   "sqlite3.c",
+   89865
+  ],
+  [
+   "sqlite3.c",
+   90236
+  ],
+  [
+   "sqlite3.c",
+   90248
+  ],
+  [
+   "sqlite3.c",
+   90286
+  ],
+  [
+   "sqlite3.c",
+   94235
+  ],
+  [
+   "sqlite3.c",
+   96563
+  ],
+  [
+   "sqlite3.c",
+   106189
+  ],
+  [
+   "sqlite3.c",
+   106373
+  ],
+  [
+   "shell.c",
+   1984
+  ],
+  [
+   "shell.c",
+   2944
+  ],
+  [
+   "shell.c",
+   3026
+  ],
+  [
+   "shell.c",
+   3372
+  ],
+  [
+   "shell.c",
+   3429
+  ],
+  [
+   "shell.c",
+   4083
+  ],
+  [
+   "shell.c",
+   5372
+  ],
+  [
+   "shell.c",
+   5820
+  ],
+  [
+   "shell.c",
+   11517
+  ],
+  [
+   "shell.c",
+   11546
+  ],
+  [
+   "shell.c",
+   11575
+  ],
+  [
+   "shell.c",
+   15671
+  ],
+  [
+   "shell.c",
+   15809
+  ],
+  [
+   "shell.c",
+   15839
+  ],
+  [
+   "shell.c",
+   15995
+  ],
+  [
+   "shell.c",
+   16006
+  ],
+  [
+   "shell.c",
+   16301
+  ],
+  [
+   "shell.c",
+   16410
+  ],
+  [
+   "shell.c",
+   16512
+  ],
+  [
+   "shell.c",
+   16573
+  ],
+  [
+   "shell.c",
+   16763
+  ],
+  [
+   "shell.c",
+   16792
+  ],
+  [
+   "shell.c",
+   16833
+  ],
+  [
+   "shell.c",
+   16837
+  ],
+  [
+   "shell.c",
+   16860
+  ],
+  [
+   "shell.c",
+   16958
+  ],
+  [
+   "shell.c",
+   17047
+  ],
+  [
+   "shell.c",
+   17134
+  ],
+  [
+   "shell.c",
+   17644
+  ],
+  [
+   "shell.c",
+   17701
+  ],
+  [
+   "shell.c",
+   17770
+  ],
+  [
+   "shell.c",
+   17808
+  ],
+  [
+   "shell.c",
+   18007
+  ],
+  [
+   "shell.c",
+   18282
+  ],
+  [
+   "shell.c",
+   18397
+  ],
+  [
+   "shell.c",
+   19932
+  ],
+  [
+   "shell.c",
+   19960
+  ],
+  [
+   "shell.c",
+   20136
+  ],
+  [
+   "shell.c",
+   20442
+  ],
+  [
+   "shell.c",
+   20459
+  ],
+  [
+   "shell.c",
+   20487
+  ],
+  [
+   "shell.c",
+   20528
+  ],
+  [
+   "shell.c",
+   20589
+  ],
+  [
+   "shell.c",
+   26443
+  ],
+  [
+   "shell.c",
+   27965
+  ],
+  [
+   "shell.c",
+   27980
+  ],
+  [
+   "shell.c",
+   28323
+  ],
+  [
+   "shell.c",
+   28735
+  ],
+  [
+   "shell.c",
+   28783
+  ],
+  [
+   "shell.c",
+   28818
+  ],
+  [
+   "shell.c",
+   29755
+  ],
+  [
+   "shell.c",
+   30778
+  ],
+  [
+   "shell.c",
+   30807
+  ],
+  [
+   "shell.c",
+   30869
+  ],
+  [
+   "shell.c",
+   30899
+  ],
+  [
+   "shell.c",
+   31046
+  ],
+  [
+   "shell.c",
+   31189
+  ],
+  [
+   "shell.c",
+   31197
+  ],
+  [
+   "shell.c",
+   31204
+  ],
+  [
+   "shell.c",
+   31228
+  ],
+  [
+   "shell.c",
+   31760
+  ],
+  [
+   "shell.c",
+   31774
+  ],
+  [
+   "shell.c",
+   33032
+  ],
+  [
+   "shell.c",
+   33053
+  ],
+  [
+   "shell.c",
+   33060
+  ],
+  [
+   "shell.c",
+   33071
+  ],
+  [
+   "shell.c",
+   33099
+  ],
+  [
+   "shell.c",
+   33493
+  ],
+  [
+   "shell.c",
+   33585
+  ],
+  [
+   "shell.c",
+   35253
+  ],
+  [
+   "shell.c",
+   35749
+  ],
+  [
+   "shell.c",
+   35845
+  ],
+  [
+   "shell.c",
+   35854
+  ],
+  [
+   "shell.c",
+   36323
+  ],
+  [
+   "shell.c",
+   36333
+  ],
+  [
+   "shell.c",
+   36387
+  ],
+  [
+   "shell.c",
+   36744
+  ],
+  [
+   "shell.c",
+   37102
+  ],
+  [
+   "shell.c",
+   37227
+  ],
+  [
+   "shell.c",
+   37312
+  ],
+  [
+   "shell.c",
+   37321
+  ],
+  [
+   "shell.c",
+   37471
+  ],
+  [
+   "shell.c",
+   38301
+  ],
+  [
+   "sqlite3.c",
+   55417
+  ],
+  [
+   "sqlite3.c",
+   55423
+  ],
+  [
+   "sqlite3.c",
+   55500
+  ],
+  [
+   "sqlite3.c",
+   85757
+  ],
+  [
+   "sqlite3.c",
+   90299
+  ],
+  [
+   "sqlite3.c",
+   90332
+  ],
+  [
+   "sqlite3.c",
+   142875
+  ],
+  [
+   "sqlite3.c",
+   148288
+  ],
+  [
+   "sqlite3.c",
+   162211
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "sqlite3.c",
+   "id": "removed:sqlite3.c:214984:jsonBlobAppendOneByte",
+   "line": 214984,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonTranslateTextToBlob",
+   "line": 215354,
+   "lines": [
+    215580,
+    215587,
+    215588,
+    215595,
+    215781,
+    215788,
+    215801,
+    215808
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonConvertTextToBlob",
+   "line": 215828,
+   "lines": [
+    215834
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobMakeEditable",
+   "line": 214952,
+   "lines": [
+    214959,
+    214965
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobExpandAndAppendOneByte",
+   "line": 214971,
+   "lines": [
+    214975,
+    214978
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobExpandAndAppendNode",
+   "line": 214996,
+   "lines": [
+    215002
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobAppendNode",
+   "line": 215016,
+   "lines": [
+    215023,
+    215028,
+    215031,
+    215035,
+    215040,
+    215047,
+    215050,
+    215051
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobChangePayloadSize",
+   "line": 215057,
+   "lines": [
+    215092,
+    215098,
+    215100
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReturnStringAsBlob",
+   "line": 215873,
+   "lines": [
+    215887
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbPayloadSizeWide",
+   "line": 215897,
+   "lines": [
+    215909,
+    215916,
+    215924,
+    215945,
+    215946
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbPayloadSize",
+   "line": 215967,
+   "lines": [
+    215975,
+    215982,
+    215991,
+    215992
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbPayloadSizeInline",
+   "line": 216005,
+   "lines": [
+    216013,
+    216020,
+    216027,
+    216034,
+    216042,
+    216055,
+    216056
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbPayloadSizeSemiInline",
+   "line": 216083,
+   "lines": [
+    216096,
+    216105,
+    216106
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonTranslateBlobToText",
+   "line": 216133,
+   "lines": [
+    216143
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonTranslateBlobToPrettyText",
+   "line": 216394,
+   "lines": [
+    216404
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonAfterEditSizeAdjust",
+   "line": 216492,
+   "lines": [
+    216497
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonBlobEdit",
+   "line": 216594,
+   "lines": [
+    216609,
+    216610,
+    216613,
+    216616
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonLookupStep",
+   "line": 216922,
+   "lines": [
+    217036,
+    217039,
+    217044,
+    217045,
+    217048,
+    217117,
+    217120
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonInsertIntoBlob",
+   "line": 217477,
+   "lines": [
+    217510,
+    217515
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArgIsJsonb",
+   "line": 217563,
+   "lines": [
+    217569,
+    217573,
+    217577
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonParseFuncArg",
+   "line": 217602,
+   "lines": [
+    217634
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReturnParse",
+   "line": 217721,
+   "lines": [
+    217733,
+    217736
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonExtractFunc",
+   "line": 218016,
+   "lines": [
+    218080
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonValidFunc",
+   "line": 218645,
+   "lines": [
+    218681
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonErrorFunc",
+   "line": 218727,
+   "lines": [
+    218740
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonSkipLabel",
+   "line": 219160,
+   "lines": [
+    219165
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonEachColumn",
+   "line": 219305,
+   "lines": [
+    219390
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    105042
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonAppendSqlValue",
+   "line": 214576,
+   "lines": [
+    214608
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReturnString",
+   "line": 214629,
+   "lines": [
+    214640
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbValidityCheck",
+   "line": 215145,
+   "lines": [
+    215156,
+    215299,
+    215316
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonbArrayCount",
+   "line": 216477,
+   "lines": [
+    216480
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonCreateEditSubstructure",
+   "line": 216873,
+   "lines": [
+    216898
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReturnTextJsonFromBlob",
+   "line": 217136,
+   "lines": [
+    217149
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReturnFromBlob",
+   "line": 217169,
+   "lines": [
+    217180
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonFunctionArgToBlob",
+   "line": 217356,
+   "lines": [
+    217372
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayLengthFunc",
+   "line": 217951,
+   "lines": [
+    217969
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonMergePatch",
+   "line": 218181,
+   "lines": [
+    218324
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonPatchFunc",
+   "line": 218334,
+   "lines": [
+    218345,
+    218347
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonRemoveFunc",
+   "line": 218412,
+   "lines": [
+    218439
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonReplaceFunc",
+   "line": 218467,
+   "lines": [
+    218477
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonSetFunc",
+   "line": 218493,
+   "lines": [
+    218509
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonTypeFunc",
+   "line": 218519,
+   "lines": [
+    218537
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonPrettyFunc",
+   "line": 218564,
+   "lines": [
+    218573
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayCompute",
+   "line": 218794,
+   "lines": [
+    218806
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonObjectCompute",
+   "line": 218927,
+   "lines": [
+    218984
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonAppendPathName",
+   "line": 219175,
+   "lines": [
+    219184
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonEachNext",
+   "line": 219215,
+   "lines": [
+    219222,
+    219269
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonEachPathLength",
+   "line": 219283,
+   "lines": [
+    219294
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonEachFilter",
+   "line": 219479,
+   "lines": [
+    219495
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFreeCursorNN",
+   "line": 90250,
+   "lines": [
+    90271
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Step",
+   "line": 94082,
+   "lines": [
+    94174
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@blobSeekToRow",
+   "line": 105907,
+   "lines": [
+    105924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonQuoteFunc",
+   "line": 217906,
+   "lines": [
+    217915
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayFunc",
+   "line": 217925,
+   "lines": [
+    217937
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonObjectFunc",
+   "line": 218370,
+   "lines": [
+    218398
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayStep",
+   "line": 218775,
+   "lines": [
+    218791
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayValue",
+   "line": 218830,
+   "lines": [
+    218831
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonArrayFinal",
+   "line": 218833,
+   "lines": [
+    218834
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonObjectStep",
+   "line": 218897,
+   "lines": [
+    218920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonObjectValue",
+   "line": 219008,
+   "lines": [
+    219009
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@jsonObjectFinal",
+   "line": 219011,
+   "lines": [
+    219012
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeMemFinalize",
+   "line": 85693,
+   "lines": [
+    85710
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeMemAggValue",
+   "line": 85726,
+   "lines": [
+    85739
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFrameDelete",
+   "line": 89859,
+   "lines": [
+    89865
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFreeCursor",
+   "line": 90235,
+   "lines": [
+    90236
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@freeCursorWithCache",
+   "line": 90238,
+   "lines": [
+    90248
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@closeCursorsInFrame",
+   "line": 90281,
+   "lines": [
+    90286
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_step",
+   "line": 94224,
+   "lines": [
+    94235
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@allocateCursor",
+   "line": 96529,
+   "lines": [
+    96563
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_open",
+   "line": 105974,
+   "lines": [
+    106189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_reopen",
+   "line": 106356,
+   "lines": [
+    106373
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfJsonbToJson",
+   "line": 1957,
+   "lines": [
+    1984
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfColumnar",
+   "line": 2931,
+   "lines": [
+    2944,
+    3026
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfExplain",
+   "line": 3348,
+   "lines": [
+    3372,
+    3429
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_format_query_result",
+   "line": 4046,
+   "lines": [
+    4083
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@sha3QueryFunc",
+   "line": 5310,
+   "lines": [
+    5372
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@sha1QueryFunc",
+   "line": 5768,
+   "lines": [
+    5820
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@completionNext",
+   "line": 11483,
+   "lines": [
+    11517,
+    11546,
+    11575
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertNext",
+   "line": 15666,
+   "lines": [
+    15671
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxGetTableInfo",
+   "line": 15789,
+   "lines": [
+    15809,
+    15839
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxFindCompatible",
+   "line": 15978,
+   "lines": [
+    15995,
+    16006
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxFindIndexes",
+   "line": 16283,
+   "lines": [
+    16301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxProcessOneTrigger",
+   "line": 16391,
+   "lines": [
+    16410
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertDbContainsObject",
+   "line": 16499,
+   "lines": [
+    16512
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxCreateVtabSchema",
+   "line": 16552,
+   "lines": [
+    16573
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxLargestIndex",
+   "line": 16751,
+   "lines": [
+    16763
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxPopulateOneStat1",
+   "line": 16771,
+   "lines": [
+    16792,
+    16833,
+    16837,
+    16860
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxPopulateStat1",
+   "line": 16902,
+   "lines": [
+    16958
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@registerUDFs",
+   "line": 17040,
+   "lines": [
+    17047
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_expert_new",
+   "line": 17087,
+   "lines": [
+    17134
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckStep",
+   "line": 17642,
+   "lines": [
+    17644
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckSaveKey",
+   "line": 17685,
+   "lines": [
+    17701,
+    17770
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckFindObject",
+   "line": 17785,
+   "lines": [
+    17808
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckIsIndex",
+   "line": 18000,
+   "lines": [
+    18007
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckCheckObjectSql",
+   "line": 18024,
+   "lines": [
+    18282
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_intck_step",
+   "line": 18362,
+   "lines": [
+    18397
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSql",
+   "line": 19924,
+   "lines": [
+    19932
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSqlInt",
+   "line": 19948,
+   "lines": [
+    19960
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSubreport",
+   "line": 20085,
+   "lines": [
+    20136
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedFunc",
+   "line": 20219,
+   "lines": [
+    20442,
+    20459,
+    20487,
+    20528,
+    20589
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shellFakeSchema",
+   "line": 26417,
+   "lines": [
+    26443
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@run_table_dump_query",
+   "line": 27947,
+   "lines": [
+    27965,
+    27980
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@bind_prepared_stmt",
+   "line": 28298,
+   "lines": [
+    28323
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tableColumnList",
+   "line": 28719,
+   "lines": [
+    28735,
+    28783
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@toggleSelectOrder",
+   "line": 28813,
+   "lines": [
+    28818
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@isDatabaseFile",
+   "line": 29746,
+   "lines": [
+    29755
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tryToCloneData",
+   "line": 30736,
+   "lines": [
+    30778,
+    30807
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tryToCloneSchema",
+   "line": 30846,
+   "lines": [
+    30869,
+    30899
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@db_int",
+   "line": 31037,
+   "lines": [
+    31046
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shell_dbtotxt_command",
+   "line": 31171,
+   "lines": [
+    31189,
+    31197,
+    31204,
+    31228
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@lintFkeyIndexes",
+   "line": 31650,
+   "lines": [
+    31760,
+    31774
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@zAutoColumn",
+   "line": 32908,
+   "lines": [
+    33032,
+    33053,
+    33060,
+    33071
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@outputDumpWarning",
+   "line": 33092,
+   "lines": [
+    33099
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@dotCmdImport",
+   "line": 33225,
+   "lines": [
+    33493,
+    33585
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@do_meta_command",
+   "line": 34937,
+   "lines": [
+    35253,
+    35749,
+    35845,
+    35854,
+    36323,
+    36333,
+    36387,
+    36744,
+    37102,
+    37227,
+    37312,
+    37321,
+    37471
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@doAutoDetectRestore",
+   "line": 38271,
+   "lines": [
+    38301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_serialize",
+   "line": 55369,
+   "lines": [
+    55417,
+    55423
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_deserialize",
+   "line": 55460,
+   "lines": [
+    55500
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@vdbeMemClearExternAndSetNull",
+   "line": 85753,
+   "lines": [
+    85757
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFrameRestore",
+   "line": 90297,
+   "lines": [
+    90299
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@closeAllCursors",
+   "line": 90323,
+   "lines": [
+    90332
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_exec",
+   "line": 142838,
+   "lines": [
+    142875
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pragmaVtabNext",
+   "line": 148281,
+   "lines": [
+    148288
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@execSql",
+   "line": 162204,
+   "lines": [
+    162211
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 3.6852,
+ "summary": {
+  "affected_direct": 24,
+  "affected_further": 99,
+  "breaks_exact": 1,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 1,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS, 123 AFFECTED).\n    123 may be affected (24 direct, 99 further up) and 1 part of the change could not be followed.\n    You removed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] REMOVED    jsonBlobAppendOneByte  sqlite3.c:214984  (removed by the patch)\n\nFunctions (124)\n  [x] BREAKS     jsonTranslateTextToBlob  sqlite3.c:215354\n                 calls jsonBlobAppendOneByte, which this patch removes (and 8 other links). Link: exact.\n  [~] AFFECTED   jsonConvertTextToBlob  sqlite3.c:215828\n                 calls jsonTranslateTextToBlob. Link: exact.\n  [~] AFFECTED   jsonBlobMakeEditable  sqlite3.c:214952\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonBlobExpandAndAppendOneByte  sqlite3.c:214971\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonBlobExpandAndAppendNode  sqlite3.c:214996\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonBlobAppendNode  sqlite3.c:215016\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonBlobChangePayloadSize  sqlite3.c:215057\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonReturnStringAsBlob  sqlite3.c:215873\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonbPayloadSizeWide  sqlite3.c:215897\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonbPayloadSize  sqlite3.c:215967\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonbPayloadSizeInline  sqlite3.c:216005\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonbPayloadSizeSemiInline  sqlite3.c:216083\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonTranslateBlobToText  sqlite3.c:216133\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonTranslateBlobToPrettyText  sqlite3.c:216394\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  [~] AFFECTED   jsonAfterEditSizeAdjust  sqlite3.c:216492\n                 reads data that jsonBlobAppendOneByte writes. Link: probable.\n  ... and 109 more (109 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}
