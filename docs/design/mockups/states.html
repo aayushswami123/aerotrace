@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>States · AeroTrace (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+<style>.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); } .trio .card { padding: 0; } .trio .state { padding: var(--space-7) var(--space-5); }
+@media (max-width: 760px) { .trio { grid-template-columns: 1fr; } }</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-current="changes"></aside>
+  <main class="main">
+    <div class="page">
+      <div class="page-head"><div><div class="caps">Every page has these</div><h1 style="margin-top:6px">Empty, error and loading</h1></div></div>
+      <div class="trio">
+        <div class="card"><div class="state">
+          <div class="ico" data-i="inbox"></div>
+          <h2>No checks yet</h2>
+          <p style="font-size:var(--text-sm)">Check a change and it shows up here.</p>
+          <div class="cmd">aerotrace check <button class="btn ghost icon sm" aria-label="Copy command" data-i="copy"></button></div>
+        </div></div>
+        <div class="card"><div class="state error">
+          <div class="ico" data-i="warn"></div>
+          <h2>Can't read the index</h2>
+          <p style="font-size:var(--text-sm)">It was made by an older AeroTrace. Build it again:</p>
+          <div class="cmd">aerotrace index <button class="btn ghost icon sm" aria-label="Copy command" data-i="copy"></button></div>
+          <details class="raw"><summary class="dim">What went wrong</summary><pre>.aerotrace/index.db: schema_version 2, this AeroTrace reads 3</pre></details>
+        </div></div>
+        <div class="card" aria-busy="true"><div style="padding:var(--space-6) var(--space-5)">
+          <div class="skel" style="height:14px;width:40%;margin-bottom:var(--space-5)"></div>
+          <div class="skel" style="height:44px;margin-bottom:var(--space-3)"></div>
+          <div class="skel" style="height:44px;margin-bottom:var(--space-3)"></div>
+          <div class="skel" style="height:44px;margin-bottom:var(--space-3)"></div>
+          <div class="skel" style="height:44px;width:70%"></div>
+          <p class="dim" style="font-size:var(--text-xs);margin-top:var(--space-4);text-align:center">Loading checks… (shown only after 150 ms)</p>
+        </div></div>
+      </div>
+      <h2 style="margin-top:var(--space-7)">Graph, empty</h2>
+      <div class="card" style="background:var(--graph-bg);border-color:#2a2f38;color:#b4bac4">
+        <div class="state" style="color:#b4bac4;padding:var(--space-8) var(--space-5)">
+          <h2 style="color:#eceef1">Pick a check to draw</h2>
+          <p style="font-size:var(--text-sm)">Open one from <a href="changes.html" style="color:var(--graph-changed)">Changes</a>, or run <span class="mono" style="color:#eceef1">aerotrace check</span>.</p>
+        </div>
+      </div>
+      <p class="refnote">Influenced by: Vercel and Linear empty states (short reason plus one action). Made our own: the action is always the exact command, with a copy button, and errors keep the raw reason in a closed box.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

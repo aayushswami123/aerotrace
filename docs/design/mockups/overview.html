@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Overview · AeroTrace (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-current="overview"></aside>
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div>
+          <div class="caps">Overview</div>
+          <h1 class="mono" style="margin-top:6px">redis-8.10.3</h1>
+          <div class="sub">Index made by AeroTrace 0.1.0 · last indexed <span class="mono">2026-11-24 14:53</span></div>
+        </div>
+        <button class="btn sm"><span data-i="search"></span>Search <kbd>/</kbd></button>
+      </div>
+
+      <div class="grid g3" style="margin-bottom:var(--space-4)">
+        <div class="card stat"><div class="caps">Files</div><div class="n">117</div><div class="d"><span class="mono">96</span> parsed · <span class="mono">21</span> headers</div></div>
+        <div class="card stat"><div class="caps">Functions</div><div class="n">5,064</div><div class="d"><span class="mono">31,208</span> calls · <span class="mono">9,870</span> data uses</div></div>
+        <div class="card stat"><div class="caps">Blind spots</div><div class="n">412</div><div class="d">places AeroTrace can't follow</div></div>
+      </div>
+
+      <div class="coverage" style="margin-bottom:var(--space-6)">
+        <span data-i="info" style="width:18px;height:18px;color:var(--accent);flex:none;margin-top:2px"></span>
+        <div style="flex:1">
+          <div>Checked <b class="mono">96</b> of <b class="mono">104</b> files in this build.</div>
+          <div class="muted" style="font-size:var(--text-sm)">8 files are in the repo but not in <code>compile_commands.json</code>, so nothing in them was checked.
+            <a href="#">See the 8 files</a></div>
+          <div class="bar" aria-hidden="true"><i style="width:92.3%"></i></div>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <section class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <h2>Recent checks</h2><a href="changes.html" style="font-size:var(--text-sm)">All checks →</a>
+          </div>
+          <ul class="list">
+            <li><span class="chip breaks" data-s="breaks">4</span><div class="grow">Breaks 4 places, 1 may break, 19 affected<div class="fl">working tree vs HEAD · scanGenericCommand</div></div><span class="fl">today 14:58</span></li>
+            <li><span class="chip affected" data-s="affected">6</span><div class="grow">Nothing breaks, 6 affected, 2 unknown<div class="fl">branch fix/expire vs main</div></div><span class="fl">today 11:02</span></li>
+            <li><span class="chip unknown" data-s="unknown">3</span><div class="grow">Nothing breaks, 3 unknown<div class="fl">patch aof-rewrite.diff</div></div><span class="fl">yesterday</span></li>
+          </ul>
+        </section>
+        <section class="card">
+          <h2>Blind spots</h2>
+          <p class="muted" style="font-size:var(--text-sm)">Where links can't be proven. Answers that pass through these say so.</p>
+          <ul class="list">
+            <li><div class="grow">Calls through a function pointer</div><span class="mono">301</span></li>
+            <li><div class="grow">Calls AeroTrace couldn't resolve</div><span class="mono">74</span></li>
+            <li><div class="grow">Data whose address escapes</div><span class="mono">37</span></li>
+            <li><div class="grow">Files with parse errors</div><span class="mono">1</span></li>
+          </ul>
+        </section>
+      </div>
+      <p class="refnote">Influenced by: Vercel project overview (a few big stat tiles, then one status line), Linear sidebar (quiet icons, muted section break), Sentry issue stream (one line of what happened, a mono line of where). Made our own: the status line is the coverage sentence, which says what was <i>not</i> checked, and every chip carries icon, word and count.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>
