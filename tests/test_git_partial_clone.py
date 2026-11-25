@@ -46,8 +46,7 @@ def _missing(clone: Path) -> set[str]:
     return {line[1:].strip() for line in out.splitlines() if line.startswith("?")}
 
 
-@pytest.fixture
-def clone(tmp_path):
+def _make_clone(tmp_path: Path, filt: str) -> Path:
     work = tmp_path / "work"
     work.mkdir()
     _run(work, "init", "-q", "-b", "main")
@@ -69,7 +68,7 @@ def clone(tmp_path):
     _run(bare, "config", "uploadpack.allowFilter", "true")
     _run(bare, "config", "uploadpack.allowAnySHA1InWant", "true")
     dest = tmp_path / "clone"
-    _run(tmp_path, "clone", "-q", "--filter=blob:none", f"file://{bare}", str(dest))
+    _run(tmp_path, "clone", "-q", f"--filter={filt}", f"file://{bare}", str(dest))
     # the cloned compile_commands.json must point at the clone
     cc = [{**e, "directory": str(dest)} for e in cc]
     (dest / "compile_commands.json").write_text(json.dumps(cc))
@@ -77,6 +76,26 @@ def clone(tmp_path):
     (dest / "a.c").write_text(V3)
     assert _missing(dest), "the repro needs a missing blob"
     return dest
+
+
+@pytest.fixture
+def clone(tmp_path):
+    return _make_clone(tmp_path, "blob:none")
+
+
+def test_tree_filter_clone_names_the_gap_too(tmp_path, capsys):
+    clone = _make_clone(tmp_path, "tree:0")
+    code = main(["diff", "HEAD~1", "--root", str(clone)])
+    text = capsys.readouterr().err
+    assert code == 2
+    assert "partial clone" in text
+
+
+def test_reason_skips_trace_lines():
+    from aerotrace.toolchain.git import _reason
+
+    assert _reason(["trace: run_command", "fatal: bad tree object abc", "x"]) == "fatal: bad tree object abc"
+    assert _reason(["a", "b"]) == "b"
 
 
 @pytest.mark.parametrize("cmd", ["diff", "check", "tests"])
@@ -89,7 +108,7 @@ def test_no_fetch_no_write_and_the_gap_is_named(clone, capsys, cmd):
     text = out.out + out.err
     assert "partial clone" in text
     assert "git fetch" in text
-    assert code != 0, "a comparison that could not be made must not exit 0"
+    assert code == 2, "a comparison that could not be made must not exit 0"
 
 
 # ---- these need no partial clone and run on any git ----

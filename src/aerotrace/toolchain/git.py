@@ -22,7 +22,7 @@ class MissingObjectError(GitError):
 
 
 _MISSING = re.compile(
-    r"unable to read|could not fetch|promisor|missing (blob|tree|commit)|bad object|not a valid object|"
+    r"unable to read|could not fetch|promisor|missing (blob|tree|commit)|bad (tree |blob |commit )?object|not a valid object|"
     r"unable to (find|read) (blob|tree)|lazy",
     re.I,
 )
@@ -44,6 +44,14 @@ _CONFIG = [
     "-c", "maintenance.auto=false",
     "-c", "gc.auto=0",
 ]  # fmt: skip
+
+
+def _reason(lines: list[str]) -> str:
+    """The line that says what went wrong: the first `fatal:` or `error:`, else the last line."""
+    for line in lines:
+        if line.startswith(("fatal:", "error:")):
+            return line
+    return lines[-1]
 
 
 def _env() -> dict[str, str]:
@@ -73,7 +81,7 @@ def _git(root: Path, *args: str, timeout: int = 120) -> str:
     if r.returncode != 0:
         msg = r.stderr.decode("utf-8", "replace").strip().splitlines()
         if msg and _MISSING.search(" ".join(msg)) and _is_partial(root):
-            raise MissingObjectError(f"{_PARTIAL_HINT}. git said: {msg[0]}")
+            raise MissingObjectError(f"{_PARTIAL_HINT}. git said: {_reason(msg)}")
         raise GitError(msg[0] if msg else f"git {args[0]} failed")
     return r.stdout.decode("utf-8", "surrogateescape")
 
