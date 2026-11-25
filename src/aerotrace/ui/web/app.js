@@ -281,6 +281,7 @@
         var ul = h("ul", { cls: "blind" });
         d.blind_spots.forEach(function (b) { ul.appendChild(h("li", { cls: b.scope === "change" ? "" : "dim", text: b.text })); });
         seeNot = h("details", { cls: "gblind" }, h("summary", { text: "What AeroTrace couldn't see (" + d.blind_spots.length + ")" }), ul);
+        if (d.blind_spots.some(function (b) { return b.scope === "change"; })) seeNot.setAttribute("open", "");  // about this change: shown
       }
       var top = notes.length || seeNot ? h("div", { cls: "gnotes" }, notes, seeNot) : null;
       main.replaceChildren(h("div", { cls: "gwrap" }, bar, top, body2));
@@ -293,6 +294,7 @@
         if (v.focus) parts.push("Focus: the selected node, its path and what depends on it. Press f to leave.");
         else if (off) parts.push(n(off) + " nodes are in groups that are off. Turn a chip on to show them.");
         if (v.stats.hiddenLabels) parts.push(plural(v.stats.hiddenLabels, "label") + " hidden so none overlap; zoom in to see more.");
+        if (v.stats.dashesSimplified) parts.push("Zoom in to see which lines are probable (dashed) or unknown (dotted).");
         hint.textContent = parts.join("  ·  ");
         hint.hidden = !parts.length;
       }

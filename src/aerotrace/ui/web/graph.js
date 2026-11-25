@@ -45,6 +45,8 @@
       affected: v("--graph-affected"), unknown: v("--graph-unknown"), no_effect: v("--graph-no-effect"),
       dot: v("--graph-dot"), edge: v("--graph-edge"), label: v("--graph-label"), mono: v("--font-mono") };
     this.stats = { frames: 0, lastMs: 0, shown: 0, labels: 0, hiddenLabels: 0 };
+    this._widths = {};
+    this._moving = 0;
     window.__aerotraceGraph = this.stats;
     this._wire();
     this.layout();
@@ -126,6 +128,21 @@
     this.draw();
   };
 
+  // each status shape painted once into a small image, then stamped per node (cheap at thousands of nodes)
+  GraphView.prototype._sprite = function (shape, group, sc) {
+    var key = shape + "|" + group + "|" + sc.toFixed(2) + "|" + this.dpr;
+    this._sprites = this._sprites || {};
+    if (this._sprites[key]) return this._sprites[key];
+    var size = Math.ceil(32 * sc) + 4, cv = document.createElement("canvas");
+    cv.width = cv.height = Math.ceil(size * this.dpr);
+    var g = cv.getContext("2d"), c = this.col;
+    g.scale(this.dpr, this.dpr); g.translate(size / 2, size / 2); g.scale(sc, sc);
+    g.fillStyle = c[group]; g.fill(path2d(shape, 0));
+    if (group !== "no_effect") { g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.lineCap = "round"; g.stroke(path2d(shape, 1)); }
+    if (group === "may_break") { g.setLineDash([4, 3]); g.strokeStyle = c.may_break; g.lineWidth = 2; g.stroke(path2d(shape, 0)); }
+    return (this._sprites[key] = { img: cv, size: size });
+  };
+
   GraphView.prototype.toScreen = function (p) {
     return [this.w / 2 + this.view.x + p.x * this.view.s, this.h / 2 + this.view.y + p.y * this.view.s];
   };
@@ -152,8 +169,14 @@
     var w = this.w, h = this.h, s = this.view.s;
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     g.clearRect(0, 0, w, h);
-    g.fillStyle = c.dot;
-    for (var gx = 12; gx < w; gx += 24) for (var gy = 12; gy < h; gy += 24) g.fillRect(gx, gy, 1.5, 1.5);
+    if (!this._dots) {
+      var tile = document.createElement("canvas");
+      tile.width = tile.height = 24;
+      var tg = tile.getContext("2d");
+      tg.fillStyle = c.dot; tg.fillRect(12, 12, 1.5, 1.5);
+      this._dots = g.createPattern(tile, "repeat");
+    }
+    g.fillStyle = this._dots; g.fillRect(0, 0, w, h);
     var ids = Object.keys(this.pos);
     var scr = {};
     ids.forEach(function (id) { scr[id] = self.toScreen(self.pos[id]); });
@@ -174,18 +197,28 @@
       if (!p.n.ring) return;
       var a = self._anchor(p.n);
       if (!a) return;
+      var e0 = scr[a.p.n.id], e1 = scr[id];
+      if (Math.max(e0[0], e1[0]) < 0 || Math.min(e0[0], e1[0]) > w || Math.max(e0[1], e1[1]) < 0 || Math.min(e0[1], e1[1]) > h) return;  // off screen
       var colour = p.n.group === "breaks" ? "rgba(255,107,94,0.65)" : p.n.group === "may_break" ? "rgba(251,191,36,0.6)" : c.edge;
       var key = a.skipped ? "skip" : colour + "|" + (STYLE[p.n.certainty] ? p.n.certainty : "unknown");
       (batches[key] = batches[key] || { colour: a.skipped ? "rgba(140,150,165,0.35)" : colour,
         dash: a.skipped ? [1, 4] : STYLE[p.n.certainty] || STYLE.unknown, list: [] }).list.push([scr[a.p.n.id], scr[id]]);
     });
+    // Dashing thousands of lines is slow and unreadable at overview zoom: over DASH_MAX dashed lines on
+    // screen they are drawn solid and fainter, and the hint says to zoom in to see which are probable.
+    var dashed = 0;
+    Object.keys(batches).forEach(function (k) { if (batches[k].dash.length) dashed += batches[k].list.length; });
+    var simplify = dashed > 600;
+    this.stats.dashesSimplified = simplify;
     Object.keys(batches).sort().forEach(function (k) {
       var b = batches[k];
       g.beginPath();
       b.list.forEach(function (e) { g.moveTo(e[0][0], e[0][1]); g.lineTo(e[1][0], e[1][1]); });
-      g.strokeStyle = b.colour; g.setLineDash(b.dash); g.lineWidth = /255,107/.test(b.colour) ? 1.6 : 1.2; g.stroke();
+      g.globalAlpha = simplify && b.dash.length ? 0.45 : 1;
+      g.strokeStyle = b.colour; g.setLineDash(simplify ? [] : b.dash); g.lineWidth = /255,107/.test(b.colour) ? 1.6 : 1.2; g.stroke();
     });
     g.setLineDash([]);
+    g.globalAlpha = 1;
     // nodes
     var many = ids.length > 1500 && s < 0.6;
     var occupied = new Grid(32), hits = new Grid(24);
@@ -198,11 +231,8 @@
       g.fillStyle = c[n.group];
       if (many) { g.fillRect(q[0] - 3, q[1] - 3, 6, 6); }
       else {
-        g.save(); g.translate(q[0], q[1]); g.scale(sc, sc);
-        g.fill(path2d(shape, 0));
-        if (n.group !== "no_effect") { g.strokeStyle = "#0b0d10"; g.lineWidth = 2.6; g.lineCap = "round"; g.stroke(path2d(shape, 1)); }
-        if (n.group === "may_break") { g.setLineDash([4, 3]); g.strokeStyle = c.may_break; g.lineWidth = 2; g.stroke(path2d(n.group, 0)); g.setLineDash([]); }
-        g.restore();
+        var sp = self._sprite(shape, n.group, sc);
+        g.drawImage(sp.img, q[0] - sp.size / 2, q[1] - sp.size / 2, sp.size, sp.size);
       }
       var rr = 14 * sc + 2;
       occupied.add({ x: q[0] - rr, y: q[1] - rr, w: 2 * rr, h: 2 * rr });
@@ -236,14 +266,17 @@
       return (b.n.id === self.selected) - (a.n.id === self.selected) || (b.n.id === self.hover) - (a.n.id === self.hover) ||
         PRIO[a.n.group] - PRIO[b.n.group] || a.n.ring - b.n.ring || a.n.order - b.n.order;
     });
-    var placed = 0, hidden = 0, budget = 600, rects = [];
+    var moving = performance.now() - this._moving < 150;
+    var placed = 0, hidden = 0, budget = moving ? 80 : 600, rects = [];
     want.forEach(function (p) {
       var n = p.n, q = scr[n.id];
       var must = n.id === self.selected || n.id === self.hover || n.group === "changed";
       if (!must && (budget-- <= 0 || (zoomedOut && PRIO[n.group] > 2))) { hidden++; return; }
       g.font = (n.group === "changed" ? "600 12px " : "11px ") + c.mono;
       var label = n.name.length > 48 ? n.name.slice(0, 47) + "…" : n.name;
-      var tw = g.measureText(label).width, th = 14, o = n.group === "changed" ? 20 : 12;
+      var wkey = (n.group === "changed" ? "b" : "r") + label, tw = self._widths[wkey];
+      if (tw === undefined) tw = self._widths[wkey] = g.measureText(label).width;
+      var th = 14, o = n.group === "changed" ? 20 : 12;
       var ca = Math.cos(p.a), sa = Math.sin(p.a);
       var cands = [[q[0] + ca * o + (ca >= 0 ? 0 : -tw), q[1] + sa * o - th / 2], [q[0] + o, q[1] - th / 2], [q[0] - o - tw, q[1] - th / 2],
         [q[0] - tw / 2, q[1] - o - th], [q[0] - tw / 2, q[1] + o], [q[0] + o * 0.7, q[1] - o * 0.7 - th], [q[0] + o * 0.7, q[1] + o * 0.7],
@@ -256,7 +289,11 @@
         if (!occupied.hits(r)) spot = r;
       }
       var forced = false;
-      if (!spot && must) { spot = { x: cands[0][0] - 3, y: cands[0][1] - 1, w: tw + 6, h: th + 2 }; forced = true; }
+      if (!spot && must) {  // always shown, kept inside the canvas
+        var fx = Math.max(4, Math.min(w - tw - 10, cands[0][0] - 3)), fy = Math.max(4, Math.min(h - th - 6, cands[0][1] - 1));
+        spot = { x: fx, y: fy, w: tw + 6, h: th + 2 };
+        forced = true;
+      }
       if (!spot) { hidden++; return; }
       rects.push({ x: spot.x, y: spot.y, w: spot.w, h: spot.h, forced: forced });
       occupied.add(spot);
@@ -269,8 +306,11 @@
     this.stats.labels = placed;
     this.stats.labelRects = rects;
     this.stats.hiddenLabels = hidden;
+    if (moving && !this._settle) this._settle = setTimeout(function () { self._settle = 0; self.draw(); }, 170);
     this.stats.frames++;
     this.stats.lastMs = performance.now() - t0;
+    this.stats.totalMs = (this.stats.totalMs || 0) + this.stats.lastMs;
+    this.stats.maxMs = Math.max(this.stats.maxMs || 0, this.stats.lastMs);
     if (this.opts.onDrawn) this.opts.onDrawn(this);
   };
 
@@ -290,7 +330,7 @@
       if (down) {
         var dx = e.clientX - down.x, dy = e.clientY - down.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-        if (moved) { self.view.x = down.vx + dx; self.view.y = down.vy + dy; self.draw(); }
+        if (moved) { self.view.x = down.vx + dx; self.view.y = down.vy + dy; self._moving = performance.now(); self.draw(); }
         return;
       }
       var r = cv.getBoundingClientRect(), hit = self.nodeAt(e.clientX - r.left, e.clientY - r.top);
@@ -313,6 +353,7 @@
       self.view.x = mx - ((mx - self.view.x) * s1) / s0;
       self.view.y = my - ((my - self.view.y) * s1) / s0;
       self.view.s = s1;
+      self._moving = performance.now();
       self.draw();
     }, { passive: false });
     this._onResize = function () { self.resize(); self.draw(); };
