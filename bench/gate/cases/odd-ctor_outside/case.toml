@@ -1,0 +1,9 @@
+id = "odd-ctor_outside"
+summary = "Constructor definition removed; it is used in main.cpp, which is not in compile_commands.json."
+origin = "review-85 (PR #85), script odd"
+expect_build = "fails"
+failing_sites = ["X::X"]
+build_flags = []
+compdb_flags = []
+not_in_build = ["main.cpp"]
+modes = ["patch", "git"]

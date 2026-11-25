@@ -1,0 +1,9 @@
+id = "cases1-static_r7"
+summary = "Function made static; another file calls it."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

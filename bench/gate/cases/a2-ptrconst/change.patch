@@ -1,0 +1,15 @@
+diff --git a/lib.c b/lib.c
+index b9da730..d3620a2 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-void set(int *p){*p=1;}
++void set(const int *p){(void)p;}
+diff --git a/lib.h b/lib.h
+index a1e0cca..e50669b 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-void set(int *p);
++void set(const int *p);

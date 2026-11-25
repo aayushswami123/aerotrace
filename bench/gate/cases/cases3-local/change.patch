@@ -1,0 +1,12 @@
+diff --git a/lib.c b/lib.c
+index 1e99ec9..9033ee3 100644
+--- a/lib.c
++++ b/lib.c
+@@ -3,5 +3,6 @@
+ static int k(void) { return 1; }
+ int f(int a) {
+   /* in fn */
+-  return a + k();
++  int z = 2;
++  return a + k() + z;
+ }

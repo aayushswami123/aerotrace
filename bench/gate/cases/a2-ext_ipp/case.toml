@@ -1,0 +1,9 @@
+id = "a2-ext_ipp"
+summary = "Function removed; x.ipp still calls it and main.c includes x.ipp under #ifdef X (build uses -DX)."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = ["-DX"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

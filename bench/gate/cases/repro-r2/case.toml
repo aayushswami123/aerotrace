@@ -1,0 +1,9 @@
+id = "repro-r2"
+summary = "Function removed; it is still named in a function table. Git mode only (edit applied, then check)."
+origin = "audit repro.sh, case R2"
+expect_build = "fails"
+failing_sites = ["op_sub"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["git"]

@@ -1,0 +1,9 @@
+id = "cases1-ifdef2"
+summary = "The edit sits only inside an inactive #ifdef DBG block (build uses -DDBG). Known limit."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = ["-DDBG"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

@@ -1,0 +1,9 @@
+id = "a1-typedef_outside"
+summary = "Typedef removed; it is used in extra.c, which is not in compile_commands.json."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["extra.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = ["extra.c"]
+modes = ["patch", "git"]

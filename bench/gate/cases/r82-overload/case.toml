@@ -1,0 +1,8 @@
+id = "r82-overload"
+summary = "Harmless: new overloads with the same name are added in a C++ file."
+origin = "review-82 (PR #82), case overload"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

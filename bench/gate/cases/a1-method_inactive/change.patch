@@ -1,0 +1,15 @@
+diff --git a/c.cpp b/c.cpp
+index 8e84a98..2ed54a9 100644
+--- a/c.cpp
++++ b/c.cpp
+@@ -1,3 +1,2 @@
+ #include "c.h"
+-int C::f(){return 1;}
+ int C::g(){return 2;}
+diff --git a/c.h b/c.h
+index 0444be5..9f109bf 100644
+--- a/c.h
++++ b/c.h
+@@ -1 +1 @@
+-struct C{ int f(); int g(); };
++struct C{ int g(); };

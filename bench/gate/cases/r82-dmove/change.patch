@@ -1,0 +1,13 @@
+diff --git a/lib.c b/lib.c
+index 90a318e..e69de29 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1 +0,0 @@
+-int calc(int a) { return a; }
+diff --git a/other.c b/other.c
+index 6c24f10..9030333 100644
+--- a/other.c
++++ b/other.c
+@@ -1 +1,2 @@
+ int other(void) { return 0; }
++int calc(int a) { return a; }

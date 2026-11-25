@@ -1,0 +1,9 @@
+id = "cases1-struct_sa"
+summary = "Struct field removed; a _Static_assert on sizeof in main.c now fails."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

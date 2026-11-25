@@ -1,0 +1,10 @@
+diff --git a/lib.c b/lib.c
+index 002ff55..b588365 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,4 +1,4 @@
+-#define PRIV
++#define PRIV static
+ PRIV int helper(int a)
+ {
+     return a;

@@ -1,0 +1,9 @@
+id = "cases1-l01"
+summary = "Signature changed; the caller in main.c is not in compile_commands.json."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = ["main.c"]
+modes = ["patch", "git"]

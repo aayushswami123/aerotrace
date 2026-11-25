@@ -1,0 +1,8 @@
+id = "r81b-a8"
+summary = "Correct change: a prototype that nobody uses is removed."
+origin = "review-81b (PR #81), case a8"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

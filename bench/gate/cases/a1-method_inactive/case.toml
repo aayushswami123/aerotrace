@@ -1,0 +1,9 @@
+id = "a1-method_inactive"
+summary = "C++ method removed; its only call is in an inactive #ifdef X block (build uses -DX)."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.cpp"]
+build_flags = ["-DX"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

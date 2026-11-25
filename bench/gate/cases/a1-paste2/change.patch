@@ -1,0 +1,14 @@
+diff --git a/lib.c b/lib.c
+index 8bd3deb..a82b12f 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1 @@
+ #include "lib.h"
+-int get_cmd(void){return 1;}
+diff --git a/lib.h b/lib.h
+index cbfb951..8710a54 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1,2 +1 @@
+ #define CMD(n) n##_cmd()
+-int get_cmd(void);

@@ -1,0 +1,9 @@
+id = "repro-r6"
+summary = "A patch that does not match the file. No build truth: any exit code except 0 is correct."
+origin = "audit repro.sh, case R6"
+expect_build = "n/a"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch"]
+patch_applies = false

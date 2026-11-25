@@ -1,0 +1,7 @@
+diff --git a/extra.c b/extra.c
+new file mode 100644
+index 0000000..d2bd43d
+--- /dev/null
++++ b/extra.c
+@@ -0,0 +1 @@
++int calc(int a) { return 2; }

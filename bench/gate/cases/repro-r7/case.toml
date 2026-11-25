@@ -1,0 +1,9 @@
+id = "repro-r7"
+summary = "Function made static while another file calls it. Git mode only."
+origin = "audit repro.sh, case R7"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["git"]

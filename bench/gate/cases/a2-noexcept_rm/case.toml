@@ -1,0 +1,9 @@
+id = "a2-noexcept_rm"
+summary = "noexcept removed from a function; main.cpp stores it in a noexcept function pointer."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["main.cpp"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

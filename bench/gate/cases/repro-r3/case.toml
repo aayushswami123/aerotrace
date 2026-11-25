@@ -1,0 +1,9 @@
+id = "repro-r3"
+summary = "Function-like macro changes arity in a header (the hook part of R3 is not run by the gate)."
+origin = "audit repro.sh, case R3"
+expect_build = "fails"
+failing_sites = ["user.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

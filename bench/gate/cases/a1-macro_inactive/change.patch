@@ -1,0 +1,7 @@
+diff --git a/lib.h b/lib.h
+index a588b0d..8b13789 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-#define M 1
++

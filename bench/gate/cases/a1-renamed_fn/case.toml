@@ -1,0 +1,9 @@
+id = "a1-renamed_fn"
+summary = "Function renamed; the caller in main.c is not in compile_commands.json."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = ["main.c"]
+modes = ["patch", "git"]

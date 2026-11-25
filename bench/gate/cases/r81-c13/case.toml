@@ -1,0 +1,8 @@
+id = "r81-c13"
+summary = "Correct move: a function moves to the end of another .c file; prototype stays."
+origin = "review-81 (PR #81), case c13"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

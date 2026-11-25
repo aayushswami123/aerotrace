@@ -1,0 +1,9 @@
+id = "cases1-table_r2"
+summary = "Function removed; it is still named in a function table in main.c."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["op_sub"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

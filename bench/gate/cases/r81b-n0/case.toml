@@ -1,0 +1,8 @@
+id = "r81b-n0"
+summary = "Correct move: a function moves to a new file with the same signature."
+origin = "review-81b (PR #81), case n0"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

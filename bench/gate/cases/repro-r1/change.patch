@@ -1,0 +1,11 @@
+--- a/lib.c
++++ b/lib.c
+@@ -1,4 +1 @@
+ #include "lib.h"
+-int scale(int x) {
+-    return x * 2;
+-}
+--- a/lib.h
++++ b/lib.h
+@@ -1 +0,0 @@
+-int scale(int x);

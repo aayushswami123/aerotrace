@@ -1,0 +1,9 @@
+id = "repro-r4"
+summary = "Parameter changes from int to int*; the caller passes an int."
+origin = "audit repro.sh, case R4"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

@@ -1,0 +1,9 @@
+id = "a1-paste"
+summary = "Function removed; its only caller reaches it by token pasting (CMD(get) becomes getCommand())."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

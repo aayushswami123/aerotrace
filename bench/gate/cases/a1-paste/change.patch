@@ -1,0 +1,16 @@
+diff --git a/lib.c b/lib.c
+index 7630db6..8fb707e 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,3 +1,2 @@
+ #include "lib.h"
+-int getCommand(void){return 1;}
+ int setCommand(void){return 2;}
+diff --git a/lib.h b/lib.h
+index d34e0d2..2ba6fce 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1,3 +1,2 @@
+ #define CMD(n) n##Command()
+-int getCommand(void);
+ int setCommand(void);

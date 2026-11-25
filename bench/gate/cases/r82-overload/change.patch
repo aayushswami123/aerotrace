@@ -1,0 +1,8 @@
+diff --git a/o.cpp b/o.cpp
+index f3b9efe..62644e8 100644
+--- a/o.cpp
++++ b/o.cpp
+@@ -1 +1,3 @@
+ int o() { return 0; }
++int f(long a) { return 2; }
++namespace n { int f(int a) { return 3; } }

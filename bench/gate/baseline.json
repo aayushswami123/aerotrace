@@ -1,0 +1,1414 @@
+{
+ "cases": {
+  "a1-asm": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a1-dlsym": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "a1-enum_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-ext_cxx": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-ext_def": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-ext_hh": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-ext_inc": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-ext_ipp": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-field_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-field_outside": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "extra.c"
+  },
+  "a1-macro_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-macrohdr": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "a1-macrohdr_unused": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a1-method_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.cpp"
+  },
+  "a1-method_outside": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.cpp"
+  },
+  "a1-param_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-paste": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "a1-paste2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "false safe",
+    "rc": 0
+   },
+   "sites": "main.c"
+  },
+  "a1-renamed_fn": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-rettype_inactive": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "a1-typedef_outside": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "extra.c"
+  },
+  "a2-const_rm": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.cpp"
+  },
+  "a2-ext_cxx": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a2-ext_def": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a2-ext_hh": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a2-ext_inc": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a2-ext_ipp": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  },
+  "a2-knr": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a2-noexcept_rm": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.cpp"
+  },
+  "a2-ok_add_param": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "a2-ok_paramname": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "a2-ok_rename_fn": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a2-ok_rename_global": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "a2-ptrconst": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "a2-static_macro": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "helper"
+  },
+  "a2-static_prevline": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "helper"
+  },
+  "cases1-build_file": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "cases1-def_table": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c, ops.def"
+  },
+  "cases1-def_table2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-enum": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-h07": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-ifdef": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-ifdef2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "false safe",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "false safe",
+    "rc": 0
+   },
+   "sites": "main.c"
+  },
+  "cases1-l01": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-l01b": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "f"
+  },
+  "cases1-macro_sa": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-newfile_dup": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "calc"
+  },
+  "cases1-override": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.cpp"
+  },
+  "cases1-override2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.cpp"
+  },
+  "cases1-static_r7": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "helper"
+  },
+  "cases1-struct_sa": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-struct_sa_c": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases1-table_r2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "1 weak",
+    "class": "weak",
+    "rc": 1
+   },
+   "sites": "op_sub"
+  },
+  "cases1-typedef": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases2-h07b": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "cases3-blank": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-body": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-filecomment": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-fncomment": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-hdrcomment": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-include": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "cases3-local": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-newstatic": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "cases3-reformat": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "odd-ctor_outside": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "X::X"
+  },
+  "odd-fnptr_rename": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 weak",
+    "class": "weak",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "odd-multi_decl_remove": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "odd-multi_decl_rename_first": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "odd2-fnptr_rename_all": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r81-c12": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r81-c13": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "r81-c14": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "r81-c4": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "sites": ""
+  },
+  "r81-c4d": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "sites": ""
+  },
+  "r81b-a8": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r81b-c1": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r81b-c2": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r81b-n0": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "patch": {
+    "before": "1 false alarm",
+    "class": "false alarm",
+    "rc": 1
+   },
+   "sites": ""
+  },
+  "r82-comment": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "r82-dmove": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "false unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "r82-dstatic": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "r82-overload": {
+   "build": "passes",
+   "error": "",
+   "expect": "passes",
+   "git": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "patch": {
+    "before": "0 correct",
+    "class": "correct",
+    "rc": 0
+   },
+   "sites": ""
+  },
+  "repro-r1": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "1 correct",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "main.c"
+  },
+  "repro-r2": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "op_sub"
+  },
+  "repro-r3": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "user.c"
+  },
+  "repro-r4": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "main.c"
+  },
+  "repro-r5": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 1
+   },
+   "sites": "calc"
+  },
+  "repro-r6": {
+   "build": "n/a",
+   "error": "",
+   "expect": "n/a",
+   "patch": {
+    "before": "0 false safe",
+    "class": "correct",
+    "rc": 2
+   },
+   "sites": ""
+  },
+  "repro-r7": {
+   "build": "fails",
+   "error": "",
+   "expect": "fails",
+   "git": {
+    "before": "0 false safe",
+    "class": "honest unknown",
+    "rc": 2
+   },
+   "sites": "helper"
+  }
+ },
+ "measured": "fd0c688"
+}

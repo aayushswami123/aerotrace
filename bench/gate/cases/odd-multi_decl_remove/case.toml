@@ -1,0 +1,9 @@
+id = "odd-multi_decl_remove"
+summary = "One name is removed from a shared declaration (int a, hits); main.c uses the removed one."
+origin = "review-85 (PR #85), script odd"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

@@ -1,0 +1,7 @@
+diff --git a/lib.h b/lib.h
+deleted file mode 100644
+index a30d3e6..0000000
+--- a/lib.h
++++ /dev/null
+@@ -1 +0,0 @@
+-int f(int a);

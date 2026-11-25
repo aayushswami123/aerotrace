@@ -1,0 +1,9 @@
+id = "a1-rettype_inactive"
+summary = "Return type changed from int to a struct; the only caller is in an inactive #ifdef X block (build uses -DX)."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = ["-DX"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

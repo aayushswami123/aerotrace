@@ -1,0 +1,7 @@
+diff --git a/lib.h b/lib.h
+index a30d3e6..88e4b30 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1,2 @@
++/* api */
+ int f(int a);

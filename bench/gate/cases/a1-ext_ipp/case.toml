@@ -1,0 +1,8 @@
+id = "a1-ext_ipp"
+summary = "Function removed; the only other mention is in x.ipp, which nothing compiles. The build passes."
+origin = "review-85 (PR #85), script a1"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

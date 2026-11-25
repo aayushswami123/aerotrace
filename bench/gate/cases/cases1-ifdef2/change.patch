@@ -1,0 +1,13 @@
+diff --git a/main.c b/main.c
+index e22ddf6..165af5e 100644
+--- a/main.c
++++ b/main.c
+@@ -1,7 +1,7 @@
+ int g(void){return 1;}
+ int main(void) {
+ #ifdef DBG
+-  return g();
++  return g(;
+ #endif
+   return 0;
+ }

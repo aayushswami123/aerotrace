@@ -1,0 +1,9 @@
+id = "a2-static_prevline"
+summary = "Function made static with 'static' on the line above its name; another file calls it."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

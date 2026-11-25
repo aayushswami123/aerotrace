@@ -1,0 +1,7 @@
+diff --git a/x.cpp b/x.cpp
+index 6656131..8266190 100644
+--- a/x.cpp
++++ b/x.cpp
+@@ -1,2 +1 @@
+ #include "x.h"
+-X::X(int a):k(a){}

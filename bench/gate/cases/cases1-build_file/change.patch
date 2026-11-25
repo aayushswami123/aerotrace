@@ -1,0 +1,8 @@
+diff --git a/Makefile b/Makefile
+index e5b498a..530b250 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,2 +1,2 @@
+ all:
+-	cc main.c
++	cc main.c missing.c

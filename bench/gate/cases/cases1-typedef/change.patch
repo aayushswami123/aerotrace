@@ -1,0 +1,7 @@
+diff --git a/t.h b/t.h
+index 333cce9..70fe23a 100644
+--- a/t.h
++++ b/t.h
+@@ -1 +1 @@
+-typedef int id_t2;
++typedef long id_t2;

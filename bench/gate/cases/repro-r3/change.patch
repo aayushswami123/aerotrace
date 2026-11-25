@@ -1,0 +1,5 @@
+--- a/defs.h
++++ b/defs.h
+@@ -1 +1 @@
+-#define SCALE(x) ((x) * 2)
++#define SCALE(x, k) ((x) * (k))

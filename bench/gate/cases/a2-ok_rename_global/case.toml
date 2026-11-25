@@ -1,0 +1,8 @@
+id = "a2-ok_rename_global"
+summary = "Correct change: a global is renamed in the header, definition and user."
+origin = "review-85 (PR #85), script a2"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

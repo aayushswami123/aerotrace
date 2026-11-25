@@ -1,0 +1,9 @@
+id = "a1-method_outside"
+summary = "C++ method removed; it is called in main.cpp, which is not in compile_commands.json."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.cpp"]
+build_flags = []
+compdb_flags = []
+not_in_build = ["main.cpp"]
+modes = ["patch", "git"]

@@ -1,0 +1,7 @@
+diff --git a/c.h b/c.h
+index 3904821..fdcc4cf 100644
+--- a/c.h
++++ b/c.h
+@@ -1 +1 @@
+-enum color { RED, GREEN, BLUE };
++enum color { RED, GREEN };

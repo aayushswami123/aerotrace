@@ -1,0 +1,9 @@
+id = "repro-r1"
+summary = "Function removed together with its header prototype; main.c still calls it."
+origin = "audit repro.sh, case R1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

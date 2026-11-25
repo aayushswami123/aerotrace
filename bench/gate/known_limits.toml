@@ -1,0 +1,13 @@
+# False-safe cases we know about and have not fixed. Tracked in the issue below.
+# A false safe that is not listed here always fails the gate.
+issue = "https://github.com/aayushswami123/aerotrace/issues/93"
+
+[[limit]]
+id = "a1-paste2"
+modes = ["patch"]
+why = "Token pasting (CMD(get)) inside an inactive #ifdef block is not followed."
+
+[[limit]]
+id = "cases1-ifdef2"
+modes = ["patch", "git"]
+why = "An edit only inside an inactive #ifdef block is invisible to the compiled code."

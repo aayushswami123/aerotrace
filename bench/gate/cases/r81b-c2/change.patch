@@ -1,0 +1,16 @@
+diff --git a/lib.c b/lib.c
+index 0e16bb3..77398ec 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,3 +1,3 @@
+ #include "lib.h"
+-int scale(int x) { return x * 2; }
++static int scale(int x) { return x * 2; }
+ int keep(int x) { return scale(x); }
+diff --git a/lib.h b/lib.h
+index 45939af..ed5e7a8 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1,2 +1 @@
+-int scale(int x);
+ int keep(int x);

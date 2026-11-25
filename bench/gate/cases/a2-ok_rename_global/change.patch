@@ -1,0 +1,23 @@
+diff --git a/lib.c b/lib.c
+index 1abc6ba..e6d1c4d 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int counter = 0;
++int hits = 0;
+diff --git a/lib.h b/lib.h
+index e3c62b5..40a4152 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-extern int counter;
++extern int hits;
+diff --git a/main.c b/main.c
+index 2a872d0..5a2c38f 100644
+--- a/main.c
++++ b/main.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int main(void){return counter;}
++int main(void){return hits;}

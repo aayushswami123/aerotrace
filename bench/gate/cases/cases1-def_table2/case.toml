@@ -1,0 +1,9 @@
+id = "cases1-def_table2"
+summary = "An entry is removed from the X-macro list ops.def; main.c still uses OP_SUB."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

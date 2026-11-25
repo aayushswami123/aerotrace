@@ -1,0 +1,7 @@
+diff --git a/s.h b/s.h
+index 64d0593..71db7bc 100644
+--- a/s.h
++++ b/s.h
+@@ -1 +1 @@
+-struct s { int a; int b; };
++struct s { int a; };
