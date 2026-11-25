@@ -126,7 +126,8 @@ def test_git_mode_removed_function_in_a_table_is_never_an_all_clear(repo):
     git(repo, "commit", "-q", "--no-verify", "-m", "init")
     build_index(repo, jobs=1)
     _, c = run_git(repo, {"src/handlers.c": [("int get_keys(int n) { return n + 1; }\n", "")]})
-    assert headline(c).startswith(("ℹ", "⚠")), headline(c)  # noqa: RUF001 (the info emoji)
+    assert headline(c).startswith("❓ UNKNOWN: "), headline(c)
+    assert c["verdict"] == "unknown" and c["unchecked"]
     assert any("get_keys was removed" in b["text"] for b in c["sections"]["blind_spots"])
 
 

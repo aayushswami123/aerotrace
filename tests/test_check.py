@@ -281,7 +281,8 @@ def test_patch_that_does_not_match_is_counted(repo):
     conn, _ = fresh_index(repo, want=diff.wanted(diffs, "patch"))
     res = check.run(conn, repo, diffs, mode="patch", outliner=Outliner(repo))
     c = check.to_contract(conn, res, "t")
-    assert c["change"]["not_followed"]["mismatched"] == [A] and c["summary"]["not_followed"] > 0
+    assert c["change"]["not_followed"]["mismatched"] == [A] and c["unchecked_parts"] > 0
+    assert c["status"] == "nothing_to_check" and c["verdict"] == "unknown"  # nothing was checked (R6)
 
 
 def test_moving_lines_changes_no_signature_or_declaration(repo):
@@ -310,7 +311,8 @@ def test_cli_check_json_and_exit_code(repo, capsys):
     assert code == 1 and data["format"] == "aerotrace-check" and data["summary"]["breaks_exact"] >= 1
     code = main(["check", "--root", str(repo)])
     out = capsys.readouterr().out
-    assert code == 0 and "No C or C++ changes to check" in out  # p.diff itself is not code
+    assert code == 0 and "No C or C++ changes, so there was nothing to check." in out  # p.diff is not code
+    assert not out.startswith("✅")
 
 
 @pytest.fixture
@@ -500,3 +502,313 @@ def test_two_removed_names_on_one_line_both_link_to_it(init_repo):
     [t] = [n for n in c["nodes"] if n["name"] == "t" and n["status"] == "breaks"]
     assert t["certainty"] == "exact"
     assert "other link" in t["why"], t["why"]  # the second removed name is not dropped
+
+
+# ---------------------------------------------------------------- duplicate definitions (A-05)
+
+
+def _committed(repo_factory, fixture):
+    root = repo_factory(fixture)
+    git(root, "init", "-q", "-b", "main")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(root, jobs=1)
+    return root
+
+
+@pytest.fixture
+def dupes(repo_factory):
+    return _committed(repo_factory, "c_dupes")
+
+
+CALC_AGAIN = {
+    "src/other.c": [("    return 0;\n}\n", "    return 0;\n}\n\nint calc(int a) {\n    return a + 1;\n}\n")]
+}
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_second_definition_of_a_function_in_another_file_breaks(dupes, mode):
+    _, c = (run_patch if mode == "patch" else run_git)(dupes, CALC_AGAIN)
+    breaks = [n for n in c["nodes"] if n["status"] == "breaks"]
+    assert breaks and all(n["certainty"] == "exact" for n in breaks), c["nodes"]
+    text = " ".join(n["why"] + n["file"] for n in breaks)
+    assert "src/lib.c" in text and "src/other.c" in text, text
+    assert "calc" in text
+    assert check.exit_code(c) == 1
+
+
+def test_second_definition_is_not_a_green_line(dupes, capsys):
+    from aerotrace.cli import main
+
+    (dupes / "p.diff").write_text(patch(dupes, CALC_AGAIN))
+    code = main(["check", "--patch", str(dupes / "p.diff"), "--root", str(dupes)])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "Nothing found that this change can break" not in out
+
+
+def test_static_functions_with_the_same_name_in_two_files_are_not_a_duplicate(dupes):
+    edits = {
+        "src/other.c": [
+            ("int other(void) {", "static int helper(void) {\n    return 2;\n}\n\nint other(void) {")
+        ]
+    }
+    _, c = run_patch(dupes, edits)
+    assert nodes(c, "breaks") == {}
+    assert check.exit_code(c) == 0
+
+
+def test_inline_functions_in_headers_are_not_a_duplicate(dupes):
+    edits = {
+        "include/util.h": [
+            ("int hook(void);\n", "int hook(void);\nstatic inline int twice(int x) { return 2 * x; }\n")
+        ],
+        "src/other.c": [
+            ("int other(void) {", "inline int calc2(int a) {\n    return a;\n}\n\nint other(void) {")
+        ],
+    }
+    _, c = run_patch(dupes, edits)
+    assert nodes(c, "breaks") == {}
+    assert check.exit_code(c) == 0
+
+
+def test_moving_a_function_to_another_file_is_not_a_duplicate(dupes):
+    edits = {
+        "src/lib.c": [("int calc(int a) {\n    return a;\n}\n\n", "")],
+        "src/other.c": [("    return 0;\n}\n", "    return 0;\n}\n\nint calc(int a) {\n    return a;\n}\n")],
+    }
+    _, c = run_patch(dupes, edits)
+    assert "second definition" not in " ".join(n["why"] for n in c["nodes"])
+    assert nodes(c, "breaks") == {}
+
+
+def test_cpp_overloads_and_namespaces_are_not_a_duplicate(dupes):
+    edits = {
+        "src/more.cpp": [
+            (
+                "int more(void) {",
+                "int area(double w) {\n    return 1;\n}\n\nnamespace other {\nint perimeter(int w) {\n"
+                "    return w;\n}\n}\n\nint more(void) {",
+            )
+        ]
+    }
+    _, c = run_patch(dupes, edits)
+    assert nodes(c, "breaks") == {}
+    assert check.exit_code(c) == 0
+
+
+def test_a_weak_definition_is_not_a_duplicate(dupes):
+    edits = {
+        "src/other.c": [("int other(void) {", "int hook(void) {\n    return 5;\n}\n\nint other(void) {")]
+    }
+    _, c = run_patch(dupes, edits)
+    assert nodes(c, "breaks") == {}
+    assert check.exit_code(c) == 0
+
+
+def test_a_third_definition_when_two_already_exist_is_a_probable_break_not_silence(dupes):
+    edits = {
+        "src/prog_c.c": [
+            ("int prog_c(void) {", "int tool_main(void) {\n    return 4;\n}\n\nint prog_c(void) {")
+        ]
+    }
+    _, c = run_patch(dupes, edits)
+    breaks = nodes(c, "breaks")
+    assert breaks and all(level == "probable" for _, level in breaks.values()), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+# ---------------------------------------------------------------- sites the patch itself fixes (A-12)
+
+
+@pytest.fixture
+def selfedit(repo_factory):
+    return _committed(repo_factory, "c_selfedit")
+
+
+RENAME_ALL = {
+    "include/g.h": [("extern int counter;", "extern int ticks;")],
+    "src/g.c": [("int counter = 0;", "int ticks = 0;"), ("return ++counter;", "return ++ticks;")],
+    "src/a.c": [("return &counter;", "return &ticks;")],
+    "src/b.c": [("return &counter;", "return &ticks;")],
+}
+
+
+def test_renaming_a_global_in_every_file_that_uses_it_breaks_nothing(selfedit):
+    _, c = run_patch(selfedit, RENAME_ALL)
+    assert nodes(c, "breaks") == {}, c["nodes"]
+    assert check.exit_code(c) == 0
+
+
+def test_renaming_a_global_but_leaving_an_address_use_in_an_edited_function_breaks(selfedit):
+    edits = {**RENAME_ALL, "src/a.c": [("int pad = 1;", "int pad = 2;")]}
+    _, c = run_patch(selfedit, edits)
+    assert "addr_a" in nodes(c, "breaks"), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+REMOVE_HELPER = {"src/g.c": [("int old_helper(void) {\n    return 1;\n}\n\n", "")]}
+
+
+def test_removing_a_function_with_its_only_call_breaks_nothing(selfedit):
+    edits = {**REMOVE_HELPER, "src/run.c": [("return old_helper() + x;", "return 1 + x;")]}
+    _, c = run_patch(selfedit, edits)
+    assert nodes(c, "breaks") == {}, c["nodes"]
+    assert check.exit_code(c) == 0
+
+
+def test_removing_a_function_but_leaving_one_of_two_calls_breaks(selfedit):
+    edits = {
+        "src/g.c": [("\nint old_pair(void) {\n    return 2;\n}\n", "")],
+        "src/run.c": [("int a = old_pair();", "int a = 2;")],
+    }
+    _, c = run_patch(selfedit, edits)
+    assert "run_two" in nodes(c, "breaks"), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_removing_a_function_but_leaving_its_call_in_an_edited_function_breaks(selfedit):
+    edits = {**REMOVE_HELPER, "src/run.c": [("int x = 5;", "int x = 6;")]}
+    _, c = run_patch(selfedit, edits)
+    assert "run_one" in nodes(c, "breaks"), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+# ---------------------------------------------------------------- review of #82: skipping must be proven
+
+
+def _breaks(c):
+    return nodes(c, "breaks")
+
+
+@pytest.fixture
+def macro(repo_factory):
+    return _committed(repo_factory, "c_macro")
+
+
+RENAME_OLD_FN = {
+    "src/lib.c": [("int old_fn(int a) {", "int new_fn(int a) {")],
+    "src/main.c": [
+        ('#include "m.h"\n', '#include "m.h"\nint new_fn(int a);\n'),
+        ("int r = old_fn(1);", "int r = new_fn(1);"),
+    ],
+}
+
+
+def test_a_use_hidden_behind_a_macro_is_not_a_fixed_site(macro):
+    _, c = run_patch(macro, RENAME_OLD_FN)  # CALL(2) still expands to old_fn(2)
+    assert "main" in _breaks(c), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_a_macro_use_that_the_patch_also_fixes_is_not_a_break(macro):
+    edits = {**RENAME_OLD_FN}
+    edits["src/main.c"] = [*RENAME_OLD_FN["src/main.c"], ("CALL(2)", "new_fn(2)")]
+    _, c = run_patch(macro, edits)
+    assert _breaks(c) == {}, c["nodes"]
+    assert check.exit_code(c) == 0
+
+
+@pytest.fixture
+def cxx(repo_factory):
+    return _committed(repo_factory, "c_cxx_uses")
+
+
+DROP_OP = ("V operator+(V a, V b) {\n    return V{a.x + b.x};\n}\n\n", "")
+DROP_CONV = ("W::operator int() const {\n    return v;\n}\n\n", "")
+DROP_CTOR = ("X::X(int a) : k(a) {}\n\n", "")
+DROP_DTOR = ("X::~X() {}\n", "")
+
+
+@pytest.mark.parametrize(
+    ("drop", "user", "touch", "name"),
+    [
+        (DROP_OP, "src/use_op.cpp", ("V a{1}, b{2};", "V a{1}, b{3};"), "use_op"),
+        (DROP_CONV, "src/use_conv.cpp", ("W w{1};", "W w{2};"), "use_conv"),
+        (DROP_CTOR, "src/use_ctor.cpp", ("X x(1);", "X x(2);"), "use_ctor"),
+        (DROP_DTOR, "src/use_ctor.cpp", ("return x.k;", "return x.k + 0;"), "X::~X"),
+    ],
+    ids=["operator", "conversion", "constructor", "destructor"],
+)
+def test_a_use_that_is_left_through_an_operator_or_special_member_still_breaks(cxx, drop, user, touch, name):
+    _, c = run_patch(cxx, {"src/v.cpp": [drop], user: [touch]})
+    assert name in _breaks(c), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+@pytest.mark.parametrize(
+    ("drop", "user", "touch"),
+    [
+        (DROP_OP, "src/use_op.cpp", ("V c = a + b;", "V c = a;")),
+        (DROP_CONV, "src/use_conv.cpp", ("int k = w;", "int k = 0;")),
+        (DROP_CTOR, "src/use_ctor.cpp", ("X x(1);\n    return x.k;", "return 0;")),
+    ],
+    ids=["operator", "conversion", "constructor"],
+)
+def test_an_operator_or_special_member_use_the_patch_removes_is_not_a_break(cxx, drop, user, touch):
+    # the constructor case: X still has its destructor, and the patch no longer makes an X
+    _, c = run_patch(cxx, {"src/v.cpp": [drop], user: [touch]})
+    assert _breaks(c) == {}, c["nodes"]
+    assert check.exit_code(c) == 0
+
+
+def _again(name, extra=""):
+    body = f"{extra}int {name}(int a) {{\n    return a + 1;\n}}\n"
+    return {"src/other.c": [("    return 0;\n}\n", "    return 0;\n}\n\n" + body)]}
+
+
+@pytest.mark.parametrize(
+    "edits",
+    [
+        _again("calc", "/* a weak spot: keep calc fast */\n"),
+        _again("c_commented"),  # the existing one has "// inline candidate" above it
+        _again("c_after_inline"),  # the existing one follows a static inline function
+        {
+            "src/other.c": [
+                (
+                    "    return 0;\n}\n",
+                    "    return 0;\n}\n\nextern inline int c_extinl(int a) {\n    return a + 1;\n}\n",
+                )
+            ]
+        },  # C99 extern inline is an external definition
+    ],
+    ids=["comment-above", "comment-above-existing", "line-above-existing", "extern-inline"],
+)
+def test_words_near_a_definition_do_not_hide_a_real_duplicate(dupes, edits):
+    _, c = run_patch(dupes, edits)
+    assert [lvl for _, lvl in _breaks(c).values()] == ["exact"], c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_a_plain_c_inline_definition_in_two_files_is_reported_not_skipped(dupes):
+    edits = {
+        "src/other.c": [
+            (
+                "    return 0;\n}\n",
+                "    return 0;\n}\n\ninline int c_plain_inline(int a) {\n    return a + 1;\n}\n",
+            )
+        ]
+    }
+    _, c = run_patch(dupes, edits)
+    assert [lvl for _, lvl in _breaks(c).values()] == ["probable"], c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_a_plain_function_defined_in_a_header_is_a_may_break(dupes):
+    edits = {"include/util.h": [("int hook(void);\n", "int hook(void);\nint hdr_fn(void) { return 2; }\n")]}
+    _, c = run_patch(dupes, edits)
+    got = [n for n in c["nodes"] if n["status"] == "breaks"]
+    assert got and all(n["certainty"] == "probable" for n in got), c["nodes"]
+    assert "header" in " ".join(n["why"] for n in got)
+    assert check.exit_code(c) == 1
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_a_duplicate_in_a_repo_with_two_programs_is_a_may_break(repo_factory, mode):
+    root = _committed(repo_factory, "c_twoprog")
+    edits = {"src/tool2.c": [("int main(void) {", "void usage(void) {\n}\n\nint main(void) {")]}
+    _, c = (run_patch if mode == "patch" else run_git)(root, edits)
+    got = [n for n in c["nodes"] if n["status"] == "breaks"]
+    assert got and all(n["certainty"] == "probable" for n in got), c["nodes"]
+    assert "more than one program" in " ".join(n["why"] for n in got)
+    assert check.exit_code(c) == 1

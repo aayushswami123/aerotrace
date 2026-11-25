@@ -83,16 +83,22 @@ class Outliner:
         self.build_dir = build_dir
         self._units: dict[str, CompileUnit] | None = None
         self._fallback: CompileUnit | None = None
-        self._cache: dict[tuple[str, str, str, str], Outline | None] = {}
+        self._cache: dict[tuple, Outline | None] = {}
         # Other files of the same change, so one version is parsed with its own headers: git mode, the
         # changed files as they were at the base; patch mode, the patched files (in memory).
         self.base_overlay: dict[str, str] = {}
         self.new_overlay: dict[str, str] = {}
+        self.ref_lines: dict[str, frozenset[int]] = {}  # patch mode: changed lines (new side) by file
         self.parses = 0  # libclang parses done (the same text is parsed once)
         self.seconds = 0.0
 
     def _parse(
-        self, rel: str, content: str, flags_from: str | None = None, overlay: dict[str, str] | None = None
+        self,
+        rel: str,
+        content: str,
+        flags_from: str | None = None,
+        overlay: dict[str, str] | None = None,
+        ref_lines: frozenset[int] | None = None,
     ) -> Outline | None:
         others = sorted((r, c) for r, c in (overlay or {}).items() if r != rel)
         digest = hashlib.sha256()
@@ -103,6 +109,7 @@ class Outliner:
             flags_from or rel,
             hashlib.sha256(content.encode("utf-8", "surrogateescape")).hexdigest(),
             digest.hexdigest(),
+            tuple(sorted(ref_lines or ())),
         )
         if key in self._cache:
             return self._cache[key]
@@ -117,7 +124,9 @@ class Outliner:
         args = [*args, "-ferror-limit=0"]  # every new error counts: clang stops after 20 by default
         t = time.perf_counter()
         unsaved = [(os.path.join(str(self.root), r), c) for r, c in others]
-        got = parse_mod.function_outline(os.path.join(str(self.root), rel), content, args, directory, unsaved)
+        got = parse_mod.function_outline(
+            os.path.join(str(self.root), rel), content, args, directory, unsaved, ref_lines
+        )
         self.parses += 1
         self.seconds += time.perf_counter() - t
         out = Outline(**got) if got is not None else None
@@ -153,5 +162,6 @@ class Outliner:
 
     def text(self, rel: str, content: str, flags_from: str | None = None) -> Outline | None:
         """`rel` with this content (a patched version in memory). `flags_from`: parse it with another
-        file's compile flags (the old path of a renamed file)."""
-        return self._parse(rel, content, flags_from, self.new_overlay)
+        file's compile flags (the old path of a renamed file). The functions that hold a changed line (see
+        `ref_lines`) also list what they refer to."""
+        return self._parse(rel, content, flags_from, self.new_overlay, self.ref_lines.get(rel))

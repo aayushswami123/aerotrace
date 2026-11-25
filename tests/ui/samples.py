@@ -17,6 +17,7 @@ NOT_FOLLOWED_EMPTY = {
     "mismatched": [],
     "unreadable": [],
     "new_files": [],
+    "build_files": [],
 }
 
 CERTAINTY_RANK = ("exact", "probable", "unknown")
@@ -76,6 +77,11 @@ def base(status="ok", **over):
         "tool": "aerotrace 0.1.0",
         "status": status,
         "message": None,
+        # A-04: set by hand in each sample below (analysis/verdict.py has the rule)
+        "verdict": "clear",
+        "unchecked": False,
+        "unchecked_parts": 0,
+        "unchecked_reason": None,
         "change": {
             "mode": "git",
             "base": "HEAD",
@@ -189,8 +195,9 @@ def sample() -> dict:
         "untested_changes": [{"node": GG, "why": "no test reaches it"}],
         "blind_spots": [
             {"text": "3 calls through function pointers in src/t_string.c were matched by type only.",
-             "scope": "change", "node": None},
-            {"text": "Macro uses are not followed anywhere in the index.", "scope": "index", "node": None},
+             "scope": "change", "node": None, "unchecked": False},
+            {"text": "Macro uses are not followed anywhere in the index.", "scope": "index", "node": None,
+             "unchecked": False},
         ],
     }  # fmt: skip
     d = base(nodes=nodes, edges=edges, sections=sections)
@@ -198,7 +205,7 @@ def sample() -> dict:
         files=2, other_files=1, changed_functions=1, removed_functions=1, changed_declarations=1
     )
     d["change"]["not_followed"]["outside"] = [
-        {"file": T, "lines": [40, 41, 42, 43, 44], "other_side_lines": []}
+        {"file": T, "lines": [40, 41, 42, 43, 44], "other_side_lines": [], "what": "a macro"}
     ]
     d["summary"].update(
         breaks_exact=3,
@@ -207,8 +214,10 @@ def sample() -> dict:
         affected_further=4,
         unknown=2,
         no_effect=1,
-        not_followed=2,
+        not_followed=1,
     )
+    # 1 part not followed (the macro) and 2 UNKNOWN; matching pointer calls by type is a standing limit
+    d.update(verdict="breaks", unchecked=True, unchecked_parts=3, unchecked_reason=f"a macro in {T}")
     return d
 
 
@@ -223,8 +232,9 @@ def nothing() -> dict:
         {"name": "tests/unit/type/string.tcl", "covers": [GG], "why": "calls getGenericCommand"}
     ]
     d["sections"]["blind_spots"] = [
-        {"text": "Macro uses are not followed anywhere in the index.", "scope": "index", "node": None}
-    ]
+        {"text": "Macro uses are not followed anywhere in the index.", "scope": "index", "node": None,
+         "unchecked": False}
+    ]  # fmt: skip
     return d
 
 
@@ -234,6 +244,8 @@ def unclear() -> dict:
     d["change"]["not_followed"]["outside"] = [{"file": T, "lines": [40, 41, 42], "other_side_lines": []}]
     d["change"]["not_followed"]["not_indexed"] = ["src/extra.c"]
     d["summary"]["not_followed"] = 2
+    d.update(verdict="unknown", unchecked=True, unchecked_parts=2,
+             unchecked_reason=f"code outside any function in {T}")  # fmt: skip
     d["sections"]["tests_to_run"] = None
     d["sections"]["untested_changes"] = None
     return d
@@ -266,6 +278,9 @@ def no_index() -> dict:
     return base(
         "no_index",
         change=None,
+        verdict="unknown",
+        unchecked=True,
+        unchecked_reason="no index",
         message="Run `aerotrace index` first (Redis takes about a minute), then run `aerotrace check` again.",
     )
 
@@ -274,6 +289,9 @@ def index_error() -> dict:
     return base(
         "index_error",
         change=None,
+        verdict="unknown",
+        unchecked=True,
+        unchecked_reason="the index could not be read",
         message="The index file .aerotrace/index.db is damaged. Run `aerotrace index` to rebuild it.",
     )
 
@@ -290,6 +308,8 @@ def nothing_to_check_gaps() -> dict:
     d["change"].update(files=2, other_files=0)
     d["change"]["not_followed"]["not_indexed"] = ["src/extra.c"]
     d["change"]["not_followed"]["mismatched"] = ["src/t_string.c"]
+    d.update(verdict="unknown", unchecked=True, unchecked_parts=2,
+             unchecked_reason="the patch does not match src/t_string.c")  # fmt: skip
     return d
 
 
@@ -360,4 +380,7 @@ def big(n: int, seed: int = 9) -> dict:
             s["affected_direct" if x["distance"] == 1 else "affected_further"] += 1
         elif x["status"] in ("unknown", "no_effect"):
             s[x["status"]] += 1
+    unknown = s["unknown"]
+    d.update(verdict="breaks" if s["breaks_exact"] else "unknown" if unknown else "clear", unchecked=bool(unknown),
+             unchecked_parts=unknown, unchecked_reason="function_00001_name in src/x.c" if unknown else None)  # fmt: skip
     return d

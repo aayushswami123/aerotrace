@@ -127,7 +127,7 @@ def test_skipped_parts_need_a_count() -> None:
     d["summary"]["not_followed"] = 0
     _bad(d, "wrong all-clear")
     d = samples.nothing()
-    d["sections"]["blind_spots"].append({"text": "x", "scope": "change", "node": None})
+    d["sections"]["blind_spots"].append({"text": "x", "scope": "change", "node": None, "unchecked": True})
     _bad(d, "wrong all-clear")
 
 
@@ -155,3 +155,25 @@ def test_node_words() -> None:
     assert schema.node_word("breaks", "exact") == "BREAKS"
     assert schema.node_word("breaks", "probable") == "MAY BREAK"
     assert schema.node_word("no_effect", "exact") == "NO EFFECT FOUND"
+
+
+def test_the_verdict_can_not_be_more_hopeful_than_the_counts() -> None:
+    """A-04: `verdict` is breaks, unknown or clear; `unchecked` is true when a part was not checked."""
+    d = samples.unclear()
+    d["verdict"] = "clear"
+    _bad(d, "wrong all-clear")
+    d = samples.unclear()
+    d["unchecked"] = False
+    _bad(d, "unchecked")
+    d = samples.nothing_to_check_gaps()
+    d["verdict"] = "clear"
+    _bad(d, "wrong all-clear")
+    d = samples.sample()
+    d["verdict"] = "unknown"
+    _bad(d, "verdict")
+    d = samples.nothing()
+    del d["verdict"]
+    _bad(d, "verdict")
+    for f in (samples.sample, samples.unclear, samples.nothing_to_check_gaps, samples.no_index):
+        assert f()["unchecked"] is True
+    assert samples.nothing()["verdict"] == "clear" and samples.nothing()["unchecked"] is False

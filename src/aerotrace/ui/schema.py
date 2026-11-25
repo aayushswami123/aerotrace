@@ -13,6 +13,9 @@ The full description, with an example, is in docs/plans/launch-ui.md section 1. 
   `removed:{file}:{line}:{name}` (a function the change removes, as in analysis/diff.py) and
   `new:{file}:{line}:{name}` (a function that is new in a patch that is not applied yet).
 
+- `verdict` (`breaks`, `unknown`, `clear`) and `unchecked` come from analysis/verdict.py: UNKNOWN when a
+  part of the change was not checked and nothing breaks (A-04).
+
 `check()` only checks shape and consistency. It refuses data that would show a wrong all-clear.
 """
 
@@ -21,6 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 from aerotrace.analysis.certainty import LEVELS, MEANING
+from aerotrace.analysis.verdict import VERDICTS, decide
 
 FORMAT = "aerotrace-check"
 VERSION = 1
@@ -33,7 +37,15 @@ KINDS = ("function", "field", "global", "static_local")
 EDGE_KINDS = ("calls", "reads", "writes")
 CERTAINTIES = LEVELS  # exact, probable, unknown
 SCOPES = ("change", "index")
-NOT_FOLLOWED_KEYS = ("outside", "not_indexed", "deleted", "mismatched", "unreadable", "new_files")
+NOT_FOLLOWED_KEYS = (
+    "outside",
+    "not_indexed",
+    "deleted",
+    "mismatched",
+    "unreadable",
+    "new_files",
+    "build_files",
+)
 SUMMARY_KEYS = (
     "breaks_exact",
     "breaks_probable",
@@ -120,6 +132,12 @@ def check(data: Any) -> dict:
     change = data.get("change")
     if change is not None:
         _check_change(change)
+    _check_verdict_shape(data)
+    if status in ("no_index", "index_error") and (data["verdict"] != "unknown" or not data["unchecked"]):
+        _fail(f"status {status!r} checked nothing, so verdict must be 'unknown' and unchecked true")
+    if status == "nothing_to_check":
+        gaps = sum(len(change["not_followed"][k]) for k in NOT_FOLLOWED_KEYS) if change else 0
+        _check_verdict(data, 0, gaps)
     if status != "ok":
         # Nothing was analysed, so nothing may be listed; but what the change skipped is still shown.
         if status == "nothing_to_check" and change is None:
@@ -305,6 +323,8 @@ def _check_sections(sections: Any, ids: set[str]) -> list[dict]:
             _fail("sections.blind_spots items need a text")
         if b.get("scope") not in SCOPES:
             _fail("sections.blind_spots[].scope must be 'change' or 'index'")
+        if not isinstance(b.get("unchecked"), bool) or (b["unchecked"] and b["scope"] != "change"):
+            _fail("sections.blind_spots[].unchecked must be true or false, and false for scope 'index'")
         if b.get("node") is not None and b["node"] not in ids:
             _fail(f"sections.blind_spots: {b['node']!r} is not a node")
     return blind
@@ -337,6 +357,36 @@ def _check_counts(data: dict, summary: dict, blind: list[dict]) -> None:
     if not found and data["proof"]["stopped_early"]:
         _fail("the walk stopped early, but the summary counts nothing (a wrong all-clear)")
     nf = data["change"]["not_followed"]
-    gaps = sum(len(nf[k]) for k in NOT_FOLLOWED_KEYS) + sum(b["scope"] == "change" for b in blind)
+    gaps = sum(len(nf[k]) for k in NOT_FOLLOWED_KEYS) + sum(
+        b["scope"] == "change" and b["unchecked"] for b in blind
+    )
     if gaps and not summary["not_followed"]:
         _fail("parts of the change were not followed, but summary.not_followed is 0 (a wrong all-clear)")
+    _check_verdict(data, summary["breaks_exact"] + summary["breaks_probable"], gaps + summary["unknown"])
+
+
+def _check_verdict_shape(data: dict) -> None:
+    if data.get("verdict") not in VERDICTS:
+        _fail(f"verdict must be one of {', '.join(VERDICTS)}, got {data.get('verdict')!r}")
+    if not isinstance(data.get("unchecked"), bool):
+        _fail("unchecked must be true or false")
+    _int(data, "unchecked_parts", "data")
+    reason = data.get("unchecked_reason")
+    if reason is not None and not isinstance(reason, str):
+        _fail("unchecked_reason must be a string or null")
+
+
+def _check_verdict(data: dict, breaks: int, parts: int) -> None:
+    """A-04: `unchecked` whenever a part was not checked (a skipped part, a blind spot of this change that is
+    not a standing limit, an UNKNOWN node); the verdict follows from it and the breaks."""
+    if data["unchecked"] != bool(parts):
+        _fail(f"{parts} parts were not checked, but unchecked is {str(data['unchecked']).lower()}")
+    if data["unchecked_parts"] != parts:
+        _fail(f"unchecked_parts says {data['unchecked_parts']}, but {parts} parts were not checked")
+    if parts and not data["unchecked_reason"]:
+        _fail("unchecked_reason must name the first part that was not checked")
+    want = decide(breaks, data["unchecked"])
+    if data["verdict"] != want:
+        if data["verdict"] == "clear":
+            _fail(f"verdict is 'clear', but it must be {want!r} (a wrong all-clear)")
+        _fail(f"verdict is {data['verdict']!r}, but the counts say {want!r}")

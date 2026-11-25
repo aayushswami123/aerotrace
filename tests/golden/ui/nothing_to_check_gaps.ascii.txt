@@ -1,4 +1,5 @@
-[i] No change AeroTrace could check (compared with HEAD), but 2 parts of it could not be followed.
+[?] UNKNOWN: AeroTrace could not check 2 parts of this change (the patch does not match src/t_string.c). Build before you rely on it.
+    No change AeroTrace could check (compared with HEAD).
 
 Changes AeroTrace could not follow (2)
   [?] src/t_string.c: the patch does not match the file on disk, so it was skipped. Make the patch against the current file.

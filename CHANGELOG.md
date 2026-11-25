@@ -62,6 +62,23 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `aerotrace check`: when any part of the change was not checked or not followed (a macro, typedef or enum
+  change, a compile error outside a function, a patch that does not match the file, a file not in the
+  index or that already had errors, files not compiled), the first line now says UNKNOWN and names the
+  first part, never "Nothing found" (A-04). With a break, the BREAKS line adds "; N parts could not be
+  checked". The JSON has `verdict` (`breaks`, `unknown`, `clear`), `unchecked`, `unchecked_parts` and
+  `unchecked_reason`, and each blind spot says if it is `unchecked`; standing limits (pointer calls
+  matched by type, other #if branches) are not. A patch where every file was skipped is no longer
+  `status: ok` but `nothing_to_check`. Calls of a retyped function that were not compiled now count as not
+  checked. The exit code and the hook are unchanged for now.
+- `aerotrace check`: a function or global that is removed, made static or retyped is also searched for by
+  name in the whole repo (comments and strings left out). A place where the index has no use of it (an
+  `#if` branch that is off, a file outside the build, a macro body) makes the answer UNKNOWN and is named
+  ("f is also named in main.c:5 (code AeroTrace did not compile)"). Struct fields are not searched. Also
+  UNKNOWN now: a removed or retyped virtual method (overrides are not followed), a renamed file (like a
+  deleted one), and a changed build file (Makefile, CMakeLists.txt, ...). Not counted any more: comment-only
+  lines outside functions and a reformatted function head. A change with no C or C++ part says "No C or
+  C++ changes, so there was nothing to check." instead of a green line.
 - `aerotrace check --patch`: a function removed together with its header prototype, or removed in a
   shifted hunk (`diff -u`, the Claude Code hook), is now REMOVED and its callers BREAK, like the same change
   written by git. A prototype removed while the function stays (or moves) makes callers in other files MAY BREAK
@@ -69,6 +86,16 @@ and versions follow [Semantic Versioning](https://semver.org/).
   (not sure) with a limit line: the new file is not in the build list yet.
   Files that only take the function's address are compiled too. A new file only downgrades BREAKS when it
   defines the same signature (not another overload, not in an unnamed namespace, not static).
+- `aerotrace check`: a patch (or edit) that defines a non-static function a second time in another file is
+  now a BREAKS (duplicate symbol), not "nothing found". Static, inline, weak, template and
+  unnamed-namespace definitions, overloads, and a function moved in the same patch are not duplicates; if
+  two definitions already existed (two programs), the answer is MAY BREAK.
+- `aerotrace check --patch`: no false BREAKS for a function the patch edits when the patch itself removes
+  the use of a renamed global or removed function there. A use that is left behind still breaks.
+- In a git partial clone, `diff`, `check` and `tests` no longer make git fetch missing files from the remote
+  or write into `.git/` (A-07). Every git call now goes through one helper and sets `GIT_NO_LAZY_FETCH=1`
+  (git 2.45 or newer; older git ignores it) and turns off background maintenance. When an old file is
+  missing, the command stops with one line saying so and to run `git fetch` yourself (exit 2).
 - Four wrong "safe" answers found by the benchmark (redis-05, curl-05, redis-07, curl-07), where the build
   failed but `check` said "None is sure to break":
   - A removed function still named in a table (a command table, a filter's callbacks) is now a break of

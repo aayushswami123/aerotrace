@@ -15,6 +15,8 @@ What AeroTrace does to stay safe on an untrusted repo:
   response files.
 - Response files (`@file`) are only read from inside the repo or the build folder.
 - Git is only used to read (`diff`, `show`, `ls-files`, `rev-parse`), and refs are checked first.
+  Every git call sets `GIT_NO_LAZY_FETCH=1`, so a partial clone never fetches. A missing old file is reported.
+  This needs git 2.45 or newer; older git ignores it.
 
 ## Reporting
 

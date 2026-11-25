@@ -16,6 +16,7 @@ never dropped.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -82,6 +83,7 @@ class Outside:
     file: str
     lines: list[int]  # changed lines, on the side the index describes
     other_side: list[int]  # lines on the other side (removed in git mode, added in patch mode)
+    what: str = "code outside any function"  # what those lines are, for the first line of `check`
 
 
 @dataclass
@@ -102,14 +104,18 @@ class DiffImpact:
     new_files: list[str] | None = None  # patch mode: files the patch creates (not analysed)
     mismatched: list[str] | None = None  # patch mode: the patch does not match the file on disk
     unreadable: list[str] | None = None  # git mode: the old version could not be read or parsed
+    build_files: list[str] | None = None  # build files that changed (Makefile, CMakeLists.txt, ...): not read
     ignored: int = 0  # files that are not C or C++ (docs, build files, binaries)
     blind_spots: list[str] | None = None
     proto_removed: list[str] = field(default_factory=list)  # patch mode: prototype removed, definition kept
+    # the blind spots that are standing limits (how calls are matched) or repeat a part already listed in
+    # `outside` or `unreadable`; they never make a check UNKNOWN on their own (see check.verdict)
+    caveats: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         for name in (
             "changed", "removed", "added", "changed_vars", "affected", "outside", "not_indexed", "deleted",
-            "new_files", "mismatched", "unreadable", "blind_spots",
+            "new_files", "mismatched", "unreadable", "build_files", "blind_spots",
         ):  # fmt: skip
             if getattr(self, name) is None:
                 setattr(self, name, [])
@@ -127,6 +133,31 @@ def ranges(lines: list[int]) -> str:
         else:
             out.append([n, n])
     return ", ".join(str(a) if a == b else f"{a}-{b}" for a, b in out)
+
+
+BUILD_NAMES = {"makefile", "gnumakefile", "cmakelists.txt", "meson.build", "build", "build.bazel",
+               "configure.ac", "compile_commands.json", "compile_flags.txt"}  # fmt: skip
+BUILD_EXTS = {".mk", ".cmake", ".bzl"}
+
+
+def is_build_file(path: str) -> bool:
+    """A file that decides how the code is built. AeroTrace does not read these."""
+    p = Path(path)
+    return p.name.lower() in BUILD_NAMES or p.suffix.lower() in BUILD_EXTS
+
+
+_COMMENTS = re.compile(r"//.*$|/\*.*?\*/")
+
+
+def comment_only(text: str) -> bool:
+    """A line that holds only a comment (or the middle or end of a block comment), so it can't change code."""
+    t = text.strip()
+    if t.startswith("*") and (t == "*" or t[1:2] in (" ", "/", "*", "\t")):
+        t = t.split("*/", 1)[1].strip() if "*/" in t else ""  # inside a block comment
+    t = _COMMENTS.sub("", t).strip()
+    if t.startswith("/*"):
+        t = ""  # a block comment that goes on on the next line
+    return not t and bool(text.strip())
 
 
 def _is_code(path: str, known: set[str]) -> bool:
@@ -351,8 +382,17 @@ class _Collect:
                 used_lines.add(r["line"])
                 self.mark_var(r)
         # Blank lines between functions can't change behaviour; leave them out of "could not follow".
-        used_lines.update(n for n in here if not here_text.get(n, "x").strip())
-        other = {o for g, o in gaps if g not in used_gaps and other_text.get(o, "x").strip()}
+        # Nor can comment-only lines.
+        used_lines.update(
+            n for n in here if not here_text.get(n, "x").strip() or comment_only(here_text.get(n, "x"))
+        )
+        other = {
+            o
+            for g, o in gaps
+            if g not in used_gaps
+            and other_text.get(o, "x").strip()
+            and not comment_only(other_text.get(o, "x"))
+        }
 
         # The index keeps one line per function and variable. Prototypes, `extern`s and fields declared
         # elsewhere need an outline of the current file.
@@ -396,7 +436,8 @@ class _Collect:
                     )
         out_lines = [n for n in here if n not in used_lines]
         if out_lines or other:
-            res.outside.append(Outside(path, out_lines, sorted(other)))
+            texts = [here_text.get(n, "") for n in out_lines] + [other_text.get(n, "") for n in other]
+            res.outside.append(Outside(path, out_lines, sorted(other), outside_what(texts)))
 
 
 def analyse(
@@ -428,8 +469,13 @@ def analyse(
         shown = fd.new_path or fd.old_path or ""
         if fd.binary or not _is_code(shown, known):
             res.ignored += 1
+            if is_build_file(shown):
+                res.build_files.append(shown)
             continue
         res.files += 1
+        if fd.old_path and fd.new_path and fd.old_path != fd.new_path:
+            # renamed: code that still includes or names the old path is not followed (like a deletion)
+            res.deleted.append(fd.old_path)
         if path is None:
             if mode == "git":
                 res.deleted.append(shown)
@@ -573,17 +619,46 @@ def proto_note(names: list[str]) -> str:
     )
 
 
+_WHAT = (  # (first word of a line outside any function, what it is), first match wins
+    (("#define", "#undef"), "a macro"),
+    (("typedef", "enum", "struct", "union", "class", "using"), "a type"),
+    (("#include", "#import"), "an include"),
+    (("#if", "#ifdef", "#ifndef", "#elif", "#else", "#endif"), "an #if"),
+)
+
+
+def outside_what(texts: list[str]) -> str:
+    """What changed lines outside any function are, in a few words: 'a macro', 'a type', ... Comments and
+    blank lines are skipped; anything else is 'code outside any function'."""
+    found = set()
+    for t in texts:
+        t = t.strip()
+        if not t or t.startswith(("//", "/*", "*")):
+            continue
+        rest = t[1:].split() if t.startswith("#") else []
+        found.add("#" + rest[0] if rest else re.split(r"[\s{(;]", t, maxsplit=1)[0])
+    for firsts, what in _WHAT:
+        if found & set(firsts):
+            return what
+    return "code outside any function" if found else "a comment"
+
+
 def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
+    """Every note about this change. The standing ones (and the ones that repeat `outside` and
+    `unreadable`) are also put in `res.caveats`."""
     notes: list[str] = []
+    caveats = res.caveats
     if res.outside:
-        notes.append(
+        caveats.append(
             "Some changed lines are outside every function (macros, types, includes, comments). "
             "AeroTrace does not follow who uses a macro or a type, so check those by hand."
         )
+        notes.append(caveats[-1])
     if res.unreadable:
-        notes.append(
+        caveats.append(
             "The old version of some files could not be read, so a function removed there would not be listed."
         )
+        notes.append(caveats[-1])
     if res.proto_removed:
         notes.append(proto_note(res.proto_removed))
     ids = [c.fn.id for c in res.changed]
@@ -594,20 +669,25 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
             f"SELECT COUNT(*) FROM address_taken WHERE function_id IN ({','.join('?' * len(chunk))})", chunk
         ).fetchone()[0]
     if taken:
-        notes.append(
+        caveats.append(
             f"{taken} changed function(s) are used as function pointers. Callers were matched by type; "
             "calls from outside this repo (callbacks into libraries) are not visible."
         )
+        notes.append(caveats[-1])
     clashes = sum(1 for c in res.changed if c.fn.clash)
     if clashes:
-        notes.append(
+        caveats.append(
             f"{clashes} changed function(s) share a clang ID with another function; "
             "callers that could not tell them apart are marked 'ambiguous'."
         )
+        notes.append(caveats[-1])
     notes += graph.template_notes(conn, [c.fn for c in res.changed] + [h.fn for h in res.affected])
     if res.truncated:
-        notes.append(f"Stopped at depth {res.depth}; more callers exist further up.")
-    return notes + graph.index_limits(conn)
+        caveats.append(f"Stopped at depth {res.depth}; more callers exist further up.")
+        notes.append(caveats[-1])
+    limits = graph.index_limits(conn)
+    caveats += limits
+    return notes + limits
 
 
 # ---------------------------------------------------------------- loading a diff

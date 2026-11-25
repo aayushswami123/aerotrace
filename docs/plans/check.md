@@ -180,7 +180,7 @@ there are more. Deterministic: ties by (file, line, id).
 | `sections.functions`, `data` | node ids by kind, in node order |
 | `tests_to_run`, `untested_changes` | `null` ("Tests: not known yet") until the test map (PR #34) lands |
 | `sections.blind_spots` | scope `change`: diff notes (outside, unreadable, address taken, clash, depth reached), Part A notes per changed signature, Part B notes per changed declaration (with its node), #25 note, layout note. Scope `index`: `graph.index_limits`. Deduplicated by text, sorted |
-| `summary` | counted over **all** nodes before the cap: `breaks_exact`, `breaks_probable`, `affected_direct` (distance 1), `affected_further`, `unknown`, `no_effect` (always 0: Part C sends no grey nodes), `not_followed` = entries in `not_followed` + change-scope blind spots |
+| `summary` | counted over **all** nodes before the cap: `breaks_exact`, `breaks_probable`, `affected_direct` (distance 1), `affected_further`, `unknown`, `no_effect` (always 0: Part C sends no grey nodes), `not_followed` = entries in `not_followed` + change-scope blind spots marked `unchecked` (A-04: standing limits are not) |
 | `omitted.nodes` | dropped by the 5,000-node cap (lowest ranked first: affected further up, then unknown); edges and `via` to dropped nodes are removed, `via_name` stays |
 | `proof` | `index_files`, `index_functions` (COUNT from the index), `depth`, `stopped_early` = any walk truncated; optional together: `build_files` (entries in compile_commands.json), `build_files_checked` (parsed), `build_files_with_errors`, `outside_build` (repo sources not in it), `outside_build_examples` (first 3 sorted paths); `outside_build_files` (all, sorted) only with `--all` |
 
@@ -229,7 +229,7 @@ New `tests/fixtures/c_check/` (small; Part A/B fixtures are not touched), patche
 | field added in the middle; positional global `{1, 2}` | new node; global unknown "by position"; layout note |
 | global removed (git mode) | removed node + #25 blind spot, never silent |
 | struct field with the same name in another struct | not mixed (Part B rule) |
-| patch that does not match the disk | `mismatched`, `summary.not_followed` > 0, no ✅ |
+| patch that does not match the disk | `mismatched`; when every file was skipped, `status` is `nothing_to_check`; `verdict` `unknown`, first line UNKNOWN |
 | patch that adds a whole new function | `new` node, not "could not follow" |
 | comment-only change in a header | ✅ only if nothing else; not_followed stays 0 |
 
