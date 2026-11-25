@@ -44,7 +44,9 @@
     return svg;
   }
   function chip(level, label) {
-    return h("span", { cls: "chip " + level }, statusIcon(level), label === undefined ? WORD[level] : label);
+    // a count-only chip still names its status for screen readers
+    var word = label === undefined ? null : h("span", { cls: "sr", text: WORD[level] + " " });
+    return h("span", { cls: "chip " + level }, statusIcon(level), word, label === undefined ? WORD[level] : label);
   }
   var ICONS = {
     overview: "M3 3h7v7H3zM14 3h7v4h-7zM14 11h7v10h-7zM3 14h7v7H3z",
@@ -71,10 +73,10 @@
     if (!cache[path]) {
       cache[path] = fetch(path, { credentials: "same-origin" }).then(function (r) {
         return r.json().then(function (body) {
-          if (!r.ok) throw new Error(body && body.error ? body.error : "HTTP " + r.status);
+          if (!r.ok) { var err = new Error(body && body.error ? body.error : "HTTP " + r.status); err.server = true; throw err; }
           return body;
         });
-      });
+      }, function () { var err = new Error("The dashboard server can't be reached."); err.server = false; throw err; });
       cache[path].catch(function () { delete cache[path]; });
     }
     return cache[path];
@@ -212,8 +214,10 @@
     document.title = "AeroTrace · " + name.charAt(0).toUpperCase() + name.slice(1);
     main.replaceChildren(loading());
     PAGES[name](main, parts.slice(1)).catch(function (e) {
-      main.replaceChildren(h("div", { cls: "page" }, errorState("This page couldn't load",
-        "The dashboard server may have stopped. Start it again:", "aerotrace ui", String(e && e.message || e))));
+      var answered = e && e.server;  // the server answered with an error, so it hasn't stopped
+      main.replaceChildren(h("div", { cls: "page" }, answered
+        ? errorState("This page couldn't load", "The dashboard answered with an error. Rebuilding the index usually fixes it:", "aerotrace index", String(e.message))
+        : errorState("This page couldn't load", "The dashboard server isn't answering; it may have stopped. Start it again:", "aerotrace ui", String(e && e.message || e))));
     });
     main.focus({ preventScroll: true });
   }
@@ -248,6 +252,7 @@
     var t = e.target;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "Escape") { if (keys.open) keys.close(); document.dispatchEvent(new CustomEvent("aerotrace:escape")); return; }
+    if (keys.open) return;  // no shortcuts act on the page behind the dialog
     if (e.key === "?") { keys.showModal(); e.preventDefault(); return; }
     if (e.key === "/") { var box = document.querySelector("[data-search]"); if (box) { box.focus(); e.preventDefault(); } return; }
     if (e.key === "t") { setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark"); return; }

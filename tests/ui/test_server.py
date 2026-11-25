@@ -34,7 +34,7 @@ def _req(srv: server.DashboardServer, path: str, method: str = "GET", headers: d
 
 
 def _cookie(srv: server.DashboardServer) -> dict:
-    return {"Cookie": f"{server.COOKIE}={srv.token}"}
+    return {"Cookie": f"{srv.cookie}={srv.token}"}
 
 
 def test_listens_on_loopback_only(srv: server.DashboardServer) -> None:
@@ -52,7 +52,7 @@ def test_everything_needs_the_cookie(srv: server.DashboardServer) -> None:
     for path in ("/", "/api/overview", "/static/app.js", "/?t=wrong"):
         r, _ = _req(srv, path)
         assert r.status == 403, path
-    r, _ = _req(srv, "/api/overview", headers={"Cookie": f"{server.COOKIE}=nope"})
+    r, _ = _req(srv, "/api/overview", headers={"Cookie": f"{srv.cookie}=nope"})
     assert r.status == 403
 
 
@@ -104,3 +104,26 @@ def test_served_files_are_only_from_the_package() -> None:
     assert "app.html" in files and "app.js" in files and "tokens.css" in files
     assert any(name.startswith("fonts/") for name in files)
     assert all(not name.endswith(".py") for name in files)
+
+
+def test_the_token_is_in_no_answer(srv: server.DashboardServer) -> None:
+    for path in ("/", "/api/overview", "/api/checks", "/api/runinfo", "/static/app.js"):
+        r, body = _req(srv, path, headers=_cookie(srv))
+        assert srv.token.encode() not in body, path
+        assert all(srv.token not in v for k, v in r.getheaders() if k.lower() != "set-cookie"), path
+
+
+def test_each_dashboard_has_its_own_cookie(tmp_path: Path) -> None:
+    a, b = server.DashboardServer(tmp_path), server.DashboardServer(tmp_path)
+    try:
+        assert a.cookie != b.cookie and str(a.server_address[1]) in a.cookie
+    finally:
+        a.server_close()
+        b.server_close()
+
+
+def test_head_and_builtin_errors_get_the_headers(srv: server.DashboardServer) -> None:
+    r, body = _req(srv, "/api/overview", method="HEAD", headers=_cookie(srv))
+    assert r.status == 200 and body == b""
+    r, _ = _req(srv, "/", method="TRACE", headers=_cookie(srv))
+    assert r.status == 501 and "default-src 'none'" in r.getheader("Content-Security-Policy", "")

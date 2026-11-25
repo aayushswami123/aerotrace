@@ -42,12 +42,31 @@ def _checks_dir(root: Path) -> Path:
     return store.index_dir(root) / CHECKS_DIR
 
 
+def _no_paths(text: str, root: Path) -> str:
+    """Messages never carry machine paths: the repo folder becomes the repo name."""
+    for p in {str(root.resolve()), str(root)}:
+        text = text.replace(p, repo_name(root))
+    return text
+
+
+def _broken(root: Path, why: str) -> dict:
+    return {
+        "status": "index_error",
+        "message": _no_paths(f"The index can't be read: {why}.", root),
+        "fix": "aerotrace index",
+    }
+
+
 def _open(root: Path) -> tuple[sqlite3.Connection | None, dict]:
     """(connection, problem). The problem says what is wrong and how to fix it, in the words the CLI uses."""
     try:
         return store.connect(root), {}
     except store.IndexVersionError as e:
-        return None, {"status": "index_error", "message": str(e), "fix": "aerotrace index"}
+        return None, {
+            "status": "index_error",
+            "message": _no_paths(e.reason, root) + ".",
+            "fix": "aerotrace index",
+        }
     except FileNotFoundError:
         return None, {
             "status": "no_index",
@@ -55,11 +74,7 @@ def _open(root: Path) -> tuple[sqlite3.Connection | None, dict]:
             "fix": "aerotrace index",
         }
     except sqlite3.DatabaseError as e:
-        return None, {
-            "status": "index_error",
-            "message": f"The index can't be read: {e}.",
-            "fix": "aerotrace index",
-        }
+        return None, _broken(root, str(e))
 
 
 def _count(conn: sqlite3.Connection, sql: str, *args: object) -> int:
@@ -73,47 +88,53 @@ def overview(root: Path) -> dict:
     if conn is None:
         return {**out, **problem}
     try:
-        meta = store.read_meta(conn)
-        units = _count(conn, "SELECT COUNT(*) FROM files WHERE is_unit = 1")
-        files = _count(conn, "SELECT COUNT(*) FROM files")
-        blind = [
-            {"kind": k, "label": BLIND_SPOT_WORDS.get(k, k.replace("_", " ").capitalize()), "count": n}
-            for k, n in conn.execute("SELECT kind, COUNT(*) FROM blind_spots GROUP BY kind ORDER BY kind")
-        ]
-        escapes = _count(conn, "SELECT COUNT(*) FROM escapes")
-        if escapes:
-            blind.append({"kind": "escape", "label": "Data whose address escapes", "count": escapes})
-        coverage = build_coverage(conn)
-        changed = store.changed_files(conn, root)
-        out.update(
-            {
-                "status": "ok",
-                "tool": meta.get("tool_version") or meta.get("aerotrace_version") or "",
-                "index": {
-                    "files": files,
-                    "parsed": units,
-                    "headers": files - units,
-                    "functions": _count(conn, "SELECT COUNT(*) FROM functions"),
-                    "variables": _count(conn, "SELECT COUNT(*) FROM variables"),
-                    "calls": _count(conn, "SELECT COUNT(*) FROM edges WHERE kind = 'calls'"),
-                    "data_uses": _count(conn, "SELECT COUNT(*) FROM edges WHERE kind IN ('reads', 'writes')"),
-                },
-                "coverage": {
-                    "build_files": coverage["build_files"],
-                    "checked": coverage["build_files_checked"],
-                    "with_errors": coverage["build_files_with_errors"],
-                    "outside_build": len(coverage["outside_build"]),
-                    "outside_examples": coverage["outside_build"][:8],
-                },
-                "blind_spots": sorted(blind, key=lambda b: (-b["count"], b["kind"])),
-                "blind_spots_total": sum(b["count"] for b in blind),
-                "changed_since_index": len(changed),
-                "changed_examples": changed[:8],
-            }
-        )
-        return out
+        return _overview(root, conn, out)
+    except sqlite3.DatabaseError as e:  # opened, but a table is missing or damaged
+        return {**out, **_broken(root, str(e))}
     finally:
         conn.close()
+
+
+def _overview(root: Path, conn: sqlite3.Connection, out: dict) -> dict:
+    meta = store.read_meta(conn)
+    units = _count(conn, "SELECT COUNT(*) FROM files WHERE is_unit = 1")
+    files = _count(conn, "SELECT COUNT(*) FROM files")
+    blind = [
+        {"kind": k, "label": BLIND_SPOT_WORDS.get(k, k.replace("_", " ").capitalize()), "count": n}
+        for k, n in conn.execute("SELECT kind, COUNT(*) FROM blind_spots GROUP BY kind ORDER BY kind")
+    ]
+    escapes = _count(conn, "SELECT COUNT(*) FROM escapes")
+    if escapes:
+        blind.append({"kind": "escape", "label": "Data whose address escapes", "count": escapes})
+    coverage = build_coverage(conn)
+    changed = store.changed_files(conn, root)
+    out.update(
+        {
+            "status": "ok",
+            "tool": meta.get("tool_version") or meta.get("aerotrace_version") or "",
+            "index": {
+                "files": files,
+                "parsed": units,
+                "headers": files - units,
+                "functions": _count(conn, "SELECT COUNT(*) FROM functions"),
+                "variables": _count(conn, "SELECT COUNT(*) FROM variables"),
+                "calls": _count(conn, "SELECT COUNT(*) FROM edges WHERE kind = 'calls'"),
+                "data_uses": _count(conn, "SELECT COUNT(*) FROM edges WHERE kind IN ('reads', 'writes')"),
+            },
+            "coverage": {
+                "build_files": coverage["build_files"],
+                "checked": coverage["build_files_checked"],
+                "with_errors": coverage["build_files_with_errors"],
+                "outside_build": len(coverage["outside_build"]),
+                "outside_examples": coverage["outside_build"][:8],
+            },
+            "blind_spots": sorted(blind, key=lambda b: (-b["count"], b["kind"])),
+            "blind_spots_total": sum(b["count"] for b in blind),
+            "changed_since_index": len(changed),
+            "changed_examples": changed[:8],
+        }
+    )
+    return out
 
 
 def _verdict(data: dict) -> tuple[str, str]:
@@ -134,6 +155,19 @@ def _level(data: dict) -> str:
     if s.get("unknown") or s.get("not_followed"):
         return "unknown"
     return "none"
+
+
+def _reason(e: Exception) -> str:
+    """Why a file couldn't be read, without its path."""
+    if isinstance(e, json.JSONDecodeError):
+        return f"not valid JSON (line {e.lineno})"
+    if isinstance(e, OSError):
+        return (e.strerror or type(e).__name__).lower()
+    return str(e)
+
+
+class Unreadable(ValueError):
+    """A saved check exists but can't be read; the message has no path."""
 
 
 def _load_check(path: Path) -> dict:
@@ -163,7 +197,7 @@ def checks(root: Path) -> dict:
         try:
             data = _load_check(p)
         except (OSError, json.JSONDecodeError, schema.ContractError) as e:
-            item.update({"ok": False, "problem": f"This saved check can't be read: {e}"})
+            item.update({"ok": False, "problem": f"This saved check can't be read: {_reason(e)}"})
             out.append(item)
             continue
         icon, line = _verdict(data)
@@ -195,7 +229,10 @@ def check(root: Path, check_id: str) -> dict:
     path = _checks_dir(root) / f"{check_id}.json"
     if path not in _check_files(root):
         raise NotFound(check_id)
-    return _load_check(path)
+    try:
+        return _load_check(path)
+    except (OSError, json.JSONDecodeError, schema.ContractError) as e:
+        raise Unreadable(f"This saved check can't be read: {_reason(e)}") from None
 
 
 def runinfo(root: Path) -> dict:

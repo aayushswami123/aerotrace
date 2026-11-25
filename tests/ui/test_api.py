@@ -121,3 +121,31 @@ def test_overview_without_compile_db_still_answers(repo_factory) -> None:
     root = repo_factory("c_multi")
     shutil.rmtree(store.index_dir(root), ignore_errors=True)
     assert api.overview(root)["status"] == "no_index"
+
+
+def test_a_damaged_table_is_an_index_error_not_a_crash(indexed: Path) -> None:
+    conn = sqlite3.connect(store.db_path(indexed))
+    conn.execute("DROP TABLE files")
+    conn.commit()
+    conn.close()
+    o = api.overview(indexed)
+    assert o["status"] == "index_error" and "no such table" in o["message"] and o["fix"] == "aerotrace index"
+
+
+def test_no_machine_paths_in_any_answer(indexed: Path) -> None:
+    _save(indexed, "0003-cccc3333", "{not json")
+    bad = _save(indexed, "0005-eeee5555", json.loads(SAMPLE.read_text()))
+    bad.chmod(0)
+    try:
+        conn = sqlite3.connect(store.db_path(indexed))
+        conn.execute("UPDATE meta SET value = '1' WHERE key = 'schema_version'")
+        conn.commit()
+        conn.close()
+        text = json.dumps([api.overview(indexed), api.checks(indexed)])
+        with pytest.raises(api.Unreadable) as e:
+            api.check(indexed, "0005-eeee5555")
+        text += str(e.value)
+    finally:
+        bad.chmod(0o644)
+    for p in {str(indexed), str(indexed.resolve()), str(Path.home())}:
+        assert p not in text

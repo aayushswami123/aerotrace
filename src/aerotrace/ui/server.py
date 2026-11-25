@@ -27,7 +27,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from aerotrace.ui import api
 
-COOKIE = "aerotrace_ui"
+COOKIE = "aerotrace_ui"  # the port is added, so two dashboards on one machine keep separate cookies
 CSP = (
     "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; "
     "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
@@ -96,10 +96,15 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return self.headers.get("Sec-Fetch-Site", "same-origin") in {"same-origin", "none"}
 
+    def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
+        # the standard library's own error answers (bad request lines, unknown methods) get the same headers
+        self.close_connection = True
+        self._error(code, message or HTTPStatus(code).phrase)
+
     def _cookie_ok(self) -> bool:
         for part in self.headers.get("Cookie", "").split(";"):
             name, _, value = part.strip().partition("=")
-            if name == COOKIE and hmac.compare_digest(value.encode(), self.server.token.encode()):
+            if name == self.server.cookie and hmac.compare_digest(value.encode(), self.server.token.encode()):
                 return True
         return False
 
@@ -121,7 +126,7 @@ class Handler(BaseHTTPRequestHandler):
         if url.path == "/" and "t" in parse_qs(url.query):
             given = parse_qs(url.query)["t"][0]
             if hmac.compare_digest(given.encode(), self.server.token.encode()):
-                cookie = f"{COOKIE}={self.server.token}; HttpOnly; SameSite=Strict; Path=/"
+                cookie = f"{self.server.cookie}={self.server.token}; HttpOnly; SameSite=Strict; Path=/"
                 self._send(HTTPStatus.SEE_OTHER, b"", "text/plain", {"Location": "/", "Set-Cookie": cookie})
                 return
         if not self._cookie_ok():
@@ -130,7 +135,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self._route(unquote(url.path))
         except Exception as e:  # an answer, never a crash; the reason is shown on the page
-            self._error(HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(e).__name__}: {e}")
+            print(f"aerotrace ui: {type(e).__name__} answering {self.path.split('?')[0]}", file=sys.stderr)
+            self._error(
+                HTTPStatus.INTERNAL_SERVER_ERROR, f"The dashboard hit an unexpected {type(e).__name__}."
+            )
 
     def _route(self, path: str) -> None:
         root = self.server.root
@@ -154,6 +162,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, api.check(root, path.removeprefix("/api/checks/")))
             except api.NotFound:
                 self._error(HTTPStatus.NOT_FOUND, "No saved check with that id.")
+            except api.Unreadable as e:
+                self._error(HTTPStatus.UNPROCESSABLE_ENTITY, str(e))
         elif path == "/api/runinfo":
             self._json(HTTPStatus.OK, api.runinfo(root))
         else:
@@ -167,6 +177,7 @@ class DashboardServer(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", port), Handler)
         self.root = root
         self.token = secrets.token_urlsafe(32)
+        self.cookie = f"{COOKIE}_{self.server_address[1]}"
         self.files = _web_files()
 
     @property
