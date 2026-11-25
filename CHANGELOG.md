@@ -67,6 +67,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
   exact when the index shows the initializer on that line, probable otherwise. Before, it was only a
   blind-spot line (with "does not compile now" twice) and the headline said "unknown" (#57). An error
   before every global stays a blind spot.
+- Two parses inside one process at the same time (for example two `diff_impact` or `tests_for_change`
+  calls to the MCP server) could each run in the other's build folder, so relative `-I` paths and
+  includes could resolve in the wrong place and an outline could be wrong or a header reported missing.
+  In-process parses now take turns (#46). Index builds run in child processes and are not affected.
 - C++ templates: a call whose target depends on the template type (`t.run(5)`, `T::f()`, `f(t)`) can't be
   linked, because libclang does not show the instantiations. `callers`, `impact`, `signature`, `diff` and
   `check` for a function with that name now say "UNKNOWN (#33)" and list the template calls, instead of
