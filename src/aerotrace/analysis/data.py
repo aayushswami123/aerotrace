@@ -398,29 +398,36 @@ def _innermost(conn: sqlite3.Connection, file: str, line: int) -> Fn | None:
     return symbols.get(conn, r[0]) if r else None
 
 
-def global_at(conn: sqlite3.Connection, file: str, line: int) -> tuple[Var, str, str] | None:
-    """The global whose initializer holds `file:line`, for a compile error outside every function (#57):
-    (global, certainty, why). Exact when the index has proof: a row of that global's initializer on that
-    line (a field it sets, an address it stores) or its definition starts there. Otherwise the nearest
-    global defined above the line, probable. None when the file has no global above the line."""
-    proof = conn.execute(
+def globals_at(conn: sqlite3.Connection, file: str, line: int) -> list[tuple[Var, str, str]]:
+    """The globals whose initializer may hold `file:line`, for a compile error outside every function
+    (#57): [(global, certainty, why)].
+    - Exact only when exactly one global is on that line: it starts there, or the index has a row of its
+      initializer there (a field it sets, an address it stores).
+    - Several globals on the line (`int x = 1, y = sizeof(g.hz);`): each of them, probable.
+    - None on the line: the nearest global defined above it, probable (the line may also be an enum, a
+      typedef or a static assert; the caller keeps the line as a blind spot too).
+    - [] when the file has no global above the line."""
+    on_line = conn.execute(
         """SELECT * FROM variables v WHERE v.kind = 'global' AND v.file = ? AND v.line <= ? AND (
                v.line = ?
                OR v.id IN (SELECT variable_id FROM initializers WHERE file = ? AND line = ?)
                OR v.id IN (SELECT function_id FROM escapes WHERE line = ?))
-           ORDER BY v.line DESC, v.id LIMIT 1""",
+           ORDER BY v.line DESC, v.id""",
         (file, line, line, file, line, line),
-    ).fetchone()
-    if proof is not None:
-        return _row(proof), certainty.EXACT, "its initializer"
+    ).fetchall()
+    if len(on_line) == 1:
+        return [(_row(on_line[0]), certainty.EXACT, "its initializer")]
+    if on_line:
+        why = f"probably its initializer (one of {len(on_line)} globals on that line)"
+        return [(_row(r), certainty.PROBABLE, why) for r in on_line]
     near = conn.execute(
         """SELECT * FROM variables WHERE kind = 'global' AND file = ? AND line <= ?
            ORDER BY line DESC, id LIMIT 1""",
         (file, line),
     ).fetchone()
     if near is None:
-        return None
-    return _row(near), certainty.PROBABLE, "probably its initializer (the nearest global above that line)"
+        return []
+    return [(_row(near), certainty.PROBABLE, "probably its initializer (the nearest global above that line)")]
 
 
 def compile_reason(reason: str) -> str:

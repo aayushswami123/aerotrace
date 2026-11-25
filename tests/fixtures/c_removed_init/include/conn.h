@@ -4,3 +4,4 @@ struct conn {
     int hz;
 };
 extern struct conn g;
+extern int rate;
