@@ -20,6 +20,6 @@ Sessions:
 | `bench/cases` (#63) | product | 30 benchmark cases | `bench/cases/` | in progress |
 | `bench/pilot-sonnet` | product | Harness and plan for the $25 Sonnet benchmark pilot | `bench/` | waiting to run |
 | `docs/launch-readme` (#54) | product | Launch README | `README.md`, `docs/launch/` | waits for benchmark results; do not merge |
-| `fix/removed-field-init` | merge | Fix #57: a removed field used in a file-scope initializer is a break (git mode) | `src/aerotrace/analysis/check.py`, `analysis/data.py` | review |
 | `feat/test-impact-coverage` | owner | gcov coverage for test impact | `src/aerotrace/analysis/testimpact.py` and more | parked until after launch |
 | `docs/morning-report` | owner | Day notes and screenshots | `docs/launch/` | owner decides (has budget figures) |
+| `docs/changelog-0.1.0` | merge | CHANGELOG section for v0.1.0 (what it does, main fixes, known limits) | `CHANGELOG.md` | waiting for owner to read |
