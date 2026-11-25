@@ -594,7 +594,7 @@ def test_cpp_overloads_and_namespaces_are_not_a_duplicate(dupes):
     }
     _, c = run_patch(dupes, edits)
     assert nodes(c, "breaks") == {}
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 def test_a_weak_definition_is_not_a_duplicate(dupes):
@@ -637,7 +637,7 @@ RENAME_ALL = {
 def test_renaming_a_global_in_every_file_that_uses_it_breaks_nothing(selfedit):
     _, c = run_patch(selfedit, RENAME_ALL)
     assert nodes(c, "breaks") == {}, c["nodes"]
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 def test_renaming_a_global_but_leaving_an_address_use_in_an_edited_function_breaks(selfedit):
@@ -706,7 +706,7 @@ def test_a_macro_use_that_the_patch_also_fixes_is_not_a_break(macro):
     edits["src/main.c"] = [*RENAME_OLD_FN["src/main.c"], ("CALL(2)", "new_fn(2)")]
     _, c = run_patch(macro, edits)
     assert _breaks(c) == {}, c["nodes"]
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 @pytest.fixture
@@ -812,3 +812,32 @@ def test_a_duplicate_in_a_repo_with_two_programs_is_a_may_break(repo_factory, mo
     assert got and all(n["certainty"] == "probable" for n in got), c["nodes"]
     assert "more than one program" in " ".join(n["why"] for n in got)
     assert check.exit_code(c) == 1
+
+
+# ---------------------------------------------------------------- an inactive #if branch is not proof
+
+
+DEAD_RENAME = {
+    "src/lib.c": [("int old_fn(int a) {", "int new_fn(int a) {")],
+    "src/main.c": [
+        ("int old_fn(int a);\n", "int old_fn(int a);\nint new_fn(int a);\n"),
+        ("return old_fn(3);", "return new_fn(3);"),
+        ("int r = old_fn(1);", "int r = new_fn(1);"),
+    ],
+}
+
+
+def test_a_use_in_an_inactive_if_branch_of_an_edited_function_still_breaks(repo_factory):
+    root = _committed(repo_factory, "c_deadif")
+    _, c = run_patch(root, DEAD_RENAME)  # `r += old_fn(2)` is only built with -DFEATURE
+    assert "main" in _breaks(c), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_a_function_with_no_conditional_region_is_still_skipped_when_fixed(repo_factory):
+    root = _committed(repo_factory, "c_deadif")
+    edits = {**DEAD_RENAME}
+    edits["src/main.c"] = [*DEAD_RENAME["src/main.c"], ("    r += old_fn(2);\n", "    r += new_fn(2);\n")]
+    _, c = run_patch(root, edits)
+    # `main` still has its #ifdef, so it is reported; `plain` has none and is fixed
+    assert "plain" not in _breaks(c), c["nodes"]

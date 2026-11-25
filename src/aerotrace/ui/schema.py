@@ -45,6 +45,7 @@ NOT_FOLLOWED_KEYS = (
     "unreadable",
     "new_files",
     "build_files",
+    "no_text",
 )
 SUMMARY_KEYS = (
     "breaks_exact",
@@ -136,7 +137,7 @@ def check(data: Any) -> dict:
     if status in ("no_index", "index_error") and (data["verdict"] != "unknown" or not data["unchecked"]):
         _fail(f"status {status!r} checked nothing, so verdict must be 'unknown' and unchecked true")
     if status == "nothing_to_check":
-        gaps = sum(len(change["not_followed"][k]) for k in NOT_FOLLOWED_KEYS) if change else 0
+        gaps = sum(len(change["not_followed"].get(k, [])) for k in NOT_FOLLOWED_KEYS) if change else 0
         _check_verdict(data, 0, gaps)
     if status != "ok":
         # Nothing was analysed, so nothing may be listed; but what the change skipped is still shown.
@@ -223,7 +224,7 @@ def _check_change(change: Any) -> None:
                     v = o.get(side)
                     if not isinstance(v, list) or not all(isinstance(n, int) for n in v):
                         _fail(f"change.not_followed.outside[].{side} must be a list of line numbers")
-        else:
+        elif k != "no_text" or k in nf:  # `no_text` is new: older JSON does not have it
             _str_list(nf.get(k), f"change.not_followed.{k}")
 
 
@@ -357,7 +358,7 @@ def _check_counts(data: dict, summary: dict, blind: list[dict]) -> None:
     if not found and data["proof"]["stopped_early"]:
         _fail("the walk stopped early, but the summary counts nothing (a wrong all-clear)")
     nf = data["change"]["not_followed"]
-    gaps = sum(len(nf[k]) for k in NOT_FOLLOWED_KEYS) + sum(
+    gaps = sum(len(nf.get(k, [])) for k in NOT_FOLLOWED_KEYS) + sum(
         b["scope"] == "change" and b["unchecked"] for b in blind
     )
     if gaps and not summary["not_followed"]:

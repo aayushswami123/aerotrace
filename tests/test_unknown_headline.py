@@ -87,7 +87,7 @@ def assert_unknown(c, reason=None):
 def test_r3_macro_arity_change_in_a_header_is_unknown(repo):
     c = contract_for(repo, make_patch(repo, [MACRO]))
     assert_unknown(c, f"a macro in {H}")
-    assert check.exit_code(c) == 0  # A-06 (exit code 2) is a separate change
+    assert check.exit_code(c) == 2  # A-06
 
 
 def test_typedef_change_is_unknown(repo):

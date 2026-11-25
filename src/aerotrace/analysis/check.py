@@ -379,6 +379,8 @@ class _Run:
         if got is None or "refs" not in got[0]:
             return False
         entry, diagnostics = got
+        if entry.get("conditional", True):
+            return False  # an #if branch that is off in this build can hold a use that the parse can't see
         if any(entry["line_start"] <= d["line"] <= entry["line_end"] for d in diagnostics):
             return False
         return usr not in entry["refs"] and simple not in entry["unresolved"]
@@ -446,7 +448,9 @@ class _Run:
 
     def _changes_interface(self, fn: Fn) -> None:
         """`fn` is removed, or its signature changed: code AeroTrace did not compile may still use it."""
-        self.interface[fn.name] = "method" if "::" in fn.qualified_name else "function"
+        parts = fn.qualified_name.split("::")
+        special = fn.name.startswith("~") or (len(parts) > 1 and parts[-2] == parts[-1])  # ctor or dtor
+        self.interface[fn.name] = "special" if special else "method" if len(parts) > 1 else "function"
         virtual = self.conn.execute(
             "SELECT 1 FROM functions WHERE id = ? AND is_virtual = 1 UNION SELECT 1 FROM edges WHERE "
             "kind = 'overrides' AND (src = ? OR dst = ?) LIMIT 1",
@@ -1395,6 +1399,7 @@ def _not_followed_reasons(change: dict) -> list[str]:
     out += [f"{f} is new and not in the build yet" for f in nf.get("new_files", [])]
     out += [f"{f} was deleted or renamed" for f in nf.get("deleted", [])]
     out += [f"a build file changed: {f}" for f in nf.get("build_files", [])]
+    out += [f"{f} changed but the patch has no text for it" for f in nf.get("no_text", [])]
     return out
 
 
@@ -1428,6 +1433,7 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
             "mismatched": list(d.mismatched),
             "unreadable": list(d.unreadable),
             "build_files": list(d.build_files),
+            "no_text": list(d.no_text),
             "new_files": list(d.new_files),
         },
     }
@@ -1551,12 +1557,13 @@ def to_contract(
     }
 
 
+EXIT_CODES = {"clear": 0, "breaks": 1, "unknown": 2}
+
+
 def exit_code(contract: dict) -> int:
-    """0 = nothing breaks, 1 = something breaks (exact or probable), 2 = could not check."""
-    if contract["status"] in ("no_index", "index_error"):
-        return 2
-    s = contract.get("summary") or {}
-    return 1 if s.get("breaks_exact") or s.get("breaks_probable") else 0
+    """A function of the verdict and nothing else: 0 clear, 1 breaks (also when a part was not checked:
+    a found break wins), 2 unknown (a part was not checked or not followed, or there is no index)."""
+    return EXIT_CODES[verdict_mod.of(contract).verdict]
 
 
 @dataclass

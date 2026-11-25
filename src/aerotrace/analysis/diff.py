@@ -104,6 +104,9 @@ class DiffImpact:
     new_files: list[str] | None = None  # patch mode: files the patch creates (not analysed)
     mismatched: list[str] | None = None  # patch mode: the patch does not match the file on disk
     unreadable: list[str] | None = None  # git mode: the old version could not be read or parsed
+    no_text: list[str] | None = (
+        None  # code, table, assembly or build files changed by a binary hunk: not read
+    )
     build_files: list[str] | None = None  # build files that changed (Makefile, CMakeLists.txt, ...): not read
     ignored: int = 0  # files that are not C or C++ (docs, build files, binaries)
     blind_spots: list[str] | None = None
@@ -115,7 +118,7 @@ class DiffImpact:
     def __post_init__(self) -> None:
         for name in (
             "changed", "removed", "added", "changed_vars", "affected", "outside", "not_indexed", "deleted",
-            "new_files", "mismatched", "unreadable", "build_files", "blind_spots",
+            "new_files", "mismatched", "unreadable", "build_files", "no_text", "blind_spots",
         ):  # fmt: skip
             if getattr(self, name) is None:
                 setattr(self, name, [])
@@ -144,6 +147,14 @@ def is_build_file(path: str) -> bool:
     """A file that decides how the code is built. AeroTrace does not read these."""
     p = Path(path)
     return p.name.lower() in BUILD_NAMES or p.suffix.lower() in BUILD_EXTS
+
+
+def watched(path: str) -> bool:
+    """A file whose change AeroTrace must not ignore silently: C/C++, a table, assembly or a build file."""
+    from aerotrace.analysis.unseen import TABLE_ASM_EXTS
+
+    p = Path(path)
+    return p.suffix.lower() in CODE_EXTS | TABLE_ASM_EXTS or is_build_file(path)
 
 
 _COMMENTS = re.compile(r"//.*$|/\*.*?\*/")
@@ -469,6 +480,8 @@ def analyse(
         shown = fd.new_path or fd.old_path or ""
         if fd.binary or not _is_code(shown, known):
             res.ignored += 1
+            if fd.binary and not fd.untracked and (_is_code(shown, known) or watched(shown)):
+                res.no_text.append(shown)  # a binary hunk on a source file: nothing was read
             if is_build_file(shown):
                 res.build_files.append(shown)
             continue
@@ -640,7 +653,34 @@ def outside_what(texts: list[str]) -> str:
     for firsts, what in _WHAT:
         if found & set(firsts):
             return what
+    if found:
+        for t in texts:
+            name = _declared(t)
+            if name:
+                return f"the declaration of {name} (file-scope code is not followed)"
     return "code outside any function" if found else "a comment"
+
+
+_DECL = re.compile(
+    r"^\s*(?:(?:extern|static|const|volatile|unsigned|signed|struct|enum)\s+)*\w[\w\s\*]*?[\s\*](\w+)\s*"
+    r"(?:\[[^\]]*\]\s*)*(?:=|;|\()"
+)
+_NOT_DECL = {"return", "goto", "else", "if", "while", "for", "switch", "case", "do", "typedef", "define"}
+
+
+def _declared(text: str) -> str | None:
+    """The name a file-scope line declares or defines (`int hits = 0;`, `int get(int k);`), else None."""
+    text = text.strip()
+    depth = 0
+    for ch in text:  # more than one declarator (`int a, hits;`): which one changed is not known
+        depth += ch in "([{"
+        depth -= ch in ")]}"
+        if ch == "," and depth <= 0:
+            return None
+    m = _DECL.match(text)
+    if not m or m.group(1) in _NOT_DECL or text.strip().split(None, 1)[0] in _NOT_DECL:
+        return None
+    return m.group(1)
 
 
 def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
@@ -705,7 +745,7 @@ def load_git(
     diffs = parse_unified(git.diff_against(root, base.sha))
     for path in git.untracked(root):
         if Path(path).suffix.lower() not in CODE_EXTS:
-            diffs.append(FileDiff(None, path, binary=True))  # counted as ignored
+            diffs.append(FileDiff(None, path, binary=True, untracked=True))  # counted as ignored
             continue
         try:
             text = (root / path).read_bytes().decode("utf-8", "surrogateescape")

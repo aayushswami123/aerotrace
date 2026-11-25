@@ -514,6 +514,15 @@ def cmd_install(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------- parser
 
 
+CHECK_EXIT_CODES = """Exit codes:
+  0  nothing found to break, and every part of the change was checked
+  1  something breaks or may break (also when some parts could not be checked)
+  2  UNKNOWN: some part of the change could not be checked or followed, or AeroTrace
+     could not run the check at all (bad patch file, bad git ref, no index).
+     Build before you rely on it.
+"""
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="aerotrace", description="Change impact for C and C++ code, for AI agents."
@@ -626,7 +635,10 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_parser(
             "check",
             help="what a change will break (does not build), may affect, and could not follow; exit code 1 "
-            "when something breaks (sure or probable), 2 when it could not check",
+            "when something breaks (sure or probable), 2 (UNKNOWN) when any part could not be checked",
+            description="What a change will break (does not build), may affect, and could not follow.",
+            epilog=CHECK_EXIT_CODES,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
         )
     )
     ck.add_argument("base", nargs="?", default="HEAD", help="commit or branch to compare with (default HEAD)")

@@ -20,6 +20,7 @@ class FileDiff:
     old_path: str | None  # None when the file is new
     new_path: str | None  # None when the file was deleted
     binary: bool = False
+    untracked: bool = False  # git mode: a file git does not track (never read as a diff)
     removed: list[tuple[int, int]] = field(default_factory=list)
     added: list[tuple[int, int]] = field(default_factory=list)
     old_text: dict[int, str] = field(default_factory=dict)  # old lines the diff shows (context + removed)

@@ -97,9 +97,13 @@ def test_body_edit_with_many_callers_is_medium(repo):
     assert len(t.splitlines()) <= 5
 
 
-def test_write_new_file_is_silent(repo):
+def test_write_new_file_says_it_was_not_checked(repo):
     ev = event(repo, "Write", "src/new.c", content="int brand_new(void) { return 1; }\n")
-    assert run(ev) is None
+    out = run(ev)  # A-09: a new file is not in the build yet, so it was not checked: one line, not silence
+    assert text(out) == (
+        "AeroTrace could not check this edit (src/new.c is new and not in the build yet). "
+        "Build before you go on."
+    )
 
 
 def test_write_overwrite_is_checked(repo):
