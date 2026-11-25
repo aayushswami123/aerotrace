@@ -1,7 +1,9 @@
 # Accuracy benchmark: results (checkpoint 2, for owner review)
 
 Run `bench/results/2026-11-24-c7df917/` on an Apple M1 Pro (macOS 26.7.2, arm64). AeroTrace
-0.1.0.dev0 at commit `d39d857` (includes #55 and #56). 30 cases on Redis 8.10.3, SQLite 3.54.1 and curl
+0.1.0.dev0, analysis code as on `launch-candidate` at `eff898b` (Merge #56, so #55 and #56 are in). The
+setup files record `d39d857`, the branch commit at run time, which was later rebased away. #71 and later
+merges came after this run and are not measured. 30 cases on Redis 8.10.3, SQLite 3.54.1 and curl
 8.23.0: 9 easy, 18 hard, 3 "might break". Cases: `bench/cases/CASES.md`. Rules, written before any
 tool ran: `accuracy-cases-protocol.md`. Exact setup: `bench/truth/README.md`.
 
