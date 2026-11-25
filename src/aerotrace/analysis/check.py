@@ -159,6 +159,10 @@ def _pairs(old: list[dict], new: list[dict]) -> tuple[list[tuple[dict, dict]], l
     return pairs, still_left, right
 
 
+def _squash(sig: str) -> str:
+    return "".join(sig.split())
+
+
 def compare_signatures(old: dict, new: dict) -> tuple[list[str], str, bool]:
     """(kinds of change, plain words, only spellings changed). Empty kinds: the signature is the same."""
     kinds: list[str] = []
@@ -414,15 +418,21 @@ class _Run:
     def _moved_new(self, fn: Fn) -> str | None:
         """The one new file of the patch that defines an extern function of this name (a real definition)."""
         found = self.new_defs.get(fn.qualified_name, [])
-        return found[0] if len(found) == 1 and fn.linkage != "internal" else None
+        if len(found) != 1 or fn.linkage == "internal":
+            return None
+        path, usr, sig = found[0]
+        # the clang ID has the parameter types in C++; the signature text covers C
+        return path if usr == fn.id and sig == _squash(fn.signature) else None
 
     def find_new_defs(self, outliner: Outliner) -> None:
         for path in sorted(self.res.diff.new_files):
             text = outliner.new_overlay.get(path)
             o = outliner.text(path, text) if text is not None else None
             for f in o.functions if o is not None else []:
-                if not f.get("static"):
-                    self.new_defs.setdefault(f["qualified_name"], []).append(path)
+                if not f.get("static") and "@aN" not in f["usr"]:  # not in an unnamed namespace
+                    self.new_defs.setdefault(f["qualified_name"], []).append(
+                        (path, f["usr"], _squash(f["signature"]))
+                    )
 
     def proto_users(self, outliner: Outliner, pairs: list) -> None:
         """Patch mode: a prototype the patch removes. Callers in files the patch does not compile may have
@@ -440,26 +450,52 @@ class _Run:
         if not ids:
             return
         marks = ",".join("?" * len(ids))
-        sites = self.conn.execute(
+        keys = sorted(ids)
+        by_file: dict[str, list] = {}  # file -> [(function id, caller id or None, global or None, line)]
+        for r in self.conn.execute(
             f"""SELECT e.dst, e.src, e.line, f.file FROM edges e JOIN functions f ON f.id = e.src
                 WHERE e.kind = 'calls' AND e.dst IN ({marks}) ORDER BY e.dst, e.src, e.line""",
-            sorted(ids),
-        ).fetchall()
-        by_file: dict[str, list] = {}
-        for r in sites:
-            if r["file"] not in self.compiled:
-                by_file.setdefault(r["file"], []).append(r)
-        for i, f in enumerate(sorted(by_file)):
+            keys,
+        ):
+            by_file.setdefault(r["file"], []).append((r["dst"], r["src"], None, r["line"]))
+        # every other use of the name: its address taken, or named in a global's initializer
+        for r in self.conn.execute(
+            f"""SELECT function_id, in_function, in_variable, file, line FROM address_sites
+                WHERE function_id IN ({marks}) ORDER BY function_id, file, line""",
+            keys,
+        ):
+            held = data.global_named(self.conn, r["in_variable"], r["file"]) if r["in_variable"] else None
+            by_file.setdefault(r["file"], []).append((r["function_id"], r["in_function"], held, r["line"]))
+        by_file = {f: v for f, v in by_file.items() if f not in self.compiled}
+        files = sorted(by_file)
+        for i, f in enumerate(files):
             o, n = outliner.before_after(f, self.mode) if i < USER_FILES_COMPILED else (None, None)
             if o is not None and n is not None and not o.errors:
                 self.errors(f, o, n)
                 continue
-            fns = symbols.get_many(self.conn, sorted({r["src"] for r in by_file[f]}))
-            for r in by_file[f]:
-                name = ids[r["dst"]]
-                self.fn_node(fns[r["src"]], "breaks", PROBABLE, "calls_removed", f"the prototype of {name} was "
-                             f"removed, and {f} could not be compiled with the change", 1, None, name,
-                             [r["line"]])  # fmt: skip
+            if i >= USER_FILES_COMPILED:
+                unsure = f"{f} was not compiled: more than {USER_FILES_COMPILED} files use it"
+            elif o is None or n is None:
+                unsure = f"{f} could not be parsed with the change"
+            else:
+                unsure = (
+                    f"{f} already had {_n(o.errors, 'error')} before the change, so a new one may be hidden"
+                )
+            fns = symbols.get_many(self.conn, sorted({c for _, c, g, _ in by_file[f] if c and g is None}))
+            for fid, caller, held, line in by_file[f]:
+                why = f"the prototype of {ids[fid]} was removed; {unsure}"
+                if caller is None and held is None:
+                    self.blind(f"{f}:{line} names {ids[fid]}, whose prototype was removed; {unsure}, and the "
+                               "global that names it is not in the index")  # fmt: skip
+                elif held is not None:
+                    self._var_node(held, "breaks", PROBABLE, f"its initializer names {ids[fid]}; {why}", None,
+                                   ids[fid], [line])  # fmt: skip
+                elif caller in fns:
+                    self.fn_node(
+                        fns[caller], "breaks", PROBABLE, "calls_removed", why, 1, None, ids[fid], [line]
+                    )
+        if len(files) > USER_FILES_COMPILED:
+            self.blind(f"{len(files) - USER_FILES_COMPILED} more files were not compiled with the change")
         shown = sorted(set(ids.values()) - set(self.res.diff.proto_removed))
         if shown and by_file:
             self.blind(diff.proto_note(shown))

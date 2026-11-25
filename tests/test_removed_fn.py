@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import json
 import subprocess
 
 import pytest
@@ -285,6 +286,15 @@ def many_callers(root, n, first_line='#include "lib.h"\n'):
         (root / f"user{i:02d}.c").write_text(
             f"{first_line}int user{i:02d}(void) {{\n    return scale({i});\n}}\n"
         )
+    entries = [
+        {
+            "directory": str(root),
+            "file": f.name,
+            "arguments": ["cc", "-std=gnu11", "-c", f.name, "-o", f.name + ".o"],
+        }
+        for f in sorted(root.glob("*.c"))
+    ]
+    (root / "compile_commands.json").write_text(json.dumps(entries))
     git(root, "add", "-A")
     git(root, "commit", "-q", "--no-verify", "-m", "users")
     build_index(root, jobs=1)

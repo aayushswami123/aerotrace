@@ -567,8 +567,9 @@ def proto_note(names: list[str]) -> str:
     shown = ", ".join(names[:5]) + (f" and {len(names) - 5} more" if len(names) > 5 else "")
     return (
         f"The prototype of {shown} is removed but the function is still defined. A file that relied on "
-        "that header declaration may no longer compile (call to an undeclared function); AeroTrace does "
-        "not follow which files include the header."
+        "that header declaration may no longer compile (call to an undeclared function). In old C modes, or "
+        "with other overloads, a call may instead resolve silently to an implicit declaration or another "
+        "overload. AeroTrace does not follow which files include the header."
     )
 
 
