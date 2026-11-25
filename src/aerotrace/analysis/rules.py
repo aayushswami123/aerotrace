@@ -3,7 +3,7 @@
 Levels come from the `aerotrace-check` summary (docs/plans/hook.md, section 3):
   high   = at least one exact break;
   medium = a probable break, or `medium_affected` or more affected functions and data;
-  low    = anything else (the hook stays silent).
+  low    = anything else (the hook stays silent, unless a part of the edit was not checked: A-09).
 Rules can only make the answer stricter (warn -> block); they never hide a warning.
 """
 
@@ -14,11 +14,16 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aerotrace.analysis import verdict as verdict_mod
+
 LEVELS = ("low", "medium", "high")
 ACTIONS = ("warn", "block")
 RULES_FILE = Path(".aerotrace") / "rules.toml"
 LIST_CAP = 20  # lines in the high-level list
 TEST_CAP = 10
+# Files that are C tables or includes but not C/C++ sources: AeroTrace does not parse them, so an edit
+# is never "checked". (`.inc` is already a header extension of the index.)
+TABLE_EXTS = (".def", ".tbl")
 
 
 @dataclass(frozen=True)
@@ -146,12 +151,29 @@ def _counts(s: dict) -> str:
 
 
 def _limits(contract: dict) -> list[str]:
-    nf = (contract.get("change") or {}).get("not_followed") or {}
-    gaps = sum(len(v) for v in nf.values())
-    blind = [b for b in (contract.get("sections") or {}).get("blind_spots", []) if b["scope"] == "change"]
-    if not gaps and not blind:
+    v = verdict_mod.of(contract)
+    if not v.unchecked:
         return []
-    return [f"Not checked: {gaps + len(blind)} part(s) of this edit (run `aerotrace check` for the list)."]
+    why = f": {v.reason}" if v.reason else ""
+    return [f"{v.parts} part(s) of this edit could not be checked{why} (run `aerotrace check` for the list)."]
+
+
+def unchecked_text(contract: dict) -> str:
+    """One line for an edit with nothing above the threshold but a part not checked or not followed
+    (the hook is never silent when it could not check). "" when every part was checked."""
+    v = verdict_mod.of(contract)
+    if not v.unchecked:
+        return ""
+    why = f" ({v.reason}{f', and {v.parts - 1} more' if v.parts > 1 else ''})" if v.reason else ""
+    return f"AeroTrace could not check this edit{why}. Build before you go on."
+
+
+def is_table_file(rel: str) -> bool:
+    return rel.lower().endswith(TABLE_EXTS)
+
+
+def table_text(rel: str) -> str:
+    return f"AeroTrace could not check this edit ({rel} is a C table file it does not follow). Build before you go on."
 
 
 def short_text(contract: dict) -> str:

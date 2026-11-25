@@ -63,7 +63,7 @@ def test_unindexed_c_file_prints_one_line(repo):
     out = run(event(repo, "Edit", "src/extra.c", old_string="return a;", new_string="return a + 1;"))
     assert out is not None
     (line,) = lines(out)
-    assert "src/extra.c is not in the index" in line and "not checked" in line
+    assert "src/extra.c is not in the index" in line and "could not check" in line
 
 
 @pytest.mark.parametrize("rel", ["README.md", "tool.py", "data.json"])

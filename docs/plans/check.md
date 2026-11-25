@@ -197,8 +197,9 @@ Nodes sorted by (status rank, certainty, distance, file, line, id), as the contr
   the new front door, `diff` stays the stable, smaller answer.
 - **`aerotrace check [BASE] [--patch FILE] [--depth N] [--limit N] [--all] [--json] [--html OUT] [--root DIR]
   [--build-dir DIR]`**: text via `ui.render_text(data, **ui.style_for(sys.stdout, os.environ), limit)`;
-  `--json` prints the contract object; `--html` calls `ui.write_html`. Exit codes (UI plan suggestion):
-  0 = nothing breaks, 1 = something breaks (exact or probable), 2 = could not check.
+  `--json` prints the contract object; `--html` calls `ui.write_html`. Exit codes (A-06, a function of the verdict):
+  0 = clear (nothing found, everything checked), 1 = breaks (exact or probable; also when parts were not checked),
+  2 = UNKNOWN (some part was not checked or followed, or no usable index).
 - **MCP**: a new `check(base="HEAD", patch="", depth=5, limit=40)` tool, text output (`render_text`, no
   colour, ASCII icons), description: "Before you finish an edit, call this with your patch: it lists what
   will not build, what may change behaviour, and what AeroTrace could not follow." `diff_impact` is

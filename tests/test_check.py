@@ -593,7 +593,7 @@ def test_cpp_overloads_and_namespaces_are_not_a_duplicate(dupes):
     }
     _, c = run_patch(dupes, edits)
     assert nodes(c, "breaks") == {}
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 def test_a_weak_definition_is_not_a_duplicate(dupes):
@@ -636,7 +636,7 @@ RENAME_ALL = {
 def test_renaming_a_global_in_every_file_that_uses_it_breaks_nothing(selfedit):
     _, c = run_patch(selfedit, RENAME_ALL)
     assert nodes(c, "breaks") == {}, c["nodes"]
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 def test_renaming_a_global_but_leaving_an_address_use_in_an_edited_function_breaks(selfedit):
@@ -705,7 +705,7 @@ def test_a_macro_use_that_the_patch_also_fixes_is_not_a_break(macro):
     edits["src/main.c"] = [*RENAME_OLD_FN["src/main.c"], ("CALL(2)", "new_fn(2)")]
     _, c = run_patch(macro, edits)
     assert _breaks(c) == {}, c["nodes"]
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: code outside any function was not followed
 
 
 @pytest.fixture

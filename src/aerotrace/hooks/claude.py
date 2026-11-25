@@ -145,7 +145,7 @@ def check_edit(root: Path, rel: str, before: str | None, after: str, rules: rule
         contract = check.to_contract(conn, res, check._tool())
         if contract["status"] != "ok":
             lvl = "low"
-            body = ""
+            body = rules_mod.unchecked_text(contract)
         else:
             lvl = rules_mod.level(contract, rules)
             body = ""
@@ -154,6 +154,8 @@ def check_edit(root: Path, rel: str, before: str | None, after: str, rules: rule
                 body = rules_mod.full_text(contract, tests, note)
             elif lvl == "medium":
                 body = rules_mod.short_text(contract)
+            else:  # nothing above the threshold, but silence must mean "checked"
+                body = rules_mod.unchecked_text(contract)
     finally:
         conn.close()
     stop = rules_mod.blocking(rules, rel, lvl)
@@ -219,7 +221,8 @@ def handle(tool: str, inp: dict, path: Path, rel: str, root: Path, rules: rules_
         stop = rules_mod.blocking(rules, rel, "low")
         if stop:
             return deny(rules_mod.blocked_text(f"AeroTrace: {rel} is protected.", stop))
-        return warn(rules_warning) if rules_warning else None
+        note = rules_mod.table_text(rel) if rules_mod.is_table_file(rel) else ""
+        return warn(_join(rules_warning, note)) if rules_warning or note else None
     out = check_edit(root, rel, before, after, rules)
     if rules_warning:
         if out is None:

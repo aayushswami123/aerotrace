@@ -1504,12 +1504,13 @@ def to_contract(
     }
 
 
+EXIT_CODES = {"clear": 0, "breaks": 1, "unknown": 2}
+
+
 def exit_code(contract: dict) -> int:
-    """0 = nothing breaks, 1 = something breaks (exact or probable), 2 = could not check."""
-    if contract["status"] in ("no_index", "index_error"):
-        return 2
-    s = contract.get("summary") or {}
-    return 1 if s.get("breaks_exact") or s.get("breaks_probable") else 0
+    """A function of the verdict and nothing else: 0 clear, 1 breaks (also when a part was not checked:
+    a found break wins), 2 unknown (a part was not checked or not followed, or there is no index)."""
+    return EXIT_CODES[verdict_mod.of(contract).verdict]
 
 
 @dataclass

@@ -29,4 +29,5 @@ Dashboard work (#79, #80) is paused until the audit must-fix list is done (owner
 | `docs/morning-report` | owner | Day notes and screenshots | `docs/launch/` | owner decides (has budget figures) |
 | `fix/removed-fn-diff` | audit-fix | A-01, A-02: removed functions seen as "changed" | `src/aerotrace/analysis/diff.py`, tests | in review |
 | `fix/check-dupes-self-edits` | audit-fix | A-05 duplicate definitions, A-12 false alarms | `src/aerotrace/analysis/check.py`, tests | in review |
+| `fix/exit-code-hook` | audit-fix | A-06 exit code 2 for UNKNOWN, A-09 hook says when it could not check | `cli.py`, `hooks/claude.py`, `analysis/rules.py`, tests | in review (stacked on #84) |
 | `fix/unknown-headline` | audit-fix | A-04 headline: UNKNOWN when any part was not checked | `analysis/check.py`, `ui/terminal.py`, tests | in review (stacked on #81 #82 #83) |

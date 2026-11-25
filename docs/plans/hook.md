@@ -55,10 +55,10 @@ Nothing is written anywhere except `.aerotrace/` (hook state, optional log).
 |---|---|---|
 | high | `breaks_exact > 0`, or a rule threshold says high | full list (capped at 20 lines, "and N more"): broken / affected functions with file:line and why, data affected, tests to run (`testimpact.for_diff`, only when the index has test entries; skipped when over the time budget, and then said so) |
 | medium | `breaks_probable > 0`, or `affected_direct + affected_further >= 10` (default, configurable) | 2-3 lines: counts plus the top 3 names, and "run `aerotrace check` for the list" |
-| low | none of the above | silent |
+| low | none of the above | silent when every part was checked; else one line "AeroTrace could not check this edit (reason). Build before you go on." (A-09) |
 
 Statuses `no_index` / `index_error` / timeout are not levels: they give the "couldn't check" note
-(section 6). `nothing_to_check` is silent. Blind spots that matter (e.g. "not followed" lines inside the
+(section 6). `nothing_to_check` is silent only when nothing was skipped; a skipped file (not in the index, patch does not match, new file) gives the one line. `.def` and `.tbl` table files give it too. Blind spots that matter (e.g. "not followed" lines inside the
 edit) add one line at medium/high; we never say "safe".
 
 ## 4. `.aerotrace/rules.toml`

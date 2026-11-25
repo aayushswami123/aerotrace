@@ -235,7 +235,7 @@ def test_prototype_removed_but_another_declaration_stays_is_not_flagged(repo_fac
     text = git_patch(root, {"lib.h": [("int scale(int x);\n", "")]})
     _, c = check_patch(root, text)
     assert only(c) == {}
-    assert check.exit_code(c) == 0
+    assert check.exit_code(c) == 2  # UNKNOWN: a removed prototype is not followed
 
 
 def test_function_moved_with_its_prototype_removed_may_break_difflib(repo_factory, tmp_path, capsys):

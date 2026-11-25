@@ -121,7 +121,6 @@ def test_exit_code_is_a_function_of_the_verdict(repo, capsys):
         make_patch(repo, [HARMLESS]),
         make_patch(repo, ADD_PARAM),
         R6,
-        "",
     ]
     seen = set()
     for text in cases:
