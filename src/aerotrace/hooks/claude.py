@@ -10,7 +10,6 @@ from __future__ import annotations
 import difflib
 import json
 import os
-import subprocess
 import sys
 import threading
 from pathlib import Path
@@ -45,14 +44,11 @@ def deny(text: str) -> dict:
 
 
 def find_root(cwd: str) -> Path:
-    try:
-        r = subprocess.run(
-            ["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5
-        )
-        if r.returncode == 0 and r.stdout.strip():
-            return Path(r.stdout.strip()).resolve()
-    except (OSError, subprocess.SubprocessError):
-        pass
+    from aerotrace.toolchain import git
+
+    top = git.toplevel(cwd, timeout=5) if Path(cwd).is_dir() else None
+    if top is not None:
+        return top
     return Path(cwd).resolve()
 
 

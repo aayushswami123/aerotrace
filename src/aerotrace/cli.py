@@ -7,7 +7,6 @@ import json
 import os
 import platform
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -18,14 +17,11 @@ def find_root(given: str | None) -> Path:
     """The repo to work on: --root, else the git top level of the current folder, else the current folder."""
     if given:
         return Path(given).resolve()
-    try:
-        r = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=10
-        )
-        if r.returncode == 0 and r.stdout.strip():
-            return Path(r.stdout.strip()).resolve()
-    except (OSError, subprocess.SubprocessError):
-        pass
+    from aerotrace.toolchain import git
+
+    top = git.toplevel(Path.cwd())
+    if top is not None:
+        return top
     return Path.cwd().resolve()
 
 

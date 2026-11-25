@@ -62,6 +62,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- In a git partial clone, `diff`, `check` and `tests` no longer make git fetch missing files from the remote
+  or write into `.git/` (A-07). Every git call now goes through one helper and sets `GIT_NO_LAZY_FETCH=1`
+  (git 2.45 or newer; older git ignores it) and turns off background maintenance. When an old file is
+  missing, the command stops with one line saying so and to run `git fetch` yourself (exit 2).
 - Four wrong "safe" answers found by the benchmark (redis-05, curl-05, redis-07, curl-07), where the build
   failed but `check` said "None is sure to break":
   - A removed function still named in a table (a command table, a filter's callbacks) is now a break of
