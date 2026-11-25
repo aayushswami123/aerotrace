@@ -69,6 +69,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
   (not sure) with a limit line: the new file is not in the build list yet.
   Files that only take the function's address are compiled too. A new file only downgrades BREAKS when it
   defines the same signature (not another overload, not in an unnamed namespace, not static).
+- `aerotrace check`: a patch (or edit) that defines a non-static function a second time in another file is
+  now a BREAKS (duplicate symbol), not "nothing found". Static, inline, weak, template and
+  unnamed-namespace definitions, overloads, and a function moved in the same patch are not duplicates; if
+  two definitions already existed (two programs), the answer is MAY BREAK.
+- `aerotrace check --patch`: no false BREAKS for a function the patch edits when the patch itself removes
+  the use of a renamed global or removed function there. A use that is left behind still breaks.
 - Four wrong "safe" answers found by the benchmark (redis-05, curl-05, redis-07, curl-07), where the build
   failed but `check` said "None is sure to break":
   - A removed function still named in a table (a command table, a filter's callbacks) is now a break of

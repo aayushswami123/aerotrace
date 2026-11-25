@@ -48,6 +48,7 @@ COMPILER_DEPENDENT = (
     "call to undeclared function",
 )
 NEWER_COMPILERS = "an error in newer compilers (clang 16+, GCC 14+); older ones, or clang for some, only warn"
+HEADER_EXTS = {".h", ".hh", ".hpp", ".hxx", ".h++", ".ipp", ".tcc"}
 USER_FILES_COMPILED = 8  # files of users of a retyped field or global compiled to find what breaks
 IFDEF_NOTE = "Uses in code that is not compiled with these flags (other #if branches) are not checked."
 LINK_LEVEL = {
@@ -126,6 +127,24 @@ class CheckResult:
 
 def _empty() -> Outline:
     return Outline([], [], [], 0)
+
+
+def _merges(f: dict, cxx: bool) -> bool:
+    """A definition that is never a second copy of the same symbol: static, in an unnamed namespace, a
+    template, weak (meant to be replaced), or inline in C++ (the copies are merged)."""
+    return bool(
+        f.get("static")
+        or "@aN" in f["usr"]
+        or f.get("template")
+        or f.get("weak")
+        or (f.get("inline") and cxx)
+    )
+
+
+def _unsure(f: dict) -> bool:
+    """Not proven to be an external definition: a C `inline` without `extern` (it depends on the other
+    declarations in the file), or an attribute AeroTrace does not know."""
+    return bool((f.get("inline") and not f.get("extern")) or f.get("attrs"))
 
 
 def _pairs(old: list[dict], new: list[dict]) -> tuple[list[tuple[dict, dict]], list[dict], list[dict]]:
@@ -250,6 +269,13 @@ class _Run:
         self.retyped_users: dict[str, list[tuple]] = {}
         self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
+        self.patched: dict[str, Outline] = {}  # patch mode: index path -> outline of the patched file
+        # patch mode: id of a function in a patched file -> (its outline entry, errors in that file)
+        self.patched_fn: dict[str, tuple[dict, list[dict]]] = {}
+        self.outliner: Outliner | None = None
+        self.undeclared: set[str] = (
+            set()
+        )  # patch mode: USRs the patch stops declaring (with their definition)
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
         self.decl_handled: set[str] = (
             set()
@@ -331,6 +357,41 @@ class _Run:
         from the old index."""
         return self.mode == "patch" and fn.id in self.edited and fn.file in self.compiled
 
+    def fixed_site(self, fn: Fn, usr: str | None, name: str) -> bool:
+        """Patch mode: a use of the function or global `usr` in `fn` that the patch itself removes. True only
+        when it is proven: the patch edits `fn`, its patched version was parsed without errors in `fn`, and
+        what the compiler resolved in the patched `fn` (macros expanded, operators and conversions included)
+        no longer refers to `usr`, nor to an unresolved name like `name`. A destructor or `operator new`
+        is also used where no code names it, so it is never skipped. When in doubt: not fixed."""
+        if self.mode != "patch" or fn.id not in self.edited or fn.file not in self.compiled or not usr:
+            return False
+        simple = name.rsplit("::", 1)[-1]
+        if simple.startswith(("~", "operator new", "operator delete")):
+            return False
+        got = self.patched_fn.get(fn.id)
+        if got is None or "refs" not in got[0]:
+            return False
+        entry, diagnostics = got
+        if any(entry["line_start"] <= d["line"] <= entry["line_end"] for d in diagnostics):
+            return False
+        return usr not in entry["refs"] and simple not in entry["unresolved"]
+
+    def _usr(self, fn: Fn) -> str | None:
+        row = self.conn.execute("SELECT usr FROM functions WHERE id = ?", (fn.id,)).fetchone()
+        return row["usr"] if row else None
+
+    def prepare(self, pairs: list) -> None:
+        """Patch mode: remember the patched outline of each file and each function in it."""
+        for _, index_path, o, n in pairs:
+            if self.mode != "patch" or not index_path or o is None or n is None:
+                continue
+            self.patched[index_path] = n
+            self.undeclared |= {d["usr"] for d in o.declarations} - {d["usr"] for d in n.declarations}
+            for f in n.functions:
+                fid = self.lookup._fn_in_file(f, index_path)
+                if fid:
+                    self.patched_fn[fid] = (f, n.diagnostics)
+
     def blind(self, text: str, node: str | None = None) -> None:
         if text == self.outside_note:
             return
@@ -370,7 +431,14 @@ class _Run:
     def _removed_in_patch(self, fn: Fn, key: str) -> None:
         """Patch mode: the index still has the callers of a function the patch removes."""
         si = signature.signature_impact(self.conn, fn, depth=0)
+        usr = self._usr(fn)
         moved = self._moved_to(fn)
+        if fn.name.startswith("~") and moved is None and usr not in self.undeclared:
+            # a destructor is called where an object goes away, without naming it: no site is indexed
+            self.add(Node(f"{key}#used", fn.qualified_name, "function", fn.file, fn.line_start, "breaks",
+                          PROBABLE, "ambiguous", f"{fn.qualified_name} is still declared, and code that makes "
+                          "an object of this class calls it without naming it; those uses are not listed, and "
+                          "the link may fail", 1, key, fn.qualified_name))  # fmt: skip
         for s in si.sites:
             level, why = s.certainty, f"calls {fn.name}, which this patch removes"
             new_file = self._moved_new(fn) if moved is None else None
@@ -384,8 +452,8 @@ class _Run:
                 self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
                              f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
                 continue
-            if self.defer(s.caller):
-                continue  # its patched code was compiled: a call that is left shows up as a new error
+            if self.fixed_site(s.caller, usr, fn.name):
+                continue  # the patch edits this function and its patched text no longer names it
             if s.caller.id in self.edited:
                 level, why = PROBABLE, why + " (the patch also edits this function; check it still calls it)"
             self.fn_node(s.caller, "breaks", level, "calls_removed", why, 1, key, fn.qualified_name, [s.line])
@@ -394,6 +462,8 @@ class _Run:
                          "which this patch removes", 1, key, fn.qualified_name, [p.line])  # fmt: skip
         for a in si.address_sites:
             if a.in_function is not None:
+                if self.fixed_site(a.in_function, usr, fn.name):
+                    continue
                 self.fn_node(a.in_function, "breaks", EXACT, "calls_removed",
                              f"names {fn.name} as a value ({a.how}), and this patch removes it", 1, key,
                              fn.qualified_name, [a.line])  # fmt: skip
@@ -770,6 +840,8 @@ class _Run:
                         self._var_node(e.in_variable, "breaks", EXACT, f"its initializer takes the address of "
                                        f"{name}, which this change removes", nid, name, [e.line])  # fmt: skip
                         continue
+                    if self.fixed_site(e.fn, v["usr"], v["name"]):
+                        continue  # the patch edits this function and its patched text no longer names it
                     self.fn_node(e.fn, "breaks", EXACT, "uses_changed", f"takes the address of {name}, which "
                                  "this change removes", 1, nid, name, [e.line], "reads")  # fmt: skip
                 for i in du.initializers:
@@ -897,6 +969,80 @@ class _Run:
             self.res.nodes[g.id].via = None
             self.res.nodes[g.id].via_name = record
         self.blind(text)
+
+    # -- duplicate definitions
+
+    def duplicates(self, shown: str, index_file: str, o: Outline, n: Outline) -> None:
+        """A function this file now defines that another file already defines (same link name): the linker
+        stops on the second one. What is read comes from the parser (storage class, inline, weak, template),
+        never from the text around a definition. When it can't be proven that the two are one symbol in one
+        program, the answer is MAY BREAK, not silence."""
+        before = {f["usr"] for f in o.functions}
+        header = Path(shown).suffix.lower() in HEADER_EXTS
+        cxx = Path(shown).suffix.lower() in CXX_EXTS or header
+        for f in n.functions:
+            if f["usr"] in before or _merges(f, cxx):
+                continue
+            fid = self.lookup._fn_in_file(f, index_file) if self.mode == "git" else None
+            via = fid or f"new:{shown}:{f['line_start']}:{f['qualified_name']}"
+            if header and not _unsure(f):
+                # included by every file that uses it: two of them, and the link fails
+                self.add(Node(via, f["qualified_name"], "function", shown, f["line_start"], "breaks", PROBABLE,
+                              "ambiguous", f"{f['qualified_name']} is defined in a header and is not inline or "
+                              "static: if two source files include it, the link fails (duplicate symbol)", 1,
+                              None, None, [f["line_start"]]))  # fmt: skip
+            rows = []
+            unsure = _unsure(f)
+            for r in self.conn.execute(
+                "SELECT id, qualified_name, file, line_start FROM functions WHERE usr = ? AND linkage = "
+                "'external' AND file != ? ORDER BY file, line_start",
+                (f["usr"], index_file),
+            ):
+                out = self.patched.get(r["file"]) if self.mode == "patch" else None
+                if self.mode == "patch" and r["file"] in self.patched and out is None:
+                    continue
+                if out is None and self.outliner is not None:
+                    out = self.outliner.now(r["file"])
+                theirs = next((g for g in (out.functions if out else []) if g["usr"] == f["usr"]), None)
+                if self.mode == "patch" and r["file"] in self.patched and theirs is None:
+                    continue  # the patch moves or removes it
+                if theirs is not None and _merges(theirs, Path(r["file"]).suffix.lower() in CXX_EXTS):
+                    continue
+                unsure = unsure or theirs is None or _unsure(theirs)
+                rows.append(r)
+            if not rows:
+                continue
+            programs = self.conn.execute(
+                "SELECT COUNT(*) FROM functions WHERE qualified_name = 'main' AND linkage = 'external'"
+            ).fetchone()[0]
+            sure = len(rows) == 1 and not unsure and programs < 2 and f["qualified_name"] != "main"
+            for r in rows:
+                why = (
+                    f"{f['qualified_name']} is defined here ({r['file']}:{r['line_start']}) and again in "
+                    f"{shown}:{f['line_start']}"
+                )
+                if sure:
+                    why += "; the program will not link (duplicate symbol)"
+                elif programs >= 2:
+                    why += (
+                        "; this repo builds more than one program, and AeroTrace cannot tell if these two "
+                        "files are linked together (if they are, the link fails: duplicate symbol)"
+                    )
+                elif unsure:
+                    why += (
+                        "; one of them has an attribute or an inline that AeroTrace can't prove makes it "
+                        "a separate symbol (if not, the link fails: duplicate symbol)"
+                    )
+                else:
+                    why += (
+                        f"; {len(rows)} other definition(s) exist, so they may be separate programs "
+                        "(if these are linked together, the link fails: duplicate symbol)"
+                    )
+                if via not in self.res.nodes:
+                    via = None
+                self.add(Node(r["id"], f["qualified_name"], "function", r["file"], r["line_start"], "breaks",
+                              EXACT if sure else PROBABLE, "exact" if sure else "ambiguous", why, 1, via,
+                              f["qualified_name"], [r["line_start"]]))  # fmt: skip
 
     # -- new compile errors
 
@@ -1049,6 +1195,11 @@ def run(
     if mode == "patch":
         # parse each patched file with the other patched files (a .h and a .c changed together)
         for fd in diffs:
+            if fd.new_path:
+                # the functions on or next to a changed line also list what they refer to
+                outliner.ref_lines[fd.new_path] = frozenset(
+                    [n for n, _ in fd.added] + [g + k for _, g in fd.removed for k in (0, 1)]
+                )
             if fd.new_path and not fd.binary and Path(fd.new_path).suffix.lower() in diff.CODE_EXTS:
                 text = diff.patched_text(root, fd)
                 if text is not None:
@@ -1058,9 +1209,9 @@ def run(
     )
     res = CheckResult(d)
     r = _Run(conn, root, res, mode)
+    r.outliner = outliner
     if mode == "patch":
         r.find_new_defs(outliner)
-    r.change_nodes()
     pairs = _file_pairs(root, diffs, d, mode, outliner, old)
     for _, _, _, n in pairs:
         for f in (n.functions + n.declarations) if n is not None else []:
@@ -1069,6 +1220,8 @@ def run(
         r.no_proto.update(n.noproto if n is not None else [])
     if mode == "patch":
         r.compiled = {ip for _, ip, o, n in pairs if ip and o is not None and n is not None}
+        r.prepare(pairs)
+    r.change_nodes()  # after `compiled` and the patched texts are known
     for shown, index_path, o, n in pairs:
         if o is None or n is None:
             side = "old" if o is None else "new"
@@ -1077,6 +1230,7 @@ def run(
                 "are not checked."
             )
             continue
+        r.duplicates(shown, index_path or shown, o, n)
         if index_path is None and mode == "patch":
             continue
         r.signatures(index_path or shown, o, n)
