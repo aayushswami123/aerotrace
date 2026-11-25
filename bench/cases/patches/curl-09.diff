@@ -1,0 +1,20 @@
+--- a/lib/curl_trc.h
++++ b/lib/curl_trc.h
+@@ -318,7 +318,7 @@
+ 
+ #ifndef CURL_DISABLE_VERBOSE_STRINGS
+ /* informational messages enabled */
+-#define Curl_trc_is_verbose(data)                          \
++#define Curl_trc_is_verbose(data, aerotrace_bench)                          \
+   ((data) && (data)->set.verbose &&                        \
+    (!(data)->state.feat ||                                 \
+     ((data)->state.feat->log_level >= CURL_LOG_LVL_INFO)))
+@@ -337,7 +337,7 @@
+ 
+ #else /* CURL_DISABLE_VERBOSE_STRINGS */
+ /* All informational messages are not compiled in for size savings */
+-#define Curl_trc_is_verbose(d)        FALSE
++#define Curl_trc_is_verbose(d, aerotrace_bench)        FALSE
+ #define Curl_trc_cf_is_verbose(x, y)  FALSE
+ #define Curl_trc_ft_is_verbose(x, y)  FALSE
+ #define CURL_MSTATE_NAME(x)           ((void)(x), "-")
