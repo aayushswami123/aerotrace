@@ -1,0 +1,4 @@
+{
+ "aerotrace_code": "eff898b",
+ "aerotrace_code_note": "analysis code as on launch-candidate at eff898b (Merge #56); the setup files record d39d857, the branch commit at run time, which was rebased away and has no src/ difference from eff898b"
+}

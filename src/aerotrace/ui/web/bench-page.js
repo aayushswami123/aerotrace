@@ -68,18 +68,27 @@
     var maxFa = 0;
     REPOS.forEach(function (r) { tools.forEach(function (t) { maxFa = Math.max(maxFa, v.repos[r][t].false_alarms); }); });
     while (chart.firstChild) chart.removeChild(chart.firstChild);
-    var H = 230, top = 26;
+    var H = 230, top = 40;
     var groups = narrow ? REPOS.map(function (r) { return [r]; }) : [REPOS];
     groups.forEach(function (rs) {
       var height = top + H + 140;
       var svg = el("svg", { viewBox: "0 0 " + W + " " + height, role: "img",
         "aria-label": (state.metric === "found" ? "Breaks found" : "False alarms") + " by tool, " + v.label + ", " + rs.map(function (r) { return RNAME[r]; }).join(", ") });
+      var AX = 40;  // room for the axis labels
       for (var k = 0; k <= 4; k++) {
         var gy = top + H - (H * k) / 4;
-        svg.appendChild(el("line", { x1: 0, x2: W, y1: gy, y2: gy, "class": "grid" }));
+        svg.appendChild(el("line", { x1: AX, x2: W, y1: gy, y2: gy, "class": "grid" }));
+        var lab = state.metric === "found" ? (25 * k) + "%" : (maxFa ? n(Math.round((maxFa * k) / 4)) : (k ? "" : "0"));
+        svg.appendChild(el("text", { x: AX - 6, y: gy + 3, "text-anchor": "end", "class": "axis" }, lab));
       }
-      var gw = W / rs.length;
-      rs.forEach(function (r, i) { drawGroup(svg, i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
+      svg.appendChild(el("text", { x: 0, y: 12, "class": "axis" },
+        state.metric === "found" ? "share of breaks found" : "false alarms"));
+      var gw = (W - AX) / rs.length;
+      rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
+      if (state.metric === "fa" && maxFa === 0) {
+        svg.appendChild(el("text", { x: AX + (W - AX) / 2, y: top + H / 2, "text-anchor": "middle", "class": "empty" },
+          (tools.length === 1 ? "AeroTrace has" : "No tool has") + " any false alarms in this view."));
+      }
       chart.appendChild(svg);
     });
     document.getElementById("legend").replaceChildren.apply(document.getElementById("legend"), tools.map(function (t) {
