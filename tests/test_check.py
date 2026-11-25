@@ -724,7 +724,7 @@ DROP_DTOR = ("X::~X() {}\n", "")
         (DROP_OP, "src/use_op.cpp", ("V a{1}, b{2};", "V a{1}, b{3};"), "use_op"),
         (DROP_CONV, "src/use_conv.cpp", ("W w{1};", "W w{2};"), "use_conv"),
         (DROP_CTOR, "src/use_ctor.cpp", ("X x(1);", "X x(2);"), "use_ctor"),
-        (DROP_DTOR, "src/use_ctor.cpp", ("return x.k;", "return x.k + 0;"), "use_ctor"),
+        (DROP_DTOR, "src/use_ctor.cpp", ("return x.k;", "return x.k + 0;"), "X::~X"),
     ],
     ids=["operator", "conversion", "constructor", "destructor"],
 )
