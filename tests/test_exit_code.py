@@ -159,3 +159,36 @@ async def test_mcp_check_for_r3_says_unknown_not_ok(repo, anyio_backend):
     text = "\n".join(c.text for c in result.content if getattr(c, "text", None))
     first = text.splitlines()[0]
     assert "UNKNOWN" in first and "Nothing found" not in first
+
+
+def raw_patch(rel, old, new):
+    return f"--- a/{rel}\n+++ b/{rel}\n@@ -1 +1 @@\n-{old}\n+{new}\n"
+
+
+def test_a_build_file_only_change_exits_2(repo, capsys):
+    code, data = check_patch(repo, raw_patch("Makefile", "CC=cc", "CC=gcc"), capsys)
+    assert data["verdict"] == "unknown" and "Makefile" in data["unchecked_reason"]
+    assert code == 2
+
+
+def test_a_change_with_no_c_part_exits_0_with_the_neutral_line(repo, capsys):
+    p = repo.parent / "p.diff"
+    p.write_text(raw_patch("README.md", "# c_unknown", "# c_unknown (docs)"))
+    code = main(["check", "--patch", str(p), "--root", str(repo)])
+    first = capsys.readouterr().out.splitlines()[0]
+    assert code == 0
+    assert "No C or C++ changes, so there was nothing to check." in first and "✅" not in first
+
+
+def test_a_comment_outside_a_function_exits_0(repo, capsys):
+    path = repo / LIB
+    text = path.read_text()
+    after = "/* a note */\n" + text
+    patch = "".join(
+        difflib.unified_diff(
+            text.splitlines(keepends=True), after.splitlines(keepends=True), f"a/{LIB}", f"b/{LIB}"
+        )
+    )
+    code, data = check_patch(repo, patch, capsys)
+    assert data["verdict"] == "clear"
+    assert code == 0

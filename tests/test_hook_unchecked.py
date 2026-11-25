@@ -133,3 +133,13 @@ def test_a_silent_hook_means_a_clear_verdict(repo):
             conn.close()
         if out is None:
             assert v == "clear", (rel, old, v)
+
+
+@pytest.mark.parametrize("rel", ["Makefile", "CMakeLists.txt", "build/meson.build"])
+def test_a_build_file_edit_prints_one_line(repo, rel):
+    (repo / rel).parent.mkdir(exist_ok=True)
+    (repo / rel).write_text("CC=cc\n")
+    out = run(event(repo, "Edit", rel, old_string="CC=cc", new_string="CC=gcc"))
+    assert out is not None
+    (line,) = lines(out)
+    assert "could not check" in line and "a build file changed" in line and rel in line
