@@ -108,7 +108,7 @@ def test_missing_index_exits_2(repo, capsys, monkeypatch):
     def no_index(*a, **k):
         raise FileNotFoundError("compile_commands.json")
 
-    monkeypatch.setattr("aerotrace.cli.fresh_index", no_index)
+    monkeypatch.setattr("aerotrace.index.build.fresh_index", no_index)
     code, data = check_patch(repo, make_patch(repo, [HARMLESS]), capsys)
     assert data["status"] == "no_index" and data["verdict"] == "unknown"
     assert code == 2
