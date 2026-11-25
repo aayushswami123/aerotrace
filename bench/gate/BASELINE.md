@@ -1,6 +1,6 @@
 # Gate baseline
 
-AeroTrace code measured: `fd0c688`. Cases: 89. How to read this: see `README.md`.
+AeroTrace code measured: `fd0c688`. Cases: 89. This file is generated from `baseline.json`. How to read it: see `README.md`.
 
 | id | build | patch before | patch | git before | git | failing site |
 |---|---|---|---|---|---|---|
@@ -94,7 +94,6 @@ AeroTrace code measured: `fd0c688`. Cases: 89. How to read this: see `README.md`
 | repro-r6 | n/a | 0 false safe | 2 correct | - | - |  |
 | repro-r7 | fails | - | - | 0 false safe | 2 honest unknown | helper |
 
-
 ```text
 patch mode (87 cases)
   correct:        29
@@ -102,14 +101,8 @@ patch mode (87 cases)
   false safe:     2
   weak:           1
   false alarm:    21 (of which false unknown: 18)
-  failing-build cases that exit 0: 2
-  before (older build): failing-build cases that exit 0: 42
   before (older build):
-    correct:        40
-    honest unknown: 0
-    false safe:     43
-    weak:           1
-    false alarm:    3 (of which false unknown: 0)
+    correct 40, honest unknown 0, false safe 43, weak 1, false alarm 3 (false unknown 0)
 
 git mode (88 cases)
   correct:        19
@@ -117,14 +110,8 @@ git mode (88 cases)
   false safe:     1
   weak:           1
   false alarm:    24 (of which false unknown: 18)
-  failing-build cases that exit 0: 1
-  before (older build): failing-build cases that exit 0: 45
   before (older build):
-    correct:        36
-    honest unknown: 0
-    false safe:     45
-    weak:           1
-    false alarm:    6 (of which false unknown: 0)
+    correct 36, honest unknown 0, false safe 45, weak 1, false alarm 6 (false unknown 0)
 
 false safe ids: a1-paste2, cases1-ifdef2
 ```

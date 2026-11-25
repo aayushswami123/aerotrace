@@ -15,7 +15,7 @@ saved: the audit's repro script (R1 to R7) and the cases written by the review p
 make gate                                  # all cases, against the code in this checkout
 make gate ONLY=a1-paste2                   # one case
 make gate AT=/path/to/aerotrace            # another build (any command that works like `aerotrace`)
-make gate-baseline                         # also writes bench/gate/BASELINE.md
+make gate-baseline                         # record a new baseline (on purpose, in a PR)
 uv run python bench/gate/run_gate.py --help
 ```
 
@@ -23,9 +23,25 @@ It takes about two minutes. It needs `cc`, `c++` and `git`, and no network. Each
 folder; the only file written in the repo is the optional `--markdown` report. The cases that use
 assembly (`a1-asm`) are written for arm64 macOS.
 
-Exit code: 1 if any case is **false safe**, 2 if there is no false safe but a case had an ERROR (for
-example a baseline that does not build), else 0. Today it exits 1: the two known limits below are false
-safe on purpose, so they stay visible.
+## How the comparison works
+
+`make gate` runs every case and compares the result with the saved baseline (`baseline.json`). It exits
+**1** only if something got worse, in either mode:
+
+- more false safe, more weak, more false alarm, or more false unknown (false unknown is also counted inside
+  false alarm, and it must not go up on its own); or fewer correct;
+- a case that errors (the baseline does not build, the tool crashes), or a case that is missing from the run
+  or not in the baseline;
+- any false safe that is not in the known limits (below), whatever the counts say.
+
+It prints each case that changed class (from -> to), sorted by id. If something got better it says
+"Better than the baseline: run `make gate-baseline` to record it" and still exits 0. `--only` / `ONLY=` runs
+one case and does not compare with the baseline.
+
+`baseline.json` has the per-case class and the counts for both modes. `BASELINE.md` is generated from the
+same data, so the two cannot drift. **The baseline is only rewritten on purpose, in a PR:** run
+`make gate-baseline` (it refuses to write if a case errors), read the diff, and commit both files.
+The comparison logic is in `compare.py` and is tested in `tests/test_gate_compare.py`.
 
 ### Run against the build before the fixes
 
@@ -74,13 +90,16 @@ Notes:
 - Any other exit code is counted as "other" and printed.
 - A case whose built result differs from `expect_build` in `case.toml` is listed under "notes".
 
-## Known limits (the two false-safe cases)
+## Known limits
 
-These are known and not fixed. They are the only cases that exit 0 on a failing build in the last baseline:
+Listed in `known_limits.toml`, tracked in https://github.com/aayushswami123/aerotrace/issues/93. They are
+false safe on purpose and not fixed. Every run prints them with their current result, even when the gate
+passes. If one stops being false safe, the run says so (an improvement: remove it from the list and record a
+new baseline).
 
-- `a1-paste2`: the name is built by token pasting (`CMD(get)`) inside an inactive `#if` block. Patch mode only.
-- `cases1-ifdef2`: the edit is only inside an inactive `#ifdef` block, so AeroTrace sees no change in the code
-  it compiled. Patch mode and git mode.
+- `a1-paste2` (patch mode): the name is built by token pasting (`CMD(get)`) inside an inactive `#if` block.
+- `cases1-ifdef2` (patch and git mode): the edit is only inside an inactive `#ifdef` block, so AeroTrace
+  sees no change in the code it compiled.
 
 ## Layout
 
@@ -88,7 +107,10 @@ These are known and not fixed. They are the only cases that exit 0 on a failing 
 bench/gate/
   repro.sh              the audit's R1 to R7 script, unchanged (AT=<binary> bash repro.sh)
   run_gate.py           the runner (standard library only)
-  BASELINE.md           the last saved report, with the commit that was measured
+  baseline.json         the saved baseline (counts and the class of every case); the comparison reads it
+  BASELINE.md           the human report, generated from baseline.json, with the commit that was measured
+  known_limits.toml     the known false-safe cases
+  compare.py            the comparison logic (pure functions)
   history/              records kept for reference
   cases/<id>/
     base/               the source files before the change

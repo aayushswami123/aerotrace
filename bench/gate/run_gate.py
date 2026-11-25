@@ -10,7 +10,7 @@ For every case in ``cases/<id>/`` (see README.md) this script:
   5. puts each mode in one bucket (see README.md).
 
 Standard library only. Nothing is written into the repo except the optional ``--markdown`` file.
-Exit code: 1 if any case is false safe, 2 if there is no false safe but a case had an ERROR, else 0.
+Exit code: 1 if anything is worse than baseline.json (see README.md), else 0.
 """
 
 from __future__ import annotations
@@ -28,12 +28,23 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from compare import (
+    MODES,
+    Verdict,
+    class_of,
+    compare,
+    known_block,
+    render_markdown,
+    render_text,
+    summary_lines,
+)
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 CASES = HERE / "cases"
+BASELINE = HERE / "baseline.json"
+KNOWN = HERE / "known_limits.toml"
 
-BUCKETS = ("correct", "honest unknown", "false safe", "weak", "false alarm")
-MODES = ("patch", "git")
 SOURCE_SUFFIXES = (".c", ".cpp", ".S")
 GIT = ["git", "-c", "user.email=gate@example.invalid", "-c", "user.name=gate", "-c", "commit.gpgsign=false"]
 TIMEOUT = 300
@@ -254,115 +265,40 @@ def sites(r: Result) -> str:
     return ", ".join((r.truth.files + r.truth.symbols)[:3])
 
 
-def tally(results: list[Result], mode: str) -> dict[str, int]:
-    t = dict.fromkeys(BUCKETS, 0) | {"false unknown": 0, "other": 0, "cases": 0}
+def to_data(results: list[Result], before: dict[str, Result] | None, measured: str) -> dict:
+    """Turn run results into the plain data that is compared and saved (see compare.py)."""
+    cases: dict[str, dict] = {}
     for r in results:
-        a = r.answers.get(mode)
-        if not a:
-            continue
-        t["cases"] += 1
-        if a.bucket == "false unknown":
-            t["false unknown"] += 1
-            t["false alarm"] += 1
-        else:
-            t[a.bucket] += 1
-    return t
+        e: dict = {"build": truth_text(r), "expect": r.case.expect_build, "sites": sites(r), "error": r.error}
+        old = before.get(r.case.id) if before else None
+        for mode, a in sorted(r.answers.items()):
+            e[mode] = {"rc": a.rc, "class": a.bucket}
+            oa = old.answers.get(mode) if old else None
+            if oa:
+                e[mode]["before"] = f"{oa.rc} {oa.bucket}"
+        cases[r.case.id] = e
+    return {"measured": measured, "cases": cases}
 
 
-def summary_lines(results: list[Result], mode: str) -> list[str]:
-    t = tally(results, mode)
-    lines = [
-        f"{mode} mode ({t['cases']} cases)",
-        f"  correct:        {t['correct']}",
-        f"  honest unknown: {t['honest unknown']}",
-        f"  false safe:     {t['false safe']}",
-        f"  weak:           {t['weak']}",
-        f"  false alarm:    {t['false alarm']} (of which false unknown: {t['false unknown']})",
-    ]
-    if t["other"]:
-        lines.append(f"  other exit code: {t['other']}")
-    return lines
+def load_known() -> tuple[dict[tuple[str, str], str], str]:
+    raw = tomllib.loads(KNOWN.read_text())
+    known = {(x["id"], m): x["why"] for x in raw["limit"] for m in x["modes"]}
+    return known, raw["issue"]
 
 
-def exit0_on_failing(results: list[Result], mode: str) -> int:
-    return sum(
-        1
-        for r in results
-        if r.truth
-        and not r.truth.ok
-        and r.case.expect_build == "fails"
-        and mode in r.answers
-        and r.answers[mode].rc == 0
-    )
+def load_baseline() -> dict | None:
+    return json.loads(BASELINE.read_text()) if BASELINE.exists() else None
 
 
-def cell(r: Result | None, mode: str) -> str:
-    if r is None:
-        return ""
-    if r.error:
-        return "ERROR"
-    a = r.answers.get(mode)
-    return f"{a.rc} {a.bucket}" if a else "-"
-
-
-def report(results: list[Result], before: dict[str, Result] | None, markdown: bool) -> str:
-    out: list[str] = []
-    head = ["id", "build", "patch", "git", "failing site"]
-    if before:
-        head = ["id", "build", "patch before", "patch", "git before", "git", "failing site"]
-    rows = []
-    notes = []
-    for r in results:
-        b = before.get(r.case.id) if before else None
-        build_cell = truth_text(r)
-        if r.truth and r.case.expect_build in ("fails", "passes") and build_cell != r.case.expect_build:
-            build_cell += " (expected " + r.case.expect_build + ")"
-            notes.append(f"{r.case.id}: build result differs from case.toml")
-        if r.error:
-            notes.append(f"{r.case.id}: {r.error}")
-        if before:
-            rows.append(
-                [
-                    r.case.id,
-                    build_cell,
-                    cell(b, "patch"),
-                    cell(r, "patch"),
-                    cell(b, "git"),
-                    cell(r, "git"),
-                    sites(r),
-                ]
-            )
-        else:
-            rows.append([r.case.id, build_cell, cell(r, "patch"), cell(r, "git"), sites(r)])
-    if markdown:
-        out.append("| " + " | ".join(head) + " |")
-        out.append("|" + "---|" * len(head))
-        out += ["| " + " | ".join(row) + " |" for row in rows]
-    else:
-        widths = [max(len(x[i]) for x in [head, *rows]) for i in range(len(head))]
-        for row in [head, *rows]:
-            out.append("  ".join(c.ljust(widths[i]) for i, c in enumerate(row)).rstrip())
-    out.append("")
-    block: list[str] = []
-    for mode in MODES:
-        block += summary_lines(results, mode)
-        block.append(f"  failing-build cases that exit 0: {exit0_on_failing(results, mode)}")
-        if before:
-            bres = list(before.values())
-            block.append(
-                f"  before (older build): failing-build cases that exit 0: {exit0_on_failing(bres, mode)}"
-            )
-            block += ["  before (older build):"] + ["  " + x for x in summary_lines(bres, mode)[1:]]
-        block.append("")
-    fs = [r.case.id for r in results for a in r.answers.values() if a.bucket == "false safe"]
-    block.append("false safe ids: " + (", ".join(sorted(set(fs))) if fs else "none"))
-    if notes:
-        block += ["", "notes:"] + [f"  {n}" for n in notes]
-    if markdown:
-        out += ["", "```text", *block, "```"]
-    else:
-        out += block
-    return "\n".join(out) + "\n"
+def carry_before(data: dict, old: dict | None) -> None:
+    """Keep the 'before' cells of the saved baseline when this run did not measure an older build."""
+    if not old:
+        return
+    for i, e in data["cases"].items():
+        for mode in MODES:
+            prev = old["cases"].get(i, {}).get(mode, {}).get("before")
+            if prev and mode in e and "before" not in e[mode]:
+                e[mode]["before"] = prev
 
 
 def measured_label(args: argparse.Namespace) -> str:
@@ -380,7 +316,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Run the gate cases against an AeroTrace build.")
     ap.add_argument("--at", help="aerotrace command to test (default: uv run aerotrace from this repo)")
     ap.add_argument("--before", help="a second, older build: adds its exit codes as 'before' columns")
-    ap.add_argument("--only", help="run one case id")
+    ap.add_argument("--only", help="run one case id (no comparison with the baseline)")
+    ap.add_argument(
+        "--write-baseline", action="store_true", help="save baseline.json and BASELINE.md (on purpose)"
+    )
     ap.add_argument("--markdown", help="also write the report to this file")
     ap.add_argument("--measured", help="text for the report header: which AeroTrace code was measured")
     ap.add_argument("--jobs", type=int, default=4, help="cases to run at the same time (default 4)")
@@ -395,17 +334,60 @@ def main() -> int:
             old = shlex.split(args.before)
             before = {r.case.id: r for r in pool.map(lambda c: run_case(c, old), cases)}
 
-    print(report(results, before, markdown=False), end="")
+    data = to_data(results, before, measured_label(args))
+    known, issue = load_known()
+    saved = load_baseline()
+    partial = bool(args.only)
+    compare_to = None if partial or args.write_baseline else saved
+    if args.write_baseline:
+        carry_before(data, saved)
+    with_before = bool(before)
+
+    print("\n".join(render_text(data["cases"], with_before)) + "\n")
+    print("\n".join(summary_lines(data, compare_to, with_before)))
+    k_lines, k_better = known_block(data, known, issue)
+    print("\n".join(k_lines) + "\n")
+
+    if args.write_baseline:
+        if any(r.error for r in results):
+            print(
+                "Not writing the baseline: "
+                + "; ".join(f"{r.case.id}: {r.error}" for r in results if r.error)
+            )
+            return 1
+        BASELINE.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n")
+        (HERE / "BASELINE.md").write_text(render_markdown(data))
+        print("Wrote bench/gate/baseline.json and bench/gate/BASELINE.md.")
+        return 0
     if args.markdown:
-        header = (
-            "# Gate baseline\n\n"
-            f"AeroTrace code measured: `{measured_label(args)}`. Cases: {len(results)}. "
-            "How to read this: see `README.md`.\n\n"
-        )
-        Path(args.markdown).write_text(header + report(results, before, markdown=True))
-    if any(a.bucket == "false safe" for r in results for a in r.answers.values()):
+        Path(args.markdown).write_text(render_markdown(data))
+    if saved is None and not partial:
+        print("GATE FAILED: no baseline.json. Run `make gate-baseline` on purpose.")
         return 1
-    return 2 if any(r.error for r in results) else 0
+    if partial:
+        v = Verdict()
+        for i, e in data["cases"].items():
+            for mode in MODES:
+                if class_of(data["cases"], i, mode) == "false safe" and (i, mode) not in known:
+                    v.failures.append(f"{i} ({mode} mode): false safe, and not in the known limits")
+            if e["error"]:
+                v.failures.append(f"{i}: ERROR: {e['error']}")
+        print("(one case: not compared with the baseline)")
+    else:
+        v = compare(saved, data, known)
+    v.better += k_better
+    if v.changes:
+        print("Cases that changed class (from -> to):")
+        print("\n".join(f"  {c}" for c in v.changes) + "\n")
+    if v.failures:
+        print("GATE FAILED:")
+        print("\n".join(f"  {f}" for f in v.failures))
+        return 1
+    if v.better:
+        print("Better than the baseline: run `make gate-baseline` to record it.")
+        print("\n".join(f"  {b}" for b in v.better))
+    print("GATE PASSED: nothing is worse than the baseline.")
+    return 0
 
 
 if __name__ == "__main__":
