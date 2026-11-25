@@ -139,6 +139,18 @@ class Outliner:
             return None
         return self._parse(rel, content)
 
+    def before_after(self, rel: str, mode: str) -> tuple[Outline | None, Outline | None]:
+        """A file the change does not touch, parsed with the other files as they were before and after the
+        change (git mode: the base versions of the changed files, then the files on disk; patch mode: the
+        files on disk, then the patched ones). New errors in the second one are caused by the change."""
+        try:
+            content = (self.root / rel).read_bytes().decode("utf-8", "surrogateescape")
+        except OSError:
+            return None, None
+        if mode == "git":
+            return self._parse(rel, content, overlay=self.base_overlay), self._parse(rel, content)
+        return self._parse(rel, content), self._parse(rel, content, overlay=self.new_overlay)
+
     def text(self, rel: str, content: str, flags_from: str | None = None) -> Outline | None:
         """`rel` with this content (a patched version in memory). `flags_from`: parse it with another
         file's compile flags (the old path of a renamed file)."""

@@ -38,6 +38,14 @@ BREAKS_ID = "{}#breaks"  # id of the break of a changed node that does not build
 STATUSES = ("changed", "new", "removed", "breaks", "affected", "unknown", "no_effect")
 USED_RESULT = {"stored", "compared", "checked", "passed", "returned", "used", "called"}
 CXX_EXTS = {".cc", ".cpp", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".h++", ".ipp", ".tcc"}
+# Errors only in newer compilers (clang 16+, GCC 14+); older ones warn and build. A break, but probable.
+COMPILER_DEPENDENT = (
+    "incompatible integer to pointer conversion",
+    "incompatible pointer to integer conversion",
+    "incompatible function pointer types",
+)
+NEWER_COMPILERS = "an error in clang 16+ and GCC 14+; older compilers only warn"
+USER_FILES_COMPILED = 8  # files of users of a retyped field or global compiled to find what breaks
 IFDEF_NOTE = "Uses in code that is not compiled with these flags (other #if branches) are not checked."
 LINK_LEVEL = {
     "exact": EXACT,
@@ -228,6 +236,8 @@ class _Run:
             dict(conn.execute("SELECT key, value FROM meta").fetchall())
         )
         self.sig_seen: set[str] = set()
+        # users of a field or global whose type really changed, by file, until their files are compiled
+        self.retyped_users: dict[str, list[tuple]] = {}
         self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
@@ -361,6 +371,29 @@ class _Run:
                 self.fn_node(a.in_function, "breaks", EXACT, "calls_removed",
                              f"names {fn.name} as a value ({a.how}), and this patch removes it", 1, key,
                              fn.qualified_name, [a.line])  # fmt: skip
+            elif a.in_variable is not None:
+                # a table that names it (a command table, a filter's callbacks): it no longer builds (static) or
+                # no longer links (benchmark redis-05, curl-05)
+                table = data.global_named(self.conn, a.in_variable, a.file)
+                if table is None:
+                    self.blind(f"{a.file}:{a.line}: {a.in_variable} names {fn.name}, which this patch removes; "
+                               "it is not in the index, so it is not listed", key)  # fmt: skip
+                    continue
+                level, why = self._removed_link(fn)
+                self._var_node(table, "breaks", level, f"its initializer names {fn.name} ({a.file}:{a.line}); "
+                               f"{why}", key, fn.qualified_name, [a.line])  # fmt: skip
+
+    def _removed_link(self, fn: Fn) -> tuple[str, str]:
+        """How sure it is that a reference to the removed `fn` no longer builds or links, and why."""
+        if fn.linkage == "internal":
+            return EXACT, "it is static, so that does not compile"
+        others = self.conn.execute(
+            "SELECT COUNT(*) FROM functions WHERE qualified_name = ? AND id != ? AND linkage = 'external'",
+            (fn.qualified_name, fn.id),
+        ).fetchone()[0]
+        if others == 0:
+            return EXACT, "nothing else in the repo defines it, so the program does not link"
+        return PROBABLE, f"{others} other definition(s) with that name exist; it may not link"
 
     # -- signatures
 
@@ -668,6 +701,11 @@ class _Run:
                     if c.same_underlying:
                         level = PROBABLE
                         why += ", the same underlying type on this build; behaviour should not change"
+                    elif u.fn.file not in self.compiled:
+                        # a real type change: whether this use still builds is known only by compiling it
+                        # with the change (benchmark redis-07, curl-07: int to pointer)
+                        self.retyped_users.setdefault(u.fn.file, []).append((u, level, why, nid, name, edge))
+                        continue
                     self.fn_node(u.fn, "affected", level, "uses_changed", why, 1, nid, name, lines, edge)
                 elif c.kind == "text":
                     self.fn_node(u.fn, "unknown", UNKNOWN, "uses_changed", f"uses {name}: {c.words}; AeroTrace "
@@ -739,11 +777,50 @@ class _Run:
             fid = self.lookup._fn_in_file(f, file) if f is not None else None
             fn = symbols.get(self.conn, fid) if fid else None
             text = f"{file}:{d['line']} does not compile after this change: {d['text']}"
+            sure = EXACT
+            if d["text"].startswith(COMPILER_DEPENDENT):
+                sure, text = PROBABLE, f"{text} ({NEWER_COMPILERS})"
+            why = text.split(" ", 1)[1]
             if fn is not None:
-                self.fn_node(fn, "breaks", EXACT, "exact", f"does not compile after this change: {d['text']}", 1,
-                             None, None, [d["line"]])  # fmt: skip
-            else:
+                self.fn_node(fn, "breaks", sure, "exact", why, 1, None, None, [d["line"]])
+                continue
+            # outside every function: the initializer of a global (a filter or command table, curl-05)
+            holders = [
+                g
+                for v in new.variables
+                if v["kind"] == "global" and v["line"] <= d["line"] <= v.get("line_end", v["line"])
+                and (g := data.global_named(self.conn, v["qualified_name"], file)) is not None
+            ]  # fmt: skip
+            if len(holders) != 1:  # none, or several on that line: say so
                 self.blind(text, fid if fid in self.res.nodes else None)
+            for g in holders:
+                level = sure if len(holders) == 1 else PROBABLE
+                self._var_node(g, "breaks", level, f"its initializer {why}", None, None, [d["line"]])
+
+    def compile_users(self, outliner: Outliner) -> None:
+        """Compile the files of users of a retyped field or global, before and after the change: a use
+        with a new error breaks, the other uses are affected. A file not compiled (too many, or libclang
+        could not load it) leaves its uses unknown, never affected: AeroTrace can't say they still build."""
+        files = sorted(self.retyped_users, key=lambda f: (-len(self.retyped_users[f]), f))
+        for i, f in enumerate(files):
+            o, n = outliner.before_after(f, self.mode) if i < USER_FILES_COMPILED else (None, None)
+            if o is not None and n is not None:
+                self.errors(f, o, n)
+            for u, level, why, nid, name, edge in self.retyped_users[f]:
+                lines = u.reads + u.writes
+                if o is None or n is None:
+                    left = (
+                        "not compiled (too many files)" if i >= USER_FILES_COMPILED else "could not be parsed"
+                    )
+                    self.fn_node(u.fn, "unknown", UNKNOWN, "uses_changed", f"{why}; {f} was {left} with the "
+                                 "change, so whether this use still builds is not known", 1, nid, name, lines,
+                                 edge)  # fmt: skip
+                else:
+                    self.fn_node(u.fn, "affected", level, "uses_changed", f"{why}; it still compiles", 1, nid,
+                                 name, lines, edge)  # fmt: skip
+        if len(files) > USER_FILES_COMPILED:
+            self.blind(f"Uses in {len(files) - USER_FILES_COMPILED} more files of a retyped field or global "
+                       "were not compiled with the change; they are listed as unknown.")  # fmt: skip
 
     # -- callers found by the diff walk
 
@@ -856,6 +933,7 @@ def run(
         r.signatures(index_path or shown, o, n)
         r.declarations(shown, index_path, o, n)
         r.errors(index_path or shown, o, n)
+    r.compile_users(outliner)
     r.walk_hits()
     for b in d.blind_spots:
         r.blind(b)
