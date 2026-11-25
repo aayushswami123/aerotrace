@@ -413,3 +413,49 @@ def test_list_outside_names_the_files(repo_with_outside_file):
     text = ui.render_text(c, all_hint="--all lists them")
     assert "Files outside this build (1)\n  legacy/old.c" in text
     assert "(--all lists them)" not in text  # already listed
+
+
+# ---------------------------------------------------------------- removed field used at file scope (#57)
+
+
+@pytest.fixture
+def init_repo(repo_factory):
+    root = repo_factory("c_removed_init")
+    git(root, "init", "-q", "-b", "main")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(root, jobs=1)
+    return root
+
+
+REMOVE_HZ = {"include/conn.h": [("    int a;\n    int hz;\n", "    int a;\n")]}
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_removed_field_breaks_the_initializers_that_use_it(init_repo, mode):
+    _, c = (run_patch if mode == "patch" else run_git)(init_repo, REMOVE_HZ)
+    got = nodes(c)
+    # proof in the index: table stores &g.hz on line 16, defaults sets .hz on line 20
+    assert got["table"] == ("breaks", "exact"), got
+    assert got["defaults"] == ("breaks", "exact"), got
+    assert check.exit_code(c) == 1
+    by = {n["name"]: n for n in c["nodes"]}
+    if mode == "git":
+        assert "its initializer at src/tables.c:16 does not compile now:" in by["table"]["why"]
+        assert all("does not compile now: does not compile now" not in n["why"] for n in c["nodes"])
+
+
+def test_file_scope_error_with_no_proof_is_probable_or_a_blind_spot(init_repo):
+    _, c = run_git(init_repo, REMOVE_HZ)
+    by = {n["name"]: n for n in c["nodes"]}
+    # line 25, a static assert: no initializer row there, so only the nearest global above it (counter),
+    # probable, and the reason says so. The line does not compile either way, so it is still a break.
+    assert (by["counter"]["status"], by["counter"]["certainty"]) == ("breaks", "probable")
+    assert (
+        "probably its initializer (the nearest global above that line) at src/tables.c:25"
+        in by["counter"]["why"]
+    )
+    # blind spot: line 4 comes before every global, so there is no global to name; it stays a blind spot,
+    # counted as a part of the change that could not be followed
+    assert any(t.startswith("src/tables.c:4 does not compile now:") for t in blind(c)), blind(c)
+    assert c["summary"]["not_followed"] >= 1

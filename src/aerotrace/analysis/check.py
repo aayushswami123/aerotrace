@@ -621,11 +621,20 @@ class _Run:
                         continue
                     du = data.data_users_of(self.conn, gv, depth=0)
                     for b in du.broken:
+                        reason = data.compile_reason(b.reason)
                         if b.fn is not None:
-                            self.fn_node(b.fn, "breaks", b.certainty, "uses_changed",
-                                         f"does not compile now: {b.reason}", 1, nid, name, [b.line])  # fmt: skip
-                        else:
-                            self.blind(f"{b.file}:{b.line} does not compile now: {b.reason}", nid)
+                            self.fn_node(b.fn, "breaks", b.certainty, "uses_changed", reason, 1, nid, name,
+                                         [b.line])  # fmt: skip
+                            continue
+                        # outside every function: a global's initializer that still uses it (#57)
+                        hit = data.global_at(self.conn, b.file, b.line)
+                        if hit is None:
+                            self.blind(f"{b.file}:{b.line} {reason}", nid)
+                            continue
+                        gvar, level, where = hit
+                        level = EXACT if level == EXACT and b.certainty == EXACT else PROBABLE
+                        self._var_node(gvar, "breaks", level, f"{where} at {b.file}:{b.line} {reason}", nid, name,
+                                       [b.line])  # fmt: skip
                 if v["kind"] != "field":
                     self.blind(
                         f"{name} was removed. A file that still declares it (an extern left in a header) "

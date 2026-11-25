@@ -398,6 +398,37 @@ def _innermost(conn: sqlite3.Connection, file: str, line: int) -> Fn | None:
     return symbols.get(conn, r[0]) if r else None
 
 
+def global_at(conn: sqlite3.Connection, file: str, line: int) -> tuple[Var, str, str] | None:
+    """The global whose initializer holds `file:line`, for a compile error outside every function (#57):
+    (global, certainty, why). Exact when the index has proof: a row of that global's initializer on that
+    line (a field it sets, an address it stores) or its definition starts there. Otherwise the nearest
+    global defined above the line, probable. None when the file has no global above the line."""
+    proof = conn.execute(
+        """SELECT * FROM variables v WHERE v.kind = 'global' AND v.file = ? AND v.line <= ? AND (
+               v.line = ?
+               OR v.id IN (SELECT variable_id FROM initializers WHERE file = ? AND line = ?)
+               OR v.id IN (SELECT function_id FROM escapes WHERE line = ?))
+           ORDER BY v.line DESC, v.id LIMIT 1""",
+        (file, line, line, file, line, line),
+    ).fetchone()
+    if proof is not None:
+        return _row(proof), certainty.EXACT, "its initializer"
+    near = conn.execute(
+        """SELECT * FROM variables WHERE kind = 'global' AND file = ? AND line <= ?
+           ORDER BY line DESC, id LIMIT 1""",
+        (file, line),
+    ).fetchone()
+    if near is None:
+        return None
+    return _row(near), certainty.PROBABLE, "probably its initializer (the nearest global above that line)"
+
+
+def compile_reason(reason: str) -> str:
+    """'does not compile now: ...' once, whether or not `reason` already says it."""
+    prefix = "does not compile now: "
+    return reason if reason.startswith(prefix) else prefix + reason
+
+
 def _container_names(var: Var) -> set[str]:
     """Names a compile error may use for the field's struct: its qualified container, and the short one."""
     if not var.container:

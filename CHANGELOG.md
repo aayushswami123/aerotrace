@@ -62,6 +62,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `check` without `--patch` (the index already has the change): a removed field or global still used in a
+  file-scope initializer (`{"hz", &server.hz}` in a table, `{.hz = 7}`) is now a break of that global,
+  exact when the index shows the initializer on that line, probable otherwise. Before, it was only a
+  blind-spot line (with "does not compile now" twice) and the headline said "unknown" (#57). An error
+  before every global stays a blind spot.
 - C++ templates: a call whose target depends on the template type (`t.run(5)`, `T::f()`, `f(t)`) can't be
   linked, because libclang does not show the instantiations. `callers`, `impact`, `signature`, `diff` and
   `check` for a function with that name now say "UNKNOWN (#33)" and list the template calls, instead of
