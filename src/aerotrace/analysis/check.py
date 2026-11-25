@@ -376,6 +376,8 @@ class _Run:
         if got is None or "refs" not in got[0]:
             return False
         entry, diagnostics = got
+        if entry.get("conditional", True):
+            return False  # an #if branch that is off in this build can hold a use that the parse can't see
         if any(entry["line_start"] <= d["line"] <= entry["line_end"] for d in diagnostics):
             return False
         return usr not in entry["refs"] and simple not in entry["unresolved"]
