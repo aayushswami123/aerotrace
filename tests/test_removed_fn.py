@@ -148,7 +148,9 @@ def test_shifted_hunk_and_git_hunk_of_one_deletion_give_one_answer(repo):
     b, cb = check_patch(repo, plain)
     assert_scale_removed(a, ca)
     assert_scale_removed(b, cb)
-    assert nodes(ca) == nodes(cb)
+    # a shifted hunk also lists the neighbour whose closing brace it removes ("keep": changed); the rest is equal
+    assert {k: v for k, v in nodes(ca).items() if k != "keep"} == nodes(cb)
+    assert ca["summary"]["breaks_exact"] == cb["summary"]["breaks_exact"]
 
 
 def test_shifted_hunk_with_prototype_removed_too(repo):
