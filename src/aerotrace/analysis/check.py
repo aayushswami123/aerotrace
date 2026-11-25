@@ -19,6 +19,7 @@ the files on disk (the index) and the patched text, parsed in memory. Nothing is
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from collections import Counter
 from dataclasses import dataclass, field
@@ -48,6 +49,9 @@ COMPILER_DEPENDENT = (
     "call to undeclared function",
 )
 NEWER_COMPILERS = "an error in newer compilers (clang 16+, GCC 14+); older ones, or clang for some, only warn"
+# a definition that may legally appear twice, or that is meant to be replaced: not a duplicate
+NOT_A_CLASH = re.compile(r"\b(inline|__inline|__inline__|weak|__weak|selectany|template)\b")
+HEADER_EXTS = {".h", ".hh", ".hpp", ".hxx", ".h++", ".ipp", ".tcc"}
 USER_FILES_COMPILED = 8  # files of users of a retyped field or global compiled to find what breaks
 IFDEF_NOTE = "Uses in code that is not compiled with these flags (other #if branches) are not checked."
 LINK_LEVEL = {
@@ -225,6 +229,13 @@ def _var_key(v: dict) -> tuple:
 # ---------------------------------------------------------------- the analysis
 
 
+def _head(text: str, start: int, end: int | None) -> str:
+    """The lines that start a definition (its attributes and head), up to the first `{`."""
+    lines = text.splitlines()
+    chunk = "\n".join(lines[max(start - 1, 0) : (end if end else start + 8)])
+    return chunk.split("{", 1)[0]
+
+
 class _Run:
     def __init__(self, conn: sqlite3.Connection, root: Path, res: CheckResult, mode: str):
         self.conn = conn
@@ -243,6 +254,9 @@ class _Run:
         self.retyped_users: dict[str, list[tuple]] = {}
         self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
+        self.patched: dict[str, Outline] = {}  # patch mode: index path -> outline of the patched file
+        self.bodies: dict[str, str] = {}  # patch mode: id of a function in a patched file -> its patched text
+        self.new_text: dict[str, str] = {}  # patch mode: the patched text of each patched file
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
         self.decl_handled: set[str] = (
             set()
@@ -324,6 +338,32 @@ class _Run:
         from the old index."""
         return self.mode == "patch" and fn.id in self.edited and fn.file in self.compiled
 
+    def fixed_site(self, fn: Fn, name: str) -> bool:
+        """Patch mode: a use of `name` in `fn` that the patch itself removes. True only when the patch edits
+        `fn`, its patched version was parsed, and `name` no longer appears anywhere in the patched function.
+        A use that is left (even in a function the patch edits elsewhere) is not fixed."""
+        if self.mode != "patch" or fn.id not in self.edited or fn.file not in self.compiled:
+            return False
+        body = self.bodies.get(fn.id)
+        if body is None:
+            return False
+        return re.search(rf"\b{re.escape(name.rsplit('::', 1)[-1])}\b", body) is None
+
+    def prepare(self, pairs: list, outliner: Outliner) -> None:
+        """Patch mode: remember the patched outlines and the patched text of each function."""
+        for shown, index_path, o, n in pairs:
+            if self.mode != "patch" or not index_path or o is None or n is None:
+                continue
+            self.patched[index_path] = n
+            text = outliner.new_overlay.get(shown)
+            if text is None:
+                continue
+            lines = text.splitlines()
+            for f in n.functions:
+                fid = self.lookup._fn_in_file(f, index_path)
+                if fid:
+                    self.bodies[fid] = "\n".join(lines[f["line_start"] - 1 : f["line_end"]])
+
     def blind(self, text: str, node: str | None = None) -> None:
         if text == self.outside_note:
             return
@@ -370,8 +410,8 @@ class _Run:
                 self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
                              f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
                 continue
-            if self.defer(s.caller):
-                continue  # its patched code was compiled: a call that is left shows up as a new error
+            if self.fixed_site(s.caller, fn.name):
+                continue  # the patch edits this function and its patched text no longer names it
             if s.caller.id in self.edited:
                 level, why = PROBABLE, why + " (the patch also edits this function; check it still calls it)"
             self.fn_node(s.caller, "breaks", level, "calls_removed", why, 1, key, fn.qualified_name, [s.line])
@@ -380,6 +420,8 @@ class _Run:
                          "which this patch removes", 1, key, fn.qualified_name, [p.line])  # fmt: skip
         for a in si.address_sites:
             if a.in_function is not None:
+                if self.fixed_site(a.in_function, fn.name):
+                    continue
                 self.fn_node(a.in_function, "breaks", EXACT, "calls_removed",
                              f"names {fn.name} as a value ({a.how}), and this patch removes it", 1, key,
                              fn.qualified_name, [a.line])  # fmt: skip
@@ -671,6 +713,8 @@ class _Run:
                         self._var_node(e.in_variable, "breaks", EXACT, f"its initializer takes the address of "
                                        f"{name}, which this change removes", nid, name, [e.line])  # fmt: skip
                         continue
+                    if self.fixed_site(e.fn, v["name"]):
+                        continue  # the patch edits this function and its patched text no longer names it
                     self.fn_node(e.fn, "breaks", EXACT, "uses_changed", f"takes the address of {name}, which "
                                  "this change removes", 1, nid, name, [e.line], "reads")  # fmt: skip
                 for i in du.initializers:
@@ -798,6 +842,71 @@ class _Run:
             self.res.nodes[g.id].via = None
             self.res.nodes[g.id].via_name = record
         self.blind(text)
+
+    # -- duplicate definitions
+
+    def duplicates(self, shown: str, index_file: str, o: Outline, n: Outline) -> None:
+        """A function this file now defines that another file of the program already defines (same link
+        name): the linker stops on the second one. Static, inline, weak, template and unnamed-namespace
+        definitions, and overloads (the USR holds the parameter types), are not the same symbol."""
+        before = {f["usr"] for f in o.functions}
+        source = self._source(shown)
+        for f in n.functions:
+            if f["usr"] in before or f.get("static") or "@aN" in f["usr"]:
+                continue
+            if Path(shown).suffix.lower() in HEADER_EXTS and ("@S@" in f["usr"] or "@C@" in f["usr"]):
+                continue  # a method defined in its class: implicitly inline
+            if NOT_A_CLASH.search(_head(source, f["line_start"] - 1, f.get("head_end"))):
+                continue
+            rows = []
+            for r in self.conn.execute(
+                "SELECT id, qualified_name, file, line_start FROM functions WHERE usr = ? AND linkage = "
+                "'external' AND file != ? ORDER BY file, line_start",
+                (f["usr"], index_file),
+            ):
+                out = self.patched.get(r["file"])
+                if (
+                    self.mode == "patch"
+                    and out is not None
+                    and not any(g["usr"] == f["usr"] for g in out.functions)
+                ):
+                    continue  # the patch moves or removes it
+                text = self._source(r["file"])
+                if NOT_A_CLASH.search(_head(text, r["line_start"] - 1, None)):
+                    continue
+                rows.append(r)
+            if not rows:
+                continue
+            fid = self.lookup._fn_in_file(f, index_file) if self.mode == "git" else None
+            via = fid or f"new:{shown}:{f['line_start']}:{f['qualified_name']}"
+            if via not in self.res.nodes:
+                via = None
+            sure = len(rows) == 1 and f["qualified_name"] != "main"
+            for r in rows:
+                if sure:
+                    why = (
+                        f"{f['qualified_name']} is defined here ({r['file']}:{r['line_start']}) and again in "
+                        f"{shown}:{f['line_start']}; the program will not link (duplicate symbol)"
+                    )
+                else:
+                    why = (
+                        f"{f['qualified_name']} is defined here ({r['file']}:{r['line_start']}) and again in "
+                        f"{shown}:{f['line_start']}; if both go into one program it will not link (duplicate "
+                        f"symbol). {len(rows)} other definition(s) exist, so they may be separate programs"
+                    )
+                self.add(Node(r["id"], f["qualified_name"], "function", r["file"], r["line_start"], "breaks",
+                              EXACT if sure else PROBABLE, "exact" if sure else "ambiguous", why, 1, via,
+                              f["qualified_name"], [r["line_start"]]))  # fmt: skip
+
+    def _source(self, path: str) -> str:
+        """The text of `path` as this change leaves it."""
+        return self.new_text.get(path) or self.disk(path)
+
+    def disk(self, path: str) -> str:
+        try:
+            return (self.root / path).read_text(errors="surrogateescape")
+        except OSError:
+            return ""
 
     # -- new compile errors
 
@@ -959,7 +1068,6 @@ def run(
     )
     res = CheckResult(d)
     r = _Run(conn, root, res, mode)
-    r.change_nodes()
     pairs = _file_pairs(root, diffs, d, mode, outliner, old)
     for _, _, _, n in pairs:
         for f in (n.functions + n.declarations) if n is not None else []:
@@ -968,6 +1076,9 @@ def run(
         r.no_proto.update(n.noproto if n is not None else [])
     if mode == "patch":
         r.compiled = {ip for _, ip, o, n in pairs if ip and o is not None and n is not None}
+        r.new_text = dict(outliner.new_overlay)
+        r.prepare(pairs, outliner)
+    r.change_nodes()  # after `compiled` and the patched texts are known
     for shown, index_path, o, n in pairs:
         if o is None or n is None:
             side = "old" if o is None else "new"
@@ -976,6 +1087,7 @@ def run(
                 "are not checked."
             )
             continue
+        r.duplicates(shown, index_path or shown, o, n)
         if index_path is None and mode == "patch":
             continue
         r.signatures(index_path or shown, o, n)
