@@ -22,6 +22,8 @@ it falls back to the libclang bundled with the `libclang` Python package. Set `A
 - One branch per change, cut from `main` (or from the branch it builds on, see "Stacked PRs"):
   `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `docs/<topic>`, `test/<topic>`, `refactor/<topic>`.
 - Keep branches short-lived. Rebase on `main` if it has moved.
+- Before working on a branch or file area, check `docs/COORDINATION.md`. Add your branch when you start it;
+  remove it when it's merged.
 
 ## Commits
 
