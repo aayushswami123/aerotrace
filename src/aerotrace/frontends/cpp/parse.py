@@ -1592,6 +1592,7 @@ INLINE_WORDS = {"inline", "__inline", "__inline__", "constexpr", "consteval"}
 WEAK_WORDS = {"weak", "__weak__", "selectany"}
 
 
+_CONDITIONAL = re.compile(r"^[ \t]*#[ \t]*(if|ifdef|ifndef|elif|else)\b", re.M)
 _COMMENTS = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
 
 
@@ -1792,6 +1793,11 @@ def _outline_here(
                     and any(entry["line_start"] <= n <= entry["line_end"] for n in ref_lines)
                 ):
                     entry["refs"], entry["unresolved"] = _body_refs(c)
+                    # an inactive branch is not in the tree: what it refers to can't be seen
+                    text = data[c.extent.start.offset : c.extent.end.offset].decode(
+                        "utf-8", "surrogateescape"
+                    )
+                    entry["conditional"] = _CONDITIONAL.search(text) is not None
                 out["functions" if c.is_definition() else "declarations"].append(entry)
             elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):
                 if c.spelling:
