@@ -17,7 +17,7 @@ def main() -> None:
         "|---|---|---|---|---|---|---|",
     ]
     for c in d["cases"]:
-        counts = ", ".join(f"{k} {v}" for k, v in c.get("counts", {}).items())
+        counts = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in c.get("counts", {}).items() if v)
         where = f"`{c['file']}:{c['line']}`" if "line" in c else f"`{c.get('file', '')}`"
         why = d["kinds"][c["kind"]]["why"]
         extra = f" Type `{c['type']}`." if c["kind"] == "field_type" else ""
@@ -31,8 +31,8 @@ def main() -> None:
     for repo, pools in d["pools"].items():
         n = sum(1 for s in d["skipped"] if s["repo"] == repo)
         out.append(
-            f"- {repo}: {pools['add_param']} function definitions, {pools['field_rename']} fields, "
-            f"{pools['global_rename']} file-scope variables, {pools['macro_arity']} function-like macros. "
+            f"- {repo}: {pools['defs']} function definitions, {pools['fields']} fields, "
+            f"{pools['globals']} compiled file-scope variables, {pools['macros']} function-like macros. "
             f"{n} candidates skipped (all in `cases.json`, with reasons)."
         )
     sys.stdout.write("\n".join(out) + "\n")
