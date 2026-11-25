@@ -228,6 +228,7 @@ class _Run:
             dict(conn.execute("SELECT key, value FROM meta").fetchall())
         )
         self.sig_seen: set[str] = set()
+        self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
         self.decl_handled: set[str] = (
@@ -621,11 +622,24 @@ class _Run:
                         continue
                     du = data.data_users_of(self.conn, gv, depth=0)
                     for b in du.broken:
+                        key = (name, b.file, b.line)
+                        if key in self.seen_broken:  # one name removed twice (extern + definition)
+                            continue
+                        self.seen_broken.add(key)
+                        reason = data.compile_reason(b.reason)
                         if b.fn is not None:
-                            self.fn_node(b.fn, "breaks", b.certainty, "uses_changed",
-                                         f"does not compile now: {b.reason}", 1, nid, name, [b.line])  # fmt: skip
-                        else:
-                            self.blind(f"{b.file}:{b.line} does not compile now: {b.reason}", nid)
+                            self.fn_node(b.fn, "breaks", b.certainty, "uses_changed", reason, 1, nid, name,
+                                         [b.line])  # fmt: skip
+                            continue
+                        # outside every function: a global's initializer that still uses it (#57)
+                        hits = data.globals_at(self.conn, b.file, b.line)
+                        sure = len(hits) == 1 and hits[0][1] == EXACT and b.certainty == EXACT
+                        if not sure:  # nothing proves which global it is (or it may be no global at all)
+                            self.blind(f"{b.file}:{b.line} {reason}", nid)
+                        for gvar, level, where in hits:
+                            level = EXACT if sure else PROBABLE
+                            self._var_node(gvar, "breaks", level, f"{where} at {b.file}:{b.line} {reason}", nid,
+                                           name, [b.line])  # fmt: skip
                 if v["kind"] != "field":
                     self.blind(
                         f"{name} was removed. A file that still declares it (an extern left in a header) "

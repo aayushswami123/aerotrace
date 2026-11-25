@@ -62,6 +62,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `check` without `--patch` (the index already has the change): a removed field or global still used in a
+  file-scope initializer (`{"hz", &server.hz}` in a table, `{.hz = 7}`) is now a break of that global.
+  It is exact only when that global is the only one on the line and the index shows its initializer
+  there; otherwise the globals that may hold it are probable breaks and the line also stays a blind spot.
+  Before, it was only a blind-spot line (with "does not compile now" twice) and the headline said
+  "unknown" (#57).
 - Two parses inside one process at the same time (for example two `diff_impact` or `tests_for_change`
   calls to the MCP server) could each run in the other's build folder, so relative `-I` paths and
   includes could resolve in the wrong place and an outline could be wrong or a header reported missing.

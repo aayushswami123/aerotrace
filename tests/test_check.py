@@ -413,3 +413,90 @@ def test_list_outside_names_the_files(repo_with_outside_file):
     text = ui.render_text(c, all_hint="--all lists them")
     assert "Files outside this build (1)\n  legacy/old.c" in text
     assert "(--all lists them)" not in text  # already listed
+
+
+# ---------------------------------------------------------------- removed field used at file scope (#57)
+
+
+@pytest.fixture
+def init_repo(repo_factory):
+    root = repo_factory("c_removed_init")
+    git(root, "init", "-q", "-b", "main")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(root, jobs=1)
+    return root
+
+
+REMOVE_HZ = {"include/conn.h": [("    int a;\n    int hz;\n", "    int a;\n")]}
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_removed_field_breaks_the_initializers_that_use_it(init_repo, mode):
+    _, c = (run_patch if mode == "patch" else run_git)(init_repo, REMOVE_HZ)
+    got = nodes(c)
+    # proof in the index: table stores &g.hz on line 16, defaults sets .hz on line 20
+    assert got["table"] == ("breaks", "exact"), got
+    assert got["defaults"] == ("breaks", "exact"), got
+    assert check.exit_code(c) == 1
+    by = {n["name"]: n for n in c["nodes"]}
+    if mode == "git":
+        assert "its initializer at src/tables.c:16 does not compile now:" in by["table"]["why"]
+        assert all("does not compile now: does not compile now" not in n["why"] for n in c["nodes"])
+
+
+def test_file_scope_error_with_no_proof_is_probable_and_stays_a_blind_spot(init_repo):
+    _, c = run_git(init_repo, REMOVE_HZ)
+    by = {n["name"]: n for n in c["nodes"]}
+    spots = [t for t in blind(c) if "does not compile now" in t]
+    # line 26, a static assert: no initializer row there, so only the nearest global above it (counter),
+    # probable. The line does not compile either way, so it is a break, and it stays a blind spot too.
+    assert (by["counter"]["status"], by["counter"]["certainty"]) == ("breaks", "probable")
+    assert (
+        "probably its initializer (the nearest global above that line) at src/tables.c:26"
+        in by["counter"]["why"]
+    )
+    assert any(t.startswith("src/tables.c:26 ") for t in spots), spots
+    # line 29, two globals on one line: the index can't tell which one, so both are probable, never exact
+    for name in ("x", "y"):
+        assert (by[name]["status"], by[name]["certainty"]) == ("breaks", "probable"), by[name]
+        assert "one of 2 globals on that line" in by[name]["why"]
+    assert any(t.startswith("src/tables.c:29 ") for t in spots), spots
+    # line 4 comes before every global, so there is no global to name: a blind spot only
+    assert any(t.startswith("src/tables.c:4 ") for t in spots), spots
+    # the proven lines (16, 20) are not blind spots; the three unproven ones are, each once
+    assert sorted(t.split(" ", 1)[0] for t in spots) == [
+        "src/tables.c:26",
+        "src/tables.c:29",
+        "src/tables.c:4",
+    ]
+    assert by["table"]["certainty"] == by["defaults"]["certainty"] == "exact"
+
+
+def test_removed_global_used_at_file_scope_is_listed_once(init_repo):
+    _, c = run_git(
+        init_repo,
+        {
+            "include/conn.h": [("extern int rate;\n", "")],
+            "src/tables.c": [("int rate = 5;\n", "")],
+        },
+    )
+    by = {n["name"]: n for n in c["nodes"]}
+    assert (by["pr"]["status"], by["pr"]["certainty"]) == ("breaks", "exact"), by["pr"]
+    # gone_fields finds rate twice (the extern and the definition); the reason is given once
+    assert by["pr"]["why"].count("does not compile now") == 1, by["pr"]["why"]
+    assert all(n["why"].count("does not compile now") <= 1 for n in c["nodes"])
+
+
+def test_two_removed_names_on_one_line_both_link_to_it(init_repo):
+    # line 37: int t = sizeof(g.hz) + rate; removing both breaks t through each of them
+    _, c = run_git(
+        init_repo,
+        {
+            "include/conn.h": [("    int a;\n    int hz;\n", "    int a;\n"), ("extern int rate;\n", "")],
+            "src/tables.c": [("int rate = 5;\n", "")],
+        },
+    )
+    [t] = [n for n in c["nodes"] if n["name"] == "t" and n["status"] == "breaks"]
+    assert t["certainty"] == "exact"
+    assert "(and 1 other link)" in t["why"], t["why"]  # the second removed name is not dropped
