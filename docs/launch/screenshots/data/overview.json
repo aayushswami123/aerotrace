@@ -1,0 +1,113 @@
+{
+ "overview": {
+  "blind_spots": [
+   {
+    "count": 2691,
+    "kind": "escape",
+    "label": "Data whose address escapes"
+   },
+   {
+    "count": 871,
+    "kind": "pointer_call",
+    "label": "Calls through a function pointer"
+   },
+   {
+    "count": 567,
+    "kind": "unresolved_call",
+    "label": "Calls AeroTrace couldn't resolve"
+   }
+  ],
+  "blind_spots_total": 4129,
+  "changed_examples": [],
+  "changed_since_index": 0,
+  "coverage": {
+   "build_files": 117,
+   "checked": 117,
+   "outside_build": 1696,
+   "outside_examples": [
+    "deps/fpconv/fpconv_dtoa.c",
+    "deps/hdr_histogram/hdr_histogram.c",
+    "deps/hiredis/alloc.c",
+    "deps/hiredis/async.c",
+    "deps/hiredis/dict.c",
+    "deps/hiredis/examples/example-ae.c",
+    "deps/hiredis/examples/example-glib.c",
+    "deps/hiredis/examples/example-ivykis.c"
+   ],
+   "with_errors": 0
+  },
+  "index": {
+   "calls": 30019,
+   "data_uses": 48717,
+   "files": 216,
+   "functions": 5064,
+   "headers": 99,
+   "parsed": 117,
+   "variables": 5063
+  },
+  "recent_checks": [
+   {
+    "changed": "1 changed function",
+    "changed_functions": 1,
+    "counts": {
+     "affected": 594,
+     "breaks": 2,
+     "may_break": 15,
+     "not_followed": 10,
+     "unknown": 0
+    },
+    "icon": "risk",
+    "id": "0003-redis-04",
+    "level": "breaks",
+    "ok": true,
+    "source": "patch redis-04.diff",
+    "verdict": "This change can break 2 things you didn't touch (2 BREAKS, 15 MAY BREAK, 594 AFFECTED)."
+   },
+   {
+    "changed": "1 changed function",
+    "changed_functions": 1,
+    "counts": {
+     "affected": 881,
+     "breaks": 8,
+     "may_break": 0,
+     "not_followed": 4,
+     "unknown": 0
+    },
+    "icon": "risk",
+    "id": "0002-redis-01",
+    "level": "breaks",
+    "ok": true,
+    "source": "patch redis-01.diff",
+    "verdict": "This change can break 8 things you didn't touch (8 BREAKS, 881 AFFECTED)."
+   },
+   {
+    "changed": "2 changed declarations",
+    "changed_functions": 0,
+    "counts": {
+     "affected": 803,
+     "breaks": 0,
+     "may_break": 0,
+     "not_followed": 6,
+     "unknown": 0
+    },
+    "icon": "risk",
+    "id": "0001-redis-07",
+    "level": "affected",
+    "ok": true,
+    "source": "patch redis-07.diff",
+    "verdict": "This change may affect 803 things you didn't touch (5 direct, 798 further up). None is sure to break."
+   }
+  ],
+  "repo": "redis-8.10.3",
+  "status": "ok",
+  "tool": "0.1.0.dev0"
+ },
+ "runinfo": {
+  "checks": {
+   "0001-redis-07": "2026-11-25T00:03+00:00",
+   "0002-redis-01": "2026-11-25T01:03+00:00",
+   "0003-redis-04": "2026-11-25T02:03+00:00"
+  },
+  "indexed": "2026-11-25T01:13+00:00"
+ }
+}

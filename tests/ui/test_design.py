@@ -194,7 +194,8 @@ def test_mockup_screenshots_are_not_reused_elsewhere() -> None:
 
 
 def test_launch_screenshots_never_come_from_mockups() -> None:
-    """Every launch image must be in MANIFEST.json, made from a results.json that is in the repo."""
+    """Every launch image must be in MANIFEST.json and name the real data it shows: a benchmark
+    results.json in bench/results/, or a snapshot of the dashboard's answer saved in data/ next to it."""
     images = (
         sorted(
             p.name for p in LAUNCH_SHOTS.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
@@ -216,4 +217,17 @@ def test_launch_screenshots_never_come_from_mockups() -> None:
         assert "mockups" not in e["page"] and "components.html" not in e["page"], (
             f"{name} was taken from a mockup"
         )
-        assert e.get("data_sha256") in real, f"{name}: data_sha256 matches no bench/results/*/results.json"
+        data = e.get("data", "")
+        if data.startswith("data/"):  # a snapshot of what the dashboard answered for this image
+            snap = LAUNCH_SHOTS / data
+            assert snap.is_file(), f"{name}: {data} is missing"
+            assert hashlib.sha256(snap.read_bytes()).hexdigest() == e.get("data_sha256"), (
+                f"{name}: {data} changed"
+            )
+            assert "sample" not in snap.read_text("utf-8").lower()[:2000], (
+                f"{name}: data looks like sample data"
+            )
+        else:
+            assert e.get("data_sha256") in real, (
+                f"{name}: data_sha256 matches no bench/results/*/results.json"
+            )

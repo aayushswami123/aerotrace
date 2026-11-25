@@ -1,0 +1,35 @@
+{
+ "about": "Launch screenshots. Each image names the data it shows (sha256). Made by bench/ui/launch_screenshots.py.",
+ "images": [
+  {
+   "data": "data/graph-0003-redis-04.json",
+   "data_sha256": "67e0a6d3478a570b9abe7a03447e9f21da2484dfebd6f99c6b253b240e49bd03",
+   "file": "graph-dark.png",
+   "page": "aerotrace ui #/graph/0003-redis-04"
+  },
+  {
+   "data": "data/graph-0003-redis-04.json",
+   "data_sha256": "67e0a6d3478a570b9abe7a03447e9f21da2484dfebd6f99c6b253b240e49bd03",
+   "file": "graph-light.png",
+   "page": "aerotrace ui #/graph/0003-redis-04"
+  },
+  {
+   "data": "data/overview.json",
+   "data_sha256": "ba6082164097b6d01cd081a22c16ba1e583a2676e792d81821a9b1f531be70dd",
+   "file": "overview-dark.png",
+   "page": "aerotrace ui #/overview"
+  },
+  {
+   "data": "data/overview.json",
+   "data_sha256": "ba6082164097b6d01cd081a22c16ba1e583a2676e792d81821a9b1f531be70dd",
+   "file": "overview-light.png",
+   "page": "aerotrace ui #/overview"
+  },
+  {
+   "data": "bench/results/2026-11-24-c7df917/results.json",
+   "data_sha256": "490893aebe75bc42eff1e1101e7d8f775f3b06f6adda873150f34e126ad0d1e7",
+   "file": "results-light.png",
+   "page": "docs/benchmark/index.html"
+  }
+ ]
+}
