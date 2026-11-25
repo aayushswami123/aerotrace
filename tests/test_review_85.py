@@ -121,7 +121,7 @@ def test_a_removed_constructor_used_in_any_form_outside_the_build_is_unknown(cxx
 def test_a_removed_destructor_named_in_a_file_outside_the_build_is_unknown(cxx):
     (cxx / "src/extra.cpp").write_text('#include "v.h"\nint extra() {\n    X x(1);\n    return x.k;\n}\n')
     _, c = run_patch(cxx, {"src/v.cpp": [("X::~X() {}\n", "")]})
-    assert c["verdict"] == "unknown" and "src/extra.cpp" in c["unchecked_reason"], c["unchecked_reason"]
+    assert c["unchecked"] is True and "src/extra.cpp" in c["unchecked_reason"], c["unchecked_reason"]
 
 
 @pytest.mark.parametrize(

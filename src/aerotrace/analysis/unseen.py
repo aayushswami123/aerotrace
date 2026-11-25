@@ -6,7 +6,7 @@ an `#if` that is off with these flags, a file outside compile_commands.json, a m
 word search over the repo's C and C++ files, comments and strings left out. A place counts as unseen when
 the index records no use of that name on that line. It is cheap: each file is read once per check, and
 only when it contains one of the names. Constructors and destructors count only in files outside the build (a class names them in its own
-declaration). Table (`.def`, `.tbl`) and assembly (`.s`, `.S`, `.asm`) files are searched too. Struct fields are not searched (names like `len` are everywhere).
+declaration), and there any use of the class name counts (`X x(1)`, `new X`). Table (`.def`, `.tbl`) and assembly (`.s`, `.S`, `.asm`) files are searched too. Struct fields are not searched (names like `len` are everywhere).
 """
 
 from __future__ import annotations
@@ -106,8 +106,8 @@ def _pattern(name: str, kind: str) -> re.Pattern:
     member = kind == "method"
     guard = r"(?<!\w)" if member else r"(?<![\w.])(?<!->)"
     # a call, the address, or an entry of a table: f(  &f  f,  f}
-    if kind == "special":  # a constructor or destructor: written like a call
-        return re.compile(rf"(?<![\w.])(?<!->){n}\s*\(")
+    if kind == "special":  # a constructor or destructor: the class name in any form (`X x(1)`, `new X`)
+        return re.compile(rf"(?<![\w.])(?<!->){re.escape(name.lstrip('~'))}\b")
     return re.compile(rf"{guard}{n}\s*\(|&\s*{n}\b|{guard}{n}\s*[,}}]")
 
 
@@ -133,11 +133,14 @@ def find(
         return Found([], False)
     skip = skip or {}
     plain = sorted(names)
+    word = {n: n.lstrip("~") for n in plain}  # `~X` is searched as the class name X
     seen, ranges = _seen(conn, plain)
     indexed = store.indexed_paths(conn)
-    quick = re.compile(r"(?<![A-Za-z0-9])_?(?:" + "|".join(re.escape(n) for n in plain) + r")\b")
+    quick = re.compile(
+        r"(?<![A-Za-z0-9])_?(?:" + "|".join(re.escape(w) for w in sorted(set(word.values()))) + r")\b"
+    )
     quick_bytes = re.compile(quick.pattern.encode("utf-8"))
-    raw = [n.encode("utf-8") for n in plain]
+    raw = [w.encode("utf-8") for w in word.values()]
     pats = {n: _pattern(n, names[n]) for n in plain}
     asm_pats = {n: _pattern(n, "asm") for n in plain}
     places: list[Place] = []
@@ -160,10 +163,10 @@ def find(
         is_asm = os.path.splitext(rel)[1].lower() in ASM_EXTS
         fn_ranges = ranges.get(rel, [])
         for no, line in enumerate(lines, 1):
-            if not any(n in line for n in plain) or no in skip.get(rel, ()):
+            if not any(w in line for w in word.values()) or no in skip.get(rel, ()):
                 continue
             for n in plain:
-                if n not in line or (rel, no, n) in seen:
+                if word[n] not in line or (rel, no, n) in seen:
                     continue
                 if names[n] == "special" and not outside:
                     continue  # the class's own declarations name its constructor and destructor

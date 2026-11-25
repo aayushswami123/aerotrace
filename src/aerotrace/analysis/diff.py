@@ -670,7 +670,14 @@ _NOT_DECL = {"return", "goto", "else", "if", "while", "for", "switch", "case", "
 
 def _declared(text: str) -> str | None:
     """The name a file-scope line declares or defines (`int hits = 0;`, `int get(int k);`), else None."""
-    m = _DECL.match(text.strip())
+    text = text.strip()
+    depth = 0
+    for ch in text:  # more than one declarator (`int a, hits;`): which one changed is not known
+        depth += ch in "([{"
+        depth -= ch in ")]}"
+        if ch == "," and depth <= 0:
+            return None
+    m = _DECL.match(text)
     if not m or m.group(1) in _NOT_DECL or text.strip().split(None, 1)[0] in _NOT_DECL:
         return None
     return m.group(1)
