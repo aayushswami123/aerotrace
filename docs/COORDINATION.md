@@ -17,7 +17,10 @@ Sessions:
 | Branch | Owner | What it is for | Area | State |
 |---|---|---|---|---|
 | `docs/dashboard-plan` (#62) | product | Dashboard and benchmark plan, design system, web UI | `docs/design/`, `docs/decisions/`, `docs/plans/dashboard*`, `src/aerotrace/ui/web/`, `tests/ui/`, `CLAUDE.md` | in progress |
-| `bench/cases` (#63) | product | 30 benchmark cases | `bench/cases/` | in progress |
+| `bench/truth` (#74) | product | Benchmark truth (build each case), tool runs, scores, `docs/benchmark/RESULTS.md` | `bench/cases/patches/`, `bench/truth/`, `bench/results/`, `docs/benchmark/` | review |
+| `feat/bench-page` (#76) | product | Benchmark results page `docs/benchmark/index.html`, generated from the run | `src/aerotrace/ui/bench_page.py`, `src/aerotrace/ui/web/bench-page.*`, `bench/page/`, `docs/benchmark/index.html`, `docs/benchmark/screenshots/` | review (on top of #62 and #74) |
+| `feat/ui-dashboard` (#79) | product | `aerotrace ui` dashboard, its tests, CI browser job, launch screenshots | `src/aerotrace/ui/api.py`, `ui/server.py`, `ui/web/app.*`, `ui/web/graph.js`, `cli.py` (the `ui` command only), `tests/ui/`, `tests/golden/ui/`, `bench/ui/`, `docs/design/dashboard/`, `docs/launch/screenshots/`, `.github/workflows/ci.yml` (browser job) | review (on top of #76 and #80) |
+| `feat/save-checks` (#80) | product | `aerotrace check` keeps each answer in `.aerotrace/checks/` (`--no-save`) | `src/aerotrace/ui/saved.py`, `cli.py` (check save only), `tests/test_save_checks.py` | review |
 | `bench/pilot-sonnet` | product | Harness and plan for the $25 Sonnet benchmark pilot | `bench/` | waiting to run |
 | `docs/launch-readme` (#54) | product | Launch README | `README.md`, `docs/launch/` | waits for benchmark results; do not merge |
 | `fix/wrong-safe-answers` | merge | The 4 wrong "safe" answers from benchmark run 1 (redis-05, curl-05, redis-07, curl-07) | `src/aerotrace/analysis/check.py`, `analysis/data.py`, `index/history.py`, `ui/terminal.py` | review |
