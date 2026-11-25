@@ -7,3 +7,4 @@ build_flags = []
 compdb_flags = []
 not_in_build = []
 modes = ["patch", "git"]
+needs = "arm64 macOS"

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import re
 import shlex
 import shutil
@@ -33,6 +34,7 @@ from compare import (
     Verdict,
     class_of,
     compare,
+    expectation_error,
     known_block,
     render_markdown,
     render_text,
@@ -63,6 +65,7 @@ class Case:
     not_in_build: list[str] = field(default_factory=list)
     modes: list[str] = field(default_factory=lambda: list(MODES))
     patch_applies: bool = True
+    needs: str = ""
 
 
 @dataclass
@@ -213,8 +216,24 @@ def _names_failure(ans: Answer, truth: Build) -> bool:
     return False
 
 
+def supported(needs: str) -> bool:
+    return "arm64" not in needs or platform.machine() == "arm64"
+
+
+def preflight() -> str:
+    """One plain line if this machine cannot run the gate, else an empty string."""
+    if sys.platform != "darwin":
+        return "The gate runs on macOS with Apple clang only for now."
+    if "clang" not in sh(["cc", "--version"], HERE).stdout.lower():
+        return "The gate needs clang as `cc` (macOS with Apple clang only for now)."
+    return ""
+
+
 def run_case(case: Case, at: list[str]) -> Result:
     res = Result(case)
+    if case.needs and not supported(case.needs):
+        res.error = f"skipped: needs {case.needs} (the gate is not green without it)"
+        return res
     tmp = Path(tempfile.mkdtemp(prefix="gate-"))
     w = tmp / "w"
     try:
@@ -237,6 +256,15 @@ def run_case(case: Case, at: list[str]) -> Result:
                 res.error = f"patch does not apply: {p.stderr.strip()[:120]}"
                 return res
             res.truth = build(case, w)
+            res.error = expectation_error(
+                case.id,
+                case.expect_build,
+                res.truth.ok,
+                case.failing_sites,
+                res.truth.files + res.truth.symbols,
+            )
+            if res.error:
+                return res
             if "git" in case.modes:
                 res.answers["git"] = ask(at, w, [])
         else:
@@ -324,6 +352,9 @@ def main() -> int:
     ap.add_argument("--measured", help="text for the report header: which AeroTrace code was measured")
     ap.add_argument("--jobs", type=int, default=4, help="cases to run at the same time (default 4)")
     args = ap.parse_args()
+    if problem := preflight():
+        print(problem)
+        return 1
 
     at = shlex.split(args.at) if args.at else ["uv", "run", "--quiet", "--project", str(REPO), "aerotrace"]
     cases = load_cases(args.only)

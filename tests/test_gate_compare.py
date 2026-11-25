@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bench" / "gate"))
 
-from compare import compare, counts, counts_from_classes, known_block
+from compare import compare, counts, counts_from_classes, expectation_error, known_block
 
 KNOWN = {("c3", "patch"): "why"}
 
@@ -102,3 +102,12 @@ def test_counts_per_mode_skip_cases_without_that_mode():
     d = data(a=case("correct", None), b=case("weak", "correct"))
     assert counts(d["cases"], "patch")["cases"] == 2
     assert counts(d["cases"], "git")["cases"] == 1
+
+
+def test_expectation_must_match_the_real_build():
+    assert expectation_error("c", "fails", False, ["a.c"], ["a.c", "b.c"]) == ""
+    assert expectation_error("c", "passes", True, [], []) == ""
+    assert expectation_error("c", "n/a", True, [], []) == ""
+    msg = expectation_error("c", "passes", False, [], ["a.c"])
+    assert "c" in msg and "'passes'" in msg and "fails" in msg
+    assert "failing_sites" in expectation_error("c", "fails", False, ["x.c"], ["a.c"])

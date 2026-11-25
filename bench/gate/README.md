@@ -19,9 +19,8 @@ make gate-baseline                         # record a new baseline (on purpose, 
 uv run python bench/gate/run_gate.py --help
 ```
 
-It takes about two minutes. It needs `cc`, `c++` and `git`, and no network. Each case runs in a temp
-folder; the only file written in the repo is the optional `--markdown` report. The cases that use
-assembly (`a1-asm`) are written for arm64 macOS.
+**macOS with Apple clang only for now** (the gate prints one line and stops on anything else; `a1-asm` needs arm64). It is not part of CI. It takes about two minutes. It needs `cc`, `c++` and `git`, and no network. Each case runs in a temp
+folder; the only file written in the repo is the optional `--markdown` report. A case with `needs = "arm64 macOS"` (`a1-asm`) is skipped loudly on other machines and the gate then fails.
 
 ## How the comparison works
 
@@ -121,7 +120,10 @@ bench/gate/
 `case.toml` keys: `id`, `summary`, `origin`, `expect_build` (`fails`, `passes`, or `n/a`), `failing_sites`
 (files or symbols the compiler or linker names), `build_flags` (extra flags for the truth build, for
 example `-DX`), `compdb_flags` (flags in compile_commands.json), `not_in_build` (files left out of
-compile_commands.json but still built for the truth), `modes`, `patch_applies`.
+compile_commands.json but still built for the truth), `modes`, `patch_applies`, `needs`.
+
+The gate checks `case.toml` against the real build: if `expect_build` is wrong, or a `failing_sites` entry is not
+among the files or symbols that really fail, the case is an ERROR and the gate fails.
 
 Ids are the name of the script they came from plus the case name (`a1-paste2`, `cases1-ifdef2`).
 

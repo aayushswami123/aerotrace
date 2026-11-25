@@ -205,3 +205,20 @@ def render_markdown(data: dict[str, Any]) -> str:
     fs = sorted({i for i, e in cases.items() for m in MODES if m in e and e[m]["class"] == "false safe"})
     out += ["false safe ids: " + (", ".join(fs) if fs else "none"), "```", ""]
     return "\n".join(out)
+
+
+def expectation_error(
+    case_id: str, expect: str, built_ok: bool, listed_sites: list[str], actual_sites: list[str]
+) -> str:
+    """Error text if case.toml disagrees with the real build of the changed tree, else an empty string."""
+    if expect in ("fails", "passes"):
+        actual = "passes" if built_ok else "fails"
+        if actual != expect:
+            return f"{case_id}: case.toml says expect_build = {expect!r} but the changed tree {actual}"
+    if expect == "fails":
+        missing = [x for x in listed_sites if x not in actual_sites]
+        if missing:
+            return (
+                f"{case_id}: failing_sites {missing} are not among the real failures {sorted(actual_sites)}"
+            )
+    return ""
