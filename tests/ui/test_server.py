@@ -127,3 +127,22 @@ def test_head_and_builtin_errors_get_the_headers(srv: server.DashboardServer) ->
     assert r.status == 200 and body == b""
     r, _ = _req(srv, "/", method="TRACE", headers=_cookie(srv))
     assert r.status == 501 and "default-src 'none'" in r.getheader("Content-Security-Policy", "")
+
+
+def test_report_page_gets_its_own_exact_csp(srv: server.DashboardServer) -> None:
+    from aerotrace.ui import api, bench_page
+
+    if api.benchmark() is None:
+        pytest.skip("no packaged benchmark")
+    r, body = _req(srv, "/benchmark-report", headers=_cookie(srv))
+    assert r.status == 200
+    csp = r.getheader("Content-Security-Policy")
+    assert csp.startswith(bench_page.csp_of(body.decode())) and "frame-ancestors 'none'" in csp
+    assert "unsafe-inline" not in csp
+
+
+def test_graph_and_node_errors_are_plain(srv: server.DashboardServer) -> None:
+    r, body = _req(srv, "/api/graph/nope", headers=_cookie(srv))
+    assert r.status == 404 and b"No saved check" in body
+    r, body = _req(srv, "/api/node?check=nope&node=x", headers=_cookie(srv))
+    assert r.status == 404

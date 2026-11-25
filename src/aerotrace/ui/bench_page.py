@@ -423,6 +423,20 @@ def render(d: dict) -> str:
     )
 
 
-def write(run_dir: Path, out: Path) -> Path:
-    out.write_text(render(build(run_dir)), encoding="utf-8")
+def published(d: dict) -> dict:
+    """The data plus the generated sentences, as shipped in the package for the dashboard's Benchmark page."""
+    return {**d, "headline": _headline(d)}
+
+
+def csp_of(html: str) -> str:
+    """The Content-Security-Policy the page carries in its <meta> (served as a header by `aerotrace ui`)."""
+    m = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)
+    return m.group(1) if m else "default-src 'none'"
+
+
+def write(run_dir: Path, out: Path, package_json: Path | None = None) -> Path:
+    d = build(run_dir)
+    out.write_text(render(d), encoding="utf-8")
+    if package_json is not None:
+        package_json.write_text(json.dumps(published(d), indent=1, sort_keys=True) + "\n", encoding="utf-8")
     return out

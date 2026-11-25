@@ -149,3 +149,14 @@ def test_no_machine_paths_in_any_answer(indexed: Path) -> None:
         bad.chmod(0o644)
     for p in {str(indexed), str(indexed.resolve()), str(Path.home())}:
         assert p not in text
+
+
+def test_newest_first_by_run_number_past_9999(indexed: Path) -> None:
+    data = json.loads(SAMPLE.read_text())
+    for name in ("9999-aaaa0001", "10000-aaaa0002", "10001-aaaa0003"):
+        _save(indexed, name, data)
+    assert [c["id"] for c in api.checks(indexed)["checks"]] == [
+        "10001-aaaa0003",
+        "10000-aaaa0002",
+        "9999-aaaa0001",
+    ]

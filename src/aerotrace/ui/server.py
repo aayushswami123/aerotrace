@@ -64,11 +64,13 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---- helpers
 
-    def _send(self, status: int, body: bytes, ctype: str, extra: dict[str, str] | None = None) -> None:
+    def _send(
+        self, status: int, body: bytes, ctype: str, extra: dict[str, str] | None = None, csp: str = CSP
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Content-Security-Policy", CSP)
+        self.send_header("Content-Security-Policy", csp)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cache-Control", "no-store")
@@ -157,6 +159,21 @@ class Handler(BaseHTTPRequestHandler):
             self._json(HTTPStatus.OK, api.overview(root))
         elif path == "/api/checks":
             self._json(HTTPStatus.OK, api.checks(root))
+        elif path.startswith("/api/graph/"):
+            try:
+                self._json(HTTPStatus.OK, api.graph(root, path.removeprefix("/api/graph/")))
+            except api.NotFound:
+                self._error(HTTPStatus.NOT_FOUND, "No saved check with that id.")
+            except api.Unreadable as e:
+                self._error(HTTPStatus.UNPROCESSABLE_ENTITY, str(e))
+        elif path == "/api/node":
+            q = parse_qs(urlsplit(self.path).query)
+            try:
+                self._json(HTTPStatus.OK, api.node(root, q.get("check", [""])[0], q.get("node", [""])[0]))
+            except api.NotFound:
+                self._error(HTTPStatus.NOT_FOUND, "No such node in that check.")
+            except api.Unreadable as e:
+                self._error(HTTPStatus.UNPROCESSABLE_ENTITY, str(e))
         elif path.startswith("/api/checks/"):
             try:
                 self._json(HTTPStatus.OK, api.check(root, path.removeprefix("/api/checks/")))
@@ -164,6 +181,20 @@ class Handler(BaseHTTPRequestHandler):
                 self._error(HTTPStatus.NOT_FOUND, "No saved check with that id.")
             except api.Unreadable as e:
                 self._error(HTTPStatus.UNPROCESSABLE_ENTITY, str(e))
+        elif path == "/api/benchmark":
+            self._json(HTTPStatus.OK, {"benchmark": api.benchmark()})
+        elif path == "/benchmark-report":
+            data = api.benchmark()
+            if data is None:
+                self._error(HTTPStatus.NOT_FOUND, "This AeroTrace has no benchmark results.")
+            else:
+                from aerotrace.ui import bench_page
+
+                html = bench_page.render(data)
+                # the report carries its own hashed policy; send exactly that, never a looser one
+                page_csp = bench_page.csp_of(html) + "; frame-ancestors 'none'"
+                self._send(HTTPStatus.OK, html.encode("utf-8"), "text/html; charset=utf-8", csp=page_csp)
+                return
         elif path == "/api/runinfo":
             self._json(HTTPStatus.OK, api.runinfo(root))
         else:
