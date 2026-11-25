@@ -365,3 +365,19 @@ def test_never_none_is_sure_to_break_when_something_was_not_seen(key: str) -> No
     first = terminal.render(d).splitlines()[0]
     assert "None is sure to break" not in first
     assert "could not check all of it, so something may still break" in first
+
+
+def test_first_line_says_unknown_when_part_of_the_change_was_not_checked() -> None:
+    """A-04: never "Nothing found" when a part of the change was skipped; the reason is named."""
+    affected = samples.affected_only()
+    affected["change"]["not_followed"]["not_indexed"] = ["src/extra.c"]
+    affected["summary"]["not_followed"] = 1
+    affected.update(verdict="unknown", unchecked=True, unchecked_parts=1, unchecked_reason="src/extra.c is not in the index")  # fmt: skip
+    for d in (samples.unclear(), samples.nothing_to_check_gaps(), affected):
+        for uni in (True, False):
+            first = terminal.render(d, unicode=uni).splitlines()[0]
+            assert first.split(" ", 1)[1].lstrip().startswith("UNKNOWN: "), first
+            assert "Nothing found" not in first and "safe" not in first, first
+            assert d["unchecked_reason"] in first, first
+    first = terminal.render(samples.sample()).splitlines()[0]
+    assert "BREAKS" in first and "could not be checked" in first, first
