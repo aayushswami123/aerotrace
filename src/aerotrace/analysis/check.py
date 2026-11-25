@@ -622,12 +622,10 @@ class _Run:
                         continue
                     du = data.data_users_of(self.conn, gv, depth=0)
                     for b in du.broken:
-                        if (
-                            b.file,
-                            b.line,
-                        ) in self.seen_broken:  # one name removed twice (extern + definition)
+                        key = (name, b.file, b.line)
+                        if key in self.seen_broken:  # one name removed twice (extern + definition)
                             continue
-                        self.seen_broken.add((b.file, b.line))
+                        self.seen_broken.add(key)
                         reason = data.compile_reason(b.reason)
                         if b.fn is not None:
                             self.fn_node(b.fn, "breaks", b.certainty, "uses_changed", reason, 1, nid, name,

@@ -33,3 +33,6 @@ int first_name(void) { return table[0].name[0]; }
 /* removing the global rate (here and its extern in conn.h) breaks pr's initializer */
 int rate = 5;
 int *pr = &rate;
+
+/* two removed names on one line: removing hz and rate both break t */
+int t = sizeof(g.hz) + rate;

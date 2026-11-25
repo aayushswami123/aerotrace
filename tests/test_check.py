@@ -486,3 +486,17 @@ def test_removed_global_used_at_file_scope_is_listed_once(init_repo):
     # gone_fields finds rate twice (the extern and the definition); the reason is given once
     assert by["pr"]["why"].count("does not compile now") == 1, by["pr"]["why"]
     assert all(n["why"].count("does not compile now") <= 1 for n in c["nodes"])
+
+
+def test_two_removed_names_on_one_line_both_link_to_it(init_repo):
+    # line 37: int t = sizeof(g.hz) + rate; removing both breaks t through each of them
+    _, c = run_git(
+        init_repo,
+        {
+            "include/conn.h": [("    int a;\n    int hz;\n", "    int a;\n"), ("extern int rate;\n", "")],
+            "src/tables.c": [("int rate = 5;\n", "")],
+        },
+    )
+    [t] = [n for n in c["nodes"] if n["name"] == "t" and n["status"] == "breaks"]
+    assert t["certainty"] == "exact"
+    assert "(and 1 other link)" in t["why"], t["why"]  # the second removed name is not dropped
