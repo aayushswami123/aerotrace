@@ -313,7 +313,9 @@ def test_nothing_found_headlines_name_the_files_outside_the_build_first() -> Non
         )
         lines = terminal.render(d, all_hint="--all lists them").splitlines()
         seen.add(terminal.headline(d)[0])
-        want = "5 C/C++ files outside this build were not checked: a.c, b.c, c.c, ..."
+        want = (
+            "5 C/C++ files outside this build were not checked: a.c, b.c, c.c and 2 more (--all lists them)."
+        )
         at = next(i for i, line in enumerate(lines) if want in line)
         assert at < 6 and sum("outside this build" in line for line in lines) == 1
     assert seen == {"clear", "info"}
@@ -322,3 +324,27 @@ def test_nothing_found_headlines_name_the_files_outside_the_build_first() -> Non
 def test_wrap_hangs_under_the_ascii_no_test_icon() -> None:
     out = terminal.wrap("  [ ] NO TEST    " + "word " * 20, 40).splitlines()
     assert all(line.startswith("      ") for line in out[1:])  # under "NO TEST", not at the indent
+
+
+@pytest.mark.parametrize("n_spots", [4, 5, 6])
+def test_a_pass_never_drops_an_index_limit(n_spots: int) -> None:
+    # 5 limits fit under the headline; the files outside the build take one of those places
+    d = samples.nothing()
+    d["sections"]["blind_spots"] = [
+        {"text": f"limit {i}.", "scope": "index", "node": None} for i in range(n_spots)
+    ]
+    d["proof"].update(
+        {
+            "build_files": 3,
+            "build_files_checked": 3,
+            "build_files_with_errors": 0,
+            "outside_build": 1,
+            "outside_build_examples": ["a.c"],
+        }
+    )
+    text = terminal.render(d)
+    for i in range(n_spots):
+        assert f"limit {i}." in text, f"limit {i} is not shown"
+    if "listed below" in text:
+        assert "Limits of the index" in text
+    assert "...." not in text

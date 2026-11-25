@@ -11,7 +11,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
   lists use, e.g. `(4 BREAKS, 19 AFFECTED)`. A coverage line comes before the proof line: `Checked 117
   of 117 files in this build (1 had parse errors).`, plus one short line for repo sources outside
   compile_commands.json, naming up to 3 of them (`1,696 C/C++ files outside this build were not checked:
-  deps/a.c, ...`); under a "nothing found" headline it comes right below it. It replaces the long
+  deps/a.c, deps/b.c, deps/c.c and 1,693 more`); under a "nothing found" headline it comes right below it. It replaces the long
   "not in compile_commands.json" limit. New `aerotrace check --all`: no caps, and lists those files. On a
   terminal, long lines wrap at word boundaries to the terminal width; pipes, `--json` and MCP answers are
   not wrapped. The JSON `proof` has new optional counts (`build_files`, `build_files_checked`,

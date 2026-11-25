@@ -83,7 +83,7 @@ def _cap_first(s: str) -> str:
 # ---------------------------------------------------------------- shared wording (terminal and HTML)
 
 
-def headline(data: dict) -> tuple[str, list[str]]:
+def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
     """(icon key, lines). The first line is the headline; it is chosen from counts only."""
     st = data["status"]
     change = data.get("change") or {}
@@ -164,11 +164,11 @@ def headline(data: dict) -> tuple[str, list[str]]:
         lines.append(f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)")
     if icon == "info":
         # nothing found here either, so what the build left out is said right away
-        lines += [f"Index limit: {t}" for t in coverage_lines(data)[1:]]
+        lines += [f"Index limit: {t}" for t in coverage_lines(data, all_hint)[1:]]
     if icon == "clear":
         lines.append("No other indexed function calls what changed or reads what it writes.")
         # A pass never hides what the index as a whole can't see; files outside the build come first.
-        limits = coverage_lines(data)[1:] + index_limits(data)
+        limits = coverage_lines(data, all_hint)[1:] + index_limits(data)
         lines += [f"Index limit: {t}" for t in limits[:INDEX_LIMITS_UNDER_PASS]]
         if len(limits) > INDEX_LIMITS_UNDER_PASS:
             lines.append(
@@ -200,7 +200,8 @@ def coverage_lines(data: dict, all_hint: str = "") -> list[str]:
     if outside:
         names = p.get("outside_build_examples") or []
         more = outside > len(names)
-        listed = ": " + ", ".join(names) + (", ..." if more else "") if names else ""
+        rest = outside - len(names)
+        listed = (": " + ", ".join(names) + (f" and {rest:,} more" if rest else "")) if names else ""
         hint = f" ({all_hint})" if all_hint and more and "outside_build_files" not in p else ""
         out.append(
             f"{n_(outside, 'C/C++ file')} outside this build {'was' if outside == 1 else 'were'} not "
@@ -421,7 +422,7 @@ def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str
     check(data)
     data = clean(data, not unicode)  # type: ignore[assignment]
     o = _Out(color, unicode)
-    icon, head = headline(data)
+    icon, head = headline(data, all_hint)
     o.lines.append(o.paint(f"{o.icon(icon)} {head[0]}", "head"))
     o.lines += [f"    {line}" for line in head[1:]]
     if data["status"] != "ok":
@@ -489,7 +490,9 @@ def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str
 
     for scope, heading in (("change", "Blind spots in this change"), ("index", "Limits of the index")):
         spots = [b for b in sec["blind_spots"] if b["scope"] == scope]
-        if scope == "index" and icon == "clear" and len(spots) <= INDEX_LIMITS_UNDER_PASS:
+        # the same count as under the headline: files outside the build come first there
+        shown_above = len(coverage_lines(data)[1:]) + len(spots)
+        if scope == "index" and icon == "clear" and shown_above <= INDEX_LIMITS_UNDER_PASS:
             continue  # already printed under the headline
         if spots:
             o.section(f"{heading} ({len(spots):,})")
