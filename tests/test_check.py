@@ -810,3 +810,32 @@ def test_a_duplicate_in_a_repo_with_two_programs_is_a_may_break(repo_factory, mo
     assert got and all(n["certainty"] == "probable" for n in got), c["nodes"]
     assert "more than one program" in " ".join(n["why"] for n in got)
     assert check.exit_code(c) == 1
+
+
+# ---------------------------------------------------------------- an inactive #if branch is not proof
+
+
+DEAD_RENAME = {
+    "src/lib.c": [("int old_fn(int a) {", "int new_fn(int a) {")],
+    "src/main.c": [
+        ("int old_fn(int a);\n", "int old_fn(int a);\nint new_fn(int a);\n"),
+        ("return old_fn(3);", "return new_fn(3);"),
+        ("int r = old_fn(1);", "int r = new_fn(1);"),
+    ],
+}
+
+
+def test_a_use_in_an_inactive_if_branch_of_an_edited_function_still_breaks(repo_factory):
+    root = _committed(repo_factory, "c_deadif")
+    _, c = run_patch(root, DEAD_RENAME)  # `r += old_fn(2)` is only built with -DFEATURE
+    assert "main" in _breaks(c), c["nodes"]
+    assert check.exit_code(c) == 1
+
+
+def test_a_function_with_no_conditional_region_is_still_skipped_when_fixed(repo_factory):
+    root = _committed(repo_factory, "c_deadif")
+    edits = {**DEAD_RENAME}
+    edits["src/main.c"] = [*DEAD_RENAME["src/main.c"], ("    r += old_fn(2);\n", "    r += new_fn(2);\n")]
+    _, c = run_patch(root, edits)
+    # `main` still has its #ifdef, so it is reported; `plain` has none and is fixed
+    assert "plain" not in _breaks(c), c["nodes"]
