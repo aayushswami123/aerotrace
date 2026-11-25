@@ -1,6 +1,7 @@
 """Saved check answers, for the dashboard (`aerotrace ui`): `.aerotrace/checks/<id>.json` + `<id>.run.json`.
 
-`<id>.json` is the `aerotrace check --json` answer as it is (deterministic: no dates, no machine paths).
+`<id>.json` is the same answer `aerotrace check --json` prints, with its keys sorted (deterministic: no
+dates, no machine paths).
 `<id>.run.json` holds what changes from run to run: the date, where the change came from, and the tool
 version. The id is `NNNN-<first 8 hex of the answer's sha256>`; NNNN counts up. Only the last KEEP runs
 are kept. Everything is written inside `.aerotrace/`, never anywhere else.
@@ -34,9 +35,12 @@ def source_of(base: str | None, patch: str | None) -> str:
 
 
 def _atomic_write(path: Path, text: str) -> None:
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")  # one temp name per process: no clashes
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)  # nothing left behind when the write fails (a full disk, say)
 
 
 def save(root: Path, data: dict, source: str, tool: str, now: datetime | None = None) -> Path:
@@ -56,7 +60,7 @@ def save(root: Path, data: dict, source: str, tool: str, now: datetime | None = 
 
 
 def _prune(d: Path) -> None:
-    runs = sorted((int(m.group(1)), p) for p in d.glob("*.json") if (m := _ID.match(p.stem)))
+    runs = sorted((int(m.group(1)), p) for p in d.glob("*.json") if (m := _ID.match(p.stem)) and p.is_file())
     for _, p in runs[:-KEEP] if len(runs) > KEEP else []:
         p.unlink(missing_ok=True)
         p.with_name(p.stem + ".run.json").unlink(missing_ok=True)

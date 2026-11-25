@@ -379,13 +379,14 @@ def _save_check(root: Path, data: dict, args: argparse.Namespace) -> None:
     try:
         first = not saved.checks_dir(root).is_dir()
         path = saved.save(root, data, saved.source_of(args.base, args.patch), f"aerotrace {__version__}")
-    except OSError as e:
-        _err(f"note: could not save this answer for `aerotrace ui` ({e.strerror or e}).")
+    except Exception as e:  # saving must never change what the check prints or returns
+        why = e.strerror if isinstance(e, OSError) and e.strerror else type(e).__name__
+        _err(f"note: could not save this answer for `aerotrace ui` ({why}).")
         return
     if first:
         _err(
             f"note: saved this answer in {path.parent.relative_to(root)}/ for `aerotrace ui` "
-            "(--no-save turns this off). Add .aerotrace/ to your .gitignore."
+            "(--no-save turns this off). .aerotrace/ already keeps itself out of git."
         )
 
 

@@ -35,7 +35,11 @@ def test_check_saves_its_answer_and_a_run_file(repo: Path, capsys) -> None:
     assert run["source"] == "patch p.diff" and run["tool"].startswith("aerotrace ")
     datetime.fromisoformat(run["date"])
     assert str(repo) not in (d / f"{ids[0]}.run.json").read_text()  # no machine paths
-    assert ".gitignore" in out.err  # the first save says where it went and how to keep it out of git
+    assert "for `aerotrace ui`" in out.err  # the first save says where it went
+    gitignore = (repo / ".aerotrace" / ".gitignore").read_text().splitlines()
+    assert "*" in gitignore  # and git already ignores it
+    answer = (d / f"{ids[0]}.json").read_text()
+    assert str(repo) not in answer and str(Path.home()) not in answer  # no machine paths in the answer
 
 
 def test_the_saved_answer_is_deterministic(repo: Path, capsys) -> None:
@@ -45,7 +49,7 @@ def test_the_saved_answer_is_deterministic(repo: Path, capsys) -> None:
     a, b = _ids(repo)
     assert a.split("-")[1] == b.split("-")[1]  # same answer, same hash
     assert a.startswith("0001-") and b.startswith("0002-")
-    assert "gitignore" not in capsys.readouterr().err  # the hint is only for the first save
+    assert "for `aerotrace ui`" not in capsys.readouterr().err  # the note is only for the first save
 
 
 def test_no_save(repo: Path, capsys) -> None:
@@ -87,3 +91,48 @@ def test_a_failed_save_does_not_fail_the_check(repo: Path, capsys) -> None:
 )
 def test_source_words(base: str | None, patch_name: str | None, want: str) -> None:
     assert saved.source_of(base, patch_name) == want
+
+
+def test_nothing_to_check_is_saved(repo: Path, capsys) -> None:
+    (repo / "notes.txt").write_text("a\n")
+    (repo / "docs.diff").write_text("--- a/notes.txt\n+++ b/notes.txt\n@@ -1 +1 @@\n-a\n+b\n")
+    main(["check", "--patch", str(repo / "docs.diff"), "--root", str(repo), "--json"])
+    assert json.loads(capsys.readouterr().out)["status"] == "nothing_to_check"
+    assert len(_ids(repo)) == 1  # nothing to check: still an answer, saved
+
+
+def test_an_answer_without_a_check_is_not_saved(repo: Path, monkeypatch, capsys) -> None:
+    from aerotrace.analysis import check
+
+    def no_index(*a: object, **k: object) -> tuple[dict, str | None]:
+        return {
+            "format": "aerotrace-check",
+            "version": 1,
+            "status": "no_index",
+            "message": "Run `aerotrace index`.",
+        }, None
+
+    monkeypatch.setattr(check, "check_change", no_index)
+    monkeypatch.setattr(check, "exit_code", lambda data: 2)
+    (repo / "p.diff").write_text(patch(repo, ADD_PARAM))
+    main(["check", "--patch", str(repo / "p.diff"), "--root", str(repo), "--json"])
+    assert not saved.checks_dir(repo).exists()  # nothing was checked, so nothing is saved
+
+
+def test_prune_leaves_other_files_alone(tmp_path: Path) -> None:
+    d = saved.checks_dir(tmp_path)
+    d.mkdir(parents=True)
+    keep = [d / "notes.txt", d / "mine.json", d / "0001-zzzzzzzz.json"]  # not an id: z isn't hex
+    for p in keep:
+        p.write_text("x")
+    (d / "0002-aaaaaaaa.json").mkdir()  # a folder with an id's name is skipped, not deleted
+    for i in range(saved.KEEP + 2):
+        saved.save(tmp_path, {"n": i}, "working tree vs HEAD", "aerotrace test")
+    assert all(p.exists() for p in keep) and (d / "0002-aaaaaaaa.json").is_dir()
+    assert not list(d.glob(".*.tmp"))
+
+
+def test_text_mode_also_saves(repo: Path, capsys) -> None:
+    (repo / "p.diff").write_text(patch(repo, ADD_PARAM))
+    main(["check", "--patch", str(repo / "p.diff"), "--root", str(repo)])
+    assert len(_ids(repo)) == 1
