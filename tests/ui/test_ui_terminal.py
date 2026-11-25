@@ -90,7 +90,18 @@ def test_only_exact_breaks_count_in_the_headline() -> None:
         if n["status"] == "breaks":
             n["certainty"] = "probable"
     d["summary"]["breaks_probable"] = 4
-    assert "4 things you didn't touch may not build or link." in terminal.render(d).splitlines()[0]
+    assert (
+        "4 things you didn't touch may not build or link (4 MAY BREAK," in terminal.render(d).splitlines()[0]
+    )
+
+
+def test_headline_counts_use_the_status_words() -> None:
+    first = terminal.render(samples.sample()).splitlines()[0]
+    assert first.endswith(
+        "can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN)."
+    )
+    d = samples.affected_only()
+    assert "BREAKS" not in terminal.render(d).splitlines()[0]  # nothing breaks: no counts in parentheses
 
 
 def test_direct_counts_come_first() -> None:
@@ -202,3 +213,138 @@ class _Stream(io.StringIO):
 )
 def test_style_for(tty: bool, enc: str, env: dict, want: tuple[bool, bool]) -> None:
     assert terminal.style_for(_Stream(tty, enc), env) == want
+
+
+# ---------------------------------------------------------------- wrapping (terminal only)
+
+
+@pytest.mark.parametrize("width", [40, 60, 80])
+def test_wrap_keeps_lines_inside_the_width(width: int) -> None:
+    text = terminal.render(samples.sample(), width=width)
+    for line in text.splitlines():
+        if terminal._width(line) > width:
+            assert " " not in line.strip(), f"line could have been broken: {line!r}"  # one long word only
+
+
+def test_wrap_breaks_at_word_boundaries_and_hangs_under_the_text() -> None:
+    plain = terminal.render(samples.sample())
+    wrapped = terminal.render(samples.sample(), width=60)
+    assert wrapped.split() == plain.split()  # same words, same order: only line breaks moved
+    lines = wrapped.splitlines()
+    body = next(i for i, line in enumerate(lines) if line.lstrip().startswith("calls a getGenericCommand"))
+    indent = len(lines[body]) - len(lines[body].lstrip())
+    assert lines[body + 1].startswith(" " * indent) and not lines[body + 1][indent].isspace()
+
+
+def test_wrap_hangs_notes_under_the_text_after_the_icon() -> None:
+    line = "  ? " + "word " * 30
+    out = terminal.wrap(line.rstrip(), 30).splitlines()
+    assert len(out) > 1 and all(o.startswith("    word") for o in out[1:])
+
+
+def test_no_width_means_no_wrapping() -> None:
+    assert terminal.render(samples.sample()) == terminal.render(samples.sample(), width=None)
+
+
+def test_wrap_does_not_count_colour_codes() -> None:
+    text = terminal.render(samples.sample(), color=True, width=70)
+    assert terminal.strip_ansi(text) == terminal.render(samples.sample(), width=70)
+
+
+# ---------------------------------------------------------------- coverage line
+
+
+def _with_coverage(**kw: object) -> dict:
+    d = samples.sample()
+    d["proof"].update(
+        {"build_files": 117, "build_files_checked": 117, "build_files_with_errors": 1, "outside_build": 1696}
+    )
+    d["proof"].update(kw)
+    return d
+
+
+def test_coverage_line_comes_before_the_proof_line() -> None:
+    lines = terminal.render(_with_coverage(), all_hint="--all lists them").splitlines()
+    assert lines[-4:-1] == [
+        "Checked 117 of 117 files in this build (1 had parse errors).",
+        "1,696 C/C++ files outside this build were not checked (--all lists them).",
+        "",
+    ]
+    assert lines[-1].startswith("index: ")
+
+
+def test_old_json_without_coverage_has_no_coverage_line() -> None:
+    assert "Checked " not in terminal.render(samples.sample())
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"build_files": -1},
+        {"build_files_checked": 118},
+        {"outside_build_files": ["b.c", "a.c"]},
+        {"outside_build_files": ["a.c"]},  # count says 1,696
+    ],
+)
+def test_schema_rejects_bad_coverage(bad: dict) -> None:
+    with pytest.raises(schema.ContractError):
+        schema.check(_with_coverage(**bad))
+
+
+def test_schema_needs_all_coverage_keys_together() -> None:
+    d = samples.sample()
+    d["proof"]["build_files"] = 3
+    with pytest.raises(schema.ContractError):
+        schema.check(d)
+
+
+def test_nothing_found_headlines_name_the_files_outside_the_build_first() -> None:
+    seen = set()
+    for make in (samples.nothing, samples.unclear):
+        d = make()
+        d["proof"].update(
+            {
+                "build_files": 3,
+                "build_files_checked": 3,
+                "build_files_with_errors": 0,
+                "outside_build": 5,
+                "outside_build_examples": ["a.c", "b.c", "c.c"],
+            }
+        )
+        lines = terminal.render(d, all_hint="--all lists them").splitlines()
+        seen.add(terminal.headline(d)[0])
+        want = (
+            "5 C/C++ files outside this build were not checked: a.c, b.c, c.c and 2 more (--all lists them)."
+        )
+        at = next(i for i, line in enumerate(lines) if want in line)
+        assert at < 6 and sum("outside this build" in line for line in lines) == 1
+    assert seen == {"clear", "info"}
+
+
+def test_wrap_hangs_under_the_ascii_no_test_icon() -> None:
+    out = terminal.wrap("  [ ] NO TEST    " + "word " * 20, 40).splitlines()
+    assert all(line.startswith("      ") for line in out[1:])  # under "NO TEST", not at the indent
+
+
+@pytest.mark.parametrize("n_spots", [4, 5, 6])
+def test_a_pass_never_drops_an_index_limit(n_spots: int) -> None:
+    # 5 limits fit under the headline; the files outside the build take one of those places
+    d = samples.nothing()
+    d["sections"]["blind_spots"] = [
+        {"text": f"limit {i}.", "scope": "index", "node": None} for i in range(n_spots)
+    ]
+    d["proof"].update(
+        {
+            "build_files": 3,
+            "build_files_checked": 3,
+            "build_files_with_errors": 0,
+            "outside_build": 1,
+            "outside_build_examples": ["a.c"],
+        }
+    )
+    text = terminal.render(d)
+    for i in range(n_spots):
+        assert f"limit {i}." in text, f"limit {i} is not shown"
+    if "listed below" in text:
+        assert "Limits of the index" in text
+    assert "...." not in text

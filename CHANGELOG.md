@@ -7,6 +7,15 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace check`: when something breaks, the first line now ends with the counts in the words the
+  lists use, e.g. `(4 BREAKS, 19 AFFECTED)`. A coverage line comes before the proof line: `Checked 117
+  of 117 files in this build (1 had parse errors).`, plus one short line for repo sources outside
+  compile_commands.json, naming up to 3 of them (`1,696 C/C++ files outside this build were not checked:
+  deps/a.c, deps/b.c, deps/c.c and 1,693 more`); under a "nothing found" headline it comes right below it. It replaces the long
+  "not in compile_commands.json" limit. New `aerotrace check --all`: no caps, and lists those files. On a
+  terminal, long lines wrap at word boundaries to the terminal width; pipes, `--json` and MCP answers are
+  not wrapped. The JSON `proof` has new optional counts (`build_files`, `build_files_checked`,
+  `build_files_with_errors`, `outside_build`, `outside_build_examples`).
 - Claude Code edit check: `aerotrace install --client claude` now also adds a `PreToolUse` hook (in the
   repo's `.claude/settings.json`, other settings kept). Before Claude edits a C/C++ file, the edit is
   checked as a patch: exact breaks give the full list (functions, data, tests to run), probable breaks or

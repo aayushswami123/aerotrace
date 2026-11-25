@@ -173,7 +173,10 @@ Icons, always next to a word:
 | no test         | ○       | `[ ]`  | NO TEST           | none                |
 
 Only bold, red and yellow, only on the icon and the word (works on light and dark terminals). No dim,
-grey or background colours. Lines are not wrapped. In data strings, control characters, bidi controls
+grey or background colours. Lines are wrapped at word boundaries only on a TTY, to the terminal width,
+with continuation lines under the text (`render(..., width=N)`; a single long word such as a path is
+never split). Pipes, CI logs, `--json`, MCP answers and the goldens are not wrapped, so they stay the
+same everywhere and are easy to grep. In data strings, control characters, bidi controls
 (U+061C, U+200E/F, U+202A-202E, U+2066-2069) and U+2028/2029 are shown as `\uXXXX` (terminal and HTML),
 so a name can't send escape codes or reorder text. In ASCII mode every non-ASCII character is escaped
 too (`backslashreplace`), so a non-UTF-8 stream never raises UnicodeEncodeError. Numbers use `1,234`.
@@ -184,8 +187,8 @@ limits are printed right below the headline ("Index limit: ..."), so a pass neve
 
 | summary                                         | first line                                                                       |
 |-------------------------------------------------|----------------------------------------------------------------------------------|
-| breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch.`                            |
-| only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link.`                            |
+| breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch (N BREAKS, M AFFECTED).`     |
+| only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link (N MAY BREAK, M AFFECTED).`  |
 | affected > 0, no breaks                         | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
 | only unknown > 0                                | `⚠️  N things this change reaches are unknown: AeroTrace could not follow them. Check by hand.` |
 | only not_followed > 0                           | `ℹ️  Nothing found that this change can break, but N parts of the change could not be followed.` |
@@ -193,7 +196,18 @@ limits are printed right below the headline ("Index limit: ..."), so a pass neve
 
 The second line lists the other non-zero counts, direct counts first ("1 more may not build or link, 6
 may be affected (2 direct, 4 further up), 2 are unknown and 2 parts of the change could not be
-followed."). The proof line at the end says only what is true about the run:
+followed."). When something breaks, the first line ends with the counts in the words the lists use
+(`BREAKS`, `MAY BREAK`, `AFFECTED`, `UNKNOWN`; zero counts left out), so the verdict is complete on one
+line. Before the proof line comes the coverage line, from `proof.build_files*` (only when the JSON has
+them): `Checked 117 of 117 files in this build (1 had parse errors).` If some repo sources are not in
+compile_commands.json, one short line follows and names up to 3 of them: `1,696 C/C++ files outside this
+build were not checked: deps/a.c, deps/b.c, deps/c.c and 1,693 more (--all lists them).` (the hint is the CLI's;
+MCP and HTML name the same 3). Under a ✅ or ℹ️ "nothing found" headline this line comes right below the
+headline as an "Index limit:", not at the end, because a caller in those files is exactly what a pass
+can miss. This line replaces the long "not in compile_commands.json" index limit in `check`, so what was
+not seen is still always said.
+`aerotrace check --all` removes the caps and lists those files. The proof line at the end says only what
+is true about the run:
 `index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)`.
 
 ### 2.2 Mock-ups (these are the goldens in `tests/golden/ui/`)

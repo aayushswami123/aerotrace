@@ -223,6 +223,10 @@ class _Run:
         self.lookup = diff._Collect(conn, root, DiffImpact(mode, None, 0))
         self.edited = {c.fn.id for c in res.diff.changed}
         self.index_limits = set(graph.index_limits(conn))
+        # shown as the coverage line (proof), not as a limit
+        self.outside_note = graph.outside_build_note(
+            dict(conn.execute("SELECT key, value FROM meta").fetchall())
+        )
         self.sig_seen: set[str] = set()
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
@@ -307,6 +311,8 @@ class _Run:
         return self.mode == "patch" and fn.id in self.edited and fn.file in self.compiled
 
     def blind(self, text: str, node: str | None = None) -> None:
+        if text == self.outside_note:
+            return
         scope = "index" if text in self.index_limits else "change"
         self.res.blind_spots.append((text, scope, node if scope == "change" else None))
 
@@ -891,9 +897,15 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
     }
 
 
-def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int = NODE_CAP) -> dict:
+OUTSIDE_EXAMPLES = 3  # repo sources outside the build named in every answer (the rest with --all)
+
+
+def to_contract(
+    conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int = NODE_CAP, list_outside: bool = False
+) -> dict:
     """The `aerotrace-check` v1 JSON (see aerotrace/ui/schema.py). Counts are over every node; the node
-    list is capped at `cap`, lowest ranked dropped first."""
+    list is capped at `cap`, lowest ranked dropped first. `list_outside` adds the sorted repo sources
+    outside the build (proof.outside_build_files); by default only their count is given."""
     d = res.diff
     change = _change(d, res)
     if d.files == 0:
@@ -954,6 +966,8 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
         conn.execute("SELECT COUNT(*) FROM files").fetchone()[0],
         conn.execute("SELECT COUNT(*) FROM functions").fetchone()[0],
     )
+    cov = graph.build_coverage(conn)
+    outside = cov.pop("outside_build")
     return {
         "format": FORMAT,
         "version": VERSION,
@@ -978,6 +992,10 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
             "index_functions": functions,
             "depth": d.depth,
             "stopped_early": res.stopped_early,
+            **cov,
+            "outside_build": len(outside),
+            "outside_build_examples": outside[:OUTSIDE_EXAMPLES],
+            **({"outside_build_files": outside} if list_outside else {}),
         },
     }
 
@@ -1022,12 +1040,17 @@ def _tool() -> str:
 
 
 def check_loaded(
-    conn: sqlite3.Connection, root: Path, change: Change, outliner: Outliner, depth: int = 5
+    conn: sqlite3.Connection,
+    root: Path,
+    change: Change,
+    outliner: Outliner,
+    depth: int = 5,
+    list_outside: bool = False,
 ) -> dict:
     """The aerotrace-check JSON for a change, with an open index."""
     res = run(conn, root, change.diffs, mode=change.mode, outliner=outliner, base=change.base, depth=depth,
               old=change.old)  # fmt: skip
-    return to_contract(conn, res, _tool())
+    return to_contract(conn, res, _tool(), list_outside=list_outside)
 
 
 def check_change(
@@ -1038,6 +1061,7 @@ def check_change(
     patch_text: str | None = None,
     build_dir: Path | None = None,
     depth: int = 5,
+    list_outside: bool = False,
 ) -> tuple[dict, str]:
     """Read the change, open the index with `open_index(want) -> (conn, note)`, and return (the
     aerotrace-check JSON, note about the index). Raises ValueError or GitError when the change can't be
@@ -1055,6 +1079,6 @@ def check_change(
     except Exception as e:
         return empty_contract("index_error", _tool(), f"The index could not be opened: {e}"), ""
     try:
-        return check_loaded(conn, root, change, outliner, depth), note
+        return check_loaded(conn, root, change, outliner, depth, list_outside), note
     finally:
         conn.close()
