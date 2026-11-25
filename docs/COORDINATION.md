@@ -18,6 +18,7 @@ Sessions:
 |---|---|---|---|---|
 | `docs/dashboard-plan` (#62) | product | Dashboard and benchmark plan, design system, web UI | `docs/design/`, `docs/decisions/`, `docs/plans/dashboard*`, `src/aerotrace/ui/web/`, `tests/ui/`, `CLAUDE.md` | in progress |
 | `bench/cases` (#63) | product | 30 benchmark cases | `bench/cases/` | in progress |
+| `bench/truth` | product | Benchmark truth (build each case), tool runs, scores, `docs/benchmark/RESULTS.md` | `bench/cases/patches/`, `bench/truth/`, `bench/results/`, `docs/benchmark/` | in progress |
 | `bench/pilot-sonnet` | product | Harness and plan for the $25 Sonnet benchmark pilot | `bench/` | waiting to run |
 | `docs/launch-readme` (#54) | product | Launch README | `README.md`, `docs/launch/` | waits for benchmark results; do not merge |
 | `fix/wrong-safe-answers` | merge | The 4 wrong "safe" answers from benchmark run 1 (redis-05, curl-05, redis-07, curl-07) | `src/aerotrace/analysis/check.py`, `analysis/data.py`, `index/history.py`, `ui/terminal.py` | review |
