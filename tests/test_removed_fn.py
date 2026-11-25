@@ -266,3 +266,99 @@ def test_function_moved_to_a_new_file_may_break_and_says_why(repo_factory, shape
     assert only(c) == {"main": ("breaks", "probable")}  # not "sure": the new file may not be built
     assert check.exit_code(c) == 1
     assert any("other.c" in b["text"] and "new" in b["text"] for b in c["sections"]["blind_spots"])
+
+
+# ---------------------------------------------------------------- second review of #81
+
+PROTO_GONE = {"lib.h": [("int scale(int x);\n", "")]}
+
+
+def test_files_that_only_take_the_address_are_checked(repo_factory):
+    root = repo_of(repo_factory, "c_proto_addr")  # tbl.c: a table names scale; g.c: `return &scale;`
+    _, c = check_patch(root, git_patch(root, PROTO_GONE))
+    assert {k: v[0] for k, v in only(c).items()} == {"table": "breaks", "get": "breaks"}
+    assert check.exit_code(c) == 1
+
+
+def many_callers(root, n, first_line='#include "lib.h"\n'):
+    for i in range(n):
+        (root / f"user{i:02d}.c").write_text(
+            f"{first_line}int user{i:02d}(void) {{\n    return scale({i});\n}}\n"
+        )
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "users")
+    build_index(root, jobs=1)
+
+
+def test_files_over_the_compile_cap_stay_may_break_with_their_own_reason(repo_factory):
+    root = repo_factory("c_proto_gone")
+    git(root, "init", "-q", "-b", "main")
+    many_callers(root, 10)
+    _, c = check_patch(root, git_patch(root, PROTO_GONE))
+    why = {n["name"]: n["why"] for n in c["nodes"] if n["status"] == "breaks"}
+    capped = {k: w for k, w in why.items() if "more than 8 files" in w}
+    assert len(capped) == 3  # 11 caller files (main.c and 10 users), 8 compiled
+    assert all("could not be compiled" not in w for w in capped.values())
+    assert all(nodes(c)[k] == ("breaks", "probable") for k in capped)
+    assert check.exit_code(c) == 1
+    assert any("3 more files were not compiled" in b["text"] for b in c["sections"]["blind_spots"])
+
+
+def test_a_caller_file_that_already_had_errors_stays_may_break(repo_factory):
+    root = repo_factory("c_proto_gone")
+    git(root, "init", "-q", "-b", "main")
+    many_callers(root, 1, first_line='#include "lib.h"\n#include "missing.h"\n')
+    _, c = check_patch(root, git_patch(root, PROTO_GONE))
+    assert nodes(c, "breaks")["user00"] == ("breaks", "probable")
+    why = next(n["why"] for n in c["nodes"] if n["name"] == "user00")
+    assert "already had" in why and "error" in why
+
+
+def test_prototype_limit_line_mentions_implicit_declarations_and_overloads(repo_factory):
+    root = repo_of(repo_factory, "c_proto_gone")
+    _, c = check_patch(root, git_patch(root, PROTO_GONE))
+    text = next(b["text"] for b in c["sections"]["blind_spots"] if "prototype of scale" in b["text"])
+    assert "implicit declaration" in text and "overload" in text
+
+
+def new_file_patch(root, name, body):
+    n = body.count("\n")
+    return f"--- /dev/null\n+++ b/{name}\n@@ -0,0 +1,{n} @@\n" + "".join(
+        f"+{ln}\n" for ln in body.splitlines()
+    )
+
+
+@pytest.mark.parametrize(
+    "fixture, gone, new_name, new_body",
+    [
+        (
+            "cpp_moved_new",
+            {"lib.cpp": [("int scale(int x) { return x * 2; }\n", "")]},
+            "other.cpp",
+            "long scale(long x) { return x * 2; }\n",
+        ),
+        (
+            "cpp_moved_new",
+            {"lib.cpp": [("int scale(int x) { return x * 2; }\n", "")]},
+            "other.cpp",
+            "namespace { int scale(int x) { return x * 2; } }\n",
+        ),
+        (
+            "c_proto_gone",
+            {"lib.c": [(SCALE, "")]},
+            "other.c",
+            "static int scale(int x) {\n    return x * 2;\n}\n",
+        ),
+        ("c_proto_gone", {"lib.c": [(SCALE, "")]}, "other.c", "int scale(int x);\n"),
+        ("c_proto_gone", {"lib.c": [(SCALE, "")]}, "other.c", "long scale(long x) {\n    return x * 2;\n}\n"),
+    ],
+    ids=["other_signature", "unnamed_namespace", "static", "prototype_only", "c_other_signature"],
+)
+def test_a_new_file_that_does_not_really_replace_it_keeps_breaks_exact(
+    repo_factory, fixture, gone, new_name, new_body
+):
+    root = repo_of(repo_factory, fixture)
+    text = git_patch(root, gone) + new_file_patch(root, new_name, new_body)
+    _, c = check_patch(root, text)
+    assert nodes(c, "breaks") == {"main": ("breaks", "exact")}
+    assert check.exit_code(c) == 1
