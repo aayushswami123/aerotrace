@@ -37,7 +37,15 @@ KINDS = ("function", "field", "global", "static_local")
 EDGE_KINDS = ("calls", "reads", "writes")
 CERTAINTIES = LEVELS  # exact, probable, unknown
 SCOPES = ("change", "index")
-NOT_FOLLOWED_KEYS = ("outside", "not_indexed", "deleted", "mismatched", "unreadable", "new_files")
+NOT_FOLLOWED_KEYS = (
+    "outside",
+    "not_indexed",
+    "deleted",
+    "mismatched",
+    "unreadable",
+    "new_files",
+    "build_files",
+)
 SUMMARY_KEYS = (
     "breaks_exact",
     "breaks_probable",

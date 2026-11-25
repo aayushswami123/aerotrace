@@ -84,6 +84,14 @@ and versions follow [Semantic Versioning](https://semver.org/).
   matched by type, other #if branches) are not. A patch where every file was skipped is no longer
   `status: ok` but `nothing_to_check`. Calls of a retyped function that were not compiled now count as not
   checked. The exit code and the hook are unchanged for now.
+- `aerotrace check`: a function or global that is removed, made static or retyped is also searched for by
+  name in the whole repo (comments and strings left out). A place where the index has no use of it (an
+  `#if` branch that is off, a file outside the build, a macro body) makes the answer UNKNOWN and is named
+  ("f is also named in main.c:5 (code AeroTrace did not compile)"). Struct fields are not searched. Also
+  UNKNOWN now: a removed or retyped virtual method (overrides are not followed), a renamed file (like a
+  deleted one), and a changed build file (Makefile, CMakeLists.txt, ...). Not counted any more: comment-only
+  lines outside functions and a reformatted function head. A change with no C or C++ part says "No C or
+  C++ changes, so there was nothing to check." instead of a green line.
 - `aerotrace check --patch`: a function removed together with its header prototype, or removed in a
   shifted hunk (`diff -u`, the Claude Code hook), is now REMOVED and its callers BREAK, like the same change
   written by git. A prototype removed while the function stays (or moves) makes callers in other files MAY BREAK

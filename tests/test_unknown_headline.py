@@ -157,3 +157,152 @@ def test_verdict_helper_reads_any_contract(repo):
     v = check.verdict(c)
     assert (v.verdict, v.unchecked) == ("unknown", True)
     assert check.verdict(check.empty_contract("no_index", "t", "no index")).verdict == "unknown"
+
+
+# ---------------------------------------------------------------- review of #84: uses AeroTrace can't see
+#
+# These assert from known truth (what the compiler says), not from the `unchecked` flag the code sets.
+
+
+def _git(root, *args):
+    return subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", *args],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+
+
+@pytest.fixture
+def unseen(repo_factory, monkeypatch):
+    """f is only called under #ifdef USE_F; h only from src/out.c, which is not in compile_commands.json."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    root = repo_factory("c_unseen")
+    db = root / "compile_commands.json"
+    db.write_text(json.dumps([e for e in json.loads(db.read_text()) if e["file"] != "src/out.c"]))
+    for args in (["init", "-q", "-b", "main"], ["add", "-A"], ["commit", "-q", "--no-verify", "-m", "init"]):
+        _git(root, *args)
+    build_index(root, jobs=1)
+    return root
+
+
+@pytest.fixture
+def override(repo_factory, monkeypatch):
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    root = repo_factory("cpp_override")
+    for args in (["init", "-q", "-b", "main"], ["add", "-A"], ["commit", "-q", "--no-verify", "-m", "init"]):
+        _git(root, *args)
+    build_index(root, jobs=1)
+    return root
+
+
+def git_contract(root, edits):
+    for rel, old, new in edits:
+        p = root / rel
+        text = p.read_text() if p.exists() else ""
+        assert old in text, old
+        p.write_text(text.replace(old, new, 1))
+    outliner = Outliner(root)
+    diffs, desc, old_outlines = diff.load_git(root, "HEAD", outliner, every=True)
+    conn, _ = fresh_index(root, want=diff.wanted(diffs, "git"))
+    try:
+        res = check.run(conn, root, diffs, mode="git", base=desc, outliner=outliner, old=old_outlines)
+        return check.to_contract(conn, res, "aerotrace test")
+    finally:
+        conn.close()
+
+
+def assert_not_clear(c):
+    assert c["verdict"] != "clear", c["verdict"]
+    text = ui.render_text(c, unicode=True)
+    first = text.splitlines()[0]
+    assert "Nothing found" not in first and not first.startswith("✅"), first
+    assert "Nothing found" not in ui.render_html(c).split("</h1>", 1)[0]
+
+
+LH, LC = "include/lib.h", "src/lib.c"
+F_TWO = [(LH, "int f(int a);", "int f(int a, int b);"), (LC, "int f(int a) {", "int f(int a, int b) {")]
+H_TWO = [(LH, "int h(int a);", "int h(int a, int b);"), (LC, "int h(int a) {", "int h(int a, int b) {")]
+H_GONE = [(LH, "int h(int a);\n", ""), (LC, "int h(int a) {\n    return a * 2;\n}\n", "")]
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_a_caller_only_in_an_inactive_if_branch_is_never_clear(unseen, mode):
+    c = contract_for(unseen, make_patch(unseen, F_TWO)) if mode == "patch" else git_contract(unseen, F_TWO)
+    assert_not_clear(c)
+    assert "src/main.c:5" in c["unchecked_reason"], c["unchecked_reason"]
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_a_caller_only_outside_the_build_is_never_clear(unseen, mode):
+    c = contract_for(unseen, make_patch(unseen, H_TWO)) if mode == "patch" else git_contract(unseen, H_TWO)
+    assert_not_clear(c)
+    assert "src/out.c:5" in c["unchecked_reason"], c["unchecked_reason"]
+
+
+def test_a_removed_function_used_only_outside_the_build_is_never_clear(unseen):
+    assert_not_clear(contract_for(unseen, make_patch(unseen, H_GONE)))
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+def test_a_renamed_header_that_is_still_included_is_never_clear(unseen, mode):
+    _git(unseen, "mv", LH, "include/lib2.h")
+    if mode == "git":
+        c = git_contract(unseen, [])
+    else:
+        text = _git(unseen, "diff", "--cached", "HEAD")
+        _git(unseen, "mv", "include/lib2.h", LH)
+        c = contract_for(unseen, text)
+    assert_not_clear(c)
+
+
+@pytest.mark.parametrize(
+    "edits",
+    [
+        [
+            ("include/b.h", "    virtual int f();\n", ""),
+            ("src/b.cpp", "int B::f() {\n    return 1;\n}\n", ""),
+        ],
+        [
+            ("include/b.h", "virtual int f();", "virtual int f(int x);"),
+            ("src/b.cpp", "int B::f() {", "int B::f(int x) {"),
+        ],
+    ],
+    ids=["removed", "retyped"],
+)
+def test_a_virtual_method_with_an_override_is_never_clear(override, edits):
+    assert_not_clear(contract_for(override, make_patch(override, edits)))
+
+
+def test_a_changed_build_file_is_not_checked(unseen):
+    c = git_contract(unseen, [("Makefile", "src/main.c", "src/main.c src/missing.c")])
+    assert_not_clear(c)
+    assert c["verdict"] == "unknown" and "Makefile" in c["unchecked_reason"]
+
+
+def test_a_change_with_no_c_part_is_neutral_not_green(unseen):
+    c = git_contract(unseen, [("README.md", "# c_unseen", "# c_unseen (docs)")])
+    first = ui.render_text(c, unicode=True).splitlines()[0]
+    assert not first.startswith("✅") and "No C or C++ changes, so there was nothing to check." in first, (
+        first
+    )
+
+
+HARMLESS_EDITS = {
+    "body": [(LC, "    return a + k();", "    return a + k() + 1;")],
+    "new_local": [(LC, "    return a + k();", "    int z = 2;\n    return a + k() + z;")],
+    "new_static": [(LC, "int g(int a) {", "static int extra(void) {\n    return 3;\n}\n\nint g(int a) {")],
+    "comment_in_function": [(LC, "/* in fn */", "/* in fn, edited */")],
+    "comment_outside": [(LC, "/* file comment */", "/* file comment, edited */")],
+    "blank_line": [(LC, "/* file comment */\n", "/* file comment */\n\n")],
+    "reformatted_signature": [(LC, "int f(int a) {", "int f( int  a )\n{")],
+}
+
+
+@pytest.mark.parametrize("mode", ["patch", "git"])
+@pytest.mark.parametrize("name", sorted(HARMLESS_EDITS))
+def test_harmless_edits_stay_clear(unseen, name, mode):
+    edits = HARMLESS_EDITS[name]
+    c = contract_for(unseen, make_patch(unseen, edits)) if mode == "patch" else git_contract(unseen, edits)
+    assert c["verdict"] == "clear", (c["verdict"], c.get("unchecked_reason"))

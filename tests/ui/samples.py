@@ -17,6 +17,7 @@ NOT_FOLLOWED_EMPTY = {
     "mismatched": [],
     "unreadable": [],
     "new_files": [],
+    "build_files": [],
 }
 
 CERTAINTY_RANK = ("exact", "probable", "unknown")

@@ -59,7 +59,8 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
     "changed_functions": 1, "new_functions": 0, "removed_functions": 1, "changed_declarations": 1,
     "not_followed": {                 // straight from DiffImpact; parts of the change AeroTrace skipped
       "outside": [{"file": "src/t_string.c", "lines": [40, 41], "other_side_lines": []}],
-      "not_indexed": [], "deleted": [], "mismatched": [], "unreadable": [], "new_files": []
+      "not_indexed": [], "deleted": [], "mismatched": [], "unreadable": [], "new_files": [],
+      "build_files": []               // Makefile, CMakeLists.txt, ...: AeroTrace does not read them
     }
   },
 

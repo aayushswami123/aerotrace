@@ -311,7 +311,8 @@ def test_cli_check_json_and_exit_code(repo, capsys):
     assert code == 1 and data["format"] == "aerotrace-check" and data["summary"]["breaks_exact"] >= 1
     code = main(["check", "--root", str(repo)])
     out = capsys.readouterr().out
-    assert code == 0 and "No C or C++ changes to check" in out  # p.diff itself is not code
+    assert code == 0 and "No C or C++ changes, so there was nothing to check." in out  # p.diff is not code
+    assert not out.startswith("✅")
 
 
 @pytest.fixture
