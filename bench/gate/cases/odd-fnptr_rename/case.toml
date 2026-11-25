@@ -1,0 +1,9 @@
+id = "odd-fnptr_rename"
+summary = "Function-pointer variable renamed in lib.h and lib.c; main.c still uses the old name."
+origin = "review-85 (PR #85), script odd"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

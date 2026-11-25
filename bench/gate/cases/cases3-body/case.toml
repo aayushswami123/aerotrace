@@ -1,0 +1,8 @@
+id = "cases3-body"
+summary = "Harmless edit: The body of f changes."
+origin = "review-84 (PR #84), script cases3 (harmless edits)"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

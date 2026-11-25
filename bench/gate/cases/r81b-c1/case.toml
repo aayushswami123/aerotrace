@@ -1,0 +1,8 @@
+id = "r81b-c1"
+summary = "Correct change: a prototype moves to another header that the callers include."
+origin = "review-81b (PR #81), case c1"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

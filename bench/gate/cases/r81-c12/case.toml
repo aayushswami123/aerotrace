@@ -1,0 +1,8 @@
+id = "r81-c12"
+summary = "Correct change: only an attribute is added to a prototype."
+origin = "review-81 (PR #81), case c12"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

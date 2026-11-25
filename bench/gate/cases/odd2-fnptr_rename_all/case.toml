@@ -1,0 +1,8 @@
+id = "odd2-fnptr_rename_all"
+summary = "Correct change: a function-pointer variable is renamed in all three files."
+origin = "review-85 (PR #85), script odd2"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

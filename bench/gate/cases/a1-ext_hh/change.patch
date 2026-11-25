@@ -1,0 +1,14 @@
+diff --git a/lib.c b/lib.c
+index 8fc54a2..d8f5832 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1 @@
+-#include "lib.h"
+-int helper(int a){return a;}
++int other(void){return 0;}
+diff --git a/lib.h b/lib.h
+index 74727fc..e69de29 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +0,0 @@
+-int helper(int);

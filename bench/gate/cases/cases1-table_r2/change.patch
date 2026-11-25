@@ -1,0 +1,10 @@
+diff --git a/ops.c b/ops.c
+index 44d1e48..74e7571 100644
+--- a/ops.c
++++ b/ops.c
+@@ -1,5 +1,2 @@
+ #include "ops.h"
+ int op_add(int a) { return a + 1; }
+-int op_sub(int a) {
+-    return a - 1;
+-}

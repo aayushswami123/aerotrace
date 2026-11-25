@@ -1,0 +1,19 @@
+diff --git a/lib.c b/lib.c
+index ac7d6e5..b29f1b2 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1 +1 @@
+-int old_fn(int a) { return a; }
++int new_fn(int a) { return a; }
+diff --git a/main.c b/main.c
+index 052220e..6b0de1e 100644
+--- a/main.c
++++ b/main.c
+@@ -1,4 +1,5 @@
+-int old_fn(int a);
++int new_fn(int a);
+ int main(void) {
+-    return old_fn(1);
++    /* was old_fn */
++    return new_fn(1);
+ }

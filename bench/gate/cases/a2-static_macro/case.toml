@@ -1,0 +1,9 @@
+id = "a2-static_macro"
+summary = "Function made static through a macro (#define PRIV static); another file calls it."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

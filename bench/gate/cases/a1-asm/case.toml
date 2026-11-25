@@ -1,0 +1,9 @@
+id = "a1-asm"
+summary = "Function removed; it is also called from assembly (x.S, not in the build list), so the link fails."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["helper"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

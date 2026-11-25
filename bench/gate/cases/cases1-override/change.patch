@@ -1,0 +1,9 @@
+diff --git a/b.h b/b.h
+index fba6ce6..086f237 100644
+--- a/b.h
++++ b/b.h
+@@ -1,3 +1,2 @@
+-struct B { virtual int f(); virtual int g(); };
+-inline int B::f(){return 1;}
++struct B { virtual int g(); };
+ inline int B::g(){return 2;}

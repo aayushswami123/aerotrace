@@ -1,0 +1,8 @@
+id = "cases3-reformat"
+summary = "Harmless edit: The signature of f is reformatted over two lines."
+origin = "review-84 (PR #84), script cases3 (harmless edits)"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

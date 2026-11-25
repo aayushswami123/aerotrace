@@ -1,0 +1,9 @@
+id = "repro-r5"
+summary = "A duplicate definition of calc is added in another file."
+origin = "audit repro.sh, case R5"
+expect_build = "fails"
+failing_sites = ["calc"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

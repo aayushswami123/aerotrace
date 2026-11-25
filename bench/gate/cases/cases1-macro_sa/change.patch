@@ -1,0 +1,7 @@
+diff --git a/d.h b/d.h
+index 9d86db9..cd57766 100644
+--- a/d.h
++++ b/d.h
+@@ -1 +1 @@
+-#define BUFSZ 64
++#define BUFSZ 16

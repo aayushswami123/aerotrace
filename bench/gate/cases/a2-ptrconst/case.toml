@@ -1,0 +1,9 @@
+id = "a2-ptrconst"
+summary = "Parameter int* becomes const int*; main.c passes the function as an int* callback (build uses -Werror)."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = ["-Werror"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

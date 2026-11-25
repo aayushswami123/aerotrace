@@ -1,0 +1,9 @@
+id = "cases1-typedef"
+summary = "Typedef changed from int to long; main.c converts a pointer to it (build uses -Werror=incompatible-pointer-types)."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = ["-Werror=incompatible-pointer-types"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

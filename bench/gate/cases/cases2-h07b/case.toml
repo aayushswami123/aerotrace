@@ -1,0 +1,9 @@
+id = "cases2-h07b"
+summary = "Header renamed from lib.h to lib2.h; main.c still includes lib.h."
+origin = "review-84 (PR #84), script cases2"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

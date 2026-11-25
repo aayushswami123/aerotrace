@@ -1,0 +1,8 @@
+id = "r82-dstatic"
+summary = "Harmless: a new static function calc is added in other.c while lib.c keeps its own calc."
+origin = "review-82 (PR #82), case dstatic"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

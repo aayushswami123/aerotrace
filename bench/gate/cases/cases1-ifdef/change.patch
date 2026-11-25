@@ -1,0 +1,15 @@
+diff --git a/lib.c b/lib.c
+index 6a926d1..9aaf351 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int f(int a) { return a; }
++int f(int a, int b) { return a+b; }
+diff --git a/lib.h b/lib.h
+index a30d3e6..f014225 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-int f(int a);
++int f(int a, int b);

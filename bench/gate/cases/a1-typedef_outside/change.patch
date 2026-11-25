@@ -1,0 +1,7 @@
+diff --git a/lib.h b/lib.h
+index 83b8f02..8b13789 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-typedef int T;
++

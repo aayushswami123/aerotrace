@@ -1,0 +1,13 @@
+diff --git a/lib.c b/lib.c
+index ead1d4b..320231e 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,5 +1,5 @@
+-int f(a)
+-int a;
++int f(a, b)
++int a; int b;
+ {
+-    return a;
++    return a+b;
+ }

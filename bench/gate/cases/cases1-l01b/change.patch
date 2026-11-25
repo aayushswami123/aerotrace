@@ -1,0 +1,8 @@
+diff --git a/lib.c b/lib.c
+index 663e1fa..ae0707b 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,3 +1,2 @@
+ #include "lib.h"
+-int f(int a) { return a; }
+ int k(void){return 0;}

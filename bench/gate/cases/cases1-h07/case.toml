@@ -1,0 +1,9 @@
+id = "cases1-h07"
+summary = "Header lib.h deleted but main.c still includes it."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

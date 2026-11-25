@@ -1,0 +1,11 @@
+diff --git a/lib.c b/lib.c
+index 1e99ec9..c8a3403 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,5 +1,6 @@
+ #include "lib.h"
+ /* file comment */
++
+ static int k(void) { return 1; }
+ int f(int a) {
+   /* in fn */

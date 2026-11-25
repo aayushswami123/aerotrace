@@ -1,0 +1,8 @@
+id = "cases1-build_file"
+summary = "A build file (Makefile) changes and no C file does. The C sources still build."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

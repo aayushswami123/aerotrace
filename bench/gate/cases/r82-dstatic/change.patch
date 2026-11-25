@@ -1,0 +1,8 @@
+diff --git a/other.c b/other.c
+index 6c24f10..8c77b0d 100644
+--- a/other.c
++++ b/other.c
+@@ -1 +1,2 @@
+-int other(void) { return 0; }
++static int calc(int a) { return a + 1; }
++int other(void) { return calc(0); }

@@ -1,0 +1,8 @@
+id = "a2-knr"
+summary = "K&R definition gains a parameter; the caller uses an empty-parentheses declaration. The build passes."
+origin = "review-85 (PR #85), script a2"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

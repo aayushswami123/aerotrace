@@ -1,0 +1,15 @@
+diff --git a/lib.c b/lib.c
+index cf5560c..1439ec5 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int get(int k){return k;}
++int get(int key){return key;}
+diff --git a/lib.h b/lib.h
+index c3bfae3..66e9186 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-int get(int k);
++int get(int key);

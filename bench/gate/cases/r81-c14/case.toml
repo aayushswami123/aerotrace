@@ -1,0 +1,8 @@
+id = "r81-c14"
+summary = "Correct move: same as c13 with a differently shaped diff."
+origin = "review-81 (PR #81), case c14"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

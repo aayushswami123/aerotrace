@@ -1,0 +1,9 @@
+id = "a1-enum_inactive"
+summary = "Enum member removed; its only use is in an inactive #ifdef X branch (build uses -DX)."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = ["-DX"]
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

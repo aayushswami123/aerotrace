@@ -1,0 +1,8 @@
+id = "r82-dmove"
+summary = "Correct move: calc moves from lib.c to other.c; main.c declares it."
+origin = "review-82 (PR #82), case dmove"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

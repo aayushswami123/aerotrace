@@ -1,0 +1,9 @@
+id = "a1-macrohdr"
+summary = "Function removed; it is named in a macro body in m.h, and main.c uses that macro."
+origin = "review-85 (PR #85), script a1"
+expect_build = "fails"
+failing_sites = ["main.c"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

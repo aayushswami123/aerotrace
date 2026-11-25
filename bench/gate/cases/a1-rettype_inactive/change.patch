@@ -1,0 +1,16 @@
+diff --git a/lib.c b/lib.c
+index 29b8ff1..218c59f 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int get(void){return 1;}
++struct S get(void){struct S s={1};return s;}
+diff --git a/lib.h b/lib.h
+index 4be3231..88f2db4 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1,2 @@
+-int get(void);
++struct S{int a;};
++struct S get(void);

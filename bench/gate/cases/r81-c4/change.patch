@@ -1,0 +1,21 @@
+diff --git a/lib.c b/lib.c
+index bdb5c5d..fa0132d 100644
+--- a/lib.c
++++ b/lib.c
+@@ -2,6 +2,3 @@
+ int keep(int x) {
+     return x + 1;
+ }
+-int scale(int x) {
+-    return x * 2;
+-}
+diff --git a/other.c b/other.c
+new file mode 100644
+index 0000000..c8efadc
+--- /dev/null
++++ b/other.c
+@@ -0,0 +1,4 @@
++#include "lib.h"
++int scale(int x) {
++    return x * 2;
++}

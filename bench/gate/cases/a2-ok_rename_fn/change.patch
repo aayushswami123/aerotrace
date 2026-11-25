@@ -1,0 +1,23 @@
+diff --git a/lib.c b/lib.c
+index cf5560c..dee94ad 100644
+--- a/lib.c
++++ b/lib.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int get(int k){return k;}
++int fetch(int k){return k;}
+diff --git a/lib.h b/lib.h
+index d79050e..40be655 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1 +1 @@
+-int get(int);
++int fetch(int);
+diff --git a/main.c b/main.c
+index 8ca22dd..956cb70 100644
+--- a/main.c
++++ b/main.c
+@@ -1,2 +1,2 @@
+ #include "lib.h"
+-int main(void){return get(1);}
++int main(void){return fetch(1);}

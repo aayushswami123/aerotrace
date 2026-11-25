@@ -1,0 +1,9 @@
+id = "a2-const_rm"
+summary = "C++ method loses const; main.cpp calls it on a const object."
+origin = "review-85 (PR #85), script a2"
+expect_build = "fails"
+failing_sites = ["main.cpp"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

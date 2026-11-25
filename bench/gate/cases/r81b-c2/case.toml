@@ -1,0 +1,8 @@
+id = "r81b-c2"
+summary = "Correct change: a function becomes static; all callers are in the same file; the prototype is removed."
+origin = "review-81b (PR #81), case c2"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

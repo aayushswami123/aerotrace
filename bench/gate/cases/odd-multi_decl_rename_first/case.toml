@@ -1,0 +1,8 @@
+id = "odd-multi_decl_rename_first"
+summary = "Correct change: the first name in a shared declaration is renamed everywhere."
+origin = "review-85 (PR #85), script odd"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

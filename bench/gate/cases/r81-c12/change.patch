@@ -1,0 +1,8 @@
+diff --git a/lib.h b/lib.h
+index 45939af..e748fd7 100644
+--- a/lib.h
++++ b/lib.h
+@@ -1,2 +1,2 @@
+-int scale(int x);
++int scale(int x) __attribute__((warn_unused_result));
+ int keep(int x);

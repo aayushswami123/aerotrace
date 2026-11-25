@@ -1,0 +1,9 @@
+id = "cases1-def_table"
+summary = "An X-macro list file (ops.def) is broken by an unbalanced parenthesis."
+origin = "review-84 (PR #84), script cases1"
+expect_build = "fails"
+failing_sites = ["main.c", "ops.def"]
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

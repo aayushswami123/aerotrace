@@ -1,0 +1,15 @@
+diff --git a/a.cpp b/a.cpp
+index 7c4cf0c..3940dce 100644
+--- a/a.cpp
++++ b/a.cpp
+@@ -1,2 +1,2 @@
+ #include "a.h"
+-void f() noexcept {}
++void f() {}
+diff --git a/a.h b/a.h
+index c1a90f1..789447c 100644
+--- a/a.h
++++ b/a.h
+@@ -1 +1 @@
+-void f() noexcept;
++void f();

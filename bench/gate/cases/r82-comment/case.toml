@@ -1,0 +1,8 @@
+id = "r82-comment"
+summary = "Correct rename: a function is renamed everywhere; the old name stays only in a comment."
+origin = "review-82 (PR #82), case comment"
+expect_build = "passes"
+build_flags = []
+compdb_flags = []
+not_in_build = []
+modes = ["patch", "git"]

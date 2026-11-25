@@ -1,0 +1,5 @@
+--- a/lib.h
++++ b/lib.h
+@@ -1,2 +1 @@
+-int scale(int x);
+ int keep(int x);

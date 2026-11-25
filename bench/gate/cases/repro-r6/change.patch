@@ -1,0 +1,8 @@
+--- a/lib.c
++++ b/lib.c
+@@ -1,4 +1,4 @@
+ #include "lib.h"
+-int nothing_like_this(int k) {
++int get(long k) {
+     return k;
+ }

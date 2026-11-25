@@ -1,0 +1,7 @@
+diff --git a/ops.def b/ops.def
+index 8ce0392..db7782c 100644
+--- a/ops.def
++++ b/ops.def
+@@ -1,2 +1 @@
+ X(ADD)
+-X(SUB)

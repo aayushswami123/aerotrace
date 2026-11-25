@@ -1,0 +1,16 @@
+--- a/lib.c
++++ b/lib.c
+@@ -2,6 +2,3 @@
+ int keep(int x) {
+     return x + 1;
+ }
+-int scale(int x) {
+-    return x * 2;
+-}
+--- a/other.c
++++ b/other.c
+@@ -0,0 +1,4 @@
++#include "lib.h"
++int scale(int x) {
++    return x * 2;
++}
