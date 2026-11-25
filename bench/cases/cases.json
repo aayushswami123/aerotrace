@@ -1,0 +1,3219 @@
+{
+ "seed": "aerotrace-bench-cases-1/",
+ "cap": 150,
+ "cap_hand": 40,
+ "kinds": {
+  "add_param": {
+   "difficulty": "easy",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
+   "why": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)"
+  },
+  "remove_fn": {
+   "difficulty": "easy",
+   "edit": "delete the definition; any prototype stays",
+   "why": "callers fail to compile, or, when a prototype stays in a header, only at link"
+  },
+  "int_to_void": {
+   "difficulty": "easy",
+   "edit": "change the return type from int to void in the definition and every prototype; `return X;` becomes `(void)(X); return;`",
+   "why": "only callers that use the value break; callers that ignore it still build"
+  },
+  "ptr_param": {
+   "difficulty": "hard",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
+   "why": "direct calls break, and so does the place it is put in a table or assigned to a pointer"
+  },
+  "ptr_remove": {
+   "difficulty": "hard",
+   "edit": "delete the definition of a function that is reached only through a pointer; any prototype stays",
+   "why": "nothing calls it by name; only the table or assignment that names it breaks"
+  },
+  "field_rename": {
+   "difficulty": "hard",
+   "edit": "rename the struct field to `<name>_renamed` in the struct only",
+   "why": "every reader and writer breaks; same-named fields of other structs must not be counted"
+  },
+  "field_type": {
+   "difficulty": "hard",
+   "edit": "change the type of an integer struct field to `void *`",
+   "why": "arithmetic and integer uses break; some uses still build and may behave differently"
+  },
+  "global_rename": {
+   "difficulty": "hard",
+   "edit": "rename the definition of a file-scope variable to `<name>_renamed`; any `extern` stays",
+   "why": "every use breaks (at compile time, or at link when an `extern` stays)"
+  },
+  "macro_arity": {
+   "difficulty": "hard",
+   "edit": "add a trailing parameter `aerotrace_bench` to every `#define` of the function-like macro",
+   "why": "every use breaks; macros are a common gap for tools that read the code after the preprocessor"
+  },
+  "behaviour": {
+   "difficulty": "might_break",
+   "edit": "make the function return the zero value of its type (0, NULL or false) as its first statement",
+   "why": "nothing fails to build; callers that use the value may behave differently (truth checked by hand)"
+  }
+ },
+ "cases": [
+  {
+   "id": "redis-01",
+   "repo": "redis",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "src/networking.c:_addReplyToBufferOrList",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
+   "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
+   "file": "src/networking.c",
+   "line": 514,
+   "ret": "void",
+   "counts": {
+    "calls": 18,
+    "live_calls": 18,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 19
+   }
+  },
+  {
+   "id": "redis-02",
+   "repo": "redis",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "src/bitops.c:redisPopCountAarch64",
+   "edit": "delete the definition; any prototype stays",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "src/bitops.c",
+   "line": 168,
+   "ret": "long long",
+   "counts": {
+    "calls": 2,
+    "live_calls": 1,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-03",
+   "repo": "redis",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "src/bitops.c:checkSignedBitfieldOverflow",
+   "edit": "change the return type from int to void in the definition and every prototype; `return X;` becomes `(void)(X); return;`",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "src/bitops.c",
+   "line": 616,
+   "ret": "int",
+   "counts": {
+    "calls": 2,
+    "live_calls": 2,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-04",
+   "repo": "redis",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "src/server.c:dictSdsKeyCompare",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
+   "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
+   "file": "src/server.c",
+   "line": 370,
+   "ret": "int",
+   "counts": {
+    "calls": 2,
+    "live_calls": 2,
+    "macro_calls": 0,
+    "values": 15,
+    "live_values": 15,
+    "self_calls": 0,
+    "mentions": 19
+   }
+  },
+  {
+   "id": "redis-05",
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "src/db.c:delexGetKeys",
+   "edit": "delete the definition of a function that is reached only through a pointer; any prototype stays",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "src/db.c",
+   "line": 3964,
+   "ret": "int",
+   "counts": {
+    "calls": 0,
+    "live_calls": 0,
+    "macro_calls": 0,
+    "values": 1,
+    "live_values": 1,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "redis-06",
+   "repo": "redis",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "redisServer.aof_dirname",
+   "edit": "rename the struct field to `<name>_renamed` in the struct only",
+   "why_this_kind": "every reader and writer breaks; same-named fields of other structs must not be counted",
+   "file": "src/server.h",
+   "type": "char *",
+   "counts": {
+    "uses": 45,
+    "live_uses": 38
+   }
+  },
+  {
+   "id": "redis-07",
+   "repo": "redis",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "redisServer.stat_current_cow_peak",
+   "edit": "change the type of an integer struct field to `void *`",
+   "why_this_kind": "arithmetic and integer uses break; some uses still build and may behave differently",
+   "file": "src/server.h",
+   "type": "size_t",
+   "counts": {
+    "uses": 9,
+    "live_uses": 8
+   }
+  },
+  {
+   "id": "redis-08",
+   "repo": "redis",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "src/bitops.c:bitsinbyte",
+   "edit": "rename the definition of a file-scope variable to `<name>_renamed`; any `extern` stays",
+   "why_this_kind": "every use breaks (at compile time, or at link when an `extern` stays)",
+   "file": "src/bitops.c",
+   "line": 53,
+   "counts": {
+    "uses": 8,
+    "live_uses": 4
+   }
+  },
+  {
+   "id": "redis-09",
+   "repo": "redis",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "src/zmalloc.c:MALLOC_MIN_SIZE",
+   "edit": "add a trailing parameter `aerotrace_bench` to every `#define` of the function-like macro",
+   "why_this_kind": "every use breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "src/zmalloc.c",
+   "line": 56,
+   "counts": {
+    "uses": 6,
+    "live_uses": 2,
+    "defines": 1,
+    "live_defines": 1
+   }
+  },
+  {
+   "id": "redis-10",
+   "repo": "redis",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "src/fast_float_strtod.c:read8_to_u64",
+   "edit": "make the function return the zero value of its type (0, NULL or false) as its first statement",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently (truth checked by hand)",
+   "file": "src/fast_float_strtod.c",
+   "line": 320,
+   "ret": "static inline uint64_t",
+   "counts": {
+    "calls": 2,
+    "live_calls": 2,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "sqlite-01",
+   "repo": "sqlite",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "shell.c:rePeek",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
+   "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
+   "file": "shell.c",
+   "line": 9516,
+   "ret": "static unsigned char",
+   "counts": {
+    "calls": 10,
+    "live_calls": 10,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 11
+   }
+  },
+  {
+   "id": "sqlite-02",
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "sqlite3.c:jsonBlobAppendOneByte",
+   "edit": "delete the definition; any prototype stays",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "sqlite3.c",
+   "line": 214984,
+   "ret": "static void",
+   "counts": {
+    "calls": 4,
+    "live_calls": 4,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 5
+   }
+  },
+  {
+   "id": "sqlite-03",
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "sqlite3.c:pagerIsSuperJrnlName",
+   "edit": "change the return type from int to void in the definition and every prototype; `return X;` becomes `(void)(X); return;`",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "sqlite3.c",
+   "line": 60257,
+   "ret": "static int",
+   "counts": {
+    "calls": 3,
+    "live_calls": 3,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 4
+   }
+  },
+  {
+   "id": "sqlite-04",
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:sqlite3_column_int",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
+   "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
+   "file": "sqlite3.c",
+   "line": 94717,
+   "ret": "SQLITE_API int",
+   "counts": {
+    "calls": 101,
+    "live_calls": 30,
+    "macro_calls": 0,
+    "values": 1,
+    "live_values": 1,
+    "self_calls": 0,
+    "mentions": 106
+   }
+  },
+  {
+   "id": "sqlite-05",
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "shell.c:vfstraceDelete",
+   "edit": "delete the definition of a function that is reached only through a pointer; any prototype stays",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "shell.c",
+   "line": 19506,
+   "ret": "static int",
+   "counts": {
+    "calls": 0,
+    "live_calls": 0,
+    "macro_calls": 0,
+    "values": 1,
+    "live_values": 1,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "sqlite-06",
+   "repo": "sqlite",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "sqlite3.pSavepoint",
+   "edit": "rename the struct field to `<name>_renamed` in the struct only",
+   "why_this_kind": "every reader and writer breaks; same-named fields of other structs must not be counted",
+   "file": "sqlite3.c",
+   "type": "Savepoint *",
+   "counts": {
+    "uses": 14,
+    "live_uses": 13
+   }
+  },
+  {
+   "id": "sqlite-07",
+   "repo": "sqlite",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "Parse.eOrconf",
+   "edit": "change the type of an integer struct field to `void *`",
+   "why_this_kind": "arithmetic and integer uses break; some uses still build and may behave differently",
+   "file": "sqlite3.c",
+   "type": "u8",
+   "counts": {
+    "uses": 3,
+    "live_uses": 3
+   }
+  },
+  {
+   "id": "sqlite-08",
+   "repo": "sqlite",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "shell.c:shellCmdLineEdit",
+   "edit": "rename the definition of a file-scope variable to `<name>_renamed`; any `extern` stays",
+   "why_this_kind": "every use breaks (at compile time, or at link when an `extern` stays)",
+   "file": "shell.c",
+   "line": 238,
+   "counts": {
+    "uses": 3,
+    "live_uses": 2
+   }
+  },
+  {
+   "id": "sqlite-09",
+   "repo": "sqlite",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "sqlite3.c:AtomicLoad",
+   "edit": "add a trailing parameter `aerotrace_bench` to every `#define` of the function-like macro",
+   "why_this_kind": "every use breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "sqlite3.c",
+   "line": 15115,
+   "counts": {
+    "uses": 20,
+    "live_uses": 20,
+    "defines": 2,
+    "live_defines": 1
+   }
+  },
+  {
+   "id": "sqlite-10",
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "sqlite3.c:sqlite3BtreeCursor",
+   "edit": "make the function return the zero value of its type (0, NULL or false) as its first statement",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently (truth checked by hand)",
+   "file": "sqlite3.c",
+   "line": 77526,
+   "ret": "SQLITE_PRIVATE int",
+   "counts": {
+    "calls": 4,
+    "live_calls": 4,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 6
+   }
+  },
+  {
+   "id": "curl-01",
+   "repo": "curl",
+   "kind": "add_param",
+   "difficulty": "easy",
+   "symbol": "lib/dynhds.c:Curl_dynhds_add",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
+   "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
+   "file": "lib/dynhds.c",
+   "line": 134,
+   "ret": "CURLcode",
+   "counts": {
+    "calls": 13,
+    "live_calls": 9,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 15
+   }
+  },
+  {
+   "id": "curl-02",
+   "repo": "curl",
+   "kind": "remove_fn",
+   "difficulty": "easy",
+   "symbol": "src/tool_paramhlp.c:add2list",
+   "edit": "delete the definition; any prototype stays",
+   "why_this_kind": "callers fail to compile, or, when a prototype stays in a header, only at link",
+   "file": "src/tool_paramhlp.c",
+   "line": 601,
+   "ret": "ParameterError",
+   "counts": {
+    "calls": 15,
+    "live_calls": 15,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 17
+   }
+  },
+  {
+   "id": "curl-03",
+   "repo": "curl",
+   "kind": "int_to_void",
+   "difficulty": "easy",
+   "symbol": "lib/cf-socket.c:socket_close",
+   "edit": "change the return type from int to void in the definition and every prototype; `return X;` becomes `(void)(X); return;`",
+   "why_this_kind": "only callers that use the value break; callers that ignore it still build",
+   "file": "lib/cf-socket.c",
+   "line": 535,
+   "ret": "static int",
+   "counts": {
+    "calls": 5,
+    "live_calls": 5,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 6
+   }
+  },
+  {
+   "id": "curl-04",
+   "repo": "curl",
+   "kind": "ptr_param",
+   "difficulty": "hard",
+   "symbol": "lib/cw-pause.c:cw_pause_flush",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
+   "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
+   "file": "lib/cw-pause.c",
+   "line": 102,
+   "ret": "static CURLcode",
+   "counts": {
+    "calls": 1,
+    "live_calls": 1,
+    "macro_calls": 0,
+    "values": 1,
+    "live_values": 1,
+    "self_calls": 0,
+    "mentions": 3
+   }
+  },
+  {
+   "id": "curl-05",
+   "repo": "curl",
+   "kind": "ptr_remove",
+   "difficulty": "hard",
+   "symbol": "lib/http_proxy.c:http_proxy_cf_destroy",
+   "edit": "delete the definition of a function that is reached only through a pointer; any prototype stays",
+   "why_this_kind": "nothing calls it by name; only the table or assignment that names it breaks",
+   "file": "lib/http_proxy.c",
+   "line": 696,
+   "ret": "static void",
+   "counts": {
+    "calls": 0,
+    "live_calls": 0,
+    "macro_calls": 0,
+    "values": 1,
+    "live_values": 1,
+    "self_calls": 0,
+    "mentions": 2
+   }
+  },
+  {
+   "id": "curl-06",
+   "repo": "curl",
+   "kind": "field_rename",
+   "difficulty": "hard",
+   "symbol": "UserDefined.http_follow_mode",
+   "edit": "rename the struct field to `<name>_renamed` in the struct only",
+   "why_this_kind": "every reader and writer breaks; same-named fields of other structs must not be counted",
+   "file": "lib/urldata.h",
+   "type": "uint8_t",
+   "counts": {
+    "uses": 5,
+    "live_uses": 5
+   }
+  },
+  {
+   "id": "curl-07",
+   "repo": "curl",
+   "kind": "field_type",
+   "difficulty": "hard",
+   "symbol": "UserDefined.upkeep_interval_ms",
+   "edit": "change the type of an integer struct field to `void *`",
+   "why_this_kind": "arithmetic and integer uses break; some uses still build and may behave differently",
+   "file": "lib/urldata.h",
+   "type": "timediff_t",
+   "counts": {
+    "uses": 7,
+    "live_uses": 7
+   }
+  },
+  {
+   "id": "curl-08",
+   "repo": "curl",
+   "kind": "global_rename",
+   "difficulty": "hard",
+   "symbol": "src/tool_libinfo.c:feature_altsvc",
+   "edit": "rename the definition of a file-scope variable to `<name>_renamed`; any `extern` stays",
+   "why_this_kind": "every use breaks (at compile time, or at link when an `extern` stays)",
+   "file": "src/tool_libinfo.c",
+   "line": 67,
+   "counts": {
+    "uses": 3,
+    "live_uses": 3
+   }
+  },
+  {
+   "id": "curl-09",
+   "repo": "curl",
+   "kind": "macro_arity",
+   "difficulty": "hard",
+   "symbol": "lib/curl_trc.h:Curl_trc_is_verbose",
+   "edit": "add a trailing parameter `aerotrace_bench` to every `#define` of the function-like macro",
+   "why_this_kind": "every use breaks; macros are a common gap for tools that read the code after the preprocessor",
+   "file": "lib/curl_trc.h",
+   "line": 321,
+   "counts": {
+    "uses": 14,
+    "live_uses": 4,
+    "defines": 2,
+    "live_defines": 1
+   }
+  },
+  {
+   "id": "curl-10",
+   "repo": "curl",
+   "kind": "behaviour",
+   "difficulty": "might_break",
+   "symbol": "lib/vauth/vauth.c:Curl_auth_allowed_to_origin",
+   "edit": "make the function return the zero value of its type (0, NULL or false) as its first statement",
+   "why_this_kind": "nothing fails to build; callers that use the value may behave differently (truth checked by hand)",
+   "file": "lib/vauth/vauth.c",
+   "line": 145,
+   "ret": "bool",
+   "counts": {
+    "calls": 2,
+    "live_calls": 2,
+    "macro_calls": 0,
+    "values": 0,
+    "live_values": 0,
+    "self_calls": 0,
+    "mentions": 4
+   }
+  }
+ ],
+ "pools": {
+  "redis": {
+   "defs": 5296,
+   "fields": 659,
+   "globals": 270,
+   "macros": 328
+  },
+  "sqlite": {
+   "defs": 5641,
+   "fields": 228,
+   "globals": 86,
+   "macros": 755
+  },
+  "curl": {
+   "defs": 4284,
+   "fields": 196,
+   "globals": 231,
+   "macros": 570
+  }
+ },
+ "skipped": [
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/keymeta.c:keyMetaClassRelease",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:moduleDefragValue",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:RM_DictIteratorReseekC",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/t_hash.c:hashTemplateLpGetTemplateId",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/cluster_legacy.c:clusterStartHandshake",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/aof.c:rioWriteBulkUnsignedLongLong",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:moduleFreeKeyIterator",
+   "reason": "8 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/anet.c:anetFdToString",
+   "reason": "3 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/module.c:RM_CreateStringPrintf",
+   "reason": "0 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/rdb.c:rdbCreateTemplateFromFields",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/object.c:getDoubleFromObjectOrReply",
+   "reason": "7 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/tracking.c:sendTrackingMessage",
+   "reason": "6 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/quicklist.c:_quicklistInsertNodeAfter",
+   "reason": "4 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/script_lua.c:luaRedisPcall",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "redis",
+   "kind": "add_param",
+   "id": "src/ziplist.c:usec",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "redis",
+   "kind": "remove_fn",
+   "id": "src/setproctitle.c:spt_copyargs",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "int_to_void",
+   "id": "src/module.c:RM_BlockedClientMeasureTimeEnd",
+   "reason": "0 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "int_to_void",
+   "id": "src/zmalloc.c:zfree",
+   "reason": "over 150 mentions (664)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/dict.c:_dictInit",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/socket.c:connSocketGetType",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/config.c:getConfigLatencyTrackingInfoPercentilesOutputOption",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/dict.c:dictShrink",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/t_array.c:arOpAccumulate",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/t_zset.c:zremrangebyscoreCommand",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/aof.c:aofDelTempIncrAofFile",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/release.c:redisBuildIdRaw",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/sentinel.c:sentinelLinkEstablishedCallback",
+   "reason": "2 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/sds.c:sdstrim",
+   "reason": "0 live value uses, 12 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/multi.c:execCommandAbort",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/kvstore.c:kvstoreIteratorReset",
+   "reason": "0 live value uses, 10 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/t_zset.c:zslGetRank",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/mstr.c:mstrNewWithMeta",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_param",
+   "id": "src/syscheck.c:checkLinuxMadvFreeForkBug",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/evict.c:overMaxmemoryAfterAlloc",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/script_lua.c:luaCreateArray",
+   "reason": "0 live value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/sentinel.c:rewriteConfigSentinelOption",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "ptr_remove",
+   "id": "src/resp_parser.c:parseLong",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "redis",
+   "kind": "field_type",
+   "id": "redisServer.el_cron_duration",
+   "reason": "type 'monotime' is not a plain integer"
+  },
+  {
+   "repo": "redis",
+   "kind": "macro_arity",
+   "id": "src/anet.c:UNUSED",
+   "reason": "403 uses (want 2 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "macro_arity",
+   "id": "src/sha256.c:ROTLEFT",
+   "reason": "0 uses (want 2 to 150)"
+  },
+  {
+   "repo": "redis",
+   "kind": "behaviour",
+   "id": "src/cluster_legacy.c:clusterNodeTimedOut",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "redis",
+   "kind": "behaviour",
+   "id": "src/unix.c:connUnixSyncRead",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "add_param",
+   "id": "sqlite3.c:fts3WriteSegdir",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:avgFinalize",
+   "reason": "also used as a value (2)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:fts5Porter_MGt1_and_S_or_T",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "shell.c:recoverVfsClose",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:rtreeCheckReset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "remove_fn",
+   "id": "sqlite3.c:sqlite3_deserialize",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3_malloc64",
+   "reason": "over 150 mentions (239)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3PagerExclusiveLock",
+   "reason": "returns 'SQLITE_PRIVATE int', not int"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3changegroup_delete",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5TokendataIterAppendMap",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "shell.c:idxProcessOneTrigger",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts3RollbackMethod",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5ValueClampedInt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3DbpageRegister",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3DbpageRegister",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3PcacheShutdown",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3rbu_close",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "shell.c:lintFkeyIndexes",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "shell.c:shellAuth",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts3AppendToNode",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:proxyCreateConchPathname",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "shell.c:tableColumnList",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:jsonbPayloadSizeInline",
+   "reason": "returns 'static SQLITE_INLINE u32', not int"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5CreateMethod",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3VdbeChangeP4",
+   "reason": "returns 'SQLITE_PRIVATE void', not int"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3_strglob",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:rbuObjIterGetBindlist",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:fts5ExprSynonymList",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3session_changeset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:sqlite3SelectWalkFail",
+   "reason": "also used as a value (5)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "int_to_void",
+   "id": "sqlite3.c:memsys5Realloc",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuGetUpdateStmt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:qrfLoadAlignment",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rebuildPage",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5PorterCb",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:modePush",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5DecodeFunction",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:sqlite3_recover_init_sql",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3TreeViewTrigger",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuStep",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sessionBufferGrow",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:recoverIsValidPage",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3BtreeNext",
+   "reason": "0 live value uses, 7 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:bytecodevtabCursorClear",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:rbuBadControlError",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:vfstraceOnOff",
+   "reason": "0 live value uses, 30 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3PagerIswriteable",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3_db_cacheflush",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:idxPrintfPrepareStmt",
+   "reason": "0 live value uses, 7 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:SplitNode",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:nodeAcquire",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts3EvalAllocateReaders",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3NomemError",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sampleIsBetter",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fkChildIsModified",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:pagerRollbackWal",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:vdbeSorterGetReal",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:pcache1InitBulk",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts3HashMalloc",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:walHashGet",
+   "reason": "0 live value uses, 4 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:execSql",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:parseDotRealloc",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:winMutexAlloc",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:apndFullPathname",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts3InsertDocsize",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3WalkerDepthDecrease",
+   "reason": "2 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3DbReallocOrFree",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:qrfResetStmt",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:arErrorMsg",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sqlite3Fts5ParseSetColset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5MultiIterIsEmpty",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:sessionPreupdateOneChange",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "shell.c:seriesEof",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:transferJoinMarkings",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_param",
+   "id": "sqlite3.c:fts5ApiColumnText",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:winFileControl",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:vdbeRecordCompareDebug",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:markImmutableExprStep",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:subjournalPage",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:btreeBeginTrans",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3VtabSync",
+   "reason": "0 live value uses, 2 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "shell.c:vfstrace_printf",
+   "reason": "0 live value uses, 48 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "shell.c:shellFilenameFromUri",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3rebaser_create",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:fts3GobbleInt",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "shell.c:memtraceFree",
+   "reason": "1 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "ptr_remove",
+   "id": "sqlite3.c:sqlite3RowSetTest",
+   "reason": "0 live value uses, 1 direct calls (want >= 1 and 0)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "macro_arity",
+   "id": "sqlite3.c:CHECK_PAGE",
+   "reason": "1 uses (want 2 to 150)"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:sqlite3LimitWhere",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:sqlite3Fts3SegReaderFinish",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "sqlite",
+   "kind": "behaviour",
+   "id": "sqlite3.c:memsys3OutOfMemory",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/select.c:Curl_pollset_check",
+   "reason": "5 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/setopt.c:setopt_copypostfields",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/easy.c:curl_easy_getinfo",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/ws.c:ws_dec_read_head",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vtls/openssl.c:pinned",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/ws.c:cr_ws_read",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vdns/dnscache.c:dns_shuffle_addr",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "src/tool_paramhlp.c:checkpasswd",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vdns/cf-dns.c:Curl_conn_dns_resolved_https",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/ftp.c:ftp_done_path",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vssh/libssh2.c:ssh_state_sftp_readdir_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/mprintf.c:addrun",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/pop3.c:pop3_get_message",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vdns/asyn-thrdd.c:async_thrdd_report_item",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/sendf.c:cr_in_total_length",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/http_chunks.c:Curl_httpchunk_free",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/curl_ed25519.c:Curl_ed25519_sign",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/curl_ed25519.c:Curl_ed25519_sign",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/curl_ed25519.c:Curl_ed25519_sign",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/curl_ed25519.c:Curl_ed25519_sign",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/openldap.c:oldap_get_message",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/content_encoding.c:process_zlib_error",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/ftp.c:ftp_do",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/transfer.c:Curl_xfer_send_is_paused",
+   "reason": "6 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "src/tool_cfgable.c:config_free",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "src/tool_getparam.c:parse_upload_flags",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "src/config2setopts.c:gen_cb_setopts",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/cf-https-connect.c:cf_hc_baller_init",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/cookie.c:Curl_cookie_run",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/multi.c:multi_addmsg",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vssh/libssh2.c:sftp_quote",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/multi.c:curl_multi_setopt",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/http.c:http_exp100_is_waiting",
+   "reason": "2 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/curlx/warnless.c:curlx_sztosi",
+   "reason": "0 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/cookie.c:cookie_sort_ct",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/cf-https-connect.c:cf_hc_may_h3",
+   "reason": "3 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/dynhds.c:Curl_dynhds_getn",
+   "reason": "6 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/ws.c:ws_dec_init",
+   "reason": "1 direct calls (want 10 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/easy.c:events_timer",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "add_param",
+   "id": "lib/vtls/gtls.c:gtls_connect_common",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/url.c:url_match_ssl_config",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/multi.c:protocol_doing",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/vtls/x509asn1.c:ssl_push_certinfo_dyn",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "remove_fn",
+   "id": "lib/vdns/asyn-ares.c:Curl_async_getaddrinfo",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/telnet.c:telrcv",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vauth/cleartext.c:Curl_auth_create_plain_message",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/request.c:Curl_req_want_send",
+   "reason": "returns 'bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/idn.c:win32_idn_to_ascii",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/setopt.c:cookielist",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/url.c:Curl_conn_meta_remove",
+   "reason": "returns 'void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:auth_basic",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/escape.c:curl_free",
+   "reason": "also used as a value (19)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:cr_in_read",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi_ev.c:mev_sh_entry_dtor",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curlx/win32-fopen.c:fix_excessive_path",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curlx/strparse.c:curlx_str_until",
+   "reason": "34 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_operate.c:share_setup",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_writeout.c:ourWriteOut",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_paramhlp.c:add2list",
+   "reason": "already used by another case"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_output_basic",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/select.c:Curl_pollset_check",
+   "reason": "no direct call in compiled code"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vssh/libssh.c:myssh_in_SFTP_READDIR_DONE",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks5_recv_resp1",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:cr_buf_read",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/schannel.c:schannel_set_ssl_version_min_max",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/gtls.c:gtls_populate_creds",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http1.c:trim_line",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/vquic.c:vquic_msghdr_get_ecn",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:Curl_ftp_parselist_geterror",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curlx/dynbuf.c:curlx_dyn_uptr",
+   "reason": "returns 'unsigned char *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-quiche.c:cf_quiche_write_hd",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/bufq.c:chunk_reset",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/asyn-thrdd.c:async_thrdd_item_create",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/schannel.c:schannel_cert_share_free",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_operate.c:run_all_transfers",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_init",
+   "reason": "returns 'curl_mime *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/tftp.c:tftp_set_timeouts",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cf-ip-happy.c:cf_ip_attempt_new",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/netrc.c:netrc_scan_end_entry",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_creader_def_total_length",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:Curl_cookie_list",
+   "reason": "returns 'struct curl_slist *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http_chunks.c:add_chunk",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vssh/libssh.c:scp_recv",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_share.c:share_destroy",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vssh/libssh2.c:ssh_state_scp_upload_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/doh.c:doh_decode_rdata_name",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi.c:Curl_multi_xfer_ulbuf_borrow",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi.c:multistate_protoconnecting",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vauth/digest.c:auth_digest_md5_to_ascii",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_getparam.c:existingfile",
+   "reason": "returns 'static ParameterError', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/var.c:setvariable",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/dnscache.c:dnsc_id_matches_entry",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_paramhlp.c:str2num",
+   "reason": "returns 'ParameterError', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:h2_client_new",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/multi_ntfy.c:Curl_mntfy_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_getparam.c:set_trace_config",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/imap.c:is_custom_fetch_listing_match",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_trc.c:Curl_trc_smtp",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_trc.c:Curl_trc_smtp",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:Curl_ftp_parselist_data_free",
+   "reason": "returns 'void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/select.c:Curl_waitfds_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:Curl_cookie_init",
+   "reason": "returns 'struct CookieInfo *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks_failed",
+   "reason": "returns 'static CURLproxycode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/cf-dns.c:cf_dns_ctx_create",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/schannel.c:schannel_cleanup",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks.c:socks_proxy_ctx_free",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2.c:h3_xfer_write_resp_hd",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftp.c:ftp_need_type",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/vtls.c:Curl_ssl_free_certinfo",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/openssl.c:ossl_cert_status_request",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_fnmatch.c:charclass",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_getparam.c:opt_secs",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/wolfssl.c:wssl_init_ech",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/telnet.c:telnet_negotiate",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_getparam.c:getparameter",
+   "reason": "returns 'ParameterError', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http_aws_sigv4.c:get_payload_hash",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2.c:recv_closed_stream",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/vtls_scache.c:cf_ssl_scache_get",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_cwriter_count",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/x509asn1.c:encodeOID",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_share.c:curl_share_init",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftplistparser.c:parse_unix_group",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/openssl.c:ossl_apple_verify",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/asyn-thrdd.c:Curl_async_thrdd_multi_init",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/dynhds.c:Curl_dynhds_to_nva",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2-proxy.c:h3_tunnel_stream_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/sendf.c:Curl_cwriter_create",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_getparam.c:find_tos",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_setopt.c:tool_setopt_long_force",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_urlglob.c:glob_is_literal",
+   "reason": "returns 'bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/wolfssl.c:wssl_bio_cf_out_write",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:set_auto_referer",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cf-https-connect.c:cf_hc_get_httpsrr_alpn",
+   "reason": "returns 'static enum alpnid', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_writeout.c:writeOffset",
+   "reason": "also used as a value (9)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2-cmn.c:cb_stream_close",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_operate.c:del_per_transfer",
+   "reason": "returns 'static struct per_transfer *', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/x509asn1.c:UTime2str",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/openssl.c:client_cert",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/config2setopts.c:mail_and_sasl_setopts",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/curl_addrinfo.c:Curl_looks_like_ipv6",
+   "reason": "returns 'bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/progress.c:Curl_pgrsRecvPause",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2-cmn.c:quic_printf",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/protocol.c:two_letter_scheme",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cw-pause.c:cw_pause_buf_free",
+   "reason": "returns 'static void', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cookie.c:parse_domain",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/u32_ptrset.c:Curl_u32_ptrset_count",
+   "reason": "no direct call in compiled code"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/wolfssl.c:wssl_populate_x509_store",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vssh/libssh2.c:sshc_cleanup",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mprintf.c:alloc_fits",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:Curl_http2_upgrade",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/ftp.c:ftp_has_ctrl",
+   "reason": "returns 'static bool', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/schannel.c:schannel_recv",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/doh.c:doh_resp_decode",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/openldap.c:oldap_connect",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/openssl.c:Curl_ossl_version",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/cfilters.c:Curl_conn_get_max_concurrent",
+   "reason": "returns 'size_t', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vquic/cf-ngtcp2-proxy.c:cf_h3_proxy_adjust_pollset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_header",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/rustls.c:init_config_builder",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_formparse.c:read_field_headers",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/openldap.c:oldap_perform_sasl",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http.c:http_header_a",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/smtp.c:cr_eob_total_length",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vssh/libssh.c:myssh_in_SFTP_READDIR",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/formdata.c:free_chain",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/socks_gssapi.c:socks5_gss_negotiate_enc",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "src/tool_parsecfg.c:parseconfig",
+   "reason": "returns 'ParameterError', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:mime_rewind",
+   "reason": "returns 'static CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/hash.c:compare_socket",
+   "reason": "also used as a value (1)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/http2.c:cf_h2_ctx_free",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_filename",
+   "reason": "returns 'CURLcode', not int"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/mime.c:curl_mime_filename",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/openssl.c:pinned",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/vtls.c:Curl_init_sslset_nolock",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vtls/vtls.c:Curl_init_sslset_nolock",
+   "reason": "1 direct calls (want 2 to 30)"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/vdns/asyn-ares.c:async_ares_poll_timeout",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "int_to_void",
+   "id": "lib/idn.c:win32_ascii_to_idn",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/vtls_config.c:blobdup",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/vtls.c:multissl_version",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ftplistparser.c:Curl_wildcard_init",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/url.c:Curl_parse_login_details",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi_ev.c:mev_sh_entry_get",
+   "reason": "0 live value uses, 8 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vauth/gsasl.c:Curl_auth_gsasl_is_supported",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http_proxy.c:Curl_cf_http_proxy_insert_after",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http2.c:on_stream_close",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_getparam.c:has_leading_unicode",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ws.c:ws_dec_init",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/cf-https-connect.c:cf_hc_ctx_destroy",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ratelimit.c:Curl_rlimit_per_step",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/content_encoding.c:zstd_do_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_help.c:print_category",
+   "reason": "0 live value uses, 3 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/request.c:Curl_req_done_sending",
+   "reason": "0 live value uses, 4 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ratelimit.c:Curl_rlimit_next_step_ms",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vdns/httpsrr.c:httpsrr_decode_alpn",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ws.c:cr_ws_init",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_gssapi.c:stub_gss_set_neg_mechs",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vquic/cf-ngtcp2-proxy.c:cb_h3_tunnel_read_data",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/imap.c:imap_state_auth_resp",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/smtp.c:smtp_doing",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ldap.c:ldap_win_bind",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vssh/libssh2.c:ssh_state_sftp_postquote_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/transfer.c:Curl_xfer_setup_sendrecv",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/mqtt.c:mqtt_subscribe",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ldap.c:str2scope",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/transfer.c:sendrecv_dl",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/url.c:conn_meta_freeentry",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_trc.c:trc_timer_name",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/imap.c:imap_connect",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/openssl.c:ossl_bio_cf_out_write",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http_httpsig.c:sf_append_quoted",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi_ev.c:Curl_multi_ev_assess_xfer",
+   "reason": "0 live value uses, 4 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/urlapi.c:urlencode_str",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/imap.c:imap_perform",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi.c:multi_xfers_running",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/vtls.c:Curl_ssl_cf_get_filter_config",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi_ev.c:Curl_multi_ev_assess_conn",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/openssl.c:Curl_ossl_ctx_init",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/schannel.c:schannel_error",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/file.c:file_disconnect",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/openssl.c:ossl_provider_cleanup",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/pop3.c:pop3_perform_user",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/mime.c:search_header",
+   "reason": "0 live value uses, 3 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi.c:Curl_multi_max_concurrent_streams",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vdns/cf-dns.c:cf_dns_report_addr",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/escape.c:curl_easy_unescape",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/socks.c:socks4_connect",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http2.c:cf_h2_update_settings",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/progress.c:Curl_pgrsEarlyData",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/tftp.c:tftp_conn_dtor",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/vtls_scache.c:cf_ssl_scache_session_ldestroy",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/schannel.c:set_ssl_ciphers",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/dynhds.c:Curl_dynhds_count",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http.c:http_check_new_conn",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/urlapi.c:Curl_is_absolute_url",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/openldap.c:ldapsb_tls_read",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/parsedate.c:datenum",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vssh/libssh.c:sftp_recv",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_progress.c:progress_finalize",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vdns/httpsrr.c:Curl_httpsrr_trace",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_parsecfg.c:my_get_line",
+   "reason": "0 live value uses, 5 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vquic/cf-ngtcp2-cmn.c:cb_ngtcp2_handshake_completed",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_writeout.c:ourWriteOut",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_getparam.c:findarg",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/ldap.c:ldap_str_needs_base64",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi_ntfy.c:Curl_mntfy_dispatch_all",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/altsvc.c:Curl_altsvc_cleanup",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/vtls.c:Curl_ssl_adjust_pollset",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_trc.c:Curl_trc_timer",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_trc.c:Curl_trc_timer",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi.c:multistate_protoconnecting",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/sendf.c:Curl_cwriter_unpause",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/tftp.c:tftp_done",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vquic/cf-ngtcp2.c:cf_ngtcp2_query",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/sendf.c:Curl_creader_get_by_type",
+   "reason": "0 live value uses, 4 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/imap.c:imap_state_listsearch_resp",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/hash.c:compare_bytes",
+   "reason": "1 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vssh/libssh2.c:ssh_state_sftp_create_dirs",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/memdebug.c:curl_dbg_vlog",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curlx/win32-fopen.c:curlx_win32_freopen",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_trc.c:Curl_trc_ssls",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curl_trc.c:Curl_trc_ssls",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/pop3.c:pop3_regular_transfer",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http.c:http_firstwrite",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/cw-out.c:cw_out_do_flush",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vssh/libssh.c:myssh_in_AUTH_PKEY",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/multi.c:multistate_done",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/mprintf.c:out_double",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vssh/libssh.c:myssh_easy_dtor",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/url.c:url_match_auth",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_cfgable.c:globalconf_free",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/x509asn1.c:ASN1tostr",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/openssl.c:pubkey_show",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/urlapi.c:badoctets",
+   "reason": "0 live value uses, 6 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http_aws_sigv4.c:is_reserved_char",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/curlx/warnless.c:curlx_sztosi",
+   "reason": "0 live value uses, 0 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/vtls/openssl.c:ossl_on_session_reuse",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/cookie.c:cap_expires",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/conncache.c:cpool_discard_conn",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http1.c:detect_line",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/rtsp.c:rtp_write_body_junk",
+   "reason": "0 live value uses, 3 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/openldap.c:ldapsb_tls_remove",
+   "reason": "definition not compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/sendf.c:Curl_client_start",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/pingpong.c:Curl_pp_vsendf",
+   "reason": "0 live value uses, 2 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_cfgable.c:free_config_fields",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "lib/http_aws_sigv4.c:find_date_hdr",
+   "reason": "0 live value uses, 1 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "ptr_param",
+   "id": "src/tool_xattr.c:xattr",
+   "reason": "0 live value uses, 3 live calls (want >= 1 each)"
+  },
+  {
+   "repo": "curl",
+   "kind": "field_rename",
+   "id": "connectdata.proxy_ntlm_state",
+   "reason": "no use in compiled code"
+  },
+  {
+   "repo": "curl",
+   "kind": "field_rename",
+   "id": "UserDefined.ssh_keyfunc",
+   "reason": "no use in compiled code"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/sha256.c:Sigma0",
+   "reason": "no #define of it is compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/mime.h:Curl_mime_set_subparts",
+   "reason": "a function has the same name"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/curlx/win32-fopen.c:CURLX_MALLOC",
+   "reason": "no #define of it is compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/cf-h2-proxy.c:CF_CTX_CALL_DATA",
+   "reason": "no #define of it is compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/vquic/vquic_int.h:H3_STREAM_CTX",
+   "reason": "no #define of it is compiled"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "include/curl/typecheck-gcc.h:curlcheck_write_cb_option",
+   "reason": "0 uses (want 2 to 150)"
+  },
+  {
+   "repo": "curl",
+   "kind": "macro_arity",
+   "id": "lib/vdns/asyn.h:Curl_async_take_result",
+   "reason": "a function has the same name"
+  }
+ ]
+}
