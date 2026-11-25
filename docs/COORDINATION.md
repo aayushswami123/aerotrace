@@ -20,6 +20,6 @@ Sessions:
 | `bench/cases` (#63) | product | 30 benchmark cases | `bench/cases/` | in progress |
 | `bench/pilot-sonnet` | product | Harness and plan for the $25 Sonnet benchmark pilot | `bench/` | waiting to run |
 | `docs/launch-readme` (#54) | product | Launch README | `README.md`, `docs/launch/` | waits for benchmark results; do not merge |
-| `fix/data-gaps` (#56) | merge | Data gaps fix | `src/aerotrace/frontends/cpp/parse.py` | reviewed, CI green; conflicts with `launch-candidate` in `parse.py` and `CHANGELOG.md` (owner to OK the fix) |
+| `fix/parse-cwd` | merge | Fix #46: in-process parses take turns changing the working folder | `src/aerotrace/frontends/cpp/parse.py` (`_in_folder`, `parse_unit`, `function_outline`) | review |
 | `feat/test-impact-coverage` | owner | gcov coverage for test impact | `src/aerotrace/analysis/testimpact.py` and more | parked until after launch |
 | `docs/morning-report` | owner | Day notes and screenshots | `docs/launch/` | owner decides (has budget figures) |

@@ -7,10 +7,13 @@ needs every translation unit at once.
 
 from __future__ import annotations
 
+import contextlib
 import ctypes
 import hashlib
 import os
 import re
+import threading
+from collections.abc import Iterator
 from pathlib import Path
 
 from clang import cindex
@@ -1383,6 +1386,24 @@ def _get_index() -> cindex.Index:
     return _index
 
 
+# The working folder is shared by every thread of the process, and libclang resolves relative -I paths and
+# include names against it. Every in-process parse changes it, so they take turns (#46). Index builds parse
+# in child processes and are not slowed down by this.
+_CWD_LOCK = threading.RLock()
+
+
+@contextlib.contextmanager
+def _in_folder(folder: str) -> Iterator[None]:
+    """Work in `folder`, holding the process-wide lock until the old working folder is back."""
+    with _CWD_LOCK:
+        old = os.getcwd()
+        os.chdir(folder)
+        try:
+            yield
+        finally:
+            os.chdir(old)
+
+
 def parse_unit(unit: CompileUnit, root: Path, excludes: list[str], extra_args: list[str]) -> dict:
     """Parse one source file. Returns a JSON-friendly dict of facts."""
     rel_src = rel_to(unit.file, root) or unit.file
@@ -1393,12 +1414,8 @@ def parse_unit(unit: CompileUnit, root: Path, excludes: list[str], extra_args: l
         result["error_count"] = 1
         result["errors"] = [f"{rel_src}: listed in compile_commands.json but not found on disk"]
         return result
-    old_cwd = os.getcwd()
-    os.chdir(unit.directory if os.path.isdir(unit.directory) else str(root))
-    try:
+    with _in_folder(unit.directory if os.path.isdir(unit.directory) else str(root)):
         return _collect_unit(unit, root, excludes, extra_args, rel_src, result)
-    finally:
-        os.chdir(old_cwd)
 
 
 _UNKNOWN_FLAG = re.compile(
@@ -1654,74 +1671,71 @@ def function_outline(
 
     None when libclang could not load it. `path` is the file's absolute path. `others`: (absolute path,
     content) of other files of the same version (a patched header), used instead of the files on disk."""
-    old_cwd = os.getcwd()
-    os.chdir(directory if os.path.isdir(directory) else os.path.dirname(path) or ".")
+    with _in_folder(directory if os.path.isdir(directory) else os.path.dirname(path) or "."):
+        return _outline_here(path, content, args, others)
+
+
+def _outline_here(
+    path: str, content: str, args: list[str], others: list[tuple[str, str]] | None
+) -> dict | None:
+    """`function_outline` without changing the working folder (the caller holds `_in_folder`)."""
     data = content.encode("utf-8", "surrogateescape")
     try:
-        try:
-            tu = _get_index().parse(
-                path,
-                args=args,
-                unsaved_files=[(path, content), *(others or [])],
-                options=cindex.TranslationUnit.PARSE_INCOMPLETE,  # bodies are parsed: skipping them loses end lines
-            )
-        except cindex.TranslationUnitLoadError:
-            return None
-        target = os.path.realpath(path)
-        out: dict = {"functions": [], "declarations": [], "variables": []}
-        protos: dict[str, set[str]] = {}
-        noproto: set[str] = set()
-        real: dict[str, bool] = {}
+        tu = _get_index().parse(
+            path,
+            args=args,
+            unsaved_files=[(path, content), *(others or [])],
+            options=cindex.TranslationUnit.PARSE_INCOMPLETE,  # bodies are parsed: skipping them loses end lines
+        )
+    except cindex.TranslationUnitLoadError:
+        return None
+    target = os.path.realpath(path)
+    out: dict = {"functions": [], "declarations": [], "variables": []}
+    protos: dict[str, set[str]] = {}
+    noproto: set[str] = set()
+    real: dict[str, bool] = {}
 
-        def is_target(name: str) -> bool:
-            if name not in real:
-                real[name] = os.path.realpath(name) == target
-            return real[name]
+    def is_target(name: str) -> bool:
+        if name not in real:
+            real[name] = os.path.realpath(name) == target
+        return real[name]
 
-        def visit(cursor: Cursor) -> None:
-            position = 0
-            for c in cursor.get_children():
-                f = c.location.file
-                if f is None:
-                    continue
-                if c.kind == K.FIELD_DECL:
-                    position += 1
-                if not is_target(f.name):
-                    if c.kind in FUNC_KINDS and not c.is_definition() and c.spelling:
-                        qn = "::".join([*_scope_parts(c), c.spelling])
-                        protos.setdefault(qn, set()).add(_outline_function(c, b"")["signature"])
-                        if c.type.kind == TypeKind.FUNCTIONNOPROTO:
-                            noproto.add(qn)
-                    elif c.kind in DESCEND_KINDS:
-                        visit(c)
-                    continue
-                if c.kind in FUNC_KINDS:
-                    out["functions" if c.is_definition() else "declarations"].append(
-                        _outline_function(c, data)
-                    )
-                elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):
-                    if c.spelling:
-                        kind = "field" if c.kind == K.FIELD_DECL else "global"
-                        out["variables"].append(_outline_variable(c, kind, position - 1, data))
+    def visit(cursor: Cursor) -> None:
+        position = 0
+        for c in cursor.get_children():
+            f = c.location.file
+            if f is None:
+                continue
+            if c.kind == K.FIELD_DECL:
+                position += 1
+            if not is_target(f.name):
+                if c.kind in FUNC_KINDS and not c.is_definition() and c.spelling:
+                    qn = "::".join([*_scope_parts(c), c.spelling])
+                    protos.setdefault(qn, set()).add(_outline_function(c, b"")["signature"])
+                    if c.type.kind == TypeKind.FUNCTIONNOPROTO:
+                        noproto.add(qn)
                 elif c.kind in DESCEND_KINDS:
                     visit(c)
+                continue
+            if c.kind in FUNC_KINDS:
+                out["functions" if c.is_definition() else "declarations"].append(_outline_function(c, data))
+            elif c.kind == K.FIELD_DECL or (c.kind == K.VAR_DECL and _variable_kind(c) == "global"):
+                if c.spelling:
+                    kind = "field" if c.kind == K.FIELD_DECL else "global"
+                    out["variables"].append(_outline_variable(c, kind, position - 1, data))
+            elif c.kind in DESCEND_KINDS:
+                visit(c)
 
-        visit(tu.cursor)
-        for key in ("functions", "declarations"):
-            out[key].sort(key=lambda d: (d["line_start"], d["usr"]))
-        out["variables"].sort(key=lambda d: (d["line"], d["qualified_name"]))
-        errors = [d for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error]
-        out["errors"] = len(errors)
-        mine = sorted(
-            {
-                (d.location.line, d.spelling)
-                for d in errors
-                if d.location.file and is_target(d.location.file.name)
-            }
-        )
-        out["diagnostics"] = [{"line": n, "text": t} for n, t in mine]
-        out["protos"] = {k: sorted(v) for k, v in sorted(protos.items())}
-        out["noproto"] = sorted(noproto)
-        return out
-    finally:
-        os.chdir(old_cwd)
+    visit(tu.cursor)
+    for key in ("functions", "declarations"):
+        out[key].sort(key=lambda d: (d["line_start"], d["usr"]))
+    out["variables"].sort(key=lambda d: (d["line"], d["qualified_name"]))
+    errors = [d for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error]
+    out["errors"] = len(errors)
+    mine = sorted(
+        {(d.location.line, d.spelling) for d in errors if d.location.file and is_target(d.location.file.name)}
+    )
+    out["diagnostics"] = [{"line": n, "text": t} for n, t in mine]
+    out["protos"] = {k: sorted(v) for k, v in sorted(protos.items())}
+    out["noproto"] = sorted(noproto)
+    return out
