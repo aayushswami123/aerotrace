@@ -352,6 +352,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     if args.html:
         _err(ui.write_html(data, Path(args.html), root))
     if args.json:
+        ui.check(data)  # the same "no wrong all-clear" check as the text and HTML
         print(json.dumps(data, indent=2))
     else:
         color, uni = ui.style_for(sys.stdout, os.environ)

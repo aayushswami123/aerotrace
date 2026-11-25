@@ -1,5 +1,5 @@
-[1m⚠️  This change can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN).[0m
-    1 more may not build or link, 6 may be affected (2 direct, 4 further up), 2 are unknown and 2 parts of the change could not be followed.
+[1m⚠️  This change can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN); 3 parts could not be checked.[0m
+    1 more may not build or link and 6 may be affected (2 direct, 4 further up).
     You changed 1 function, removed 1 function and changed 1 declaration in 2 C/C++ files (compared with HEAD).
     (1 other file in the diff is not C or C++.)
 

@@ -281,7 +281,8 @@ def test_patch_that_does_not_match_is_counted(repo):
     conn, _ = fresh_index(repo, want=diff.wanted(diffs, "patch"))
     res = check.run(conn, repo, diffs, mode="patch", outliner=Outliner(repo))
     c = check.to_contract(conn, res, "t")
-    assert c["change"]["not_followed"]["mismatched"] == [A] and c["summary"]["not_followed"] > 0
+    assert c["change"]["not_followed"]["mismatched"] == [A] and c["unchecked_parts"] > 0
+    assert c["status"] == "nothing_to_check" and c["verdict"] == "unknown"  # nothing was checked (R6)
 
 
 def test_moving_lines_changes_no_signature_or_declaration(repo):

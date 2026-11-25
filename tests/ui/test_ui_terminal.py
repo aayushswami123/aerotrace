@@ -98,7 +98,8 @@ def test_only_exact_breaks_count_in_the_headline() -> None:
 def test_headline_counts_use_the_status_words() -> None:
     first = terminal.render(samples.sample()).splitlines()[0]
     assert first.endswith(
-        "can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN)."
+        "can break 3 things you didn't touch (3 BREAKS, 1 MAY BREAK, 6 AFFECTED, 2 UNKNOWN); "
+        "3 parts could not be checked."
     )
     d = samples.affected_only()
     assert "BREAKS" not in terminal.render(d).splitlines()[0]  # nothing breaks: no counts in parentheses
@@ -112,11 +113,10 @@ def test_direct_counts_come_first() -> None:
 def test_never_an_all_clear_when_part_of_the_change_was_skipped() -> None:
     text = terminal.render(samples.unclear(), unicode=True)
     assert "✅" not in text
-    assert text.startswith(
-        terminal.ICONS["info"][0] + " Nothing found that this change can break, but 2 parts"
-    )
+    assert text.startswith(terminal.ICONS["unchecked"][0] + " UNKNOWN: AeroTrace could not check 2 parts")
+    assert "Nothing found" not in text.splitlines()[0]
     ascii_text = terminal.render(samples.unclear(), unicode=False)
-    assert ascii_text.startswith("[i] ")
+    assert ascii_text.startswith("[?] UNKNOWN: ")
 
 
 def test_all_clear_only_when_nothing_was_skipped() -> None:
@@ -171,7 +171,7 @@ def test_what_changed_is_named() -> None:
 def test_nothing_to_check_lists_what_it_skipped() -> None:
     text = terminal.render(samples.nothing_to_check_gaps())
     assert "✅" not in text
-    assert "could not be followed" in text.splitlines()[0]
+    assert "UNKNOWN: AeroTrace could not check 2 parts" in text.splitlines()[0]
     assert "src/extra.c is not in the index" in text
     assert "src/t_string.c: the patch does not match" in text
 
@@ -318,7 +318,7 @@ def test_nothing_found_headlines_name_the_files_outside_the_build_first() -> Non
         )
         at = next(i for i, line in enumerate(lines) if want in line)
         assert at < 6 and sum("outside this build" in line for line in lines) == 1
-    assert seen == {"clear", "info"}
+    assert seen == {"clear", "unchecked"}
 
 
 def test_wrap_hangs_under_the_ascii_no_test_icon() -> None:
@@ -331,7 +331,7 @@ def test_a_pass_never_drops_an_index_limit(n_spots: int) -> None:
     # 5 limits fit under the headline; the files outside the build take one of those places
     d = samples.nothing()
     d["sections"]["blind_spots"] = [
-        {"text": f"limit {i}.", "scope": "index", "node": None} for i in range(n_spots)
+        {"text": f"limit {i}.", "scope": "index", "node": None, "unchecked": False} for i in range(n_spots)
     ]
     d["proof"].update(
         {
@@ -360,11 +360,22 @@ def test_never_none_is_sure_to_break_when_something_was_not_seen(key: str) -> No
         d["nodes"].append(node)
         d["sections"]["functions"].append("unknown-1")
         d["summary"]["unknown"] = 1
+        d.update(
+            verdict="unknown", unchecked=True, unchecked_parts=1, unchecked_reason="maybe in src/t_string.c"
+        )
     else:
+        d["change"]["not_followed"]["not_indexed"] = ["src/a.c", "src/b.c"]
         d["summary"]["not_followed"] = 2
+        d.update(
+            verdict="unknown",
+            unchecked=True,
+            unchecked_parts=2,
+            unchecked_reason="src/a.c is not in the index",
+        )
     first = terminal.render(d).splitlines()[0]
     assert "None is sure to break" not in first
-    assert "could not check all of it, so something may still break" in first
+    assert first.split(" ", 1)[1].lstrip().startswith("UNKNOWN: AeroTrace could not "), first
+    assert "may affect 1 thing" in terminal.render(d).splitlines()[1]
 
 
 def test_first_line_says_unknown_when_part_of_the_change_was_not_checked() -> None:
@@ -372,7 +383,12 @@ def test_first_line_says_unknown_when_part_of_the_change_was_not_checked() -> No
     affected = samples.affected_only()
     affected["change"]["not_followed"]["not_indexed"] = ["src/extra.c"]
     affected["summary"]["not_followed"] = 1
-    affected.update(verdict="unknown", unchecked=True, unchecked_parts=1, unchecked_reason="src/extra.c is not in the index")  # fmt: skip
+    affected.update(
+        verdict="unknown",
+        unchecked=True,
+        unchecked_parts=1,
+        unchecked_reason="src/extra.c is not in the index",
+    )
     for d in (samples.unclear(), samples.nothing_to_check_gaps(), affected):
         for uni in (True, False):
             first = terminal.render(d, unicode=uni).splitlines()[0]

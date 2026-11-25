@@ -94,6 +94,9 @@ class SignatureImpact:
     depth: int = 2
     truncated: bool = False
     blind_spots: list[str] = field(default_factory=list)
+    # the blind spots that are standing limits of how calls are matched, not a part of the change left
+    # unchecked (they never make a check UNKNOWN; see check.verdict)
+    caveats: list[str] = field(default_factory=list)
 
     def uses(self, sites: list[Site] | None = None) -> Counter:
         """How the return value is used, over `sites` (default: direct and pointer call sites together)."""
@@ -243,7 +246,7 @@ def signature_impact(conn: sqlite3.Connection, target: Fn, depth: int = 2) -> Si
         hits, res.truncated = graph.walk_many(conn, [target], "callers", depth + 1)
         res.upstream = [h for h in hits if h.distance >= 2]
         res.groups = _groups(conn, res, hits)
-    res.blind_spots = _limits(conn, res)
+    res.blind_spots, res.caveats = _limits(conn, res)
     return res
 
 
@@ -308,28 +311,36 @@ def _groups(conn: sqlite3.Connection, res: SignatureImpact, hits: list[Hit]) -> 
     return out
 
 
-def _limits(conn: sqlite3.Connection, res: SignatureImpact) -> list[str]:
-    notes = []
+def _limits(conn: sqlite3.Connection, res: SignatureImpact) -> tuple[list[str], list[str]]:
+    """(every note, the notes that are standing limits). Template calls that may be missing callers are
+    not a standing limit: they may hide a break of this change."""
+    notes: list[str] = []
+    caveats: list[str] = []
     t = res.target
     if t.linkage == "external":
-        notes.append(
+        caveats.append(
             f"{t.name} can be called from outside this repo (other programs or libraries that link it); "
             "those calls are not visible."
         )
+        notes.append(caveats[-1])
     if res.address_sites:
-        notes.append(
+        caveats.append(
             "Code that receives its address (a table or callback) calls it through a pointer. Those calls are "
             "matched by type; a call through a cast or a void * is not seen."
         )
+        notes.append(caveats[-1])
     unknown = conn.execute(
         "SELECT COUNT(*) FROM call_sites WHERE callee IS NULL AND via_type = ''"
     ).fetchone()[0]
     if unknown:
-        notes.append(
+        caveats.append(
             f"{unknown} call sites in the repo go through pointers of unknown type, or names that "
             "depend on a template type, and could reach anything."
         )
+        notes.append(caveats[-1])
     notes += graph.template_notes(conn, [t])
     if res.truncated:
-        notes.append(f"Stopped at depth {res.depth}; more callers exist further up.")
-    return notes + graph.index_limits(conn)
+        caveats.append(f"Stopped at depth {res.depth}; more callers exist further up.")
+        notes.append(caveats[-1])
+    limits = graph.index_limits(conn)
+    return notes + limits, caveats + limits

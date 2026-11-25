@@ -23,6 +23,7 @@ ICONS = {
     "risk": ("⚠️ ", "[!]"),
     "clear": ("✅", "[ok]"),
     "info": ("\u2139\ufe0f ", "[i]"),  # information source emoji
+    "unchecked": ("\u2753", "[?]"),  # question mark: the answer is UNKNOWN
     "breaks": ("✖", "[x]"),
     "affected": ("▲", "[~]"),
     "unknown": ("?", "[?]"),
@@ -83,21 +84,40 @@ def _cap_first(s: str) -> str:
 # ---------------------------------------------------------------- shared wording (terminal and HTML)
 
 
+def _unknown_first(data: dict) -> str:
+    """'UNKNOWN: AeroTrace could not check 2 parts of this change (a macro in defs.h). ...' (A-04)."""
+    s = data.get("summary") or {}
+    parts, reason = data["unchecked_parts"], data["unchecked_reason"]
+    why = f" ({reason})" if reason else ""
+    unk = s.get("unknown", 0)
+    if parts and parts == unk:  # only things it reaches could not be followed
+        return (
+            f"UNKNOWN: AeroTrace could not follow {n_(unk, 'thing')} this change reaches{why}. "
+            f"Check {'it' if unk == 1 else 'them'} by hand, or build."
+        )
+    return f"UNKNOWN: AeroTrace could not check {n_(parts, 'part')} of this change{why}. Build before you rely on it."
+
+
 def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
-    """(icon key, lines). The first line is the headline; it is chosen from counts only."""
+    """(icon key, lines). The first line is the headline; it is chosen from the verdict and the counts.
+    It says UNKNOWN whenever the verdict is `unknown`, and "Nothing found" only when it is `clear`."""
     st = data["status"]
     change = data.get("change") or {}
     if st == "no_index":
-        return "risk", ["AeroTrace has no index for this repo yet, so it checked nothing.", data["message"]]
+        return "risk", [
+            "UNKNOWN: AeroTrace has no index for this repo yet, so it checked nothing.",
+            data["message"],
+        ]
     if st == "index_error":
-        return "risk", ["AeroTrace could not read its index, so it checked nothing.", data["message"]]
+        return "risk", [
+            "UNKNOWN: AeroTrace could not read its index, so it checked nothing.",
+            data["message"],
+        ]
     if st == "nothing_to_check":
         where = _where(change) if change else ""
         gaps = not_followed_lines(data)
-        if gaps:
-            lines = [
-                f"No change AeroTrace could check {where}, but {n_(len(gaps), 'part')} of it could not be followed."
-            ]
+        if data["verdict"] == "unknown":
+            lines = [_unknown_first(data), f"No change AeroTrace could check {where}."]
         else:
             lines = [f"No C or C++ changes to check{(' ' + where) if where else ''}."]
         other = change.get("other_files", 0)
@@ -106,7 +126,7 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
                 lines.append(
                     f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)"
                 )
-            return "info", lines
+            return "unchecked", lines
         if other:
             lines.append(
                 f"{n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++. "
@@ -120,7 +140,8 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
     s = data["summary"]
     be, bp = s["breaks_exact"], s["breaks_probable"]
     direct, further = s["affected_direct"], s["affected_further"]
-    aff, unk, nf = direct + further, s["unknown"], s["not_followed"]
+    aff, unk = direct + further, s["unknown"]
+    verdict, parts = data["verdict"], data["unchecked_parts"]
     aff_txt = ", ".join(
         p for p in (f"{direct:,} direct" if direct else "", f"{further:,} further up" if further else "") if p
     )
@@ -131,35 +152,26 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
             more.append(f"{bp:,} more may not build or link")
     elif bp:
         icon, first = "risk", f"{n_(bp, 'thing')} you didn't touch may not build or link."
+    elif verdict == "unknown":
+        icon, first = "unchecked", _unknown_first(data)
+        if aff:
+            more.append(f"it may affect {n_(aff, 'thing')} you didn't touch ({aff_txt})")
+        if unk and parts != unk:
+            more.append(f"{unk:,} {'is' if unk == 1 else 'are'} unknown")
     elif aff:
         icon = "risk"
-        # "none is sure to break" only when everything was followed: an unknown or a part not followed
-        # may still break (rule 5: never a wrong "safe")
-        tail = (
-            "None is sure to break."
-            if not (unk or nf)
-            else "AeroTrace could not check all of it, so something may still break."
-        )
-        first = f"This change may affect {n_(aff, 'thing')} you didn't touch ({aff_txt}). {tail}"
-    elif unk:
-        icon = "risk"
         first = (
-            f"{n_(unk, 'thing')} this change reaches {'is' if unk == 1 else 'are'} unknown: AeroTrace could not "
-            f"follow {'it' if unk == 1 else 'them'}. Check by hand."
+            f"This change may affect {n_(aff, 'thing')} you didn't touch ({aff_txt}). None is sure to break."
         )
-    elif nf:
-        icon = "info"
-        first = f"Nothing found that this change can break, but {n_(nf, 'part')} of the change could not be followed."
     else:
         icon, first = "clear", "Nothing found that this change can break, in the code AeroTrace can see."
     if aff and (be or bp):
         more.append(f"{aff:,} may be affected ({aff_txt})")
-    if unk and (be or bp or aff):
-        more.append(f"{unk:,} {'is' if unk == 1 else 'are'} unknown")
-    if nf and (be or bp or aff or unk):
-        more.append(f"{n_(nf, 'part')} of the change could not be followed")
     if be or bp:
         first = first[:-1] + f" ({_counts(be, bp, aff, unk)})."
+        if data["unchecked"]:
+            # the same first line says that the answer is not complete (A-04)
+            first = first[:-1] + f"; {n_(parts, 'part')} could not be checked."
     lines = [first]
     if more:
         lines.append(_cap_first(_join(more)) + ".")
@@ -167,7 +179,7 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
     other = change.get("other_files", 0)
     if other:
         lines.append(f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)")
-    if icon == "info":
+    if icon == "unchecked" and limits_above(data, icon):
         # nothing found here either, so what the build left out is said right away
         lines += [f"Index limit: {t}" for t in coverage_lines(data, all_hint)[1:]]
     if icon == "clear":
@@ -183,6 +195,15 @@ def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
 
 
 INDEX_LIMITS_UNDER_PASS = 5
+
+
+def limits_above(data: dict, icon: str) -> bool:
+    """True when nothing was found, so the files outside the build are named right below the headline."""
+    if icon == "clear":
+        return True
+    s = data.get("summary") or {}
+    found = s.get("affected_direct", 0) + s.get("affected_further", 0) + s.get("unknown", 0)
+    return icon == "unchecked" and data["status"] == "ok" and not found
 
 
 def _counts(be: int, bp: int, aff: int, unk: int) -> str:
@@ -515,7 +536,7 @@ def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str
     cov = coverage_lines(data, all_hint)
     if cov:
         o.section(cov[0])
-        if icon not in ("clear", "info"):  # under "nothing found" it is already right below the headline
+        if not limits_above(data, icon):  # under "nothing found" it is already right below the headline
             o.lines += cov[1:]
         outside = data["proof"].get("outside_build_files")
         if outside:

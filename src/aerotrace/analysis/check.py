@@ -19,12 +19,14 @@ the files on disk (the index) and the patched text, parsed in memory. Nothing is
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from aerotrace.analysis import certainty, data, diff, graph, signature, symbols
+from aerotrace.analysis import verdict as verdict_mod
 from aerotrace.analysis.certainty import EXACT, PROBABLE, UNKNOWN
 from aerotrace.analysis.diff import DiffImpact
 from aerotrace.analysis.symbols import Fn
@@ -116,7 +118,9 @@ class CheckResult:
     signatures: list[SigChange] = field(default_factory=list)
     decls: list[DeclChange] = field(default_factory=list)
     nodes: dict[str, Node] = field(default_factory=dict)
-    blind_spots: list[tuple[str, str, str | None]] = field(default_factory=list)  # (text, scope, node)
+    # (text, scope, node, unchecked): `unchecked` is false for standing limits (see `_Run.blind`)
+    blind_spots: list[tuple[str, str, str | None, bool]] = field(default_factory=list)
+    reasons: dict[str, str] = field(default_factory=dict)  # blind spot text -> a few words for the headline
     stopped_early: bool = False
     seconds_parsing: float = 0.0
     parses: int = 0
@@ -392,11 +396,20 @@ class _Run:
                 if fid:
                     self.patched_fn[fid] = (f, n.diagnostics)
 
-    def blind(self, text: str, node: str | None = None) -> None:
+    def blind(self, text: str, node: str | None = None, *, unchecked: bool = True, short: str = "") -> None:
+        """A blind spot. `unchecked` (the default, so a new one is never silent) means a part of this change
+        was not checked or not followed, and the answer is UNKNOWN unless something breaks. Pass
+        `unchecked=False` only for a standing limit that is true of every answer of its kind (how pointer calls
+        are matched, other #if branches), or for a note that repeats a part already counted in
+        `change.not_followed`. `short` names it in a few words for the first line."""
         if text == self.outside_note:
             return
         scope = "index" if text in self.index_limits else "change"
-        self.res.blind_spots.append((text, scope, node if scope == "change" else None))
+        self.res.blind_spots.append(
+            (text, scope, node if scope == "change" else None, unchecked and scope == "change")
+        )
+        if short:
+            self.res.reasons.setdefault(text, short)
 
     # -- the change itself
 
@@ -419,7 +432,7 @@ class _Run:
             # the index no longer has it, so tables and pointers that name it are not linked any more
             self.blind(f"{r.name} was removed. A table or pointer in another file that still declares it "
                        "compiles, and only the link fails: those places are not listed (check --patch lists "
-                       "them before the change).", key)  # fmt: skip
+                       "them before the change).", key, short=f"tables or pointers that name {r.name}")  # fmt: skip
         for a in d.added:
             key = f"new:{a.file}:{a.line_start}:{a.name}"
             self.add(Node(key, a.name, "function", a.file, a.line_start, "new", EXACT, None,
@@ -447,7 +460,8 @@ class _Run:
                 why = f"calls {fn.name}, which this patch moves to {new_file}, a new file that is not in the build list yet"
             if new_file is not None:
                 self.blind(f"{fn.name} moved to {new_file}, which is new and not in the build list yet, so "
-                           "AeroTrace can't tell whether it will be built and linked", key)  # fmt: skip
+                           "AeroTrace can't tell whether it will be built and linked", key,
+                           short=f"{new_file} is not in the build yet")  # fmt: skip
             if moved is not None:
                 self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
                              f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
@@ -473,7 +487,8 @@ class _Run:
                 table = data.global_named(self.conn, a.in_variable, a.file)
                 if table is None:
                     self.blind(f"{a.file}:{a.line}: {a.in_variable} names {fn.name}, which this patch removes; "
-                               "it is not in the index, so it is not listed", key)  # fmt: skip
+                               "it is not in the index, so it is not listed", key,
+                               short=f"{a.in_variable} in {a.file}, not in the index")  # fmt: skip
                     continue
                 moved = self._moved_to(fn)
                 if moved is not None:
@@ -556,7 +571,7 @@ class _Run:
                 why = f"the prototype of {ids[fid]} was removed; {unsure}"
                 if caller is None and held is None:
                     self.blind(f"{f}:{line} names {ids[fid]}, whose prototype was removed; {unsure}, and the "
-                               "global that names it is not in the index")  # fmt: skip
+                               "global that names it is not in the index", short=unsure.split(", so")[0])  # fmt: skip
                 elif held is not None:
                     self._var_node(held, "breaks", PROBABLE, f"its initializer names {ids[fid]}; {why}", None,
                                    ids[fid], [line])  # fmt: skip
@@ -565,10 +580,11 @@ class _Run:
                         fns[caller], "breaks", PROBABLE, "calls_removed", why, 1, None, ids[fid], [line]
                     )
         if len(files) > USER_FILES_COMPILED:
-            self.blind(f"{len(files) - USER_FILES_COMPILED} more files were not compiled with the change")
+            self.blind(f"{len(files) - USER_FILES_COMPILED} more files were not compiled with the change",
+                       short=f"{_n(len(files) - USER_FILES_COMPILED, 'file')} not compiled")  # fmt: skip
         shown = sorted(set(ids.values()) - set(self.res.diff.proto_removed))
         if shown and by_file:
-            self.blind(diff.proto_note(shown))
+            self.blind(diff.proto_note(shown), short="files that relied on a removed prototype")
 
     def _moved_to(self, fn: Fn) -> str | None:
         """The file where the patch defines a function of the same name again (it was moved), if any."""
@@ -615,6 +631,7 @@ class _Run:
                             "signature looks the same (attributes, macros or qualifiers?). Check its callers "
                             "by hand.",
                             fid,
+                            short=f"the head of {n['qualified_name']}",
                         )
                 continue
             for fid in ids:
@@ -649,6 +666,7 @@ class _Run:
                 link_fail = (
                     f"; the prototype it is declared with ({protos[0]}) no longer matches, so it may not link"
                 )
+        not_compiled = 0
         for s in si.sites:
             broken = ""
             if self.mode == "git" and s.broken:
@@ -692,6 +710,14 @@ class _Run:
                 why = f"calls {fn.name}: {sc.words}"
                 level = s.certainty
             self.fn_node(s.caller, "affected", level, s.link, why, 1, fn.id, fn.qualified_name, [s.line])
+            if not sc.same_underlying:
+                not_compiled += 1
+        if not_compiled:
+            # the calls were not compiled with the new signature: an argument of the old type may not convert
+            were = "was" if not_compiled == 1 else "were"
+            self.blind(f"{_n(not_compiled, 'call')} of {fn.name} {were} not compiled with its new signature "
+                       f"({sc.words}), so whether they still build is not checked.", fn.id,
+                       short=f"{_n(not_compiled, 'call')} of {fn.name} not compiled")  # fmt: skip
         for p in si.pointer_sites:
             self.fn_node(p.caller, "affected", PROBABLE, p.link,
                          f"calls a pointer of the old type of {fn.name} ({sc.words})", 1, fn.id,
@@ -720,10 +746,12 @@ class _Run:
             self._hit(h, f"calls {{via}}, which calls {fn.name}")
         for b in si.blind_spots:
             if not b.startswith("Stopped at depth"):  # one depth line for the whole answer (the diff's)
-                self.blind(b, fn.id)
+                self.blind(b, fn.id, unchecked=b not in si.caveats)
         if si.truncated:
-            self.blind(f"Signature effects follow callers {si.depth} steps further up; more exist.", fn.id)
-        self.blind(IFDEF_NOTE)
+            # the cap only shortens the AFFECTED list further up: the calls that break are all direct
+            self.blind(f"Signature effects follow callers {si.depth} steps further up; more exist.", fn.id,
+                       unchecked=False)  # fmt: skip
+        self.blind(IFDEF_NOTE, unchecked=False)
 
     # -- declarations
 
@@ -868,7 +896,8 @@ class _Run:
                         hits = data.globals_at(self.conn, b.file, b.line)
                         sure = len(hits) == 1 and hits[0][1] == EXACT and b.certainty == EXACT
                         if not sure:  # nothing proves which global it is (or it may be no global at all)
-                            self.blind(f"{b.file}:{b.line} {reason}", nid)
+                            self.blind(f"{b.file}:{b.line} {reason}", nid,
+                                       short=f"a compile error outside any function in {b.file}")  # fmt: skip
                         for gvar, level, where in hits:
                             level = EXACT if sure else PROBABLE
                             self._var_node(gvar, "breaks", level, f"{where} at {b.file}:{b.line} {reason}", nid,
@@ -878,6 +907,7 @@ class _Run:
                         f"{name} was removed. A file that still declares it (an extern left in a header) "
                         "compiles, and only the link fails: those uses are not listed.",
                         nid,
+                        short=f"externs of {name}",
                     )
         elif c.kind == "added":
             if v["kind"] == "global" and v["usr"].startswith("c:@"):
@@ -934,12 +964,14 @@ class _Run:
                              f"passes the address of {name} on ({e.detail}); what happens there is not known", 1,
                              nid, name, [e.line], "reads")  # fmt: skip
             if c.kind == "text":
-                self.blind(f"{name}: {c.words}. Its users are listed as unknown.", nid)
+                self.blind(
+                    f"{name}: {c.words}. Its users are listed as unknown.", nid, short=f"the type of {name}"
+                )
         if du is not None:
             for b in du.blind_spots:
-                self.blind(b, nid)
+                self.blind(b, nid, unchecked=b not in du.caveats)
         if v["kind"] == "field":
-            self.blind(IFDEF_NOTE)
+            self.blind(IFDEF_NOTE, unchecked=False)
 
     def _var_node(
         self, var: data.Var, status: str, level: str, why: str, via: str, via_name: str, lines: list[int]
@@ -960,7 +992,7 @@ class _Run:
             "followed."
         )
         if field_row is None:
-            self.blind(text)
+            self.blind(text, short=f"the layout of {record}")
             return
         du = data.data_users(self.conn, field_row["id"], depth=0)
         for g in du.by_position:
@@ -968,7 +1000,7 @@ class _Run:
                            g.id, g.shown, [g.line])  # fmt: skip
             self.res.nodes[g.id].via = None
             self.res.nodes[g.id].via_name = record
-        self.blind(text)
+        self.blind(text, short=f"the layout of {record}")
 
     # -- duplicate definitions
 
@@ -1074,7 +1106,8 @@ class _Run:
                 and (g := data.global_named(self.conn, v["qualified_name"], file)) is not None
             ]  # fmt: skip
             if len(holders) != 1:  # none, or several on that line: say so
-                self.blind(text, fid if fid in self.res.nodes else None)
+                self.blind(text, fid if fid in self.res.nodes else None,
+                           short=f"a compile error outside any function in {file}")  # fmt: skip
             for g in holders:
                 level = sure if len(holders) == 1 else PROBABLE
                 self._var_node(g, "breaks", level, f"its initializer {why}", None, None, [d["line"]])
@@ -1113,7 +1146,8 @@ class _Run:
                     self._var_node(obj, status, level, why, nid, name, lines)
         if len(files) > USER_FILES_COMPILED:
             self.blind(f"Uses in {len(files) - USER_FILES_COMPILED} more files of a retyped field or global "
-                       "were not compiled with the change; they are listed as unknown.")  # fmt: skip
+                       "were not compiled with the change; they are listed as unknown.",
+                       short=f"{_n(len(files) - USER_FILES_COMPILED, 'file')} not compiled")  # fmt: skip
 
     # -- callers found by the diff walk
 
@@ -1227,9 +1261,17 @@ def run(
             side = "old" if o is None else "new"
             r.blind(
                 f"The {side} version of {shown} could not be parsed, so signature and declaration changes in it "
-                "are not checked."
+                "are not checked.",
+                short=f"{shown} could not be parsed",
             )
             continue
+        if o.errors:
+            # links in it may be missing from the index, and a new error may hide among the old ones
+            r.blind(
+                f"{shown} already had {_n(o.errors, 'error')} before this change, so what it uses may be "
+                "missing and a new error may be hidden. Build it to be sure.",
+                short=f"{shown} already had {_n(o.errors, 'error')}",
+            )
         r.duplicates(shown, index_path or shown, o, n)
         if index_path is None and mode == "patch":
             continue
@@ -1241,7 +1283,7 @@ def run(
     r.compile_users(outliner)
     r.walk_hits()
     for b in d.blind_spots:
-        r.blind(b)
+        r.blind(b, unchecked=b not in d.caveats)
     res.parses, res.seconds_parsing = outliner.parses, outliner.seconds
     _resolve_via(res)
     return res
@@ -1270,9 +1312,49 @@ def _node_rank(n: Node) -> tuple:
 
 
 def empty_contract(status: str, tool: str, message: str | None = None, change: dict | None = None) -> dict:
-    """The JSON for runs that checked nothing: no_index, index_error, nothing_to_check."""
+    """The JSON for runs that checked nothing: no_index, index_error, nothing_to_check (no C or C++
+    change, or every changed file was skipped: a patch that does not match, files not in the index)."""
+    if status in ("no_index", "index_error"):
+        parts, reason = 0, "no index" if status == "no_index" else "the index could not be read"
+        unchecked = True
+    else:
+        found = _not_followed_reasons(change or {})
+        parts, reason, unchecked = len(found), (found[0] if found else None), bool(found)
     return {"format": FORMAT, "version": VERSION, "tool": tool, "status": status, "message": message,
-            "change": change}  # fmt: skip
+            "change": change, **_verdict_fields(0, unchecked, parts, reason)}  # fmt: skip
+
+
+def _verdict_fields(breaks: int, unchecked: bool, parts: int, reason: str | None) -> dict:
+    return {
+        "verdict": verdict_mod.decide(breaks, unchecked),
+        "unchecked": unchecked,
+        "unchecked_parts": parts,
+        "unchecked_reason": reason,
+    }
+
+
+def verdict(contract: dict) -> verdict_mod.Verdict:
+    """(verdict, unchecked, parts, reason) of a check answer: see analysis/verdict.py."""
+    return verdict_mod.of(contract)
+
+
+def _not_followed_reasons(change: dict) -> list[str]:
+    """A few words for each part of the change that was skipped, in a fixed order."""
+    nf = change.get("not_followed") or {}
+    out = [f"{o.get('what') or 'code outside any function'} in {o['file']}" for o in nf.get("outside", [])]
+    out += [f"the patch does not match {f}" for f in nf.get("mismatched", [])]
+    out += [f"the old version of {f} could not be read" for f in nf.get("unreadable", [])]
+    out += [f"{f} is not in the index" for f in nf.get("not_indexed", [])]
+    out += [f"{f} is new and not in the build yet" for f in nf.get("new_files", [])]
+    out += [f"{f} was deleted" for f in nf.get("deleted", [])]
+    return out
+
+
+def _short(text: str) -> str:
+    """The first clause of a blind spot, for the first line when it has no short name of its own."""
+    text = text.removeprefix("UNKNOWN (#33): ")
+    first = re.split(r"(?<=[A-Za-z0-9)])[.;:] ", text, maxsplit=1)[0].rstrip(".")
+    return first if len(first) <= 80 else first[:77].rsplit(" ", 1)[0] + " ..."
 
 
 def _change(d: DiffImpact, res: CheckResult) -> dict:
@@ -1290,7 +1372,8 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
         ),
         "not_followed": {
             "outside": [
-                {"file": o.file, "lines": o.lines, "other_side_lines": o.other_side} for o in d.outside
+                {"file": o.file, "lines": o.lines, "other_side_lines": o.other_side, "what": o.what}
+                for o in d.outside
             ],
             "not_indexed": list(d.not_indexed),
             "deleted": list(d.deleted),
@@ -1315,17 +1398,30 @@ def to_contract(
     if d.files == 0:
         return empty_contract("nothing_to_check", tool, None, change)
     nodes = sorted(res.nodes.values(), key=_node_rank)
-    blind: dict[str, tuple[str, str | None]] = {}
-    for text, scope, node in res.blind_spots:
+    blind: dict[str, tuple[str, str | None, bool]] = {}
+    for text, scope, node, unchecked in res.blind_spots:
         cur = blind.get(text)
         if cur is None or (scope == "change" and cur[0] == "index"):
-            blind[text] = (scope, node)
+            blind[text] = (scope, node, unchecked or (cur is not None and cur[2]))
+        elif unchecked:
+            blind[text] = (cur[0], cur[1], True)
     blind_list = [
-        {"text": t, "scope": s, "node": n}
-        for t, (s, n) in sorted(blind.items(), key=lambda kv: (kv[1][0], kv[0]))
+        {"text": t, "scope": s, "node": n, "unchecked": u}
+        for t, (s, n, u) in sorted(blind.items(), key=lambda kv: (kv[1][0], kv[0]))
     ]
     nf = change["not_followed"]
-    gaps = sum(len(v) for v in nf.values()) + sum(1 for b in blind_list if b["scope"] == "change")
+    skipped = len(nf["mismatched"]) + len(nf["not_indexed"])
+    if not nodes and skipped == d.files and not any(b["unchecked"] for b in blind_list):
+        # every changed file was skipped, so nothing was checked: never "ok" (R6)
+        return empty_contract("nothing_to_check", tool, None, change)
+    # What was not checked or not followed in this change (A-04). Each one makes the answer UNKNOWN unless
+    # something breaks: the parts in change.not_followed (lines outside any function: macros, types,
+    # includes; a patch that does not match; files not in the index, new, deleted or unreadable), every
+    # blind spot of this change that is not a standing limit (see _Run.blind), and every UNKNOWN node.
+    reasons = _not_followed_reasons(change)
+    reasons += [res.reasons.get(b["text"]) or _short(b["text"]) for b in blind_list if b["unchecked"]]
+    gaps = len(reasons)
+    reasons += [f"{n.name} in {n.file}" for n in nodes if n.status == "unknown"]
     count = Counter((n.status, n.certainty if n.status == "breaks" else "", n.distance > 1) for n in nodes)
     summary = {
         "breaks_exact": count[("breaks", EXACT, False)] + count[("breaks", EXACT, True)],
@@ -1336,6 +1432,7 @@ def to_contract(
         "no_effect": 0,
         "not_followed": gaps,
     }
+    breaks = summary["breaks_exact"] + summary["breaks_probable"]
     keep = [n for n in nodes if n.distance == 0]
     rest = [n for n in nodes if n.distance != 0]
     room = max(0, cap - len(keep))
@@ -1379,6 +1476,7 @@ def to_contract(
         "status": "ok",
         "message": None,
         "change": change,
+        **_verdict_fields(breaks, bool(reasons), len(reasons), reasons[0] if reasons else None),
         "summary": summary,
         "nodes": out_nodes,
         "edges": edges,

@@ -63,6 +63,11 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
     }
   },
 
+  "verdict": "breaks",                // A-04: breaks | unknown | clear, decided in analysis/verdict.py
+  "unchecked": true,                  // a part of the change was not checked (also when it breaks)
+  "unchecked_parts": 3,               // summary.not_followed + summary.unknown
+  "unchecked_reason": "a macro in src/t_string.c",  // the first of them, for the first line
+
   "summary": {                        // headline numbers; the renderer prints them, never recomputes
     "breaks_exact": 3,                // will not build or link, link exact
     "breaks_probable": 1,             // will not build or link, link probable
@@ -70,7 +75,7 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
     "affected_further": 4,            // affected, distance > 1
     "unknown": 2,
     "no_effect": 1,
-    "not_followed": 2                 // entries in change.not_followed + blind spots with scope "change"
+    "not_followed": 1                 // entries in change.not_followed + blind spots with "unchecked": true
   },
 
   "nodes": [                          // sorted by (status, certainty, distance, file, line, id)
@@ -135,10 +140,14 @@ The full example is `tests/fixtures/ui/check-v1-sample.json`.
 - **Counts are explicit** and can't be more hopeful than the lists: for each status, `summary` must be
   at least what `nodes` shows, and exactly that when `omitted.nodes` is 0 (so "can break 5" with 3
   listed is refused). An all-zero summary is refused when nodes were left out or the walk stopped early.
-  If `change.not_followed` lists anything, or a blind spot has scope
-  `change`, then `summary.not_followed` must be > 0 ("a wrong all-clear").
-- Blind spots have a `scope`: `change` ones (about this diff) block the all-clear; `index` ones (global
-  limits like "macros are not followed") are always shown but don't block it forever.
+  If `change.not_followed` lists anything, or a blind spot has `"unchecked": true`, then
+  `summary.not_followed` must be > 0 ("a wrong all-clear").
+- `verdict` must follow from the counts: `breaks` when something breaks, else `unknown` when
+  `unchecked`, else `clear`; `unchecked` is true exactly when `unchecked_parts` > 0 (A-04).
+- Blind spots have a `scope` and `unchecked`: `change` ones are about this diff; those with `unchecked`
+  true are a part not checked and make the answer UNKNOWN; `unchecked` false marks a standing limit
+  (pointer calls matched by type, other #if branches). `index` ones (global limits) are always shown and
+  never make it UNKNOWN.
 - Every node that is not part of the change is in exactly one of `sections.functions` /
   `sections.data`; changed, new and removed nodes are in neither (they are listed under "What changed").
 - Non-ok statuses are checked too: `nothing_to_check` needs `change`, and lists what it skipped
@@ -166,6 +175,7 @@ Icons, always next to a word:
 | headline, risk  | ⚠️      | `[!]`  | -                 | bold                |
 | headline, clear | ✅      | `[ok]` | -                 | bold                |
 | headline, info  | ℹ️      | `[i]`  | -                 | bold                |
+| headline, unknown | ❓    | `[?]`  | -                 | bold                |
 | breaks          | ✖       | `[x]`  | BREAKS / MAY BREAK| bold red (1;31)     |
 | affected        | ▲       | `[~]`  | AFFECTED          | bold yellow (1;33)  |
 | unknown         | ?       | `[?]`  | UNKNOWN           | bold                |
@@ -187,23 +197,20 @@ limits are printed right below the headline ("Index limit: ..."), so a pass neve
 
 | summary                                         | first line                                                                       |
 |-------------------------------------------------|----------------------------------------------------------------------------------|
-| breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch (N BREAKS, M AFFECTED).`     |
-| only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link (N MAY BREAK, M AFFECTED).`  |
-| affected > 0, no breaks, nothing unknown or not followed | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
-| affected > 0, no breaks, but unknown or not followed > 0 | `⚠️  This change may affect N things you didn't touch (...). AeroTrace could not check all of it, so something may still break.` (never a "safe" sentence when something was not seen) |
-| only unknown > 0                                | `⚠️  N things this change reaches are unknown: AeroTrace could not follow them. Check by hand.` |
-| only not_followed > 0                           | `ℹ️  Nothing found that this change can break, but N parts of the change could not be followed.` |
-| everything 0                                    | `✅ Nothing found that this change can break, in the code AeroTrace can see.`     |
+| breaks_exact > 0                                | `⚠️  This change can break N things you didn't touch (N BREAKS, M AFFECTED).` and, when `unchecked`, `...; K parts could not be checked.` |
+| only breaks_probable > 0                        | `⚠️  N things you didn't touch may not build or link (N MAY BREAK, M AFFECTED).` (same clause) |
+| verdict `unknown`                               | `❓ UNKNOWN: AeroTrace could not check K parts of this change (a macro in defs.h). Build before you rely on it.` (only unknown nodes: `could not follow K things this change reaches (...)`); never "Nothing found" or "safe" |
+| verdict `clear`, affected > 0                   | `⚠️  This change may affect N things you didn't touch (D direct, F further up). None is sure to break.` |
+| verdict `clear`, everything 0                   | `✅ Nothing found that this change can break, in the code AeroTrace can see.`     |
 
-The second line lists the other non-zero counts, direct counts first ("1 more may not build or link, 6
-may be affected (2 direct, 4 further up), 2 are unknown and 2 parts of the change could not be
-followed."). When something breaks, the first line ends with the counts in the words the lists use
-(`BREAKS`, `MAY BREAK`, `AFFECTED`, `UNKNOWN`; zero counts left out), so the verdict is complete on one
-line. Before the proof line comes the coverage line, from `proof.build_files*` (only when the JSON has
+The second line lists the other non-zero counts, direct counts first ("1 more may not build or link and
+6 may be affected (2 direct, 4 further up)."). When something breaks, the first line ends with the counts
+in the words the lists use (`BREAKS`, `MAY BREAK`, `AFFECTED`, `UNKNOWN`; zero counts left out) and, when
+a part was not checked, "; K parts could not be checked", so the verdict is complete on one line. Before the proof line comes the coverage line, from `proof.build_files*` (only when the JSON has
 them): `Checked 117 of 117 files in this build (1 had parse errors).` If some repo sources are not in
 compile_commands.json, one short line follows and names up to 3 of them: `1,696 C/C++ files outside this
 build were not checked: deps/a.c, deps/b.c, deps/c.c and 1,693 more (--all lists them).` (the hint is the CLI's;
-MCP and HTML name the same 3). Under a ✅ or ℹ️ "nothing found" headline this line comes right below the
+MCP and HTML name the same 3). Under a ✅ headline, or a ❓ UNKNOWN one with nothing found, this line comes right below the
 headline as an "Index limit:", not at the end, because a caller in those files is exactly what a pass
 can miss. This line replaces the long "not in compile_commands.json" index limit in `check`, so what was
 not seen is still always said.
@@ -287,10 +294,10 @@ Limits of the index (1)
 index: 117 files, 5,064 functions; followed callers up to 5 steps (stopped early: no)
 ```
 
-Nothing found, but part of the change was skipped (`unclear.txt`), never ✅:
+Nothing found, but part of the change was skipped (`unclear.txt`), never ✅ and never "Nothing found":
 
 ```text
-ℹ️  Nothing found that this change can break, but 2 parts of the change could not be followed.
+❓ UNKNOWN: AeroTrace could not check 2 parts of this change (code outside any function in src/t_string.c). Build before you rely on it.
     You changed 1 function in 1 C/C++ file (compared with HEAD).
 
 Changes AeroTrace could not follow (2)

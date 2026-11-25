@@ -62,6 +62,15 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `aerotrace check`: when any part of the change was not checked or not followed (a macro, typedef or enum
+  change, a compile error outside a function, a patch that does not match the file, a file not in the
+  index or that already had errors, files not compiled), the first line now says UNKNOWN and names the
+  first part, never "Nothing found" (A-04). With a break, the BREAKS line adds "; N parts could not be
+  checked". The JSON has `verdict` (`breaks`, `unknown`, `clear`), `unchecked`, `unchecked_parts` and
+  `unchecked_reason`, and each blind spot says if it is `unchecked`; standing limits (pointer calls
+  matched by type, other #if branches) are not. A patch where every file was skipped is no longer
+  `status: ok` but `nothing_to_check`. Calls of a retyped function that were not compiled now count as not
+  checked. The exit code and the hook are unchanged for now.
 - `aerotrace check --patch`: a function removed together with its header prototype, or removed in a
   shifted hunk (`diff -u`, the Claude Code hook), is now REMOVED and its callers BREAK, like the same change
   written by git. A prototype removed while the function stays (or moves) makes callers in other files MAY BREAK

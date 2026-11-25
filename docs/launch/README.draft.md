@@ -59,13 +59,14 @@ are kept.
 - **It needs your build's `compile_commands.json`** for accurate results. Files the build does not list
   are not indexed, and the answer says so.
 - **Macros and type changes are not followed.** A changed macro or `typedef` is listed under "changes
-  AeroTrace could not follow", never dropped.
+  AeroTrace could not follow", never dropped, and the first line says UNKNOWN.
 - **Function pointers are matched by type.** A call through a pointer is linked to every function of
   that type and labelled `probable`.
 - **Many links are `probable`, not `exact`.** Calls through function pointers, virtual calls and functions
   that share a name can't be resolved by the compiler alone, so AeroTrace lists them and says so.
-- **"Nothing found" is not "safe".** It always comes with the list of what AeroTrace could not check:
-  changed lines outside any function, files not in the index, and the index's own limits.
+- **"Nothing found" only when every part was checked.** If any part of the change was not checked (a
+  macro or type change, a file not in the index, a patch that does not match), the first line says
+  UNKNOWN and names the first part. "Nothing found" still comes with the index's own limits.
 - **It does not run your build or your tests.** Mapping changes to the tests that reach them is coming; until
   then, the answer says the test list is not known.
 - Tested on Linux and macOS.

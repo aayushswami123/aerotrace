@@ -127,7 +127,7 @@ def test_skipped_parts_need_a_count() -> None:
     d["summary"]["not_followed"] = 0
     _bad(d, "wrong all-clear")
     d = samples.nothing()
-    d["sections"]["blind_spots"].append({"text": "x", "scope": "change", "node": None})
+    d["sections"]["blind_spots"].append({"text": "x", "scope": "change", "node": None, "unchecked": True})
     _bad(d, "wrong all-clear")
 
 

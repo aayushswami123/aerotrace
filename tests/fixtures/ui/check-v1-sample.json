@@ -21,7 +21,8 @@
             43,
             44
           ],
-          "other_side_lines": []
+          "other_side_lines": [],
+          "what": "a macro"
         }
       ],
       "unreadable": []
@@ -398,12 +399,14 @@
       {
         "node": null,
         "scope": "change",
-        "text": "3 calls through function pointers in src/t_string.c were matched by type only."
+        "text": "3 calls through function pointers in src/t_string.c were matched by type only.",
+        "unchecked": false
       },
       {
         "node": null,
         "scope": "index",
-        "text": "Macro uses are not followed anywhere in the index."
+        "text": "Macro uses are not followed anywhere in the index.",
+        "unchecked": false
       }
     ],
     "data": [
@@ -455,9 +458,13 @@
     "breaks_exact": 3,
     "breaks_probable": 1,
     "no_effect": 1,
-    "not_followed": 2,
+    "not_followed": 1,
     "unknown": 2
   },
   "tool": "aerotrace 0.1.0",
+  "unchecked": true,
+  "unchecked_parts": 3,
+  "unchecked_reason": "a macro in src/t_string.c",
+  "verdict": "breaks",
   "version": 1
 }

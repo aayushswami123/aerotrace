@@ -1,2 +1,2 @@
-[!] AeroTrace has no index for this repo yet, so it checked nothing.
+[!] UNKNOWN: AeroTrace has no index for this repo yet, so it checked nothing.
     Run `aerotrace index` first (Redis takes about a minute), then run `aerotrace check` again.

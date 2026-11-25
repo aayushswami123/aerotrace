@@ -31,6 +31,7 @@ from aerotrace.ui.terminal import (
     coverage_lines,
     detail,
     headline,
+    limits_above,
     not_followed_lines,
     proof_line,
     title,
@@ -127,9 +128,7 @@ def _header(data: dict) -> str:
     out += [f"<p>{_e(line)}</p>" for line in lines[1:]]
     if data["status"] == "ok":
         cov = coverage_lines(data)
-        out += [
-            f'<p class="proof">{_e(line)}</p>' for line in (cov[:1] if icon in ("clear", "info") else cov)
-        ]
+        out += [f'<p class="proof">{_e(line)}</p>' for line in (cov[:1] if limits_above(data, icon) else cov)]
         files = data["proof"].get("outside_build_files")
         if files:
             items = "".join(f"<li>{_e(f)}</li>" for f in files)

@@ -159,6 +159,9 @@ class DataUsers:
     same_name: list[Var] = field(default_factory=list)  # other fields/globals with this name, not included
     other_copies: list[Var] = field(default_factory=list)  # same clang ID, defined in another file
     blind_spots: list[str] = field(default_factory=list)
+    # the blind spots that are standing limits of how data is tracked, not a part of the change left
+    # unchecked (they never make a check UNKNOWN; see check.verdict)
+    caveats: list[str] = field(default_factory=list)
 
     @property
     def writers(self) -> list[Use]:
@@ -660,7 +663,7 @@ def data_users_of(
         res.upstream, res.truncated = graph.walk_many(
             conn, list({f.id: f for f in starts}.values()), "callers", depth
         )
-    res.blind_spots = _limits(conn, res)
+    res.blind_spots, res.caveats = _limits(conn, res)
     return res
 
 
@@ -677,9 +680,12 @@ def _has_cpp(conn: sqlite3.Connection) -> bool:
     )
 
 
-def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
+def _limits(conn: sqlite3.Connection, res: DataUsers) -> tuple[list[str], list[str]]:
+    """(every note, the notes that are standing limits). Only the extern left in a header is about the
+    change itself: those uses may not link, and they are not listed."""
     v = res.target
     notes: list[str] = []
+    unchecked: list[str] = []
     is_field = v.kind == "field"
     record = v.record or "?"
     if is_field and res.question == DECLARATION:
@@ -710,11 +716,12 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
                 'undeclared identifier" inside a method of its class, probable).'
             )
         else:
-            notes.append(
+            unchecked.append(
                 f'{v.shown} is not declared any more. Listed: places that fail with "use of undeclared '
                 'identifier". A file that still declares it (an extern left in a header) compiles, and only the '
                 "link fails: those uses are not listed."
             )
+            notes.append(unchecked[-1])
     if res.broken or not v.exists:
         notes.append(
             "Several uses on one line (for example two calls of the same macro) count as one place. Inside a "
@@ -771,4 +778,5 @@ def _limits(conn: sqlite3.Connection, res: DataUsers) -> list[str]:
         )
     if res.truncated:
         notes.append(f"Stopped at depth {res.depth}; more callers exist further up.")
-    return notes + graph.index_limits(conn)
+    limits = graph.index_limits(conn)
+    return notes + limits, [n for n in notes if n not in unchecked] + limits
