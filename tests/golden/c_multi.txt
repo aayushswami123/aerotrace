@@ -18,8 +18,11 @@ var static_local next_id::id lib/shared.c:14
 var global table lib/table.c:8
 var global count prog_a/util.c:1 clash
 var global count prog_b/util.c:1 clash
+edge add@lib/shared.c -reads/exact-> g_total@lib/shared.c :6
 edge add@lib/shared.c -writes/exact-> g_total@lib/shared.c :6
+edge bump@prog_a/util.c -reads/exact-> count@prog_a/util.c :4
 edge bump@prog_a/util.c -writes/exact-> count@prog_a/util.c :4
+edge bump@prog_b/util.c -reads/exact-> count@prog_b/util.c :4
 edge bump@prog_b/util.c -writes/exact-> count@prog_b/util.c :4
 edge dispatch@lib/table.c -calls/via_pointer-> on_a@lib/table.c :11
 edge dispatch@lib/table.c -calls/via_pointer-> on_b@lib/table.c :11
@@ -32,6 +35,7 @@ edge main@prog_b/main.c -calls/exact-> calls_missing@lib/shared.c :7
 edge main@prog_b/main.c -calls/exact-> dispatch@lib/table.c :6
 edge main@prog_b/main.c -calls/exact-> get@lib/shared.c :8
 edge main@prog_b/main.c -calls/exact-> util_run_b@prog_b/util.c :8
+edge next_id@lib/shared.c -reads/exact-> next_id::id@lib/shared.c :15
 edge next_id@lib/shared.c -writes/exact-> next_id::id@lib/shared.c :15
 edge on_a@lib/table.c -calls/exact-> add@lib/shared.c :5
 edge on_b@lib/table.c -calls/exact-> add@lib/shared.c :6

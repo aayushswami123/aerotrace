@@ -604,14 +604,21 @@ class _Run:
                     self.fn_node(u.fn, "breaks", level, "uses_changed", why, 1, nid, name, u.reads + u.writes,
                                  "writes" if u.writes else "reads")  # fmt: skip
                 for e in du.escapes:
+                    if e.in_variable is not None:
+                        self._var_node(e.in_variable, "breaks", EXACT, f"its initializer takes the address of "
+                                       f"{name}, which this change removes", nid, name, [e.line])  # fmt: skip
+                        continue
                     self.fn_node(e.fn, "breaks", EXACT, "uses_changed", f"takes the address of {name}, which "
                                  "this change removes", 1, nid, name, [e.line], "reads")  # fmt: skip
                 for i in du.initializers:
                     self._var_node(i.variable, "breaks", EXACT, f"its initializer sets {name}, which this "
                                    "change removes", nid, name, [i.line])  # fmt: skip
-            elif v["kind"] == "field":
-                record = v["container"] or ""
-                for gv in data.gone_fields(self.conn, f"{record}::{v['name']}"):
+            else:
+                # the index already has the removal: the places that no longer compile still use it
+                query = f"{v['container'] or ''}::{v['name']}" if v["kind"] == "field" else v["name"]
+                for gv in data.gone_fields(self.conn, query):
+                    if gv.kind != v["kind"]:
+                        continue
                     du = data.data_users_of(self.conn, gv, depth=0)
                     for b in du.broken:
                         if b.fn is not None:
@@ -619,17 +626,12 @@ class _Run:
                                          f"does not compile now: {b.reason}", 1, nid, name, [b.line])  # fmt: skip
                         else:
                             self.blind(f"{b.file}:{b.line} does not compile now: {b.reason}", nid)
-                self.blind(
-                    "Clang stops reporting after 20 errors in one file, and a removed field set by "
-                    f"{{.{v['name']} = ...}} is not reported (#25); search for {v['name']} by hand.",
-                    nid,
-                )
-            else:
-                self.blind(
-                    f"{name} was removed. Uses of a removed global are not recorded (#25); search for it "
-                    "by hand.",
-                    nid,
-                )
+                if v["kind"] != "field":
+                    self.blind(
+                        f"{name} was removed. A file that still declares it (an extern left in a header) "
+                        "compiles, and only the link fails: those uses are not listed.",
+                        nid,
+                    )
         elif c.kind == "added":
             if v["kind"] == "global" and v["usr"].startswith("c:@"):
                 for r in self.conn.execute(
@@ -663,6 +665,11 @@ class _Run:
                 self._var_node(i.variable, "affected", EXACT, f"its initializer sets {name}: {c.words}", nid,
                                name, [i.line])  # fmt: skip
             for e in du.escapes:
+                if e.in_variable is not None:
+                    self._var_node(e.in_variable, "unknown", UNKNOWN, f"its initializer stores the address of "
+                                   f"{name} ({e.detail}); code that uses it may change {name}", nid, name,
+                                   [e.line])  # fmt: skip
+                    continue
                 self.fn_node(e.fn, "unknown", UNKNOWN, "uses_changed",
                              f"passes the address of {name} on ({e.detail}); what happens there is not known", 1,
                              nid, name, [e.line], "reads")  # fmt: skip

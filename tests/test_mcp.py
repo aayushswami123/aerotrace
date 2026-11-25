@@ -233,8 +233,8 @@ async def test_data_users_tool(repo_factory):
         out = text_of(await client.call_tool("data_users", {"name": "conn::count", "limit": 2}))
         many = text_of(await client.call_tool("data_users", {"name": "count"}))
         value = text_of(await client.call_tool("data_users", {"name": "conn::count", "from_function": "put"}))
-    assert "Summary: 7 functions use it in 1 file: 5 write it, 2 only read it (7 exact)." in out
-    assert "... and 5 more functions (call again with show_all=true, or a bigger limit)." in out
+    assert "Summary: 9 functions use it in 1 file: 6 write it, 3 only read it (9 exact)." in out
+    assert "... and 7 more functions (call again with show_all=true, or a bigger limit)." in out
     assert "Limits of this answer:" in out
     assert "matches 5 variables" in many
     assert "[probable]" in value and "maybe of another object" in value

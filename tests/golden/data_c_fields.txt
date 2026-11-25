@@ -1,15 +1,19 @@
 Data users of conn::count (include/fields.h:4): field of conn, type int.
-Summary: 7 functions use it in 1 file: 5 write it, 2 only read it (7 exact). 1 initializer sets it, 6 globals of its type may set it by position, 2 places pass its address on, 0 places do not compile now.
-Functions that use it (7), writers first:
-  - touch  src/fields.c  first use 18: writes 18
+Summary: 9 functions use it in 1 file: 6 write it, 3 only read it (9 exact). 3 initializers set it, 6 globals of its type may set it by position, 2 places pass its address on, 0 places do not compile now.
+Functions that use it (9), writers first:
+  - touch  src/fields.c  first use 18: writes 18; reads 18
   - touch_array  src/fields.c  first use 19: writes 19
+  - reset_conn  src/fields.c  first use 25: writes 25
   - reset_all  src/fields.c  first use 33: writes 33
-  - bump_any  src/fields.c  first use 35: writes 35
+  - bump_any  src/fields.c  first use 35: writes 35; reads 35
   - put  src/fields.c  first use 44: writes 44
   - leak_count  src/fields.c  first use 27: reads 27, 30
+  - count_offset  src/fields.c  first use 36: reads 36
   - get  src/fields.c  first use 45: reads 45
-Initializers that set it (1 line in 1 global):
+Initializers that set it (3 lines in 3 globals):
   - table  src/fields.c: line 8
+  - pos  src/fields.c: line 9
+  - wrapped  src/fields.c: line 63
 Globals of its type that may set it by position (6) [unknown]: if their initializer lists values in order, it sets this field too:
   - gone_init  src/broken.c:9  (struct conn)
   - g_main  src/fields.c:5  (struct conn)
@@ -25,9 +29,8 @@ Not included: 4 other variables named count (count@a/state.c, count@b/state.c, b
 Limits of this answer:
   - Fields are tracked per struct type, not per object: every conn's count is listed.
   - 2 places pass its address on. Reads and writes made through that pointer elsewhere are not listed.
-  - Not seen: access through a void * or a cast to another type, by offset (offsetof, #24), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).
-  - Initializers that set fields by position ({1, 2}) are not recorded (#26). Globals of this struct type, or of a struct that contains it, are listed as unknown instead. Not checked: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. A {.field = x} inside a function (a local or a compound literal) is not recorded either (#37).
-  - Its address stored in a file-scope initializer (&x in a table) is not recorded (#27).
+  - Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).
+  - Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of a struct that contains it, are still listed as unknown. Not checked there: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. {0} (all zero) is not counted.
   - Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.
   - 1 source file had parse errors; links in them may be missing.
   - Only one build configuration was analysed; code under other #ifdef settings is not seen.

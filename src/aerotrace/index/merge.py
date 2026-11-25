@@ -25,7 +25,8 @@ class Graph:
     call_sites: list[tuple] = field(default_factory=list)
     # (function id, in function id or None, in variable id or None, file, line, how)
     address_sites: list[tuple] = field(default_factory=list)
-    escapes: list[tuple] = field(default_factory=list)  # (function id, variable id, line, detail)
+    # (function id, or the id of the global whose initializer holds &x; variable id, line, detail)
+    escapes: list[tuple] = field(default_factory=list)
     initializers: list[tuple] = field(default_factory=list)  # (global id, field id, file, line)
     missing_members: list[tuple] = field(default_factory=list)  # (file, line, member, record)
     class_bases: dict[str, list[str]] = field(default_factory=dict)
@@ -201,6 +202,13 @@ def merge(results: list[dict]) -> Graph:
                 continue
             for dst, _conf in vars_.resolve(var, visible):
                 escapes.add((fns.id_of(fn, ffile), dst, line, detail))
+        for gvar, gfile, var, line, detail in res.get("init_escapes", []):
+            # &x in a file-scope initializer: no function does it, so the row is kept under the global
+            # whose initializer it is (a variable id in escapes.function_id; see ADR 0007)
+            if gvar not in vars_.defs or gfile not in vars_.defs[gvar]:
+                continue
+            for dst, _conf in vars_.resolve(var, visible):
+                escapes.add((vars_.id_of(gvar, gfile), dst, line, detail))
         for gvar, gfile, fld, file, line in res.get("initializers", []):
             if gvar not in vars_.defs or gfile not in vars_.defs[gvar]:
                 continue
