@@ -159,6 +159,10 @@ def _pairs(old: list[dict], new: list[dict]) -> tuple[list[tuple[dict, dict]], l
     return pairs, still_left, right
 
 
+def _squash(sig: str) -> str:
+    return "".join(sig.split())
+
+
 def compare_signatures(old: dict, new: dict) -> tuple[list[str], str, bool]:
     """(kinds of change, plain words, only spellings changed). Empty kinds: the signature is the same."""
     kinds: list[str] = []
@@ -239,6 +243,9 @@ class _Run:
             dict(conn.execute("SELECT key, value FROM meta").fetchall())
         )
         self.sig_seen: set[str] = set()
+        self.new_defs: dict[
+            str, list[str]
+        ] = {}  # patch mode: extern functions the patch defines in new files
         # users of a field or global whose type really changed, by file, until their files are compiled
         self.retyped_users: dict[str, list[tuple]] = {}
         self.seen_broken: set[tuple[str, str, int]] = set()  # (removed name, file, line) listed (#57)
@@ -366,6 +373,13 @@ class _Run:
         moved = self._moved_to(fn)
         for s in si.sites:
             level, why = s.certainty, f"calls {fn.name}, which this patch removes"
+            new_file = self._moved_new(fn) if moved is None else None
+            if new_file is not None:
+                level = PROBABLE if level == EXACT else level
+                why = f"calls {fn.name}, which this patch moves to {new_file}, a new file that is not in the build list yet"
+            if new_file is not None:
+                self.blind(f"{fn.name} moved to {new_file}, which is new and not in the build list yet, so "
+                           "AeroTrace can't tell whether it will be built and linked", key)  # fmt: skip
             if moved is not None:
                 self.fn_node(s.caller, "affected", PROBABLE, "calls_removed", f"calls {fn.name}, which this patch "
                              f"moves to {moved}", 1, key, fn.qualified_name, [s.line])  # fmt: skip
@@ -400,6 +414,91 @@ class _Run:
                 level, why = self._removed_link(fn)
                 self._var_node(table, "breaks", level, f"its initializer names {fn.name} ({a.file}:{a.line}); "
                                f"{why}", key, fn.qualified_name, [a.line])  # fmt: skip
+
+    def _moved_new(self, fn: Fn) -> str | None:
+        """The one new file of the patch that defines an extern function of this name (a real definition)."""
+        found = self.new_defs.get(fn.qualified_name, [])
+        if len(found) != 1 or fn.linkage == "internal":
+            return None
+        path, usr, sig = found[0]
+        # the clang ID has the parameter types in C++; the signature text covers C
+        return path if usr == fn.id and sig == _squash(fn.signature) else None
+
+    def find_new_defs(self, outliner: Outliner) -> None:
+        for path in sorted(self.res.diff.new_files):
+            text = outliner.new_overlay.get(path)
+            o = outliner.text(path, text) if text is not None else None
+            for f in o.functions if o is not None else []:
+                if not f.get("static") and "@aN" not in f["usr"]:  # not in an unnamed namespace
+                    self.new_defs.setdefault(f["qualified_name"], []).append(
+                        (path, f["usr"], _squash(f["signature"]))
+                    )
+
+    def proto_users(self, outliner: Outliner, pairs: list) -> None:
+        """Patch mode: a prototype the patch removes. Callers in files the patch does not compile may have
+        relied on it, so compile those files with the patch. A new error is a break; a file that can't be
+        compiled leaves its callers as may-break. Nothing is flagged when the files still compile."""
+        gone: dict[str, dict] = {}
+        for _, _, o, n in pairs:
+            if o is not None and n is not None:
+                kept = {d["usr"] for d in n.declarations}
+                gone.update({d["usr"]: d for d in o.declarations if d["usr"] not in kept})
+        ids: dict[str, str] = {}  # function id -> name
+        for d in gone.values():
+            for fid in self.lookup._fns_declared(d):
+                ids[fid] = d["qualified_name"]
+        if not ids:
+            return
+        marks = ",".join("?" * len(ids))
+        keys = sorted(ids)
+        by_file: dict[str, list] = {}  # file -> [(function id, caller id or None, global or None, line)]
+        for r in self.conn.execute(
+            f"""SELECT e.dst, e.src, e.line, f.file FROM edges e JOIN functions f ON f.id = e.src
+                WHERE e.kind = 'calls' AND e.dst IN ({marks}) ORDER BY e.dst, e.src, e.line""",
+            keys,
+        ):
+            by_file.setdefault(r["file"], []).append((r["dst"], r["src"], None, r["line"]))
+        # every other use of the name: its address taken, or named in a global's initializer
+        for r in self.conn.execute(
+            f"""SELECT function_id, in_function, in_variable, file, line FROM address_sites
+                WHERE function_id IN ({marks}) ORDER BY function_id, file, line""",
+            keys,
+        ):
+            held = data.global_named(self.conn, r["in_variable"], r["file"]) if r["in_variable"] else None
+            by_file.setdefault(r["file"], []).append((r["function_id"], r["in_function"], held, r["line"]))
+        by_file = {f: v for f, v in by_file.items() if f not in self.compiled}
+        files = sorted(by_file)
+        for i, f in enumerate(files):
+            o, n = outliner.before_after(f, self.mode) if i < USER_FILES_COMPILED else (None, None)
+            if o is not None and n is not None and not o.errors:
+                self.errors(f, o, n)
+                continue
+            if i >= USER_FILES_COMPILED:
+                unsure = f"{f} was not compiled: more than {USER_FILES_COMPILED} files use it"
+            elif o is None or n is None:
+                unsure = f"{f} could not be parsed with the change"
+            else:
+                unsure = (
+                    f"{f} already had {_n(o.errors, 'error')} before the change, so a new one may be hidden"
+                )
+            fns = symbols.get_many(self.conn, sorted({c for _, c, g, _ in by_file[f] if c and g is None}))
+            for fid, caller, held, line in by_file[f]:
+                why = f"the prototype of {ids[fid]} was removed; {unsure}"
+                if caller is None and held is None:
+                    self.blind(f"{f}:{line} names {ids[fid]}, whose prototype was removed; {unsure}, and the "
+                               "global that names it is not in the index")  # fmt: skip
+                elif held is not None:
+                    self._var_node(held, "breaks", PROBABLE, f"its initializer names {ids[fid]}; {why}", None,
+                                   ids[fid], [line])  # fmt: skip
+                elif caller in fns:
+                    self.fn_node(
+                        fns[caller], "breaks", PROBABLE, "calls_removed", why, 1, None, ids[fid], [line]
+                    )
+        if len(files) > USER_FILES_COMPILED:
+            self.blind(f"{len(files) - USER_FILES_COMPILED} more files were not compiled with the change")
+        shown = sorted(set(ids.values()) - set(self.res.diff.proto_removed))
+        if shown and by_file:
+            self.blind(diff.proto_note(shown))
 
     def _moved_to(self, fn: Fn) -> str | None:
         """The file where the patch defines a function of the same name again (it was moved), if any."""
@@ -959,6 +1058,8 @@ def run(
     )
     res = CheckResult(d)
     r = _Run(conn, root, res, mode)
+    if mode == "patch":
+        r.find_new_defs(outliner)
     r.change_nodes()
     pairs = _file_pairs(root, diffs, d, mode, outliner, old)
     for _, _, _, n in pairs:
@@ -981,6 +1082,8 @@ def run(
         r.signatures(index_path or shown, o, n)
         r.declarations(shown, index_path, o, n)
         r.errors(index_path or shown, o, n)
+    if mode == "patch":
+        r.proto_users(outliner, pairs)
     r.compile_users(outliner)
     r.walk_hits()
     for b in d.blind_spots:

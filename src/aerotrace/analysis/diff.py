@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from aerotrace.analysis import graph, symbols
@@ -104,6 +104,7 @@ class DiffImpact:
     unreadable: list[str] | None = None  # git mode: the old version could not be read or parsed
     ignored: int = 0  # files that are not C or C++ (docs, build files, binaries)
     blind_spots: list[str] | None = None
+    proto_removed: list[str] = field(default_factory=list)  # patch mode: prototype removed, definition kept
 
     def __post_init__(self) -> None:
         for name in (
@@ -191,14 +192,21 @@ class _Collect:
         self.conn = conn
         self.root = root
         self.res = res
-        self.changed: dict[str, list] = {}  # id -> [changed lines, all lines new, all lines removed]
+        # id -> [changed lines, all lines new, all lines removed, a line of its own body or head changed]
+        self.changed: dict[str, list] = {}
         self.vars: dict[str, ChangedVar] = {}
 
     def mark(self, fid: str, n: int, new: bool = False, removed: bool = False) -> None:
-        cur = self.changed.setdefault(fid, [0, new, removed])
+        cur = self.changed.setdefault(fid, [0, True, True, False])
         cur[0] += n
         cur[1] = cur[1] and new
         cur[2] = cur[2] and removed
+        cur[3] = True
+
+    def mark_proto(self, fid: str, n: int) -> None:
+        """A prototype line the patch removes. It is part of removing the function, so it must not turn
+        "removed" into "changed"; on its own it only says the function changed."""
+        self.changed.setdefault(fid, [0, True, True, False])[0] += n
 
     def mark_var(self, r: sqlite3.Row) -> None:
         if r["id"] not in self.vars:
@@ -250,13 +258,14 @@ class _Collect:
         index_file: str | None,
         old: bool,
         patched: bool = False,
+        removing: bool = False,
     ) -> set[int]:
         """Map lines onto an outline of one version of `file`; returns the lines that landed on something.
 
         `old` = the outline is of the old version (git mode), so a function that is not in the index any
         more was removed. `patched` = the outline is of the patched version (patch mode), so a function that
         is not in the index yet is new. `index_file` is the file's path in the index (None when it was
-        deleted)."""
+        deleted). `removing` = the lines are removed lines of the current file (patch mode)."""
         used: set[int] = set()
         for f in outline.functions:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
@@ -284,7 +293,10 @@ class _Collect:
             inside = {n for n in lines if f["line_start"] <= n <= f["line_end"]}
             ids = self._fns_declared(f) if inside else []
             for fid in ids:
-                self.mark(fid, len(inside))
+                if removing:
+                    self.mark_proto(fid, len(inside))
+                else:
+                    self.mark(fid, len(inside))
             if ids:
                 used |= inside
         for v in outline.variables:
@@ -348,7 +360,7 @@ class _Collect:
         if rest and now is not None:
             outline_now = now(path)
             if outline_now is not None:
-                used_lines |= self.explain(outline_now, rest, path, path, old=False)
+                used_lines |= self.explain(outline_now, rest, path, path, old=False, removing=mode == "patch")
         # Removed lines (git mode) belong to the old version: map them onto its outline.
         if mode == "git" and fd.removed:
             if old is None:
@@ -359,9 +371,9 @@ class _Collect:
         # Added lines (patch mode) belong to the patched version: map them onto its outline (#13).
         if mode == "patch" and new is not None and other:
             other -= self.explain(new, set(other), fd.new_path or path, path, old=False, patched=True)
-        if mode == "patch" and new is not None and new.functions:
+        if mode == "patch" and new is not None:
             # A touched function the patched version no longer defines is removed, even when the patch
-            # splits its deletion across a neighbour (#44).
+            # splits its deletion across a neighbour (#44) or only deletes lines (a shifted hunk).
             have = {f["usr"] for f in new.functions} | {f["qualified_name"] for f in new.functions}
             for r in conn.execute("SELECT id, usr, qualified_name FROM functions WHERE file = ?", (path,)):
                 cur = self.changed.get(r["id"])
@@ -437,18 +449,21 @@ def analyse(
             res.mismatched.append(path)
             continue
         new = None
-        if mode == "patch" and patched is not None and fd.new_path and fd.added:
+        if mode == "patch" and patched is not None and fd.new_path:
             new = patched_outline(root, fd, patched)
         col.map_file(path, fd, mode, old.get(fd.old_path or "") if mode == "git" else None, now, new)
 
     fns = symbols.get_many(conn, list(col.changed))
     res.changed = sorted(
         (
-            ChangedFn(fns[i], n, "new" if new else "removed" if removed else "changed")
-            for i, (n, new, removed) in col.changed.items()
+            ChangedFn(fns[i], n, "new" if new and real else "removed" if removed and real else "changed")
+            for i, (n, new, removed, real) in col.changed.items()
             if i in fns
         ),
         key=lambda c: (c.fn.file, c.fn.line_start, c.fn.id),
+    )
+    res.proto_removed = sorted(
+        fns[i].qualified_name for i, cur in col.changed.items() if i in fns and not cur[3] and cur[0]
     )
     res.removed.sort(key=lambda r: (r.file, r.line_start, r.name))
     res.added.sort(key=lambda a: (a.file, a.line_start, a.name))
@@ -548,6 +563,16 @@ def _lost_dispatch(conn: sqlite3.Connection, fid: str) -> list[tuple[str, str, l
     return out
 
 
+def proto_note(names: list[str]) -> str:
+    shown = ", ".join(names[:5]) + (f" and {len(names) - 5} more" if len(names) > 5 else "")
+    return (
+        f"The prototype of {shown} is removed but the function is still defined. A file that relied on "
+        "that header declaration may no longer compile (call to an undeclared function). In old C modes, or "
+        "with other overloads, a call may instead resolve silently to an implicit declaration or another "
+        "overload. AeroTrace does not follow which files include the header."
+    )
+
+
 def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
     notes: list[str] = []
     if res.outside:
@@ -559,6 +584,8 @@ def _limits(conn: sqlite3.Connection, res: DiffImpact) -> list[str]:
         notes.append(
             "The old version of some files could not be read, so a function removed there would not be listed."
         )
+    if res.proto_removed:
+        notes.append(proto_note(res.proto_removed))
     ids = [c.fn.id for c in res.changed]
     taken = 0
     for i in range(0, len(ids), 500):
