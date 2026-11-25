@@ -24,16 +24,21 @@ clangd, cscope and ripgrep each find all 95, with 8, 60 and 74 false alarms.
 0, and the others find 4. It's shown apart because it would otherwise be 78% of the hard total (all hard
 cases together: AeroTrace 91 of 439, the others 99 of 439). See "curl-09" below.
 
-**In one line:** AeroTrace's edge in this run is **few false alarms, not more breaks found**. On hard
-cases it misses 4 breaks the others find. clangd is the closest competitor: it finds every break outside
-curl-09, has 8 false alarms on hard cases, and answers in milliseconds where AeroTrace takes 0.3 to 6.3
-seconds.
+**In one line:** in this run AeroTrace **did not beat clangd**. It finds fewer breaks (4 fewer on hard
+cases) and is far slower (0.3 to 6.3 s against milliseconds). Its lower false-alarm count against clangd
+comes from 2 cases (redis-07, curl-07) where AeroTrace wrongly said nothing is sure to break, so it had
+nothing to be wrong about. **On the 13 hard cases where AeroTrace named at least one break, it and clangd
+score the same:** 91 of 91 found, 0 false alarms each. Against cscope and ripgrep, AeroTrace has far
+fewer false alarms there (0 against 51 and 65). What AeroTrace adds that the others don't is the split
+into BREAKS and only AFFECTED, and a list of what it couldn't see.
 
 ## Where AeroTrace wins, ties and loses
 
-- **Wins: false alarms.** Over the 27 build-break cases, AeroTrace's claimed breaks hold 1 false alarm
-  (redis-02, explained below). clangd's hold 14: 8 in the two int-to-pointer field cases, 4 in curl-03
-  and 2 in curl-09. cscope's hold 86, ripgrep's 100. "False alarm" here means "outside the compile-error
+- **False alarms: fewer than cscope and ripgrep; against clangd, mostly by saying nothing.** Over the 27
+  build-break cases, AeroTrace's claimed breaks hold 1 false alarm (redis-02, explained below). clangd's
+  hold 14: 8 in the two int-to-pointer field cases (redis-07, curl-07, where AeroTrace claimed no break
+  at all and missed the real one), 4 in curl-03 (the one case where AeroTrace beats clangd on false
+  alarms while naming breaks) and 2 in curl-09. cscope's hold 86, ripgrep's 100. "False alarm" here means "outside the compile-error
   truth". Some are real problems that clang only warns about. In curl-07, for example, a `void **` is
   passed where a `timediff_t *` is expected, and pointers are compared with integers. Those count against
   clangd, cscope and ripgrep, though a reader would want to see them. AeroTrace also says which places
@@ -51,7 +56,9 @@ seconds.
     but its headline again says "None is sure to break", so these are wrong "safe" answers too.
   - **A macro changed in a header** (curl-09). See below.
 - **Time:** AeroTrace takes 0.3 to 6.3 seconds per check (median 1.0 s), most of it parsing the changed
-  files with libclang. The others take 1 to 81 ms. One-off setup per repo, on a cold cache: AeroTrace index
+  files with libclang. Each check is timed as a new `uv run aerotrace check` process, so Python and uv
+  start-up are included; the MCP server, which stays running, was not timed. The others take 1 to 81 ms;
+  clangd is timed as one query to a server that is already running and indexed. One-off setup per repo, on a cold cache: AeroTrace index
   4.8 to 5.6 s, clangd background index 0.8 to 4.8 s, cscope database under 1 s, ripgrep none.
 - **Might-break cases (3):** every tool finds all 4 hand-checked sites. AeroTrace adds 140 more AFFECTED
   places. They're callers further up the chain, which are real but outside the "direct callers only"
@@ -70,8 +77,10 @@ whole build.
 clangd points at two of those three `#define` lines, and cscope and ripgrep at all three. That's the
 most useful answer here. The rules say a `#define` line is never a break (the breaks are where the macro
 is expanded), so those answers count as false alarms. AeroTrace answers "Nothing found that this change
-can break, but 2 parts of the change could not be followed", so it does say what it couldn't see. The
-rule was written before the run and is kept; this case is shown apart so it doesn't decide the headline.
+can break, but 2 parts of the change could not be followed". It does say what it couldn't see, so by the
+rules it is not counted as a wrong "safe" answer. But the answer opens with "Nothing found", for a change
+that breaks 344 functions, and an agent that stops reading there is misled. The rule was written before
+the run and is kept; this case is shown apart so it doesn't decide the headline.
 
 ## redis-02: AeroTrace's one easy false alarm
 
@@ -89,12 +98,19 @@ is listed as a bug below.
   They're not changes from the projects' history (issue #65 adds some as an extra). Most cases have few
   break sites (1 to 25, and 344 for curl-09), which suits grep.
 - "Breaks" means compile and link errors only. Tests, runtime behaviour and warnings are not checked.
+- The link step ran in only 4 of the 27 build cases (`link_checked` in `results.json`). In the others the
+  build stopped at compile errors first, so link-only breaks there are not in the truth. A "false alarm"
+  in those cases could be a real link break. They were not checked one by one.
+- The might-break truth is hand-checked: `might_break.json` in the run folder, with the source line for
+  each site. In those 3 cases AeroTrace's claimed breaks include its AFFECTED list, because none of the
+  changes stops the build.
 - The truth names breaks by function ("site"). A tool that points at the right line in a function it
   names wrongly is scored by the function.
 - cscope was asked `-L0` ("find this symbol") for every kind, as fixed in the rules. For function cases,
   `-L3` ("functions calling this") would list fewer prototypes and `extern`s, so fewer false alarms.
 - clangd was asked at each symbol's definition, which a human or agent first has to find. AeroTrace reads
   the patch and needs no symbol. That convenience isn't scored.
+- Medians are true medians (the mean of the two middle values for an even count).
 - AeroTrace's whole answer (every AFFECTED and UNKNOWN node) counts as false alarms beyond the breaks. It
   is shown for completeness. The claimed-breaks row is the fair comparison.
 

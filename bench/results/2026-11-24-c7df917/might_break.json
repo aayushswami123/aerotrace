@@ -1,0 +1,29 @@
+{
+ "about": "Hand-checked truth for the 'behaviour' cases: direct callers in compiled code that use the value the changed function returns. Checked by reading each call site in the unchanged source; the line shows the use. Checked before any compared tool was run.",
+ "cases": {
+  "redis-10": {
+   "sites": ["src/fast_float_strtod.c:parse_number_string"],
+   "evidence": [
+    "src/fast_float_strtod.c:557  uint64_t val = read8_to_u64(p);  then  if (!is_made_of_eight_digits(val)) break;",
+    "src/fast_float_strtod.c:577  uint64_t val = read8_to_u64(p);  then  if (!is_made_of_eight_digits(val)) break;"
+   ]
+  },
+  "sqlite-10": {
+   "sites": ["sqlite3.c:sqlite3VdbeExec"],
+   "evidence": [
+    "sqlite3.c:100884  rc = sqlite3BtreeCursor(pX, p2, wrFlag, pKeyInfo, pCur->uc.pCursor);",
+    "sqlite3.c:100930  rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR, ...",
+    "sqlite3.c:101027  rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR, ...",
+    "sqlite3.c:101033  rc = sqlite3BtreeCursor(pCx->ub.pBtx, SCHEMA_ROOT, BTREE_WRCSR, ..."
+   ]
+  },
+  "curl-10": {
+   "sites": ["lib/url.c:url_set_data_creds", "lib/vauth/vauth.c:Curl_auth_allowed_to_host"],
+   "evidence": [
+    "lib/url.c:1381  ... && Curl_auth_allowed_to_origin(data, data->state.origin)) {  (the condition of an if)",
+    "lib/vauth/vauth.c:142  return Curl_auth_allowed_to_origin(data, data->state.origin);"
+   ]
+  }
+ },
+ "limits": "Only direct callers count. Effects further up the call chain (callers of parse_number_string, and so on) are real but not scored; every tool is held to the same rule."
+}

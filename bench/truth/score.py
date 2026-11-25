@@ -1,7 +1,7 @@
 """Score every tool's answers against the truth (rules: docs/benchmark/accuracy-cases-protocol.md).
 
 Usage: python3 -I bench/truth/score.py <work-dir> <run-dir>
-Reads <run-dir>/truth.json, bench/truth/might_break.json, <run-dir>/raw/<case>/<tool>.json and, if
+Reads <run-dir>/truth.json, <run-dir>/might_break.json (a copy of bench/truth/might_break.json), <run-dir>/raw/<case>/<tool>.json and, if
 present, <run-dir>/tokens.json. Writes <run-dir>/results.json.
 """
 
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import statistics
 import sys
 from pathlib import Path
 
@@ -55,7 +56,7 @@ def score(truth: set[str], answer: list[str]) -> dict:
 def main() -> None:
     work, run = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()
     truth = {c["id"]: c for c in json.loads((run / "truth.json").read_text())["cases"]}
-    might = json.loads((HERE / "might_break.json").read_text())["cases"]
+    might = json.loads((run / "might_break.json").read_text())["cases"]  # a copy kept with the run
     tokens = json.loads((run / "tokens.json").read_text()) if (run / "tokens.json").exists() else {}
     cases = json.loads((HERE.parent / "cases" / "cases.json").read_text())["cases"]
     site_maps = {r: Sites(work / r / "base") for r in ("redis", "sqlite", "curl")}
@@ -128,7 +129,7 @@ def main() -> None:
             "recall": round(found / truth_n, 4) if truth_n else None,
             "false_alarms": fa,
             "precision": round(found / ans, 4) if ans else None,
-            "median_seconds": sorted(secs)[len(secs) // 2] if secs else None,
+            "median_seconds": round(statistics.median(secs), 4) if secs else None,
             "tokens_total": sum(toks) if len(toks) == len(sel) else None,
         }
 
@@ -150,6 +151,11 @@ def main() -> None:
     sel = [r for r in rows if r["level"] == "hard" and r["id"] != "curl-09"]  # extra view, see RESULTS.md
     groups["all/hard_without_curl-09"] = {t: agg(sel, t) for t in TOOLS}
     groups["all/hard_without_curl-09"]["aerotrace_anywhere"] = agg(sel, "aerotrace", "anywhere")
+    # Extra view: the hard cases where AeroTrace named at least one break. It shows how much of the
+    # false-alarm gap comes from the cases where AeroTrace named none (and so could have none).
+    sel = [r for r in sel if r["tools"]["aerotrace"].get("answer_sites")]
+    groups["all/hard_aerotrace_named_a_break"] = {t: agg(sel, t) for t in TOOLS}
+    groups["all/hard_aerotrace_named_a_break"]["aerotrace_anywhere"] = agg(sel, "aerotrace", "anywhere")
     out = {"protocol": "docs/benchmark/accuracy-cases-protocol.md", "groups": groups, "cases": rows}
     (run / "results.json").write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
     g = groups["all/all"]
