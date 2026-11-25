@@ -100,6 +100,19 @@ GONE_SCALE_AND_PROTO = {**GONE_SCALE, H: [("int scale(int x);\n", "")]}
 GONE_TRIPLE_AND_PROTO = {C: [(TRIPLE, "")], H: [("int triple(int x);\n", "")]}
 
 
+def cli_first_line(root, text, tmp_path, capsys):
+    from aerotrace.cli import main
+
+    f = tmp_path / "p.diff"
+    f.write_text(text)
+    capsys.readouterr()
+    code = main(["check", "--patch", str(f), "--root", str(root)])
+    out = [
+        ln for ln in capsys.readouterr().out.splitlines() if ln.strip() and not ln.startswith("(Re-indexed")
+    ]
+    return code, out[0]
+
+
 def assert_scale_removed(res, c):
     assert removed_names(res) == ["scale"]
     assert nodes(c)["main"][0] == "breaks"
@@ -119,21 +132,27 @@ def test_removing_a_function_without_its_prototype_is_still_removed(repo):
     assert_scale_removed(res, c)
 
 
-def test_removed_function_left_in_a_table_in_another_file_is_not_clean(repo):
-    res, c = check_patch(repo, git_patch(repo, GONE_TRIPLE_AND_PROTO))
+def test_removed_function_left_in_a_table_in_another_file_is_not_clean(repo, tmp_path, capsys):
+    text = git_patch(repo, GONE_TRIPLE_AND_PROTO)
+    res, c = check_patch(repo, text)
     assert removed_names(res) == ["triple"]
-    # `ops` in src/table.c still names it: that is a break (or at least a may-break), never a clean pass
-    statuses = {s for s, _ in nodes(c).values()}
-    assert statuses & {"breaks", "affected"}
-    assert check.exit_code(c) == 1 or any("triple" in b["text"] for b in c["sections"]["blind_spots"])
+    # `ops` in src/table.c still names it: the table no longer links
+    assert nodes(c, "breaks") == {"ops": ("breaks", "exact")}
+    assert check.exit_code(c) == 1
+    code, first = cli_first_line(repo, text, tmp_path, capsys)
+    assert code == 1 and "can break" in first
 
 
-def test_removing_only_the_prototype_is_never_a_clean_answer(repo):
-    res, c = check_patch(repo, git_patch(repo, {H: [("int scale(int x);\n", "")]}))
+def test_removing_only_the_prototype_makes_its_callers_may_break(repo, tmp_path, capsys):
+    text = git_patch(repo, {H: [("int scale(int x);\n", "")]})
+    res, c = check_patch(repo, text)
     assert removed_names(res) == []  # the definition stays
+    assert nodes(c, "breaks") == {"main": ("breaks", "probable")}
+    assert check.exit_code(c) == 1
     texts = [b["text"] for b in c["sections"]["blind_spots"]]
-    # callers in other files that relied on the header may not compile: say so, by name
-    assert any("prototype" in t and "scale" in t for t in texts)
+    assert any("prototype of scale" in t for t in texts)  # the limit line stays
+    code, first = cli_first_line(repo, text, tmp_path, capsys)
+    assert code == 1 and "can break" in first
 
 
 # ---------------------------------------------------------------- A-02
@@ -168,4 +187,81 @@ def test_hook_sees_a_deleted_function(repo):
     assert out is not None
     t = out["hookSpecificOutput"]
     msg = t.get("additionalContext") or t.get("permissionDecisionReason")
-    assert "breaks" in msg
+    assert msg.startswith("AeroTrace: this edit breaks code: 1 sure break(s).")
+    assert "[breaks, exact] main (src/main.c:2): calls scale, which this patch removes" in msg
+
+
+# ---------------------------------------------------------------- review of #81: prototype gone, definition kept or moved
+
+FIX = "tests/fixtures"
+
+
+def repo_of(repo_factory, name):
+    root = repo_factory(name)
+    git(root, "init", "-q", "-b", "main")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "--no-verify", "-m", "init")
+    build_index(root, jobs=1)
+    return root
+
+
+def only(c, status="breaks"):
+    return nodes(c, status)
+
+
+def test_c_prototype_removed_caller_in_another_file_may_break(repo_factory, tmp_path, capsys):
+    root = repo_of(repo_factory, "c_proto_gone")
+    text = git_patch(root, {"lib.h": [("int scale(int x);\n", "")]})
+    _, c = check_patch(root, text)
+    assert only(c) == {"main": ("breaks", "probable")}
+    assert check.exit_code(c) == 1
+    assert any("prototype of scale" in b["text"] for b in c["sections"]["blind_spots"])
+    code, first = cli_first_line(root, text, tmp_path, capsys)
+    assert code == 1 and "can break" in first
+
+
+def test_cpp_overload_prototype_removed_caller_may_break(repo_factory):
+    root = repo_of(repo_factory, "cpp_proto_gone")
+    text = git_patch(root, {"lib.h": [("int f(const char *s);\n", "")]})
+    _, c = check_patch(root, text)
+    assert only(c) == {"main": ("breaks", "probable")}
+    assert check.exit_code(c) == 1
+
+
+def test_prototype_removed_but_another_declaration_stays_is_not_flagged(repo_factory):
+    root = repo_of(repo_factory, "c_proto_dup")  # main.c declares scale itself
+    text = git_patch(root, {"lib.h": [("int scale(int x);\n", "")]})
+    _, c = check_patch(root, text)
+    assert only(c) == {}
+    assert check.exit_code(c) == 0
+
+
+def test_function_moved_with_its_prototype_removed_may_break_difflib(repo_factory, tmp_path, capsys):
+    root = repo_of(repo_factory, "c_moved_fn")
+    edits = {
+        "lib.c": [(SCALE, "")],
+        "lib.h": [("int scale(int x);\n", "")],
+        "other.c": [("    return x;\n}\n", "    return x;\n}\n" + SCALE)],
+    }
+    text = difflib_patch(root, edits)
+    _, c = check_patch(root, text)
+    assert only(c) == {"main": ("breaks", "probable")}
+    assert check.exit_code(c) == 1
+    assert any("prototype of scale" in b["text"] for b in c["sections"]["blind_spots"])
+    code, first = cli_first_line(root, text, tmp_path, capsys)
+    assert code == 1 and "can break" in first
+
+
+NEW_FILE = '--- /dev/null\n+++ b/other.c\n@@ -0,0 +1,4 @@\n+#include "lib.h"\n+int scale(int x) {\n+    return x * 2;\n+}\n'
+
+
+@pytest.mark.parametrize("shape", ["git", "difflib"])
+def test_function_moved_to_a_new_file_may_break_and_says_why(repo_factory, shape):
+    root = repo_of(repo_factory, "c_proto_gone")
+    edits = {"lib.c": [(SCALE, "")]}
+    text = (git_patch if shape == "git" else difflib_patch)(root, edits) + NEW_FILE
+    res, c = check_patch(root, text)
+    assert removed_names(res) == ["scale"]
+    assert only(c) == {"main": ("breaks", "probable")}  # not "sure": the new file may not be built
+    assert check.exit_code(c) == 1
+    assert any("other.c" in b["text"] and "new" in b["text"] for b in c["sections"]["blind_spots"])
