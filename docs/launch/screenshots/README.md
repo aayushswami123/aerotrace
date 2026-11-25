@@ -8,5 +8,7 @@ data that is not in the repo. Mockups (sample numbers) can't be screenshotted in
   `bench/results/2026-11-24-c7df917/results.json`. The page has a light theme only.
 - `overview-{light,dark}.png`, `graph-{light,dark}.png`: `aerotrace ui` on the Redis 8.10.3 demo. That
   is the pinned release (`tests/realrepo/repos.py`), built and indexed as in `bench/truth/README.md`,
-  with three real `aerotrace check --patch` answers on benchmark patches (redis-07, redis-01, redis-04).
-  The graph shows case redis-04. What the dashboard answered is in `data/`.
+  with three answers that `aerotrace check --patch` saved itself (#80) on benchmark patches (redis-07,
+  redis-01, redis-04), with the code on `launch-candidate` after #77. The dates on screen are the real
+  save times. The graph shows case redis-04. What the dashboard answered is in `data/`.
+- The graph canvas is dark in both themes by design (`docs/design/README.md`); the frame follows the theme.

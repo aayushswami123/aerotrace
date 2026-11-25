@@ -288,6 +288,20 @@
         if (r.x < 4 || r.y < 4 || r.x + r.w > w - 4 || r.y + r.h > h - 4) continue;
         if (!occupied.hits(r)) spot = r;
       }
+      var lead = false;
+      if (!spot && n.group === "breaks") {  // a BREAKS node keeps its name: try spots further out
+        [2.2, 3.4, 4.8].forEach(function (k) {
+          if (spot) return;
+          var far = [[q[0] - tw / 2, q[1] + o * k], [q[0] - tw / 2, q[1] - o * k - th], [q[0] + o * k, q[1] - th / 2],
+            [q[0] - o * k - tw, q[1] - th / 2], [q[0] + o * k * 0.7, q[1] + o * k * 0.7], [q[0] - o * k * 0.7 - tw, q[1] + o * k * 0.7],
+            [q[0] + o * k * 0.7, q[1] - o * k * 0.7 - th], [q[0] - o * k * 0.7 - tw, q[1] - o * k * 0.7 - th]];
+          for (var j = 0; j < far.length && !spot; j++) {
+            var r2 = { x: far[j][0] - 3, y: far[j][1] - 1, w: tw + 6, h: th + 2 };
+            if (r2.x < 4 || r2.y < 4 || r2.x + r2.w > w - 4 || r2.y + r2.h > h - 4) continue;
+            if (!occupied.hits(r2)) { spot = r2; lead = true; }
+          }
+        });
+      }
       var forced = false;
       if (!spot && must) {  // always shown, kept inside the canvas
         var fx = Math.max(4, Math.min(w - tw - 10, cands[0][0] - 3)), fy = Math.max(4, Math.min(h - th - 6, cands[0][1] - 1));
@@ -295,9 +309,14 @@
         forced = true;
       }
       if (!spot) { hidden++; return; }
-      rects.push({ x: spot.x, y: spot.y, w: spot.w, h: spot.h, forced: forced });
+      rects.push({ x: spot.x, y: spot.y, w: spot.w, h: spot.h, forced: forced, id: n.id, group: n.group });
       occupied.add(spot);
       placed++;
+      if (lead) {  // a thin line from the node to its label, which sits further out
+        var lx = Math.max(spot.x, Math.min(q[0], spot.x + spot.w)), ly = Math.max(spot.y, Math.min(q[1], spot.y + spot.h));
+        g.strokeStyle = "#ffb3ab"; g.globalAlpha = 0.6; g.lineWidth = 1; g.setLineDash([]);
+        g.beginPath(); g.moveTo(q[0], q[1]); g.lineTo(lx, ly); g.stroke(); g.globalAlpha = 1;
+      }
       g.fillStyle = "rgba(11,13,16,0.82)"; g.fillRect(spot.x, spot.y, spot.w, spot.h);
       g.fillStyle = n.group === "breaks" ? "#ffb3ab" : n.group === "may_break" ? "#fcd57a" : c.label;
       g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(label, spot.x + 3, spot.y + spot.h / 2 + 0.5);
@@ -305,6 +324,7 @@
     this.hits = hits;
     this.stats.labels = placed;
     this.stats.labelRects = rects;
+    this.stats.breaksOnScreen = want.filter(function (p) { return p.n.group === "breaks"; }).length;
     this.stats.hiddenLabels = hidden;
     if (moving && !this._settle) this._settle = setTimeout(function () { self._settle = 0; self.draw(); }, 170);
     this.stats.frames++;

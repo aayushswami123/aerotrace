@@ -32,26 +32,6 @@
   },
   {
    "node": null,
-   "scope": "change",
-   "text": "src/server.c:637 does not compile after this change: incompatible function pointer types initializing 'int (*)(dictCmpCache *, const void *, const void *)' (aka 'int (*)(struct dictCmpCache *, const void *, const void *)') with an expression of type 'int (dictCmpCache *, const void *, const void *, int)' (aka 'int (struct dictCmpCache *, const void *, const void *, int)')"
-  },
-  {
-   "node": null,
-   "scope": "change",
-   "text": "src/server.c:693 does not compile after this change: incompatible function pointer types initializing 'int (*)(dictCmpCache *, const void *, const void *)' (aka 'int (*)(struct dictCmpCache *, const void *, const void *)') with an expression of type 'int (dictCmpCache *, const void *, const void *, int)' (aka 'int (struct dictCmpCache *, const void *, const void *, int)')"
-  },
-  {
-   "node": null,
-   "scope": "change",
-   "text": "src/server.c:704 does not compile after this change: incompatible function pointer types initializing 'int (*)(dictCmpCache *, const void *, const void *)' (aka 'int (*)(struct dictCmpCache *, const void *, const void *)') with an expression of type 'int (dictCmpCache *, const void *, const void *, int)' (aka 'int (struct dictCmpCache *, const void *, const void *, int)')"
-  },
-  {
-   "node": null,
-   "scope": "change",
-   "text": "src/server.c:752 does not compile after this change: incompatible function pointer types initializing 'int (*)(dictCmpCache *, const void *, const void *)' (aka 'int (*)(struct dictCmpCache *, const void *, const void *)') with an expression of type 'int (dictCmpCache *, const void *, const void *, int)' (aka 'int (struct dictCmpCache *, const void *, const void *, int)')"
-  },
-  {
-   "node": null,
    "scope": "index",
    "text": "Only one build configuration was analysed; code under other #ifdef settings is not seen."
   },
@@ -70,7 +50,7 @@
   "unknown": 0
  },
  "depth": 5,
- "id": "0003-redis-04",
+ "id": "0003-7a8a8085",
  "in_graph": {
   "affected": 594,
   "breaks": 2,
@@ -8648,7 +8628,7 @@
    "word": "AFFECTED"
   }
  ],
- "not_followed": 10,
+ "not_followed": 6,
  "omitted": 0,
  "source": "patch redis-04.diff",
  "stopped_early": true,

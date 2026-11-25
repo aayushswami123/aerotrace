@@ -53,11 +53,11 @@
      "affected": 594,
      "breaks": 2,
      "may_break": 15,
-     "not_followed": 10,
+     "not_followed": 6,
      "unknown": 0
     },
     "icon": "risk",
-    "id": "0003-redis-04",
+    "id": "0003-7a8a8085",
     "level": "breaks",
     "ok": true,
     "source": "patch redis-04.diff",
@@ -74,7 +74,7 @@
      "unknown": 0
     },
     "icon": "risk",
-    "id": "0002-redis-01",
+    "id": "0002-4a3f3c37",
     "level": "breaks",
     "ok": true,
     "source": "patch redis-01.diff",
@@ -84,18 +84,18 @@
     "changed": "2 changed declarations",
     "changed_functions": 0,
     "counts": {
-     "affected": 803,
+     "affected": 798,
      "breaks": 0,
      "may_break": 0,
      "not_followed": 6,
-     "unknown": 0
+     "unknown": 5
     },
     "icon": "risk",
-    "id": "0001-redis-07",
+    "id": "0001-dff1e608",
     "level": "affected",
     "ok": true,
     "source": "patch redis-07.diff",
-    "verdict": "This change may affect 803 things you didn't touch (5 direct, 798 further up). None is sure to break."
+    "verdict": "This change may affect 798 things you didn't touch (798 further up). AeroTrace could not check all of it, so something may still break."
    }
   ],
   "repo": "redis-8.10.3",
@@ -104,9 +104,9 @@
  },
  "runinfo": {
   "checks": {
-   "0001-redis-07": "2026-11-25T00:03+00:00",
-   "0002-redis-01": "2026-11-25T01:03+00:00",
-   "0003-redis-04": "2026-11-25T02:03+00:00"
+   "0001-dff1e608": "2026-11-25T05:27+00:00",
+   "0002-4a3f3c37": "2026-11-25T05:28+00:00",
+   "0003-7a8a8085": "2026-11-25T05:28+00:00"
   },
   "indexed": "2026-11-25T01:13+00:00"
  }

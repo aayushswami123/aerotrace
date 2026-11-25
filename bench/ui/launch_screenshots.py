@@ -2,7 +2,7 @@
 
 Usage: uv run --with playwright python bench/ui/launch_screenshots.py <demo-repo>
 <demo-repo>: a repo with an AeroTrace index and saved checks (the Redis 8.10.3 demo: pinned release,
-indexed, three real `aerotrace check` answers on benchmark patches, see docs/launch/screenshots/README.md).
+indexed, three answers saved by `aerotrace check --patch` itself (#80), with their real dates, see docs/launch/screenshots/README.md).
 
 Refuses any page marked as sample data (`data-sample`), so no mockup can end up here. Every image in the
 manifest names the data it shows by sha256: the results page's `results.json`, or a snapshot of what
@@ -24,7 +24,7 @@ from aerotrace.ui import api, server
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "launch" / "screenshots"
 RUN = ROOT / "bench" / "results" / "2026-11-24-c7df917"
-CHECK = "0003-redis-04"
+SHOWN = "patch redis-04.diff"  # the check shown in the Graph screenshot, found by its source
 
 
 def sha(data: bytes) -> str:
@@ -48,6 +48,7 @@ def main() -> None:
     demo = Path(sys.argv[1]).resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     images = []
+    CHECK = next(c["id"] for c in api.checks(demo)["checks"] if c.get("source") == SHOWN)
     ov = snapshot("overview.json", {"overview": api.overview(demo), "runinfo": api.runinfo(demo)})
     gr = snapshot(f"graph-{CHECK}.json", api.graph(demo, CHECK))
     results_sha = sha((RUN / "results.json").read_bytes())

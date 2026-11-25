@@ -890,6 +890,9 @@
  "claimed_none": [
   "curl-09"
  ],
+ "claimed_none_open": {
+  "curl-09": "Nothing found that this change can break, but 2 parts of the change could not be followed."
+ },
  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
  "errors": {
   "aerotrace": 0,
@@ -907,8 +910,9 @@
  "headline": [
   "Easy cases (9): every tool found all 25 breaks.",
   "Hard cases without the macro case curl-09 (17): AeroTrace found 91 of 95 with 0 false alarms; clangd 95 with 8, cscope 95 with 60, ripgrep 95 with 74.",
-  "In one line: AeroTrace's edge here is few false alarms, not more breaks found. It found fewer breaks than another tool in 5 of 27 build cases, and it takes 329 ms to 6.3 s per check where the others take at most 81 ms."
+  "In one line: AeroTrace did not beat clangd here. On the 13 hard cases where AeroTrace named at least one break, both score the same (91 of 91 found, 0 false alarms each). AeroTrace's lower false-alarm count against clangd comes from cases where it named no break at all. Against cscope and ripgrep it has fewer false alarms there (0 against 51 and 65). It found fewer breaks than another tool in 5 of 27 build cases, and it takes 329 ms to 6.3 s per check where the others take at most 81 ms."
  ],
+ "link_checked": 4,
  "machine": "Apple M1 Pro, macOS 26.7.2, arm64",
  "macro_case": {
   "breaks": 344,
@@ -962,6 +966,47 @@
   }
  },
  "more": [],
+ "named": {
+  "cases": 13,
+  "total": {
+   "aerotrace": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 0,
+    "found": 91,
+    "seconds": 1.1316,
+    "tokens": null,
+    "truth": 91
+   },
+   "clangd": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 0,
+    "found": 91,
+    "seconds": 0.0066,
+    "tokens": null,
+    "truth": 91
+   },
+   "cscope": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 51,
+    "found": 91,
+    "seconds": 0.0094,
+    "tokens": null,
+    "truth": 91
+   },
+   "ripgrep": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 65,
+    "found": 91,
+    "seconds": 0.0194,
+    "tokens": null,
+    "truth": 91
+   }
+  }
+ },
  "run": "2026-11-24-c7df917",
  "setup_seconds": {
   "curl": {
@@ -1362,7 +1407,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 8,
-      "seconds": 0.6924,
+      "seconds": 0.67145,
       "tokens": null,
       "truth": 354
      },
@@ -1371,7 +1416,7 @@
       "errors": 0,
       "false_alarms": 6,
       "found": 14,
-      "seconds": 0.0015,
+      "seconds": 0.00135,
       "tokens": null,
       "truth": 354
      },
@@ -1380,7 +1425,7 @@
       "errors": 0,
       "false_alarms": 19,
       "found": 14,
-      "seconds": 0.0093,
+      "seconds": 0.00865,
       "tokens": null,
       "truth": 354
      },
@@ -1389,7 +1434,7 @@
       "errors": 0,
       "false_alarms": 19,
       "found": 14,
-      "seconds": 0.0287,
+      "seconds": 0.02855,
       "tokens": null,
       "truth": 354
      }
@@ -1400,7 +1445,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 46,
-      "seconds": 1.4735,
+      "seconds": 1.30255,
       "tokens": null,
       "truth": 48
      },
@@ -1409,7 +1454,7 @@
       "errors": 0,
       "false_alarms": 4,
       "found": 48,
-      "seconds": 0.0034,
+      "seconds": 0.0030499999999999998,
       "tokens": null,
       "truth": 48
      },
@@ -1418,7 +1463,7 @@
       "errors": 0,
       "false_alarms": 7,
       "found": 48,
-      "seconds": 0.0083,
+      "seconds": 0.00805,
       "tokens": null,
       "truth": 48
      },
@@ -1427,7 +1472,7 @@
       "errors": 0,
       "false_alarms": 8,
       "found": 48,
-      "seconds": 0.0242,
+      "seconds": 0.02335,
       "tokens": null,
       "truth": 48
      }
@@ -1438,7 +1483,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 37,
-      "seconds": 5.3865,
+      "seconds": 5.33355,
       "tokens": null,
       "truth": 37
      },
@@ -1447,7 +1492,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 37,
-      "seconds": 0.078,
+      "seconds": 0.06935,
       "tokens": null,
       "truth": 37
      },
@@ -1456,7 +1501,7 @@
       "errors": 0,
       "false_alarms": 48,
       "found": 37,
-      "seconds": 0.0096,
+      "seconds": 0.0095,
       "tokens": null,
       "truth": 37
      },
@@ -1465,7 +1510,7 @@
       "errors": 0,
       "false_alarms": 61,
       "found": 37,
-      "seconds": 0.0159,
+      "seconds": 0.015550000000000001,
       "tokens": null,
       "truth": 37
      }
@@ -1477,7 +1522,7 @@
      "errors": 0,
      "false_alarms": 0,
      "found": 91,
-     "seconds": 1.0477,
+     "seconds": 1.0259,
      "tokens": null,
      "truth": 439
     },
@@ -1486,7 +1531,7 @@
      "errors": 0,
      "false_alarms": 10,
      "found": 99,
-     "seconds": 0.0041,
+     "seconds": 0.00375,
      "tokens": null,
      "truth": 439
     },
@@ -1495,7 +1540,7 @@
      "errors": 0,
      "false_alarms": 74,
      "found": 99,
-     "seconds": 0.0089,
+     "seconds": 0.00885,
      "tokens": null,
      "truth": 439
     },
@@ -1504,7 +1549,7 @@
      "errors": 0,
      "false_alarms": 88,
      "found": 99,
-     "seconds": 0.0242,
+     "seconds": 0.02335,
      "tokens": null,
      "truth": 439
     }
@@ -1560,7 +1605,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 46,
-      "seconds": 1.4735,
+      "seconds": 1.30255,
       "tokens": null,
       "truth": 48
      },
@@ -1569,7 +1614,7 @@
       "errors": 0,
       "false_alarms": 4,
       "found": 48,
-      "seconds": 0.0034,
+      "seconds": 0.0030499999999999998,
       "tokens": null,
       "truth": 48
      },
@@ -1578,7 +1623,7 @@
       "errors": 0,
       "false_alarms": 7,
       "found": 48,
-      "seconds": 0.0083,
+      "seconds": 0.00805,
       "tokens": null,
       "truth": 48
      },
@@ -1587,7 +1632,7 @@
       "errors": 0,
       "false_alarms": 8,
       "found": 48,
-      "seconds": 0.0242,
+      "seconds": 0.02335,
       "tokens": null,
       "truth": 48
      }
@@ -1598,7 +1643,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 37,
-      "seconds": 5.3865,
+      "seconds": 5.33355,
       "tokens": null,
       "truth": 37
      },
@@ -1607,7 +1652,7 @@
       "errors": 0,
       "false_alarms": 0,
       "found": 37,
-      "seconds": 0.078,
+      "seconds": 0.06935,
       "tokens": null,
       "truth": 37
      },
@@ -1616,7 +1661,7 @@
       "errors": 0,
       "false_alarms": 48,
       "found": 37,
-      "seconds": 0.0096,
+      "seconds": 0.0095,
       "tokens": null,
       "truth": 37
      },
@@ -1625,7 +1670,7 @@
       "errors": 0,
       "false_alarms": 61,
       "found": 37,
-      "seconds": 0.0159,
+      "seconds": 0.015550000000000001,
       "tokens": null,
       "truth": 37
      }

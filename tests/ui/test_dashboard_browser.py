@@ -47,7 +47,14 @@ def _repo(tmp: Path, checks: dict[str, dict]) -> Path:
 
 @pytest.fixture
 def dash(tmp_path: Path) -> Iterator[tuple[server.DashboardServer, Path]]:
-    root = _repo(tmp_path, {"0001-aaaa0001": samples.big(1000), "0002-aaaa0002": samples.big(5000, seed=3)})
+    root = _repo(
+        tmp_path,
+        {
+            "0001-aaaa0001": samples.big(1000),
+            "0002-aaaa0002": samples.big(5000, seed=3),
+            "0003-aaaa0003": samples.sample(),
+        },
+    )
     srv = server.DashboardServer(root)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     yield srv, root
@@ -122,6 +129,20 @@ def test_labels_never_overlap_or_cover_the_controls(browser, dash, cid: str, gro
             assert not any(hit(a, b) for b in rects[i + 1 :]), "two labels overlap"
             assert not any(hit(a, b) for b in boxes), "a label covers the legend, hint or tools"
     ctx.close()
+
+
+def test_every_breaks_node_has_its_name_when_there_is_room(browser, dash) -> None:
+    """A small check, like most real ones: every BREAKS node on screen is labelled (no overlap either)."""
+    srv, _ = dash
+    ctx, pg, _ = _page(browser, srv)
+    pg.goto(_base(srv) + "#/graph/0003-aaaa0003")
+    pg.wait_for_selector(".stage canvas", timeout=15000)
+    pg.wait_for_timeout(300)
+    stats = pg.evaluate("() => window.__aerotraceGraph")
+    ctx.close()
+    named = {r["id"] for r in stats["labelRects"] if r["group"] == "breaks"}
+    assert stats["breaksOnScreen"] > 0
+    assert len(named) == stats["breaksOnScreen"], "a BREAKS node on screen has no label"
 
 
 def test_a_slow_page_never_replaces_the_current_one(browser, dash) -> None:
