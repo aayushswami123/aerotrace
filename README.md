@@ -30,7 +30,7 @@ other hooks and settings are kept). Before Claude edits a C/C++ file, AeroTrace 
 - a probable break, or 10+ affected functions or data: a short warning;
 - anything else that was fully checked: nothing;
 - a part of the edit that AeroTrace could not check (a macro or type change it does not follow, a C/C++
-  file not in the index, a `.def` or `.tbl` table file, a failed index refresh): one line saying so. Silence
+  file not in the index, a build file such as a Makefile, a `.def` or `.tbl` table file, a failed index refresh): one line saying so. Silence
   only means the edit was checked.
 
 It only warns. To block edits, add rules in `.aerotrace/rules.toml`:

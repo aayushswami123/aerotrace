@@ -221,7 +221,7 @@ def handle(tool: str, inp: dict, path: Path, rel: str, root: Path, rules: rules_
         stop = rules_mod.blocking(rules, rel, "low")
         if stop:
             return deny(rules_mod.blocked_text(f"AeroTrace: {rel} is protected.", stop))
-        note = rules_mod.table_text(rel) if rules_mod.is_table_file(rel) else ""
+        note = rules_mod.not_code_text(rel)
         return warn(_join(rules_warning, note)) if rules_warning or note else None
     out = check_edit(root, rel, before, after, rules)
     if rules_warning:

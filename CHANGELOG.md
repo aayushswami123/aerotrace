@@ -14,7 +14,8 @@ and versions follow [Semantic Versioning](https://semver.org/).
   answers exited 0. The exit code is a function of the JSON `verdict` and nothing else. `check --help`
   lists the three codes.
 - Claude Code edit check (A-09): it is never silent when it could not check. A macro or type change it does
-  not follow, a C/C++ file not in the index, a new file, a skipped patch, or a `.def`/`.tbl` table file now
+  not follow, a C/C++ file not in the index, a new file, a skipped patch, a changed build file (Makefile,
+  CMakeLists.txt, ...) or a `.def`/`.tbl` table file now
   give one line ("AeroTrace could not check this edit (...). Build before you go on."). With a break, the
   message says how many parts could not be checked. Other non-C files stay silent. It still only warns.
 

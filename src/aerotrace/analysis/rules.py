@@ -168,12 +168,18 @@ def unchecked_text(contract: dict) -> str:
     return f"AeroTrace could not check this edit{why}. Build before you go on."
 
 
-def is_table_file(rel: str) -> bool:
-    return rel.lower().endswith(TABLE_EXTS)
+def not_code_text(rel: str) -> str:
+    """One line for an edit to a file that is not C/C++ but changes what is built (a build file, a C
+    table file). "" for any other file: those are not AeroTrace's business."""
+    from aerotrace.analysis.diff import is_build_file
 
-
-def table_text(rel: str) -> str:
-    return f"AeroTrace could not check this edit ({rel} is a C table file it does not follow). Build before you go on."
+    if rel.lower().endswith(TABLE_EXTS):
+        what = f"{rel} is a C table file it does not follow"
+    elif is_build_file(rel):
+        what = f"a build file changed: {rel}"
+    else:
+        return ""
+    return f"AeroTrace could not check this edit ({what}). Build before you go on."
 
 
 def short_text(contract: dict) -> str:
