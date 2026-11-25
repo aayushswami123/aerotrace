@@ -106,3 +106,31 @@ def test_a_file_scope_definition_is_named_in_the_reason(unseen):
     assert (
         "the declaration of hits (file-scope code is not followed) in src/lib.c" in c["unchecked_reason"]
     ), c["unchecked_reason"]
+
+
+@pytest.mark.parametrize(
+    "use", ["X x(1);\n    return x.k;", "X x{1};\n    return x.k;", "X* p = new X(2);\n    return p->k;"]
+)
+def test_a_removed_constructor_used_in_any_form_outside_the_build_is_unknown(cxx, use):
+    (cxx / "src/extra.cpp").write_text('#include "v.h"\nint extra() {\n    ' + use + "\n}\n")
+    _, c = run_patch(cxx, {"src/v.cpp": [DROP_CTOR], "src/use_ctor.cpp": [GONE]})
+    assert c["verdict"] == "unknown" and check.exit_code(c) == 2, c["verdict"]
+    assert "src/extra.cpp" in c["unchecked_reason"], c["unchecked_reason"]
+
+
+def test_a_removed_destructor_named_in_a_file_outside_the_build_is_unknown(cxx):
+    (cxx / "src/extra.cpp").write_text('#include "v.h"\nint extra() {\n    X x(1);\n    return x.k;\n}\n')
+    _, c = run_patch(cxx, {"src/v.cpp": [("X::~X() {}\n", "")]})
+    assert c["verdict"] == "unknown" and "src/extra.cpp" in c["unchecked_reason"], c["unchecked_reason"]
+
+
+@pytest.mark.parametrize(
+    "line",
+    ["int a = 0, hits = 0;", "int (*handler)(int);", "int *p = 0, q = 1;"],
+)
+def test_an_ambiguous_file_scope_line_gets_the_generic_reason(unseen, line):
+    c = contract_for(
+        unseen, make_patch(unseen, [("src/lib.c", "int f(int a) {", line + "\n\nint f(int a) {")])
+    )
+    assert c["verdict"] == "unknown"
+    assert c["unchecked_reason"] == "code outside any function in src/lib.c", c["unchecked_reason"]
