@@ -2,7 +2,7 @@
 <html lang=en>
 <head>
 <meta charset=utf-8>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-2o12ANyPZcikzJKeHWeALr9uWq2x818ButFUzuNTcjM='; script-src 'sha256-kKjXmX73p8L+3O/9DSpqRinmFBTBE8dypyIwwOPNGq0='; font-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-2o12ANyPZcikzJKeHWeALr9uWq2x818ButFUzuNTcjM='; script-src 'sha256-M4Hb23UVx2zdv+nXjc70lSTunDK4YYDwTY4nrjTy8BM='; font-src data:; base-uri 'none'; form-action 'none'">
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>AeroTrace accuracy benchmark</title>
 <style>/* AeroTrace design tokens. The one place colours, type, spacing, radius, shadow and motion are defined.
@@ -392,7 +392,7 @@ table.cases td, table.cases th { white-space: nowrap; }
     var maxFa = 0;
     REPOS.forEach(function (r) { tools.forEach(function (t) { maxFa = Math.max(maxFa, v.repos[r][t].false_alarms); }); });
     while (chart.firstChild) chart.removeChild(chart.firstChild);
-    var H = 230, top = 26;
+    var H = 230, top = 40;
     var groups = narrow ? REPOS.map(function (r) { return [r]; }) : [REPOS];
     groups.forEach(function (rs) {
       var height = top + H + 140;
@@ -411,7 +411,7 @@ table.cases td, table.cases th { white-space: nowrap; }
       rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
       if (state.metric === "fa" && maxFa === 0) {
         svg.appendChild(el("text", { x: AX + (W - AX) / 2, y: top + H / 2, "text-anchor": "middle", "class": "empty" },
-          (tools.length === 1 ? "AeroTrace has" : "No tool has") + " any false alarms in this view."));
+          tools.length === 1 ? "AeroTrace has no false alarms in this view." : "No tool has any false alarms in this view."));
       }
       chart.appendChild(svg);
     });

@@ -95,3 +95,21 @@ def test_tokens_say_not_counted_until_they_are(data: dict, html: str) -> None:
     if not data["tokens_counted"]:
         assert "Tokens not counted yet." in html
         assert data["views"]["all"]["total"]["aerotrace"]["tokens"] is None
+
+
+def test_wrong_safe_answers_are_named(data: dict, html: str) -> None:
+    """Every build case that breaks while AeroTrace says nothing is sure to break is named on the page."""
+    for cid in data["wrong_safe"]:
+        raw = json.loads((RUN / "raw" / cid / "aerotrace.json").read_text())
+        assert bench_page.SAFE_PHRASE in raw["text"]
+        assert next(c for c in data["cases"] if c["id"] == cid)["breaks"] > 0
+        assert cid in html
+    if data["wrong_safe"]:
+        assert 'A wrong "safe" answer' in html
+
+
+def test_errored_cases_count_as_misses() -> None:
+    rows = [{"truth": ["a", "b"], "tools": {"x": {"error": "boom"}}},
+            {"truth": ["c"], "tools": {"x": {"found": 1, "truth_sites": 1, "false_alarms": 0, "seconds": 0.1}}}]  # fmt: skip
+    agg = bench_page._agg(rows, "x")
+    assert (agg["found"], agg["truth"], agg["errors"]) == (1, 3, 1)

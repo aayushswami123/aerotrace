@@ -87,7 +87,7 @@
       rs.forEach(function (r, i) { drawGroup(svg, AX + i * gw + 8, gw - 16, top + H, H, r, tools, v, maxFa); });
       if (state.metric === "fa" && maxFa === 0) {
         svg.appendChild(el("text", { x: AX + (W - AX) / 2, y: top + H / 2, "text-anchor": "middle", "class": "empty" },
-          (tools.length === 1 ? "AeroTrace has" : "No tool has") + " any false alarms in this view."));
+          tools.length === 1 ? "AeroTrace has no false alarms in this view." : "No tool has any false alarms in this view."));
       }
       chart.appendChild(svg);
     });
