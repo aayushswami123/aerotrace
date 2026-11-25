@@ -1,0 +1,27 @@
+{
+ "command": "rg -n -w --no-heading --with-filename jsonBlobAppendOneByte <build files>",
+ "hits": [
+  [
+   "sqlite3.c",
+   214984
+  ],
+  [
+   "sqlite3.c",
+   215587
+  ],
+  [
+   "sqlite3.c",
+   215595
+  ],
+  [
+   "sqlite3.c",
+   215788
+  ],
+  [
+   "sqlite3.c",
+   215808
+  ]
+ ],
+ "seconds": 0.0136,
+ "text": "sqlite3.c:214984:static void jsonBlobAppendOneByte(JsonParse *pParse, u8 c){\nsqlite3.c:215587:      jsonBlobAppendOneByte(pParse, JSONB_TRUE);\nsqlite3.c:215595:      jsonBlobAppendOneByte(pParse, JSONB_FALSE);\nsqlite3.c:215788:      jsonBlobAppendOneByte(pParse, JSONB_NULL);\nsqlite3.c:215808:        jsonBlobAppendOneByte(pParse, JSONB_NULL);\n"
+}

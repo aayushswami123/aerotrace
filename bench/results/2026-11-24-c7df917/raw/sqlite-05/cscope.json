@@ -1,0 +1,19 @@
+{
+ "command": "cscope -d -L0 vfstraceDelete",
+ "hits": [
+  [
+   "shell.c",
+   18786
+  ],
+  [
+   "shell.c",
+   19735
+  ],
+  [
+   "shell.c",
+   19506
+  ]
+ ],
+ "seconds": 0.0089,
+ "text": "shell.c <global> 18786 static int vfstraceDelete(sqlite3_vfs*, const char *zName, int syncDir);\nshell.c <global> 19735 pNew->xDelete = vfstraceDelete;\nshell.c vfstraceDelete 19506 static int vfstraceDelete(sqlite3_vfs *pVfs, const char *zPath, int dirSync){\n"
+}

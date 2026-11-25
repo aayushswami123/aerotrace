@@ -1,0 +1,271 @@
+{
+ "curl-01": {
+  "changed": {
+   "lib/dynhds.c": [
+    136
+   ],
+   "lib/dynhds.h": [
+    106
+   ]
+  },
+  "note": "edited 2 declarations"
+ },
+ "curl-02": {
+  "changed": {
+   "src/tool_paramhlp.c": [
+    601
+   ]
+  },
+  "note": "deleted lines 601-610"
+ },
+ "curl-03": {
+  "changed": {
+   "lib/cf-socket.c": [
+    535,
+    539,
+    548,
+    557
+   ]
+  },
+  "note": "edited 1 declarations, 3 return statements"
+ },
+ "curl-04": {
+  "changed": {
+   "lib/cw-pause.c": [
+    103
+   ]
+  },
+  "note": "edited 1 declarations"
+ },
+ "curl-05": {
+  "changed": {
+   "lib/http_proxy.c": [
+    696
+   ]
+  },
+  "note": "deleted lines 696-704"
+ },
+ "curl-06": {
+  "changed": {
+   "lib/urldata.h": [
+    1033
+   ]
+  },
+  "note": "renamed in the struct"
+ },
+ "curl-07": {
+  "changed": {
+   "lib/urldata.h": [
+    964
+   ]
+  },
+  "note": "was `timediff_t upkeep_interval_ms`"
+ },
+ "curl-08": {
+  "changed": {
+   "src/tool_libinfo.c": [
+    67
+   ]
+  },
+  "note": "renamed at its definition"
+ },
+ "curl-09": {
+  "changed": {
+   "lib/curl_trc.h": [
+    321,
+    340
+   ]
+  },
+  "note": "edited 2 #defines"
+ },
+ "curl-10": {
+  "changed": {
+   "lib/vauth/vauth.c": [
+    148
+   ]
+  },
+  "note": "first statement: return false;"
+ },
+ "redis-01": {
+  "changed": {
+   "src/networking.c": [
+    514
+   ]
+  },
+  "note": "edited 1 declarations"
+ },
+ "redis-02": {
+  "changed": {
+   "src/bitops.c": [
+    168
+   ]
+  },
+  "note": "deleted lines 168-268"
+ },
+ "redis-03": {
+  "changed": {
+   "src/bitops.c": [
+    616,
+    636,
+    645,
+    647,
+    668
+   ]
+  },
+  "note": "edited 1 declarations, 4 return statements"
+ },
+ "redis-04": {
+  "changed": {
+   "src/server.c": [
+    371
+   ],
+   "src/server.h": [
+    4486
+   ]
+  },
+  "note": "edited 2 declarations"
+ },
+ "redis-05": {
+  "changed": {
+   "src/db.c": [
+    3964
+   ]
+  },
+  "note": "deleted lines 3964-3986"
+ },
+ "redis-06": {
+  "changed": {
+   "src/server.h": [
+    2319
+   ]
+  },
+  "note": "renamed in the struct"
+ },
+ "redis-07": {
+  "changed": {
+   "src/server.h": [
+    2223
+   ]
+  },
+  "note": "was `size_t stat_current_cow_peak`"
+ },
+ "redis-08": {
+  "changed": {
+   "src/bitops.c": [
+    53
+   ]
+  },
+  "note": "renamed at its definition"
+ },
+ "redis-09": {
+  "changed": {
+   "src/zmalloc.c": [
+    56
+   ]
+  },
+  "note": "edited 1 #defines"
+ },
+ "redis-10": {
+  "changed": {
+   "src/fast_float_strtod.c": [
+    321
+   ]
+  },
+  "note": "first statement: return 0;"
+ },
+ "sqlite-01": {
+  "changed": {
+   "shell.c": [
+    9516
+   ]
+  },
+  "note": "edited 1 declarations"
+ },
+ "sqlite-02": {
+  "changed": {
+   "sqlite3.c": [
+    214984
+   ]
+  },
+  "note": "deleted lines 214984-214990"
+ },
+ "sqlite-03": {
+  "changed": {
+   "sqlite3.c": [
+    60257,
+    60262,
+    60263,
+    60264,
+    60265,
+    60266,
+    60268,
+    60269,
+    60270,
+    60272,
+    60274
+   ]
+  },
+  "note": "edited 1 declarations, 10 return statements"
+ },
+ "sqlite-04": {
+  "changed": {
+   "sqlite3.c": [
+    5952,
+    94717
+   ],
+   "sqlite3.h": [
+    5631
+   ]
+  },
+  "note": "edited 3 declarations"
+ },
+ "sqlite-05": {
+  "changed": {
+   "shell.c": [
+    19506
+   ]
+  },
+  "note": "deleted lines 19506-19516"
+ },
+ "sqlite-06": {
+  "changed": {
+   "sqlite3.c": [
+    18977
+   ]
+  },
+  "note": "renamed in the struct"
+ },
+ "sqlite-07": {
+  "changed": {
+   "sqlite3.c": [
+    21099
+   ]
+  },
+  "note": "was `u8 eOrconf`"
+ },
+ "sqlite-08": {
+  "changed": {
+   "shell.c": [
+    238
+   ]
+  },
+  "note": "renamed at its definition"
+ },
+ "sqlite-09": {
+  "changed": {
+   "sqlite3.c": [
+    15115,
+    15119
+   ]
+  },
+  "note": "edited 2 #defines"
+ },
+ "sqlite-10": {
+  "changed": {
+   "sqlite3.c": [
+    77533
+   ]
+  },
+  "note": "first statement: return 0;"
+ }
+}

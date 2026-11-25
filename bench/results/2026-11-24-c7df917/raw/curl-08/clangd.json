@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at src/tool_libinfo.c:67:6",
+ "hits": [
+  [
+   "src/tool_getparam.c",
+   2734
+  ],
+  [
+   "src/tool_libinfo.c",
+   89
+  ]
+ ],
+ "seconds": 0.0011,
+ "text": "src/tool_getparam.c:2734: if(!feature_altsvc)\nsrc/tool_libinfo.c:89: { \"alt-svc\",        &feature_altsvc,      CURL_VERSION_ALTSVC },\n"
+}

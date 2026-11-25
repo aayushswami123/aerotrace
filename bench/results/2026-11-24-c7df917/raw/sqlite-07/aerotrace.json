@@ -1,0 +1,1216 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "sqlite3.c",
+   160020
+  ],
+  [
+   "sqlite3.c",
+   160021
+  ],
+  [
+   "sqlite3.c",
+   160037
+  ],
+  [
+   "sqlite3.c",
+   160038
+  ],
+  [
+   "sqlite3.c",
+   160047
+  ],
+  [
+   "sqlite3.c",
+   160048
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "sqlite3.c",
+   160020
+  ],
+  [
+   "sqlite3.c",
+   160021
+  ],
+  [
+   "sqlite3.c",
+   160037
+  ],
+  [
+   "sqlite3.c",
+   160038
+  ],
+  [
+   "sqlite3.c",
+   160047
+  ],
+  [
+   "sqlite3.c",
+   160048
+  ],
+  [
+   "sqlite3.c",
+   111642
+  ],
+  [
+   "sqlite3.c",
+   122390
+  ],
+  [
+   "sqlite3.c",
+   122604
+  ],
+  [
+   "sqlite3.c",
+   122742
+  ],
+  [
+   "sqlite3.c",
+   122833
+  ],
+  [
+   "sqlite3.c",
+   160267
+  ],
+  [
+   "sqlite3.c",
+   160391
+  ],
+  [
+   "sqlite3.c",
+   134035
+  ],
+  [
+   "sqlite3.c",
+   134095
+  ],
+  [
+   "sqlite3.c",
+   140822
+  ],
+  [
+   "sqlite3.c",
+   140934
+  ],
+  [
+   "sqlite3.c",
+   160290
+  ],
+  [
+   "sqlite3.c",
+   160448
+  ],
+  [
+   "sqlite3.c",
+   161458
+  ],
+  [
+   "sqlite3.c",
+   161592
+  ],
+  [
+   "sqlite3.c",
+   133876
+  ],
+  [
+   "sqlite3.c",
+   139278
+  ],
+  [
+   "sqlite3.c",
+   141687
+  ],
+  [
+   "sqlite3.c",
+   141961
+  ],
+  [
+   "sqlite3.c",
+   162164
+  ],
+  [
+   "sqlite3.c",
+   185242
+  ],
+  [
+   "sqlite3.c",
+   185247
+  ],
+  [
+   "sqlite3.c",
+   138601
+  ],
+  [
+   "sqlite3.c",
+   186350
+  ],
+  [
+   "sqlite3.c",
+   104377
+  ],
+  [
+   "sqlite3.c",
+   104380
+  ],
+  [
+   "sqlite3.c",
+   105333
+  ],
+  [
+   "sqlite3.c",
+   110301
+  ],
+  [
+   "sqlite3.c",
+   94174
+  ],
+  [
+   "sqlite3.c",
+   105924
+  ],
+  [
+   "sqlite3.c",
+   110331
+  ],
+  [
+   "sqlite3.c",
+   112714
+  ],
+  [
+   "sqlite3.c",
+   112759
+  ],
+  [
+   "sqlite3.c",
+   157101
+  ],
+  [
+   "sqlite3.c",
+   94235
+  ],
+  [
+   "sqlite3.c",
+   106189
+  ],
+  [
+   "sqlite3.c",
+   106373
+  ],
+  [
+   "sqlite3.c",
+   110265
+  ],
+  [
+   "sqlite3.c",
+   110267
+  ],
+  [
+   "sqlite3.c",
+   110269
+  ],
+  [
+   "sqlite3.c",
+   110343
+  ],
+  [
+   "sqlite3.c",
+   110367
+  ],
+  [
+   "sqlite3.c",
+   110369
+  ],
+  [
+   "sqlite3.c",
+   110371
+  ],
+  [
+   "sqlite3.c",
+   110541
+  ],
+  [
+   "sqlite3.c",
+   112084
+  ],
+  [
+   "sqlite3.c",
+   112297
+  ],
+  [
+   "sqlite3.c",
+   112366
+  ],
+  [
+   "sqlite3.c",
+   112497
+  ],
+  [
+   "sqlite3.c",
+   112539
+  ],
+  [
+   "sqlite3.c",
+   112549
+  ],
+  [
+   "sqlite3.c",
+   112550
+  ],
+  [
+   "sqlite3.c",
+   112861
+  ],
+  [
+   "sqlite3.c",
+   115531
+  ],
+  [
+   "sqlite3.c",
+   115625
+  ],
+  [
+   "sqlite3.c",
+   115761
+  ],
+  [
+   "sqlite3.c",
+   117724
+  ],
+  [
+   "sqlite3.c",
+   119864
+  ],
+  [
+   "sqlite3.c",
+   119867
+  ],
+  [
+   "sqlite3.c",
+   119943
+  ],
+  [
+   "sqlite3.c",
+   119952
+  ],
+  [
+   "sqlite3.c",
+   120034
+  ],
+  [
+   "sqlite3.c",
+   120088
+  ],
+  [
+   "sqlite3.c",
+   120208
+  ],
+  [
+   "sqlite3.c",
+   120563
+  ],
+  [
+   "sqlite3.c",
+   121645
+  ],
+  [
+   "sqlite3.c",
+   121667
+  ],
+  [
+   "sqlite3.c",
+   122203
+  ],
+  [
+   "sqlite3.c",
+   122208
+  ],
+  [
+   "sqlite3.c",
+   122214
+  ],
+  [
+   "sqlite3.c",
+   122215
+  ],
+  [
+   "sqlite3.c",
+   125893
+  ],
+  [
+   "sqlite3.c",
+   126378
+  ],
+  [
+   "sqlite3.c",
+   126460
+  ],
+  [
+   "sqlite3.c",
+   126471
+  ],
+  [
+   "sqlite3.c",
+   126482
+  ],
+  [
+   "sqlite3.c",
+   126484
+  ],
+  [
+   "sqlite3.c",
+   127508
+  ],
+  [
+   "sqlite3.c",
+   138483
+  ],
+  [
+   "sqlite3.c",
+   139695
+  ],
+  [
+   "sqlite3.c",
+   141056
+  ],
+  [
+   "sqlite3.c",
+   154636
+  ],
+  [
+   "sqlite3.c",
+   156294
+  ],
+  [
+   "sqlite3.c",
+   156717
+  ],
+  [
+   "sqlite3.c",
+   157179
+  ],
+  [
+   "sqlite3.c",
+   161959
+  ],
+  [
+   "sqlite3.c",
+   172698
+  ],
+  [
+   "sqlite3.c",
+   176182
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "sqlite3.c",
+   "id": "c:@S@Parse@FI@eTriggerOp",
+   "line": 21099,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "sqlite3.c",
+   "id": "c:@S@Parse@FI@eOrconf",
+   "line": 21100,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@codeTriggerProgram",
+   "line": 159995,
+   "lines": [
+    160020,
+    160021,
+    160037,
+    160038,
+    160047,
+    160048
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@resolveExprStep",
+   "line": 111491,
+   "lines": [
+    111642
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameColumnFunc",
+   "line": 122275,
+   "lines": [
+    122390
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameTableFunc",
+   "line": 122499,
+   "lines": [
+    122604
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameQuotefixFunc",
+   "line": 122682,
+   "lines": [
+    122742
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameTableTest",
+   "line": 122795,
+   "lines": [
+    122833
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@getRowTrigger",
+   "line": 160245,
+   "lines": [
+    160267
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3CodeRowTrigger",
+   "line": 160352,
+   "lines": [
+    160391
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3GenerateRowDelete",
+   "line": 133971,
+   "lines": [
+    134035,
+    134095
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Insert",
+   "line": 140220,
+   "lines": [
+    140822,
+    140934
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3CodeRowTriggerDirect",
+   "line": 160280,
+   "lines": [
+    160290
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3TriggerColmask",
+   "line": 160422,
+   "lines": [
+    160448
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Update",
+   "line": 160758,
+   "lines": [
+    161458,
+    161592
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3DeleteFrom",
+   "line": 133514,
+   "lines": [
+    133876
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3FkActions",
+   "line": 139260,
+   "lines": [
+    139278
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3GenerateConstraintChecks",
+   "line": 141223,
+   "lines": [
+    141687,
+    141961
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3UpsertDoUpdate",
+   "line": 162106,
+   "lines": [
+    162164
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@yy_reduce",
+   "line": 184516,
+   "lines": [
+    185242,
+    185247
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3FkDropTable",
+   "line": 138577,
+   "lines": [
+    138601
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Parser",
+   "line": 186272,
+   "lines": [
+    186350
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    104377,
+    104380,
+    105333
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3WalkExprNN",
+   "line": 110296,
+   "lines": [
+    110301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Step",
+   "line": 94082,
+   "lines": [
+    94174
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@blobSeekToRow",
+   "line": 105907,
+   "lines": [
+    105924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3WalkExpr",
+   "line": 110330,
+   "lines": [
+    110331
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ResolveExprNames",
+   "line": 112692,
+   "lines": [
+    112714
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ResolveExprListNames",
+   "line": 112735,
+   "lines": [
+    112759
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@selectCheckOnClausesExpr",
+   "line": 157079,
+   "lines": [
+    157101
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_step",
+   "line": 94224,
+   "lines": [
+    94235
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_open",
+   "line": 105974,
+   "lines": [
+    106189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_reopen",
+   "line": 106356,
+   "lines": [
+    106373
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@walkWindowList",
+   "line": 110257,
+   "lines": [
+    110265,
+    110267,
+    110269
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3WalkExprList",
+   "line": 110338,
+   "lines": [
+    110343
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3WalkSelectExpr",
+   "line": 110365,
+   "lines": [
+    110367,
+    110369,
+    110371
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@incrAggFunctionDepth",
+   "line": 110535,
+   "lines": [
+    110541
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@resolveOrderByTermToExprList",
+   "line": 112058,
+   "lines": [
+    112084
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@windowRemoveExprFromSelect",
+   "line": 112291,
+   "lines": [
+    112297
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@resolveOrderGroupBy",
+   "line": 112322,
+   "lines": [
+    112366
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@resolveSelectStep",
+   "line": 112385,
+   "lines": [
+    112497,
+    112539,
+    112549,
+    112550
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ResolveSelfReference",
+   "line": 112825,
+   "lines": [
+    112861
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@exprIsConst",
+   "line": 115522,
+   "lines": [
+    115531
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprIsTableConstant",
+   "line": 115611,
+   "lines": [
+    115625
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprIsConstantOrGroupBy",
+   "line": 115754,
+   "lines": [
+    115761
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprCanReturnSubtype",
+   "line": 117719,
+   "lines": [
+    117724
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@bothImplyNotNullRow",
+   "line": 119862,
+   "lines": [
+    119864,
+    119867
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@impliesNotNullRow",
+   "line": 119885,
+   "lines": [
+    119943,
+    119952
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprImpliesNonNullRow",
+   "line": 120016,
+   "lines": [
+    120034
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprCoveredByIndex",
+   "line": 120076,
+   "lines": [
+    120088
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ReferencesSrcList",
+   "line": 120185,
+   "lines": [
+    120208
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprAnalyzeAggregates",
+   "line": 120554,
+   "lines": [
+    120563
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameUnmapSelectCb",
+   "line": 121623,
+   "lines": [
+    121645
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RenameExprUnmap",
+   "line": 121659,
+   "lines": [
+    121667
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@renameWalkTrigger",
+   "line": 122199,
+   "lines": [
+    122203,
+    122208,
+    122214,
+    122215
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@resolveAttachExpr",
+   "line": 125888,
+   "lines": [
+    125893
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@fixSelectCb",
+   "line": 126350,
+   "lines": [
+    126378
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3FixExpr",
+   "line": 126456,
+   "lines": [
+    126460
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3FixTriggerStep",
+   "line": 126465,
+   "lines": [
+    126471,
+    126482,
+    126484
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3FuncAuth",
+   "line": 127503,
+   "lines": [
+    127508
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@fkScanChildren",
+   "line": 138388,
+   "lines": [
+    138483
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ComputeGeneratedColumns",
+   "line": 139617,
+   "lines": [
+    139695
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ExprReferencesUpdatedColumn",
+   "line": 141046,
+   "lines": [
+    141056
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@propagateConstants",
+   "line": 154602,
+   "lines": [
+    154636
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@aggregateConvertIndexedExprRefToColumn",
+   "line": 156288,
+   "lines": [
+    156294
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@havingToWhere",
+   "line": 156711,
+   "lines": [
+    156717
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3SelectCheckOnClauses",
+   "line": 157165,
+   "lines": [
+    157179
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3UpsertAnalyzeTarget",
+   "line": 161929,
+   "lines": [
+    161959
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@estLikePatternLength",
+   "line": 172689,
+   "lines": [
+    172698
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@exprIsDeterministic",
+   "line": 176176,
+   "lines": [
+    176182
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 5.4892,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 67,
+  "breaks_exact": 1,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 6,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS, 67 AFFECTED).\n    67 may be affected (67 further up) and 6 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] CHANGED    Parse::eTriggerOp (field)  sqlite3.c:21099  (only comments or spacing changed on its line)\n  [*] CHANGED    Parse::eOrconf (field)  sqlite3.c:21100  (type is now 'void *' (was 'u8'))\n\nFunctions (68)\n  [x] BREAKS     codeTriggerProgram  sqlite3.c:159995\n                 does not compile after this change: incompatible integer to pointer conversion assigning to 'void *' from 'int' (and 4 other links). Link: exact.\n  [~] AFFECTED   resolveExprStep  sqlite3.c:111491\n                 calls lookupName. Link: exact.\n  [~] AFFECTED   renameColumnFunc  sqlite3.c:122275\n                 calls renameResolveTrigger. Link: exact.\n  [~] AFFECTED   renameTableFunc  sqlite3.c:122499\n                 calls renameResolveTrigger. Link: exact.\n  [~] AFFECTED   renameQuotefixFunc  sqlite3.c:122682\n                 calls renameResolveTrigger. Link: exact.\n  [~] AFFECTED   renameTableTest  sqlite3.c:122795\n                 calls renameResolveTrigger. Link: exact.\n  [~] AFFECTED   getRowTrigger  sqlite3.c:160245\n                 calls codeRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3CodeRowTrigger  sqlite3.c:160352\n                 calls codeReturningTrigger. Link: exact.\n  [~] AFFECTED   sqlite3GenerateRowDelete  sqlite3.c:133971\n                 calls sqlite3CodeRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3Insert  sqlite3.c:140220\n                 calls sqlite3CodeRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3CodeRowTriggerDirect  sqlite3.c:160280\n                 calls getRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3TriggerColmask  sqlite3.c:160422\n                 calls getRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3Update  sqlite3.c:160758\n                 calls sqlite3CodeRowTrigger. Link: exact.\n  [~] AFFECTED   sqlite3DeleteFrom  sqlite3.c:133514\n                 calls sqlite3GenerateRowDelete. Link: exact.\n  [~] AFFECTED   sqlite3FkActions  sqlite3.c:139260\n                 calls sqlite3CodeRowTriggerDirect. Link: exact.\n  ... and 53 more (53 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (6)\n  [?] Fields are tracked per struct type, not per object: every Parse's eOrconf is listed.\n  [?] Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of a struct that contains it, are still listed as unknown. Not checked there: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. {0} (all zero) is not counted.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}

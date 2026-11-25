@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at sqlite3.c:60257:12",
+ "hits": [
+  [
+   "sqlite3.c",
+   60331
+  ],
+  [
+   "sqlite3.c",
+   61561
+  ]
+ ],
+ "seconds": 0.0783,
+ "text": "sqlite3.c:60331: || !pagerIsSuperJrnlName(zOut)          /* Name is not valid */\nsqlite3.c:61561: if( NEVER(pagerIsSuperJrnlName(zSuper)==0) ){\n"
+}

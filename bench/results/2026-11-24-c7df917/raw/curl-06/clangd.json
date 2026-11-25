@@ -1,0 +1,27 @@
+{
+ "command": "textDocument/references at lib/urldata.h:1033:11",
+ "hits": [
+  [
+   "lib/http.c",
+   1163
+  ],
+  [
+   "lib/http.c",
+   1168
+  ],
+  [
+   "lib/http.c",
+   1440
+  ],
+  [
+   "lib/http.c",
+   3455
+  ],
+  [
+   "lib/setopt.c",
+   1017
+  ]
+ ],
+ "seconds": 0.0044,
+ "text": "lib/http.c:1163: (data->set.http_follow_mode == CURLFOLLOW_OBEYCODE)) {\nlib/http.c:1168: else if(req && (data->set.http_follow_mode != CURLFOLLOW_FIRSTONLY))\nlib/http.c:1440: if((data->set.http_follow_mode == CURLFOLLOW_FIRSTONLY) &&\nlib/http.c:3455: data->set.http_follow_mode) {\nlib/setopt.c:1017: s->http_follow_mode = (unsigned char)arg;\n"
+}

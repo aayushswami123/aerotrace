@@ -1,0 +1,19 @@
+{
+ "command": "cscope -d -L0 cw_pause_flush",
+ "hits": [
+  [
+   "lib/cw-pause.c",
+   219
+  ],
+  [
+   "lib/cw-pause.c",
+   102
+  ],
+  [
+   "lib/cw-pause.c",
+   158
+  ]
+ ],
+ "seconds": 0.01,
+ "text": "lib/cw-pause.c <global> 219 cw_pause_flush,\nlib/cw-pause.c cw_pause_flush 102 static CURLcode cw_pause_flush(struct Curl_easy *data,\nlib/cw-pause.c cw_pause_write 158 result = cw_pause_flush(data, writer);\n"
+}

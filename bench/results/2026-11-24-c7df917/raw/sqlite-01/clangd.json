@@ -1,0 +1,47 @@
+{
+ "command": "textDocument/references at shell.c:9516:22",
+ "hits": [
+  [
+   "shell.c",
+   9530
+  ],
+  [
+   "shell.c",
+   9562
+  ],
+  [
+   "shell.c",
+   9567
+  ],
+  [
+   "shell.c",
+   9603
+  ],
+  [
+   "shell.c",
+   9612
+  ],
+  [
+   "shell.c",
+   9641
+  ],
+  [
+   "shell.c",
+   9648
+  ],
+  [
+   "shell.c",
+   9652
+  ],
+  [
+   "shell.c",
+   9661
+  ],
+  [
+   "shell.c",
+   9669
+  ]
+ ],
+ "seconds": 0.0139,
+ "text": "shell.c:9530: while( rePeek(p)=='|' ){\nshell.c:9562: if( rePeek(p)!=')' ) return \"unmatched '('\";\nshell.c:9567: if( rePeek(p)=='*' ){\nshell.c:9603: while( (c=rePeek(p))>='0' && c<='9' ){\nshell.c:9612: while( (c=rePeek(p))>='0' && c<='9' ){\nshell.c:9641: if( rePeek(p)=='^' ){\nshell.c:9648: if( c=='[' && rePeek(p)==':' ){\nshell.c:9652: if( rePeek(p)=='-' ){\nshell.c:9661: if( rePeek(p)==']' ){ p->sIn.i++; break; }\nshell.c:9669: switch( rePeek(p) ){\n"
+}

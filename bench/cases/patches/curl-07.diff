@@ -1,0 +1,12 @@
+--- a/lib/urldata.h
++++ b/lib/urldata.h
+@@ -961,8 +961,7 @@
+   timediff_t shutdowntimeout; /* ms, 0 means default timeout */
+   curl_resolver_start_callback resolver_start; /* optional callback called
+                                                   before resolver start */
+-  void *resolver_start_client; /* pointer to pass to resolver start callback */
+-  timediff_t upkeep_interval_ms; /* Time between calls for connection
++  void *resolver_start_client; void *upkeep_interval_ms; /* Time between calls for connection
+                                     upkeep. */
+   CURLU *uh; /* URL handle for the current parsed URL */
+ #ifndef CURL_DISABLE_HTTP

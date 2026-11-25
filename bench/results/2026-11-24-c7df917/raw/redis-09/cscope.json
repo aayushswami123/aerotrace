@@ -1,0 +1,35 @@
+{
+ "command": "cscope -d -L0 MALLOC_MIN_SIZE",
+ "hits": [
+  [
+   "src/zmalloc.c",
+   56
+  ],
+  [
+   "src/zmalloc.c",
+   250
+  ],
+  [
+   "src/zmalloc.c",
+   252
+  ],
+  [
+   "src/zmalloc.c",
+   265
+  ],
+  [
+   "src/zmalloc.c",
+   381
+  ],
+  [
+   "src/zmalloc.c",
+   383
+  ],
+  [
+   "src/zmalloc.c",
+   397
+  ]
+ ],
+ "seconds": 0.0114,
+ "text": "src/zmalloc.c <global> 56 #define MALLOC_MIN_SIZE(x) ((x) > 0 ? (x) : sizeof(long ))\nsrc/zmalloc.c ztrymalloc_usable_internal 250 void *ptr = malloc_with_usize(MALLOC_MIN_SIZE(size)+PREFIX_SIZE, &size);\nsrc/zmalloc.c ztrymalloc_usable_internal 252 void *ptr = malloc(MALLOC_MIN_SIZE(size)+PREFIX_SIZE);\nsrc/zmalloc.c ztrymalloc_usable_internal 265 size = MALLOC_MIN_SIZE(size);\nsrc/zmalloc.c ztrycalloc_usable_internal 381 void *ptr = calloc_with_usize(1, MALLOC_MIN_SIZE(size)+PREFIX_SIZE, &size);\nsrc/zmalloc.c ztrycalloc_usable_internal 383 void *ptr = calloc(1, MALLOC_MIN_SIZE(size)+PREFIX_SIZE);\nsrc/zmalloc.c ztrycalloc_usable_internal 397 size = MALLOC_MIN_SIZE(size);\n"
+}

@@ -1,0 +1,51 @@
+{
+ "command": "cscope -d -L0 rePeek",
+ "hits": [
+  [
+   "shell.c",
+   9516
+  ],
+  [
+   "shell.c",
+   9530
+  ],
+  [
+   "shell.c",
+   9562
+  ],
+  [
+   "shell.c",
+   9567
+  ],
+  [
+   "shell.c",
+   9603
+  ],
+  [
+   "shell.c",
+   9612
+  ],
+  [
+   "shell.c",
+   9641
+  ],
+  [
+   "shell.c",
+   9648
+  ],
+  [
+   "shell.c",
+   9652
+  ],
+  [
+   "shell.c",
+   9661
+  ],
+  [
+   "shell.c",
+   9669
+  ]
+ ],
+ "seconds": 0.008,
+ "text": "shell.c rePeek 9516 static unsigned char rePeek(ReCompiled *p){\nshell.c re_subcompile_re 9530 while ( rePeek(p)=='|' ){\nshell.c re_subcompile_string 9562 if( rePeek(p)!=')' ) return \"unmatched '('\";\nshell.c re_subcompile_string 9567 if( rePeek(p)=='*' ){\nshell.c re_subcompile_string 9603 while ( (c=rePeek(p))>='0' && c<='9' ){\nshell.c re_subcompile_string 9612 while ( (c=rePeek(p))>='0' && c<='9' ){\nshell.c re_subcompile_string 9641 if( rePeek(p)=='^' ){\nshell.c re_subcompile_string 9648 if( c=='[' && rePeek(p)==':' ){\nshell.c re_subcompile_string 9652 if( rePeek(p)=='-' ){\nshell.c re_subcompile_string 9661 if( rePeek(p)==']' ){ p->sIn.i++; break; }\nshell.c re_subcompile_string 9669 switch ( rePeek(p) ){\n"
+}

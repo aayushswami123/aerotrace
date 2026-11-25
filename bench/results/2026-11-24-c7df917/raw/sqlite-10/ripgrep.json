@@ -1,0 +1,47 @@
+{
+ "command": "rg -n -w --no-heading --with-filename sqlite3BtreeCursor <build files>",
+ "hits": [
+  [
+   "sqlite3.c",
+   17448
+  ],
+  [
+   "sqlite3.c",
+   17473
+  ],
+  [
+   "sqlite3.c",
+   24643
+  ],
+  [
+   "sqlite3.c",
+   77526
+  ],
+  [
+   "sqlite3.c",
+   100884
+  ],
+  [
+   "sqlite3.c",
+   100930
+  ],
+  [
+   "sqlite3.c",
+   100932
+  ],
+  [
+   "sqlite3.c",
+   100934
+  ],
+  [
+   "sqlite3.c",
+   101027
+  ],
+  [
+   "sqlite3.c",
+   101033
+  ]
+ ],
+ "seconds": 0.0166,
+ "text": "sqlite3.c:17448:** Flags passed as the third argument to sqlite3BtreeCursor().\nsqlite3.c:17473:SQLITE_PRIVATE int sqlite3BtreeCursor(\nsqlite3.c:24643:  u8 wrFlag;              /* The wrFlag argument to sqlite3BtreeCursor() */\nsqlite3.c:77526:SQLITE_PRIVATE int sqlite3BtreeCursor(\nsqlite3.c:100884:  rc = sqlite3BtreeCursor(pX, p2, wrFlag, pKeyInfo, pCur->uc.pCursor);\nsqlite3.c:100930:  rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c:100932:  /* The sqlite3BtreeCursor() routine can only fail for the first cursor\nsqlite3.c:100934:  ** opcode is run, the sqlite3BtreeCursor() cannot fail */\nsqlite3.c:101027:            rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c:101033:          rc = sqlite3BtreeCursor(pCx->ub.pBtx, SCHEMA_ROOT, BTREE_WRCSR,\n"
+}

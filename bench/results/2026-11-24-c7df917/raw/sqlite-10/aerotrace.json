@@ -1,0 +1,1737 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "sqlite3.c",
+   100884
+  ],
+  [
+   "sqlite3.c",
+   100930
+  ],
+  [
+   "sqlite3.c",
+   101027
+  ],
+  [
+   "sqlite3.c",
+   101033
+  ],
+  [
+   "sqlite3.c",
+   94174
+  ],
+  [
+   "sqlite3.c",
+   105924
+  ],
+  [
+   "sqlite3.c",
+   94235
+  ],
+  [
+   "sqlite3.c",
+   106189
+  ],
+  [
+   "sqlite3.c",
+   106373
+  ],
+  [
+   "shell.c",
+   1984
+  ],
+  [
+   "shell.c",
+   2944
+  ],
+  [
+   "shell.c",
+   3026
+  ],
+  [
+   "shell.c",
+   3372
+  ],
+  [
+   "shell.c",
+   3429
+  ],
+  [
+   "shell.c",
+   4083
+  ],
+  [
+   "shell.c",
+   5372
+  ],
+  [
+   "shell.c",
+   5820
+  ],
+  [
+   "shell.c",
+   11517
+  ],
+  [
+   "shell.c",
+   11546
+  ],
+  [
+   "shell.c",
+   11575
+  ],
+  [
+   "shell.c",
+   15671
+  ],
+  [
+   "shell.c",
+   15809
+  ],
+  [
+   "shell.c",
+   15839
+  ],
+  [
+   "shell.c",
+   15995
+  ],
+  [
+   "shell.c",
+   16006
+  ],
+  [
+   "shell.c",
+   16301
+  ],
+  [
+   "shell.c",
+   16410
+  ],
+  [
+   "shell.c",
+   16512
+  ],
+  [
+   "shell.c",
+   16573
+  ],
+  [
+   "shell.c",
+   16763
+  ],
+  [
+   "shell.c",
+   16792
+  ],
+  [
+   "shell.c",
+   16833
+  ],
+  [
+   "shell.c",
+   16837
+  ],
+  [
+   "shell.c",
+   16860
+  ],
+  [
+   "shell.c",
+   16958
+  ],
+  [
+   "shell.c",
+   17047
+  ],
+  [
+   "shell.c",
+   17134
+  ],
+  [
+   "shell.c",
+   17644
+  ],
+  [
+   "shell.c",
+   17701
+  ],
+  [
+   "shell.c",
+   17770
+  ],
+  [
+   "shell.c",
+   17808
+  ],
+  [
+   "shell.c",
+   18007
+  ],
+  [
+   "shell.c",
+   18282
+  ],
+  [
+   "shell.c",
+   18397
+  ],
+  [
+   "shell.c",
+   19932
+  ],
+  [
+   "shell.c",
+   19960
+  ],
+  [
+   "shell.c",
+   20136
+  ],
+  [
+   "shell.c",
+   20442
+  ],
+  [
+   "shell.c",
+   20459
+  ],
+  [
+   "shell.c",
+   20487
+  ],
+  [
+   "shell.c",
+   20528
+  ],
+  [
+   "shell.c",
+   20589
+  ],
+  [
+   "shell.c",
+   26443
+  ],
+  [
+   "shell.c",
+   27965
+  ],
+  [
+   "shell.c",
+   27980
+  ],
+  [
+   "shell.c",
+   28323
+  ],
+  [
+   "shell.c",
+   28735
+  ],
+  [
+   "shell.c",
+   28783
+  ],
+  [
+   "shell.c",
+   28818
+  ],
+  [
+   "shell.c",
+   29755
+  ],
+  [
+   "shell.c",
+   30778
+  ],
+  [
+   "shell.c",
+   30807
+  ],
+  [
+   "shell.c",
+   30869
+  ],
+  [
+   "shell.c",
+   30899
+  ],
+  [
+   "shell.c",
+   31046
+  ],
+  [
+   "shell.c",
+   31189
+  ],
+  [
+   "shell.c",
+   31197
+  ],
+  [
+   "shell.c",
+   31204
+  ],
+  [
+   "shell.c",
+   31228
+  ],
+  [
+   "shell.c",
+   31760
+  ],
+  [
+   "shell.c",
+   31774
+  ],
+  [
+   "shell.c",
+   33032
+  ],
+  [
+   "shell.c",
+   33053
+  ],
+  [
+   "shell.c",
+   33060
+  ],
+  [
+   "shell.c",
+   33071
+  ],
+  [
+   "shell.c",
+   33099
+  ],
+  [
+   "shell.c",
+   33493
+  ],
+  [
+   "shell.c",
+   33585
+  ],
+  [
+   "shell.c",
+   35253
+  ],
+  [
+   "shell.c",
+   35749
+  ],
+  [
+   "shell.c",
+   35845
+  ],
+  [
+   "shell.c",
+   35854
+  ],
+  [
+   "shell.c",
+   36323
+  ],
+  [
+   "shell.c",
+   36333
+  ],
+  [
+   "shell.c",
+   36387
+  ],
+  [
+   "shell.c",
+   36744
+  ],
+  [
+   "shell.c",
+   37102
+  ],
+  [
+   "shell.c",
+   37227
+  ],
+  [
+   "shell.c",
+   37312
+  ],
+  [
+   "shell.c",
+   37321
+  ],
+  [
+   "shell.c",
+   37471
+  ],
+  [
+   "shell.c",
+   38301
+  ],
+  [
+   "sqlite3.c",
+   55417
+  ],
+  [
+   "sqlite3.c",
+   55423
+  ],
+  [
+   "sqlite3.c",
+   55500
+  ],
+  [
+   "sqlite3.c",
+   142875
+  ],
+  [
+   "sqlite3.c",
+   148288
+  ],
+  [
+   "sqlite3.c",
+   162211
+  ],
+  [
+   "shell.c",
+   2076
+  ],
+  [
+   "shell.c",
+   3511
+  ],
+  [
+   "shell.c",
+   11696
+  ],
+  [
+   "shell.c",
+   15730
+  ],
+  [
+   "shell.c",
+   16102
+  ],
+  [
+   "shell.c",
+   16126
+  ],
+  [
+   "shell.c",
+   16482
+  ],
+  [
+   "shell.c",
+   16538
+  ],
+  [
+   "shell.c",
+   16882
+  ],
+  [
+   "shell.c",
+   16889
+  ],
+  [
+   "shell.c",
+   17273
+  ],
+  [
+   "shell.c",
+   17655
+  ],
+  [
+   "shell.c",
+   17990
+  ],
+  [
+   "shell.c",
+   18446
+  ],
+  [
+   "shell.c",
+   18461
+  ],
+  [
+   "shell.c",
+   18463
+  ],
+  [
+   "shell.c",
+   19839
+  ],
+  [
+   "shell.c",
+   26571
+  ],
+  [
+   "shell.c",
+   27834
+  ],
+  [
+   "shell.c",
+   27874
+  ],
+  [
+   "shell.c",
+   28276
+  ],
+  [
+   "shell.c",
+   28499
+  ],
+  [
+   "shell.c",
+   28617
+  ],
+  [
+   "shell.c",
+   28621
+  ],
+  [
+   "shell.c",
+   28636
+  ],
+  [
+   "shell.c",
+   28642
+  ],
+  [
+   "shell.c",
+   28648
+  ],
+  [
+   "shell.c",
+   28665
+  ],
+  [
+   "shell.c",
+   28863
+  ],
+  [
+   "shell.c",
+   28979
+  ],
+  [
+   "shell.c",
+   28992
+  ],
+  [
+   "shell.c",
+   29781
+  ],
+  [
+   "shell.c",
+   29836
+  ],
+  [
+   "shell.c",
+   29981
+  ],
+  [
+   "shell.c",
+   30212
+  ],
+  [
+   "shell.c",
+   30939
+  ],
+  [
+   "shell.c",
+   30940
+  ],
+  [
+   "shell.c",
+   30943
+  ],
+  [
+   "shell.c",
+   30944
+  ],
+  [
+   "shell.c",
+   31834
+  ],
+  [
+   "shell.c",
+   32843
+  ],
+  [
+   "shell.c",
+   38398
+  ],
+  [
+   "shell.c",
+   38526
+  ],
+  [
+   "shell.c",
+   39586
+  ],
+  [
+   "shell.c",
+   39652
+  ],
+  [
+   "sqlite3.c",
+   66563
+  ],
+  [
+   "sqlite3.c",
+   125817
+  ],
+  [
+   "sqlite3.c",
+   148343
+  ],
+  [
+   "sqlite3.c",
+   148824
+  ],
+  [
+   "sqlite3.c",
+   158823
+  ],
+  [
+   "sqlite3.c",
+   162242
+  ],
+  [
+   "sqlite3.c",
+   162440
+  ],
+  [
+   "sqlite3.c",
+   90271
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCursor",
+   "line": 77526,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    100884,
+    100930,
+    101027,
+    101033
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Step",
+   "line": 94082,
+   "lines": [
+    94174
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@blobSeekToRow",
+   "line": 105907,
+   "lines": [
+    105924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_step",
+   "line": 94224,
+   "lines": [
+    94235
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_open",
+   "line": 105974,
+   "lines": [
+    106189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_reopen",
+   "line": 106356,
+   "lines": [
+    106373
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfJsonbToJson",
+   "line": 1957,
+   "lines": [
+    1984
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfColumnar",
+   "line": 2931,
+   "lines": [
+    2944,
+    3026
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfExplain",
+   "line": 3348,
+   "lines": [
+    3372,
+    3429
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_format_query_result",
+   "line": 4046,
+   "lines": [
+    4083
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@sha3QueryFunc",
+   "line": 5310,
+   "lines": [
+    5372
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@sha1QueryFunc",
+   "line": 5768,
+   "lines": [
+    5820
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@completionNext",
+   "line": 11483,
+   "lines": [
+    11517,
+    11546,
+    11575
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertNext",
+   "line": 15666,
+   "lines": [
+    15671
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxGetTableInfo",
+   "line": 15789,
+   "lines": [
+    15809,
+    15839
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxFindCompatible",
+   "line": 15978,
+   "lines": [
+    15995,
+    16006
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxFindIndexes",
+   "line": 16283,
+   "lines": [
+    16301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxProcessOneTrigger",
+   "line": 16391,
+   "lines": [
+    16410
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertDbContainsObject",
+   "line": 16499,
+   "lines": [
+    16512
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxCreateVtabSchema",
+   "line": 16552,
+   "lines": [
+    16573
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxLargestIndex",
+   "line": 16751,
+   "lines": [
+    16763
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxPopulateOneStat1",
+   "line": 16771,
+   "lines": [
+    16792,
+    16833,
+    16837,
+    16860
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxPopulateStat1",
+   "line": 16902,
+   "lines": [
+    16958
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:@F@registerUDFs",
+   "line": 17040,
+   "lines": [
+    17047
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_expert_new",
+   "line": 17087,
+   "lines": [
+    17134
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckStep",
+   "line": 17642,
+   "lines": [
+    17644
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckSaveKey",
+   "line": 17685,
+   "lines": [
+    17701,
+    17770
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckFindObject",
+   "line": 17785,
+   "lines": [
+    17808
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckIsIndex",
+   "line": 18000,
+   "lines": [
+    18007
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckCheckObjectSql",
+   "line": 18024,
+   "lines": [
+    18282
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_intck_step",
+   "line": 18362,
+   "lines": [
+    18397
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSql",
+   "line": 19924,
+   "lines": [
+    19932
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSqlInt",
+   "line": 19948,
+   "lines": [
+    19960
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedSubreport",
+   "line": 20085,
+   "lines": [
+    20136
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedFunc",
+   "line": 20219,
+   "lines": [
+    20442,
+    20459,
+    20487,
+    20528,
+    20589
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shellFakeSchema",
+   "line": 26417,
+   "lines": [
+    26443
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@run_table_dump_query",
+   "line": 27947,
+   "lines": [
+    27965,
+    27980
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@bind_prepared_stmt",
+   "line": 28298,
+   "lines": [
+    28323
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tableColumnList",
+   "line": 28719,
+   "lines": [
+    28735,
+    28783
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@toggleSelectOrder",
+   "line": 28813,
+   "lines": [
+    28818
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@isDatabaseFile",
+   "line": 29746,
+   "lines": [
+    29755
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tryToCloneData",
+   "line": 30736,
+   "lines": [
+    30778,
+    30807
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tryToCloneSchema",
+   "line": 30846,
+   "lines": [
+    30869,
+    30899
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@db_int",
+   "line": 31037,
+   "lines": [
+    31046
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shell_dbtotxt_command",
+   "line": 31171,
+   "lines": [
+    31189,
+    31197,
+    31204,
+    31228
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@lintFkeyIndexes",
+   "line": 31650,
+   "lines": [
+    31760,
+    31774
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@zAutoColumn",
+   "line": 32908,
+   "lines": [
+    33032,
+    33053,
+    33060,
+    33071
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@outputDumpWarning",
+   "line": 33092,
+   "lines": [
+    33099
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@dotCmdImport",
+   "line": 33225,
+   "lines": [
+    33493,
+    33585
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@do_meta_command",
+   "line": 34937,
+   "lines": [
+    35253,
+    35749,
+    35845,
+    35854,
+    36323,
+    36333,
+    36387,
+    36744,
+    37102,
+    37227,
+    37312,
+    37321,
+    37471
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "shell.c",
+   "id": "c:shell.c@F@doAutoDetectRestore",
+   "line": 38271,
+   "lines": [
+    38301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_serialize",
+   "line": 55369,
+   "lines": [
+    55417,
+    55423
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_deserialize",
+   "line": 55460,
+   "lines": [
+    55500
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_exec",
+   "line": 142838,
+   "lines": [
+    142875
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pragmaVtabNext",
+   "line": 148281,
+   "lines": [
+    148288
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@execSql",
+   "line": 162204,
+   "lines": [
+    162211
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfRenderValue",
+   "line": 2042,
+   "lines": [
+    2076
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@qrfScanStatusVm",
+   "line": 3488,
+   "lines": [
+    3511
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@completionFilter",
+   "line": 11655,
+   "lines": [
+    11696
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertFilter",
+   "line": 15707,
+   "lines": [
+    15730
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxCreateFromCons",
+   "line": 16059,
+   "lines": [
+    16102,
+    16126
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxProcessTriggers",
+   "line": 16474,
+   "lines": [
+    16482
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertSchemaSql",
+   "line": 16534,
+   "lines": [
+    16538
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@idxBuildSampleTable",
+   "line": 16878,
+   "lines": [
+    16882,
+    16889
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_expert_analyze",
+   "line": 17241,
+   "lines": [
+    17273
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckExec",
+   "line": 17652,
+   "lines": [
+    17655
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckGetAutoIndex",
+   "line": 17986,
+   "lines": [
+    17990
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_intck_unlock",
+   "line": 18443,
+   "lines": [
+    18446
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@sqlite3_intck_test_sql",
+   "line": 18457,
+   "lines": [
+    18461,
+    18463
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@diskusedReset",
+   "line": 19835,
+   "lines": [
+    19839
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shellAddSchemaName",
+   "line": 26533,
+   "lines": [
+    26571
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@createSelftestTable",
+   "line": 27832,
+   "lines": [
+    27834,
+    27874
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@bind_table_init",
+   "line": 28269,
+   "lines": [
+    28276
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@expertDotCommand",
+   "line": 28459,
+   "lines": [
+    28499
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shell_exec",
+   "line": 28534,
+   "lines": [
+    28617,
+    28621,
+    28636,
+    28642,
+    28648,
+    28665
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@dump_callback",
+   "line": 28836,
+   "lines": [
+    28863
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@run_schema_dump_query",
+   "line": 28973,
+   "lines": [
+    28979,
+    28992
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@deduceDatabaseType",
+   "line": 29775,
+   "lines": [
+    29781
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@isScriptFile",
+   "line": 29830,
+   "lines": [
+    29836
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@shellModuleSchema",
+   "line": 29964,
+   "lines": [
+    29981
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@open_db",
+   "line": 30012,
+   "lines": [
+    30212
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@tryToClone",
+   "line": 30927,
+   "lines": [
+    30939,
+    30940,
+    30943,
+    30944
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@lintDotCommand",
+   "line": 31826,
+   "lines": [
+    31834
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@intckDatabaseCmd",
+   "line": 32834,
+   "lines": [
+    32843
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@runOneSqlLine",
+   "line": 38341,
+   "lines": [
+    38398
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:shell.c@F@process_input",
+   "line": 38481,
+   "lines": [
+    38526
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "shell.c",
+   "id": "c:@F@main",
+   "line": 39030,
+   "lines": [
+    39586,
+    39652
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerCheckpoint",
+   "line": 66545,
+   "lines": [
+    66563
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3AnalysisLoad",
+   "line": 125780,
+   "lines": [
+    125817
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pragmaVtabFilter",
+   "line": 148299,
+   "lines": [
+    148343
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3InitOne",
+   "line": 148643,
+   "lines": [
+    148824
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_get_table",
+   "line": 158793,
+   "lines": [
+    158823
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@execSqlF",
+   "line": 162234,
+   "lines": [
+    162242
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RunVacuum",
+   "line": 162315,
+   "lines": [
+    162440
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFreeCursorNN",
+   "line": 90250,
+   "lines": [
+    90271
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 6.1799,
+ "summary": {
+  "affected_direct": 1,
+  "affected_further": 94,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 1,
+  "unknown": 0
+ },
+ "text": "[!] This change may affect 95 things you didn't touch (1 direct, 94 further up). None is sure to break.\n    1 part of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    sqlite3BtreeCursor  sqlite3.c:77526  (changed (0 lines))\n\nFunctions (95)\n  [~] AFFECTED   sqlite3VdbeExec  sqlite3.c:97179\n                 calls sqlite3BtreeCursor. Link: exact.\n  [~] AFFECTED   sqlite3Step  sqlite3.c:94082\n                 calls sqlite3VdbeExec. Link: exact.\n  [~] AFFECTED   blobSeekToRow  sqlite3.c:105907\n                 calls sqlite3VdbeExec. Link: exact.\n  [~] AFFECTED   sqlite3_step  sqlite3.c:94224\n                 calls sqlite3Step. Link: exact.\n  [~] AFFECTED   sqlite3_blob_open  sqlite3.c:105974\n                 calls blobSeekToRow. Link: exact.\n  [~] AFFECTED   sqlite3_blob_reopen  sqlite3.c:106356\n                 calls blobSeekToRow. Link: exact.\n  [~] AFFECTED   qrfJsonbToJson  shell.c:1957\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   qrfColumnar  shell.c:2931\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   qrfExplain  shell.c:3348\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   sqlite3_format_query_result  shell.c:4046\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   sha3QueryFunc  shell.c:5310\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   sha1QueryFunc  shell.c:5768\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   completionNext  shell.c:11483\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   expertNext  shell.c:15666\n                 calls sqlite3_step. Link: exact.\n  [~] AFFECTED   idxGetTableInfo  shell.c:15789\n                 calls sqlite3_step. Link: exact.\n  ... and 80 more (80 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}

@@ -1,0 +1,11 @@
+--- a/shell.c
++++ b/shell.c
+@@ -9513,7 +9513,7 @@
+ static const char *re_subcompile_string(ReCompiled*);
+ 
+ /* Peek at the next byte of input */
+-static unsigned char rePeek(ReCompiled *p){
++static unsigned char rePeek(ReCompiled *p, int aerotrace_bench){
+   return p->sIn.i<p->sIn.mx ? p->sIn.z[p->sIn.i] : 0;
+ }
+ 

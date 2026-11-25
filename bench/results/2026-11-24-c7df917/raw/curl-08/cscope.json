@@ -1,0 +1,23 @@
+{
+ "command": "cscope -d -L0 feature_altsvc",
+ "hits": [
+  [
+   "src/tool_libinfo.c",
+   67
+  ],
+  [
+   "src/tool_libinfo.c",
+   89
+  ],
+  [
+   "src/tool_libinfo.h",
+   50
+  ],
+  [
+   "src/tool_getparam.c",
+   2734
+  ]
+ ],
+ "seconds": 0.0077,
+ "text": "src/tool_libinfo.c <global> 67 bool feature_altsvc = FALSE;\nsrc/tool_libinfo.c <global> 89 { \"alt-svc\", &feature_altsvc, CURL_VERSION_ALTSVC },\nsrc/tool_libinfo.h <global> 50 extern bool feature_altsvc;\nsrc/tool_getparam.c opt_string 2734 if(!feature_altsvc)\n"
+}

@@ -1,0 +1,23 @@
+{
+ "command": "rg -n -w --no-heading --with-filename pagerIsSuperJrnlName <build files>",
+ "hits": [
+  [
+   "sqlite3.c",
+   60257
+  ],
+  [
+   "sqlite3.c",
+   60331
+  ],
+  [
+   "sqlite3.c",
+   60720
+  ],
+  [
+   "sqlite3.c",
+   61561
+  ]
+ ],
+ "seconds": 0.0148,
+ "text": "sqlite3.c:60257:static int pagerIsSuperJrnlName(const char *zSuper){\nsqlite3.c:60331:     || !pagerIsSuperJrnlName(zOut)          /* Name is not valid */\nsqlite3.c:60720:  assert( zSuper==0 || pagerIsSuperJrnlName(zSuper) );\nsqlite3.c:61561:  if( NEVER(pagerIsSuperJrnlName(zSuper)==0) ){\n"
+}

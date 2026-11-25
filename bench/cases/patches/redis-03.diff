@@ -1,0 +1,42 @@
+--- a/src/bitops.c
++++ b/src/bitops.c
+@@ -613,7 +613,7 @@
+     return 1;
+ }
+ 
+-int checkSignedBitfieldOverflow(int64_t value, int64_t incr, uint64_t bits, int owtype, int64_t *limit) {
++void checkSignedBitfieldOverflow(int64_t value, int64_t incr, uint64_t bits, int owtype, int64_t *limit) {
+     int64_t max = (bits == 64) ? INT64_MAX : (((int64_t)1<<(bits-1))-1);
+     int64_t min = (-max)-1;
+ 
+@@ -633,7 +633,7 @@
+                 *limit = max;
+             }
+         }
+-        return 1;
++        { (void)(1); return; } /* aerotrace bench */
+     } else if (value < min || (bits != 64 && incr < minincr) || (value < 0 && incr < 0 && incr < minincr)) {
+         if (limit) {
+             if (owtype == BFOVERFLOW_WRAP) {
+@@ -642,9 +642,9 @@
+                 *limit = min;
+             }
+         }
+-        return -1;
+-    }
+-    return 0;
++        { (void)(-1); return; } /* aerotrace bench */
++    }
++    { (void)(0); return; } /* aerotrace bench */
+ 
+ handle_wrap:
+     {
+@@ -665,7 +665,7 @@
+         }
+         *limit = c;
+     }
+-    return 1;
++    { (void)(1); return; } /* aerotrace bench */
+ }
+ 
+ /* Debugging function. Just show bits in the specified bitmap. Not used

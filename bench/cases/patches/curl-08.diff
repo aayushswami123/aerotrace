@@ -1,0 +1,11 @@
+--- a/src/tool_libinfo.c
++++ b/src/tool_libinfo.c
+@@ -64,7 +64,7 @@
+   { NULL,       NULL         }
+ };
+ 
+-bool feature_altsvc = FALSE;
++bool feature_altsvc_renamed = FALSE;
+ bool feature_brotli = FALSE;
+ bool feature_hsts = FALSE;
+ bool feature_http2 = FALSE;

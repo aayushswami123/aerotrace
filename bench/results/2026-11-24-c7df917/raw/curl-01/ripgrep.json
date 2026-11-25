@@ -1,0 +1,67 @@
+{
+ "command": "rg -n -w --no-heading --with-filename Curl_dynhds_add <build files>",
+ "hits": [
+  [
+   "lib/cf-h2-proxy.c",
+   606
+  ],
+  [
+   "lib/dynhds.h",
+   104
+  ],
+  [
+   "lib/http.c",
+   5039
+  ],
+  [
+   "lib/http.c",
+   5042
+  ],
+  [
+   "lib/http.c",
+   5046
+  ],
+  [
+   "lib/http.c",
+   5050
+  ],
+  [
+   "lib/http.c",
+   5059
+  ],
+  [
+   "lib/http.c",
+   5063
+  ],
+  [
+   "lib/dynhds.c",
+   134
+  ],
+  [
+   "lib/dynhds.c",
+   190
+  ],
+  [
+   "lib/dynhds.c",
+   225
+  ],
+  [
+   "lib/dynhds.c",
+   340
+  ],
+  [
+   "lib/http_proxy.c",
+   167
+  ],
+  [
+   "lib/vquic/cf-ngtcp2-proxy.c",
+   426
+  ],
+  [
+   "lib/http2.c",
+   1519
+  ]
+ ],
+ "seconds": 0.0256,
+ "text": "lib/cf-h2-proxy.c:606:  result = Curl_dynhds_add(&ctx->tunnel.resp->headers,\nlib/dynhds.h:104:CURLcode Curl_dynhds_add(struct dynhds *dynhds,\nlib/http.c:5039:  result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_METHOD),\nlib/http.c:5042:    result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_SCHEME),\nlib/http.c:5046:    result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_AUTHORITY),\nlib/http.c:5050:    result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_PATH),\nlib/http.c:5059:        result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/http.c:5063:      result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/dynhds.c:134:CURLcode Curl_dynhds_add(struct dynhds *dynhds,\nlib/dynhds.c:190:  return Curl_dynhds_add(dynhds, name, strlen(name),\nlib/dynhds.c:225:  return Curl_dynhds_add(dynhds, name, namelen, value, valuelen);\nlib/dynhds.c:340:  return Curl_dynhds_add(dynhds, name, namelen, value, valuelen);\nlib/http_proxy.c:167:          Curl_dynhds_add(hds, curlx_str(&name), curlx_strlen(&name),\nlib/vquic/cf-ngtcp2-proxy.c:426:    result = Curl_dynhds_add(&pctx->tunnel.resp->headers,\nlib/http2.c:1519:    result = Curl_dynhds_add(&stream->resp_trailers,\n"
+}

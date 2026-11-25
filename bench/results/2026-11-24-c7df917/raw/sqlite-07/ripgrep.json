@@ -1,0 +1,23 @@
+{
+ "command": "rg -n -w --no-heading --with-filename eOrconf <build files>",
+ "hits": [
+  [
+   "sqlite3.c",
+   21100
+  ],
+  [
+   "sqlite3.c",
+   160021
+  ],
+  [
+   "sqlite3.c",
+   160038
+  ],
+  [
+   "sqlite3.c",
+   160048
+  ]
+ ],
+ "seconds": 0.0159,
+ "text": "sqlite3.c:21100:  u8 eOrconf;          /* Default ON CONFLICT policy for trigger steps */\nsqlite3.c:160021:    pParse->eOrconf = (orconf==OE_Default)?pStep->orconf:(u8)orconf;\nsqlite3.c:160038:          pParse->eOrconf, 0, 0, 0\nsqlite3.c:160048:          pParse->eOrconf,\n"
+}

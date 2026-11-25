@@ -1,0 +1,43 @@
+{
+ "command": "rg -n -w --no-heading --with-filename stat_current_cow_peak <build files>",
+ "hits": [
+  [
+   "src/childinfo.c",
+   103
+  ],
+  [
+   "src/childinfo.c",
+   111
+  ],
+  [
+   "src/childinfo.c",
+   113
+  ],
+  [
+   "src/childinfo.c",
+   115
+  ],
+  [
+   "src/server.h",
+   2224
+  ],
+  [
+   "src/server.c",
+   854
+  ],
+  [
+   "src/server.c",
+   3157
+  ],
+  [
+   "src/server.c",
+   6617
+  ],
+  [
+   "src/server.c",
+   7553
+  ]
+ ],
+ "seconds": 0.0249,
+ "text": "src/childinfo.c:103:    if (cow > server.stat_current_cow_peak) server.stat_current_cow_peak = cow;\nsrc/childinfo.c:111:        server.stat_aof_cow_bytes = server.stat_current_cow_peak;\nsrc/childinfo.c:113:        server.stat_rdb_cow_bytes = server.stat_current_cow_peak;\nsrc/childinfo.c:115:        server.stat_module_cow_bytes = server.stat_current_cow_peak;\nsrc/server.h:2224:    size_t stat_current_cow_peak;   /* Peak size of copy on write bytes. */\nsrc/server.c:854:    server.stat_current_cow_peak = 0;\nsrc/server.c:3157:    server.stat_current_cow_peak = 0;\nsrc/server.c:6617:            \"current_cow_peak:%zu\\r\\n\", server.stat_current_cow_peak,\nsrc/server.c:7553:            server.stat_current_cow_peak = 0;\n"
+}

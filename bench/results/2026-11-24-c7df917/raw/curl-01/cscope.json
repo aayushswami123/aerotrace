@@ -1,0 +1,67 @@
+{
+ "command": "cscope -d -L0 Curl_dynhds_add",
+ "hits": [
+  [
+   "lib/dynhds.h",
+   104
+  ],
+  [
+   "lib/cf-h2-proxy.c",
+   606
+  ],
+  [
+   "lib/dynhds.c",
+   134
+  ],
+  [
+   "lib/dynhds.c",
+   190
+  ],
+  [
+   "lib/dynhds.c",
+   225
+  ],
+  [
+   "lib/dynhds.c",
+   340
+  ],
+  [
+   "lib/http.c",
+   5039
+  ],
+  [
+   "lib/http.c",
+   5042
+  ],
+  [
+   "lib/http.c",
+   5046
+  ],
+  [
+   "lib/http.c",
+   5050
+  ],
+  [
+   "lib/http.c",
+   5059
+  ],
+  [
+   "lib/http.c",
+   5063
+  ],
+  [
+   "lib/http2.c",
+   1519
+  ],
+  [
+   "lib/http_proxy.c",
+   167
+  ],
+  [
+   "lib/vquic/cf-ngtcp2-proxy.c",
+   426
+  ]
+ ],
+ "seconds": 0.0079,
+ "text": "lib/dynhds.h <global> 104 CURLcode Curl_dynhds_add(struct dynhds *dynhds,\nlib/cf-h2-proxy.c proxy_h2_on_header 606 result = Curl_dynhds_add(&ctx->tunnel.resp->headers,\nlib/dynhds.c Curl_dynhds_add 134 CURLcode Curl_dynhds_add(struct dynhds *dynhds,\nlib/dynhds.c Curl_dynhds_cadd 190 return Curl_dynhds_add(dynhds, name, strlen(name),\nlib/dynhds.c Curl_dynhds_h1_add_line 225 return Curl_dynhds_add(dynhds, name, namelen, value, valuelen);\nlib/dynhds.c dynhds_set 340 return Curl_dynhds_add(dynhds, name, namelen, value, valuelen);\nlib/http.c Curl_http_req_to_h2 5039 result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_METHOD),\nlib/http.c Curl_http_req_to_h2 5042 result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_SCHEME),\nlib/http.c Curl_http_req_to_h2 5046 result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_AUTHORITY),\nlib/http.c Curl_http_req_to_h2 5050 result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_PATH),\nlib/http.c Curl_http_req_to_h2 5059 result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/http.c Curl_http_req_to_h2 5063 result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/http2.c on_header 1519 result = Curl_dynhds_add(&stream->resp_trailers,\nlib/http_proxy.c dynhds_add_custom 167 Curl_dynhds_add(hds, curlx_str(&name), curlx_strlen(&name),\nlib/vquic/cf-ngtcp2-proxy.c cb_h3_proxy_recv_header 426 result = Curl_dynhds_add(&pctx->tunnel.resp->headers,\n"
+}

@@ -1,0 +1,23 @@
+{
+ "command": "textDocument/references at src/bitops.c:53:22",
+ "hits": [
+  [
+   "src/bitops.c",
+   81
+  ],
+  [
+   "src/bitops.c",
+   150
+  ],
+  [
+   "src/bitops.c",
+   174
+  ],
+  [
+   "src/bitops.c",
+   265
+  ]
+ ],
+ "seconds": 0.0019,
+ "text": "src/bitops.c:150: while(count--) bits += bitsinbyte[*p++];\nsrc/bitops.c:174: bits += bitsinbyte[*p++];\nsrc/bitops.c:265: while (count--) bits += bitsinbyte[*p++];\nsrc/bitops.c:81: bits += bitsinbyte[*p++];\n"
+}

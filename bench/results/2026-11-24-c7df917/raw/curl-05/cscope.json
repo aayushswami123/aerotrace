@@ -1,0 +1,15 @@
+{
+ "command": "cscope -d -L0 http_proxy_cf_destroy",
+ "hits": [
+  [
+   "lib/http_proxy.c",
+   710
+  ],
+  [
+   "lib/http_proxy.c",
+   696
+  ]
+ ],
+ "seconds": 0.0079,
+ "text": "lib/http_proxy.c <global> 710 http_proxy_cf_destroy,\nlib/http_proxy.c http_proxy_cf_destroy 696 static void http_proxy_cf_destroy(struct Curl_cfilter *cf,\n"
+}

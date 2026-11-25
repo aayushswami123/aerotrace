@@ -1,0 +1,70 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "shell.c",
+   39061
+  ],
+  [
+   "shell.c",
+   39311
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "shell.c",
+   39061
+  ],
+  [
+   "shell.c",
+   39311
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "shell.c",
+   "id": "new:shell.c:238:shellCmdLineEdit_renamed",
+   "line": 238,
+   "lines": [],
+   "status": "new"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "shell.c",
+   "id": "removed:shell.c:238:shellCmdLineEdit",
+   "line": 238,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "shell.c",
+   "id": "c:@F@main",
+   "line": 39030,
+   "lines": [
+    39061,
+    39311
+   ],
+   "status": "breaks"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.8782,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 0,
+  "breaks_exact": 1,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 4,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS).\n    4 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] NEW        shellCmdLineEdit_renamed (global)  shell.c:238  (added (maybe renamed from shellCmdLineEdit))\n  [*] REMOVED    shellCmdLineEdit (global)  shell.c:238  (removed (maybe renamed to shellCmdLineEdit_renamed))\n\nFunctions (1)\n  [x] BREAKS     main  shell.c:39030\n                 uses shellCmdLineEdit, which this change removes (and 3 other links). Link: exact.\n\nChanges AeroTrace could not follow (1)\n  [?] shell.c: added line 238 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (3)\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: no)"
+}

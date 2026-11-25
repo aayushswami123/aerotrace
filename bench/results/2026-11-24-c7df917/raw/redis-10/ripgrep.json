@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename read8_to_u64 <build files>",
+ "hits": [
+  [
+   "src/fast_float_strtod.c",
+   320
+  ],
+  [
+   "src/fast_float_strtod.c",
+   557
+  ],
+  [
+   "src/fast_float_strtod.c",
+   577
+  ]
+ ],
+ "seconds": 0.0223,
+ "text": "src/fast_float_strtod.c:320:static inline uint64_t read8_to_u64(const char *p) {\nsrc/fast_float_strtod.c:557:        uint64_t val = read8_to_u64(p);\nsrc/fast_float_strtod.c:577:            uint64_t val = read8_to_u64(p);\n"
+}

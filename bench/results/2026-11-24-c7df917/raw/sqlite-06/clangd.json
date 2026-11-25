@@ -1,0 +1,47 @@
+{
+ "command": "textDocument/references at sqlite3.c:18977:14",
+ "hits": [
+  [
+   "sqlite3.c",
+   100313
+  ],
+  [
+   "sqlite3.c",
+   100314
+  ],
+  [
+   "sqlite3.c",
+   100326
+  ],
+  [
+   "sqlite3.c",
+   100397
+  ],
+  [
+   "sqlite3.c",
+   100398
+  ],
+  [
+   "sqlite3.c",
+   100399
+  ],
+  [
+   "sqlite3.c",
+   100410
+  ],
+  [
+   "sqlite3.c",
+   189560
+  ],
+  [
+   "sqlite3.c",
+   189561
+  ],
+  [
+   "sqlite3.c",
+   189562
+  ]
+ ],
+ "seconds": 0.0809,
+ "text": "sqlite3.c:100313: pNew->pNext = db->pSavepoint;\nsqlite3.c:100314: db->pSavepoint = pNew;\nsqlite3.c:100326: pSavepoint = db->pSavepoint;\nsqlite3.c:100397: while( db->pSavepoint!=pSavepoint ){\nsqlite3.c:100398: pTmp = db->pSavepoint;\nsqlite3.c:100399: db->pSavepoint = pTmp->pNext;\nsqlite3.c:100410: db->pSavepoint = pSavepoint->pNext;\nsqlite3.c:189560: while( db->pSavepoint ){\nsqlite3.c:189561: Savepoint *pTmp = db->pSavepoint;\nsqlite3.c:189562: db->pSavepoint = pTmp->pNext;\n"
+}

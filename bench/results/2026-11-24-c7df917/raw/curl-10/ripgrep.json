@@ -1,0 +1,23 @@
+{
+ "command": "rg -n -w --no-heading --with-filename Curl_auth_allowed_to_origin <build files>",
+ "hits": [
+  [
+   "lib/vauth/vauth.h",
+   63
+  ],
+  [
+   "lib/vauth/vauth.c",
+   142
+  ],
+  [
+   "lib/vauth/vauth.c",
+   145
+  ],
+  [
+   "lib/url.c",
+   1381
+  ]
+ ],
+ "seconds": 0.0268,
+ "text": "lib/vauth/vauth.h:63:bool Curl_auth_allowed_to_origin(struct Curl_easy *data,\nlib/vauth/vauth.c:142:  return Curl_auth_allowed_to_origin(data, data->state.origin);\nlib/vauth/vauth.c:145:bool Curl_auth_allowed_to_origin(struct Curl_easy *data,\nlib/url.c:1381:     Curl_auth_allowed_to_origin(data, data->state.origin)) {\n"
+}

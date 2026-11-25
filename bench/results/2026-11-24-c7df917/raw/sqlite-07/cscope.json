@@ -1,0 +1,23 @@
+{
+ "command": "cscope -d -L0 eOrconf",
+ "hits": [
+  [
+   "sqlite3.c",
+   21100
+  ],
+  [
+   "sqlite3.c",
+   160021
+  ],
+  [
+   "sqlite3.c",
+   160038
+  ],
+  [
+   "sqlite3.c",
+   160048
+  ]
+ ],
+ "seconds": 0.0088,
+ "text": "sqlite3.c <global> 21100 u8 eOrconf;\nsqlite3.c <global> 160021 pParse->eOrconf = (orconf==OE_Default)?pStep->orconf:(u8)orconf;\nsqlite3.c <global> 160038 pParse->eOrconf, 0, 0, 0\nsqlite3.c <global> 160048 pParse->eOrconf,\n"
+}

@@ -1,0 +1,175 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "src/tool_getparam.c",
+   2734
+  ],
+  [
+   "src/tool_libinfo.c",
+   89
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "src/tool_getparam.c",
+   2734
+  ],
+  [
+   "src/tool_libinfo.c",
+   89
+  ],
+  [
+   "src/tool_getparam.c",
+   3079
+  ],
+  [
+   "src/tool_getparam.c",
+   3148
+  ],
+  [
+   "src/tool_getparam.c",
+   3185
+  ],
+  [
+   "src/tool_parsecfg.c",
+   303
+  ],
+  [
+   "src/tool_getparam.c",
+   2286
+  ],
+  [
+   "src/tool_operate.c",
+   2456
+  ],
+  [
+   "src/tool_main.c",
+   198
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/tool_libinfo.c",
+   "id": "new:src/tool_libinfo.c:67:feature_altsvc_renamed",
+   "line": 67,
+   "lines": [],
+   "status": "new"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/tool_libinfo.c",
+   "id": "removed:src/tool_libinfo.c:67:feature_altsvc",
+   "line": 67,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@opt_string",
+   "line": 2484,
+   "lines": [
+    2734
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/tool_libinfo.c",
+   "id": "c:tool_libinfo.c@maybe_feature",
+   "line": 87,
+   "lines": [
+    89
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/tool_getparam.c",
+   "id": "c:@F@getparameter",
+   "line": 2934,
+   "lines": [
+    3079
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_getparam.c",
+   "id": "c:@F@parse_args",
+   "line": 3117,
+   "lines": [
+    3148,
+    3185
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/tool_parsecfg.c",
+   "id": "c:@F@parseconfig",
+   "line": 251,
+   "lines": [
+    303
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_getparam.c",
+   "id": "c:tool_getparam.c@F@opt_file",
+   "line": 2255,
+   "lines": [
+    2286
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_operate.c",
+   "id": "c:@F@operate",
+   "line": 2423,
+   "lines": [
+    2456
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_main.c",
+   "id": "c:@F@main",
+   "line": 152,
+   "lines": [
+    198
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.5029,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 6,
+  "breaks_exact": 2,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 6,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 2 things you didn't touch (2 BREAKS, 6 AFFECTED).\n    6 may be affected (6 further up) and 6 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] NEW        feature_altsvc_renamed (global)  src/tool_libinfo.c:67  (added (maybe renamed from feature_altsvc))\n  [*] REMOVED    feature_altsvc (global)  src/tool_libinfo.c:67  (removed (maybe renamed to feature_altsvc_renamed))\n\nFunctions (7)\n  [x] BREAKS     opt_string  src/tool_getparam.c:2484\n                 uses feature_altsvc, which this change removes (and 1 other link). Link: exact.\n  [~] AFFECTED   getparameter  src/tool_getparam.c:2934\n                 calls opt_string. Link: exact.\n  [~] AFFECTED   parse_args  src/tool_getparam.c:3117\n                 calls getparameter. Link: exact.\n  [~] AFFECTED   parseconfig  src/tool_parsecfg.c:251\n                 calls getparameter. Link: exact.\n  [~] AFFECTED   opt_file  src/tool_getparam.c:2255\n                 calls parseconfig. Link: exact.\n  [~] AFFECTED   operate  src/tool_operate.c:2423\n                 calls parse_args. Link: exact.\n  [~] AFFECTED   main  src/tool_main.c:152\n                 calls operate. Link: exact.\n\nData (1)\n  [x] BREAKS     maybe_feature (global)  src/tool_libinfo.c:87\n                 its initializer takes the address of feature_altsvc, which this change removes. Link: exact.\n\nChanges AeroTrace could not follow (1)\n  [?] src/tool_libinfo.c: added line 67 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (5)\n  [?] 1 place passes its address on. Reads and writes made through that pointer elsewhere are not listed.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n  [?] feature_altsvc can be used from outside this repo (code that links to it); that is not seen.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: no)"
+}

@@ -1,0 +1,23 @@
+{
+ "command": "textDocument/references at sqlite3.c:77526:20",
+ "hits": [
+  [
+   "sqlite3.c",
+   100884
+  ],
+  [
+   "sqlite3.c",
+   100930
+  ],
+  [
+   "sqlite3.c",
+   101027
+  ],
+  [
+   "sqlite3.c",
+   101033
+  ]
+ ],
+ "seconds": 0.0789,
+ "text": "sqlite3.c:100884: rc = sqlite3BtreeCursor(pX, p2, wrFlag, pKeyInfo, pCur->uc.pCursor);\nsqlite3.c:100930: rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c:101027: rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c:101033: rc = sqlite3BtreeCursor(pCx->ub.pBtx, SCHEMA_ROOT, BTREE_WRCSR,\n"
+}
