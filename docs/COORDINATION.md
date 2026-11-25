@@ -12,7 +12,10 @@ read this table. If someone else owns it, don't touch it: ask the owner (Aayush)
 Sessions:
 - **merge**: the merge coordinator. Merges finished, reviewed work into `launch-candidate`. Builds nothing.
 - **product**: the dashboard, benchmark and UI session.
+- **audit-fix**: the session fixing docs/audit must-fix items.
 - **owner**: Aayush. Not an agent.
+
+Dashboard work (#79, #80) is paused until the audit must-fix list is done (owner's call, 2026-11-24).
 
 | Branch | Owner | What it is for | Area | State |
 |---|---|---|---|---|
@@ -23,3 +26,5 @@ Sessions:
 | `fix/wrong-safe-answers` | merge | The 4 wrong "safe" answers from benchmark run 1 (redis-05, curl-05, redis-07, curl-07) | `src/aerotrace/analysis/check.py`, `analysis/data.py`, `index/history.py`, `ui/terminal.py` | review |
 | `feat/test-impact-coverage` | owner | gcov coverage for test impact | `src/aerotrace/analysis/testimpact.py` and more | parked until after launch |
 | `docs/morning-report` | owner | Day notes and screenshots | `docs/launch/` | owner decides (has budget figures) |
+| `fix/removed-fn-diff` | audit-fix | A-01, A-02: removed functions seen as "changed" | `src/aerotrace/analysis/diff.py`, tests | in review |
+| `fix/check-dupes-self-edits` | audit-fix | A-05 duplicate definitions, A-12 false alarms | `src/aerotrace/analysis/check.py`, tests | in review |
