@@ -5,7 +5,7 @@
  "kinds": {
   "add_param": {
    "difficulty": "easy",
-   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
    "why": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)"
   },
   "remove_fn": {
@@ -20,7 +20,7 @@
   },
   "ptr_param": {
    "difficulty": "hard",
-   "edit": "add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored as a pointer",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
    "why": "direct calls break, and so does the place it is put in a table or assigned to a pointer"
   },
   "ptr_remove": {
@@ -61,7 +61,7 @@
    "kind": "add_param",
    "difficulty": "easy",
    "symbol": "src/networking.c:_addReplyToBufferOrList",
-   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
    "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
    "file": "src/networking.c",
    "line": 514,
@@ -124,7 +124,7 @@
    "kind": "ptr_param",
    "difficulty": "hard",
    "symbol": "src/server.c:dictSdsKeyCompare",
-   "edit": "add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored as a pointer",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
    "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
    "file": "src/server.c",
    "line": 370,
@@ -249,7 +249,7 @@
    "kind": "add_param",
    "difficulty": "easy",
    "symbol": "shell.c:rePeek",
-   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
    "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
    "file": "shell.c",
    "line": 9516,
@@ -312,7 +312,7 @@
    "kind": "ptr_param",
    "difficulty": "hard",
    "symbol": "sqlite3.c:sqlite3_column_int",
-   "edit": "add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored as a pointer",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
    "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
    "file": "sqlite3.c",
    "line": 94717,
@@ -437,7 +437,7 @@
    "kind": "add_param",
    "difficulty": "easy",
    "symbol": "lib/dynhds.c:Curl_dynhds_add",
-   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged",
    "why_this_kind": "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
    "file": "lib/dynhds.c",
    "line": 134,
@@ -500,7 +500,7 @@
    "kind": "ptr_param",
    "difficulty": "hard",
    "symbol": "lib/cw-pause.c:cw_pause_flush",
-   "edit": "add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored as a pointer",
+   "edit": "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged",
    "why_this_kind": "direct calls break, and so does the place it is put in a table or assigned to a pointer",
    "file": "lib/cw-pause.c",
    "line": 102,

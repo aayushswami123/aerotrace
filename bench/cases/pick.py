@@ -44,7 +44,8 @@ CAP_HAND = 40  # "might break" cases are checked by hand
 KINDS = {
     "add_param": (
         "easy",
-        "add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged",
+        "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function "
+        "(same-named functions in other files are left alone); calls unchanged",
         "every direct caller stops compiling; drawn from functions with 10 to 150 direct calls (wide fan-out)",
     ),
     "remove_fn": (
@@ -60,8 +61,8 @@ KINDS = {
     ),
     "ptr_param": (
         "hard",
-        "add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored "
-        "as a pointer",
+        "add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function "
+        "that is called directly and also stored as a pointer; calls and tables unchanged",
         "direct calls break, and so does the place it is put in a table or assigned to a pointer",
     ),
     "ptr_remove": (

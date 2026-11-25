@@ -57,8 +57,11 @@ drawn by a fixed seed.
    preprocessor. AeroTrace is never used to find or filter them.
 3. Candidates are ordered by `sha256("aerotrace-bench-cases-1/" + repo + "/" + kind + "/" + id)`. The
    first one that passes the kind's filter is taken. A name is used by at most one case per repo.
-4. **Compiled only.** A definition, use or `#define` counts only if its line survives `cc -E` (or
-   `cc -E -dD` for `#define`s) with the build's flags. Every case has at least one compiled use.
+4. **Compiled.** The definition (or the `#define`) must survive `cc -E` (`cc -E -dD` for `#define`s)
+   with the build's flags, and the case must have at least one compiled use. The count ranges below
+   count every use, compiled or not. For example curl-01 has 13 calls, of which 9 are compiled, and
+   redis-02 has 2 calls, of which 1 is compiled. "Compiled" is per line, so a dead `assert(...)` line
+   still counts, because it leaves `((void)0)` behind.
 5. Filters:
    - At most 150 mentions, so the truth stays checkable. "Might break" cases allow at most 40, because
      they are checked by hand.
@@ -81,8 +84,11 @@ Reproduce: unpack the three pinned archives into empty folders, run
 
 ## Edits, exactly
 
-Only what the kind says changes. Every other declaration (prototypes, `extern`s) stays as it is, so some
-breaks show only at link time. The exact edit for each kind is in the table at the end. `behaviour`
+Only what the kind says changes. Signature edits (`add_param`, `ptr_param`, `int_to_void`) change the
+definition **and every prototype of that function**: the prototypes in its own file and, unless it is
+`static`, every non-static prototype elsewhere. Same-named functions in other files are left alone.
+Removals and renames leave other declarations (prototypes, `extern`s) as they are, so some breaks show
+only at link time. The exact edit for each kind is in the table at the end. `behaviour`
 returns the zero value of the type (`0`, `NULL` or `false`) as the first statement. Its truth is the
 direct callers in compiled code that use the returned value, checked by hand with the lines that show it.
 
@@ -103,6 +109,7 @@ direct callers in compiled code that use the returned value, checked by hand wit
   these hasn't been checked; they stay in either way.
 - Most cases have few uses (often 2 to 20). That suits grep, which works well on small, unique names.
   `add_param` is drawn from wide fan-outs (10 to 150 calls) to balance this a little.
+- `global_rename` counts an `extern` line as a use (curl-08's 3 uses include one in a header).
 - The counts in the table come from regex, which can still miss calls hidden inside other macros. They
   only decide which cases are drawn. The truth comes from the compiler and linker.
 
@@ -145,10 +152,10 @@ direct callers in compiled code that use the returned value, checked by hand wit
 
 | kind | level | the edit |
 |---|---|---|
-| add_param | easy | add a trailing `int aerotrace_bench` parameter to the definition and every prototype; calls unchanged |
+| add_param | easy | add a trailing `int aerotrace_bench` parameter to the definition and every prototype of that function (same-named functions in other files are left alone); calls unchanged |
 | remove_fn | easy | delete the definition; any prototype stays |
 | int_to_void | easy | change the return type from int to void in the definition and every prototype; `return X;` becomes `(void)(X); return;` |
-| ptr_param | hard | add a trailing `int aerotrace_bench` parameter to a function that is called directly and also stored as a pointer |
+| ptr_param | hard | add a trailing `int aerotrace_bench` parameter to the definition and every prototype of a function that is called directly and also stored as a pointer; calls and tables unchanged |
 | ptr_remove | hard | delete the definition of a function that is reached only through a pointer; any prototype stays |
 | field_rename | hard | rename the struct field to `<name>_renamed` in the struct only |
 | field_type | hard | change the type of an integer struct field to `void *` |
