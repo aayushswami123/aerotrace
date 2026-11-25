@@ -1,0 +1,11 @@
+--- a/shell.c
++++ b/shell.c
+@@ -235,7 +235,7 @@
+ ** to 0 if no command-line editing library is available.  The
+ ** "--cmdline-edit off" command-line option will change this value to 0.
+ */
+-static int shellCmdLineEdit = SHELL_CMDLINE_EDIT_AVAILABLE;
++static int shellCmdLineEdit_renamed = SHELL_CMDLINE_EDIT_AVAILABLE;
+ 
+ #ifndef deliberate_fall_through
+ /* Quiet some compilers about some of our intentional code. */

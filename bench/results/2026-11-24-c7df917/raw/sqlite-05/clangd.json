@@ -1,0 +1,11 @@
+{
+ "command": "textDocument/references at shell.c:19506:12",
+ "hits": [
+  [
+   "shell.c",
+   19735
+  ]
+ ],
+ "seconds": 0.014,
+ "text": "shell.c:19735: pNew->xDelete = vfstraceDelete;\n"
+}

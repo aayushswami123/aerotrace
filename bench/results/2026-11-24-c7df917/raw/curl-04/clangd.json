@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at lib/cw-pause.c:102:17",
+ "hits": [
+  [
+   "lib/cw-pause.c",
+   158
+  ],
+  [
+   "lib/cw-pause.c",
+   219
+  ]
+ ],
+ "seconds": 0.0016,
+ "text": "lib/cw-pause.c:158: result = cw_pause_flush(data, writer);\nlib/cw-pause.c:219: cw_pause_flush,\n"
+}

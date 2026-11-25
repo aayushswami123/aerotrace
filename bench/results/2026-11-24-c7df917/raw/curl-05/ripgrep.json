@@ -1,0 +1,15 @@
+{
+ "command": "rg -n -w --no-heading --with-filename http_proxy_cf_destroy <build files>",
+ "hits": [
+  [
+   "lib/http_proxy.c",
+   696
+  ],
+  [
+   "lib/http_proxy.c",
+   710
+  ]
+ ],
+ "seconds": 0.0284,
+ "text": "lib/http_proxy.c:696:static void http_proxy_cf_destroy(struct Curl_cfilter *cf,\nlib/http_proxy.c:710:  http_proxy_cf_destroy,\n"
+}

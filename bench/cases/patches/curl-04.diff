@@ -1,0 +1,11 @@
+--- a/lib/cw-pause.c
++++ b/lib/cw-pause.c
+@@ -100,7 +100,7 @@
+ }
+ 
+ static CURLcode cw_pause_flush(struct Curl_easy *data,
+-                               struct Curl_cwriter *cw_pause)
++                               struct Curl_cwriter *cw_pause, int aerotrace_bench)
+ {
+   struct cw_pause_ctx *ctx = (struct cw_pause_ctx *)cw_pause;
+   CURLcode result = CURLE_OK;

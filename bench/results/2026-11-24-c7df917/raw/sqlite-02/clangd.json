@@ -1,0 +1,23 @@
+{
+ "command": "textDocument/references at sqlite3.c:214984:13",
+ "hits": [
+  [
+   "sqlite3.c",
+   215587
+  ],
+  [
+   "sqlite3.c",
+   215595
+  ],
+  [
+   "sqlite3.c",
+   215788
+  ],
+  [
+   "sqlite3.c",
+   215808
+  ]
+ ],
+ "seconds": 0.0814,
+ "text": "sqlite3.c:215587: jsonBlobAppendOneByte(pParse, JSONB_TRUE);\nsqlite3.c:215595: jsonBlobAppendOneByte(pParse, JSONB_FALSE);\nsqlite3.c:215788: jsonBlobAppendOneByte(pParse, JSONB_NULL);\nsqlite3.c:215808: jsonBlobAppendOneByte(pParse, JSONB_NULL);\n"
+}

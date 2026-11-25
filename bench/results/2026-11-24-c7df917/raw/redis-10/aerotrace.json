@@ -1,0 +1,382 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "src/fast_float_strtod.c",
+   557
+  ],
+  [
+   "src/fast_float_strtod.c",
+   577
+  ],
+  [
+   "src/fast_float_strtod.c",
+   698
+  ],
+  [
+   "src/fast_float_strtod.c",
+   740
+  ],
+  [
+   "src/debug.c",
+   945
+  ],
+  [
+   "src/resp_parser.c",
+   134
+  ],
+  [
+   "src/t_zset.c",
+   726
+  ],
+  [
+   "src/t_zset.c",
+   730
+  ],
+  [
+   "src/t_zset.c",
+   739
+  ],
+  [
+   "src/t_zset.c",
+   743
+  ],
+  [
+   "src/t_zset.c",
+   950
+  ],
+  [
+   "src/util.c",
+   670
+  ],
+  [
+   "src/config.c",
+   3311
+  ],
+  [
+   "src/module.c",
+   11722
+  ],
+  [
+   "src/object.c",
+   1144
+  ],
+  [
+   "src/resp_parser.c",
+   198
+  ],
+  [
+   "src/sort.c",
+   521
+  ],
+  [
+   "src/sparsearray.c",
+   858
+  ],
+  [
+   "src/t_zset.c",
+   963
+  ],
+  [
+   "src/t_zset.c",
+   1947
+  ],
+  [
+   "src/t_zset.c",
+   2179
+  ],
+  [
+   "src/t_zset.c",
+   3653
+  ],
+  [
+   "src/t_zset.c",
+   4017
+  ],
+  [
+   "src/t_zset.c",
+   4488
+  ],
+  [
+   "src/aof.c",
+   1993
+  ],
+  [
+   "src/server.c",
+   4058
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/fast_float_strtod.c",
+   "id": "c:fast_float_strtod.c@F@read8_to_u64",
+   "line": 320,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "src/fast_float_strtod.c",
+   "id": "c:fast_float_strtod.c@F@parse_number_string",
+   "line": 537,
+   "lines": [
+    557,
+    577
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "src/fast_float_strtod.c",
+   "id": "c:fast_float_strtod.c@F@fast_float_try_fast",
+   "line": 690,
+   "lines": [
+    698
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "src/fast_float_strtod.c",
+   "id": "c:@F@fast_float_strtod",
+   "line": 734,
+   "lines": [
+    740
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/debug.c",
+   "id": "c:@F@debugCommand",
+   "line": 420,
+   "lines": [
+    945
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/resp_parser.c",
+   "id": "c:resp_parser.c@F@parseDouble",
+   "line": 127,
+   "lines": [
+    134
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/t_zset.c",
+   "id": "c:t_zset.c@F@zslParseRange",
+   "line": 713,
+   "lines": [
+    726,
+    730,
+    739,
+    743
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/t_zset.c",
+   "id": "c:t_zset.c@F@zzlStrtod",
+   "line": 949,
+   "lines": [
+    950
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/util.c",
+   "id": "c:@F@string2d",
+   "line": 663,
+   "lines": [
+    670
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/config.c",
+   "id": "c:config.c@F@setConfigLatencyTrackingInfoPercentilesOutputOption",
+   "line": 3297,
+   "lines": [
+    3311
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ServerInfoGetFieldDouble",
+   "line": 11714,
+   "lines": [
+    11722
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/object.c",
+   "id": "c:@F@getDoubleFromObject",
+   "line": 1136,
+   "lines": [
+    1144
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/resp_parser.c",
+   "id": "c:@F@parseReply",
+   "line": 188,
+   "lines": [
+    198
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/sort.c",
+   "id": "c:@F@sortCommandGeneric",
+   "line": 178,
+   "lines": [
+    521
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/sparsearray.c",
+   "id": "c:@F@arTryEncodeFloat",
+   "line": 829,
+   "lines": [
+    858
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:@F@zzlGetScore",
+   "line": 953,
+   "lines": [
+    963
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:@F@zsetTypeRandomElement",
+   "line": 1931,
+   "lines": [
+    1947
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:@F@zremrangeGenericCommand",
+   "line": 2161,
+   "lines": [
+    2179
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:@F@zcountCommand",
+   "line": 3646,
+   "lines": [
+    3653
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:@F@zrangeGenericCommand",
+   "line": 3930,
+   "lines": [
+    4017
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/t_zset.c",
+   "id": "c:t_zset.c@F@zrandmemberReplyWithListpack",
+   "line": 4478,
+   "lines": [
+    4488
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadSingleAppendOnlyFile",
+   "line": 1810,
+   "lines": [
+    1993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@call",
+   "line": 3992,
+   "lines": [
+    4058
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.6283,
+ "summary": {
+  "affected_direct": 1,
+  "affected_further": 21,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 1,
+  "unknown": 0
+ },
+ "text": "[!] This change may affect 22 things you didn't touch (1 direct, 21 further up). None is sure to break.\n    1 part of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    read8_to_u64  src/fast_float_strtod.c:320  (changed (0 lines))\n\nFunctions (22)\n  [~] AFFECTED   parse_number_string  src/fast_float_strtod.c:537\n                 calls read8_to_u64. Link: exact.\n  [~] AFFECTED   fast_float_try_fast  src/fast_float_strtod.c:690\n                 calls parse_number_string. Link: exact.\n  [~] AFFECTED   fast_float_strtod  src/fast_float_strtod.c:734\n                 calls fast_float_try_fast. Link: exact.\n  [~] AFFECTED   debugCommand  src/debug.c:420\n                 calls fast_float_strtod. Link: exact.\n  [~] AFFECTED   parseDouble  src/resp_parser.c:127\n                 calls fast_float_strtod. Link: exact.\n  [~] AFFECTED   zslParseRange  src/t_zset.c:713\n                 calls fast_float_strtod. Link: exact.\n  [~] AFFECTED   zzlStrtod  src/t_zset.c:949\n                 calls fast_float_strtod. Link: exact.\n  [~] AFFECTED   string2d  src/util.c:663\n                 calls fast_float_strtod. Link: exact.\n  [~] AFFECTED   setConfigLatencyTrackingInfoPercentilesOutputOption  src/config.c:3297\n                 calls string2d. Link: exact.\n  [~] AFFECTED   RM_ServerInfoGetFieldDouble  src/module.c:11714\n                 calls string2d. Link: exact.\n  [~] AFFECTED   getDoubleFromObject  src/object.c:1136\n                 calls string2d. Link: exact.\n  [~] AFFECTED   parseReply  src/resp_parser.c:188\n                 calls parseDouble. Link: exact.\n  [~] AFFECTED   sortCommandGeneric  src/sort.c:178\n                 calls string2d. Link: exact.\n  [~] AFFECTED   arTryEncodeFloat  src/sparsearray.c:829\n                 calls string2d. Link: exact.\n  [~] AFFECTED   zzlGetScore  src/t_zset.c:953\n                 calls zzlStrtod. Link: exact.\n  ... and 7 more (7 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 117 of 117 files in this build.\n1,696 C/C++ files outside this build were not checked: deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c and 1,693 more.\n\nindex: 216 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)"
+}

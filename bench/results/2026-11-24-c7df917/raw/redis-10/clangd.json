@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at src/fast_float_strtod.c:320:24",
+ "hits": [
+  [
+   "src/fast_float_strtod.c",
+   557
+  ],
+  [
+   "src/fast_float_strtod.c",
+   577
+  ]
+ ],
+ "seconds": 0.0016,
+ "text": "src/fast_float_strtod.c:557: uint64_t val = read8_to_u64(p);\nsrc/fast_float_strtod.c:577: uint64_t val = read8_to_u64(p);\n"
+}

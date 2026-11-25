@@ -1,0 +1,1729 @@
+{
+ "aerotrace_code": "eff898b",
+ "build_cases": 27,
+ "capped": [
+  [
+   "redis-04",
+   2
+  ],
+  [
+   "redis-06",
+   10
+  ],
+  [
+   "sqlite-04",
+   4
+  ]
+ ],
+ "cases": [
+  {
+   "breaks": 8,
+   "id": "redis-01",
+   "kind": "add_param",
+   "level": "easy",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 8
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 8
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 8
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 8
+    }
+   },
+   "whole": {
+    "false_alarms": 881,
+    "found": 8
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "redis-02",
+   "kind": "remove_fn",
+   "level": "easy",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 15,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "redis-03",
+   "kind": "int_to_void",
+   "level": "easy",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 15,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 17,
+   "id": "redis-04",
+   "kind": "ptr_param",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 17
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 17
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 17
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 17
+    }
+   },
+   "whole": {
+    "false_alarms": 594,
+    "found": 17
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "redis-05",
+   "kind": "ptr_remove",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 0
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 142,
+    "found": 0
+   }
+  },
+  {
+   "breaks": 25,
+   "id": "redis-06",
+   "kind": "field_rename",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 25
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 25
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 25
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 25
+    }
+   },
+   "whole": {
+    "false_alarms": 88,
+    "found": 25
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "redis-07",
+   "kind": "field_type",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 0
+    },
+    "clangd": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 4,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 802,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "redis-08",
+   "kind": "global_rename",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 2,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 2,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 9,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "redis-09",
+   "kind": "macro_arity",
+   "level": "hard",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 0,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "redis-10",
+   "kind": "behaviour",
+   "level": "might_break",
+   "repo": "redis",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 21,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 21,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "sqlite-01",
+   "kind": "add_param",
+   "level": "easy",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 5,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "sqlite-02",
+   "kind": "remove_fn",
+   "level": "easy",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 123,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "sqlite-03",
+   "kind": "int_to_void",
+   "level": "easy",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 19,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 19,
+   "id": "sqlite-04",
+   "kind": "ptr_param",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 19
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 19
+    },
+    "cscope": {
+     "false_alarms": 41,
+     "found": 19
+    },
+    "ripgrep": {
+     "false_alarms": 47,
+     "found": 19
+    }
+   },
+   "whole": {
+    "false_alarms": 73,
+    "found": 19
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "sqlite-05",
+   "kind": "ptr_remove",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 50,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "sqlite-06",
+   "kind": "field_rename",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 3,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 9,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 135,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "sqlite-07",
+   "kind": "field_type",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 67,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "sqlite-08",
+   "kind": "global_rename",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 2,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 0,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 13,
+   "id": "sqlite-09",
+   "kind": "macro_arity",
+   "level": "hard",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 13
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 13
+    },
+    "cscope": {
+     "false_alarms": 2,
+     "found": 13
+    },
+    "ripgrep": {
+     "false_alarms": 2,
+     "found": 13
+    }
+   },
+   "whole": {
+    "false_alarms": 0,
+    "found": 13
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "sqlite-10",
+   "kind": "behaviour",
+   "level": "might_break",
+   "repo": "sqlite",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 94,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 3,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 94,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 4,
+   "id": "curl-01",
+   "kind": "add_param",
+   "level": "easy",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 4
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 4
+    },
+    "cscope": {
+     "false_alarms": 5,
+     "found": 4
+    },
+    "ripgrep": {
+     "false_alarms": 5,
+     "found": 4
+    }
+   },
+   "whole": {
+    "false_alarms": 24,
+    "found": 4
+   }
+  },
+  {
+   "breaks": 5,
+   "id": "curl-02",
+   "kind": "remove_fn",
+   "level": "easy",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 5
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 5
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 5
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 5
+    }
+   },
+   "whole": {
+    "false_alarms": 10,
+    "found": 5
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "curl-03",
+   "kind": "int_to_void",
+   "level": "easy",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "clangd": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 4,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 104,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "curl-04",
+   "kind": "ptr_param",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 131,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "curl-05",
+   "kind": "ptr_remove",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 0
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 111,
+    "found": 0
+   }
+  },
+  {
+   "breaks": 4,
+   "id": "curl-06",
+   "kind": "field_rename",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 4
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 4
+    },
+    "cscope": {
+     "false_alarms": 0,
+     "found": 4
+    },
+    "ripgrep": {
+     "false_alarms": 0,
+     "found": 4
+    }
+   },
+   "whole": {
+    "false_alarms": 17,
+    "found": 4
+   }
+  },
+  {
+   "breaks": 1,
+   "id": "curl-07",
+   "kind": "field_type",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 0
+    },
+    "clangd": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "cscope": {
+     "false_alarms": 4,
+     "found": 1
+    },
+    "ripgrep": {
+     "false_alarms": 4,
+     "found": 1
+    }
+   },
+   "whole": {
+    "false_alarms": 86,
+    "found": 1
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "curl-08",
+   "kind": "global_rename",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 6,
+    "found": 2
+   }
+  },
+  {
+   "breaks": 344,
+   "id": "curl-09",
+   "kind": "macro_arity",
+   "level": "hard",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 0,
+     "found": 0
+    },
+    "clangd": {
+     "false_alarms": 2,
+     "found": 4
+    },
+    "cscope": {
+     "false_alarms": 14,
+     "found": 4
+    },
+    "ripgrep": {
+     "false_alarms": 14,
+     "found": 4
+    }
+   },
+   "whole": {
+    "false_alarms": 0,
+    "found": 0
+   }
+  },
+  {
+   "breaks": 2,
+   "id": "curl-10",
+   "kind": "behaviour",
+   "level": "might_break",
+   "repo": "curl",
+   "tools": {
+    "aerotrace": {
+     "false_alarms": 25,
+     "found": 2
+    },
+    "clangd": {
+     "false_alarms": 0,
+     "found": 2
+    },
+    "cscope": {
+     "false_alarms": 1,
+     "found": 2
+    },
+    "ripgrep": {
+     "false_alarms": 1,
+     "found": 2
+    }
+   },
+   "whole": {
+    "false_alarms": 25,
+    "found": 2
+   }
+  }
+ ],
+ "claimed_none": [
+  "curl-09"
+ ],
+ "claimed_none_open": {
+  "curl-09": "Nothing found that this change can break, but 2 parts of the change could not be followed."
+ },
+ "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+ "errors": {
+  "aerotrace": 0,
+  "clangd": 0,
+  "cscope": 0,
+  "ripgrep": 0
+ },
+ "fewer": [
+  "redis-05",
+  "redis-07",
+  "curl-05",
+  "curl-07",
+  "curl-09"
+ ],
+ "headline": [
+  "Easy cases (9): every tool found all 25 breaks.",
+  "Hard cases without the macro case curl-09 (17): AeroTrace found 91 of 95 with 0 false alarms; clangd 95 with 8, cscope 95 with 60, ripgrep 95 with 74.",
+  "In one line: AeroTrace did not beat clangd here. On the 13 hard cases where AeroTrace named at least one break, both score the same (91 of 91 found, 0 false alarms each). AeroTrace's lower false-alarm count against clangd comes from cases where it named no break at all. Against cscope and ripgrep it has fewer false alarms there (0 against 51 and 65). It found fewer breaks than another tool in 5 of 27 build cases, and it takes 329 ms to 6.3 s per check where the others take at most 81 ms."
+ ],
+ "link_checked": 4,
+ "machine": "Apple M1 Pro, macOS 26.7.2, arm64",
+ "macro_case": {
+  "breaks": 344,
+  "id": "curl-09",
+  "tools": {
+   "aerotrace": 0,
+   "clangd": 4,
+   "cscope": 4,
+   "ripgrep": 4
+  }
+ },
+ "might_break": {
+  "cases": 3,
+  "total": {
+   "aerotrace": {
+    "cases": 3,
+    "errors": 0,
+    "false_alarms": 140,
+    "found": 4,
+    "seconds": 0.6283,
+    "tokens": null,
+    "truth": 4
+   },
+   "clangd": {
+    "cases": 3,
+    "errors": 0,
+    "false_alarms": 0,
+    "found": 4,
+    "seconds": 0.0016,
+    "tokens": null,
+    "truth": 4
+   },
+   "cscope": {
+    "cases": 3,
+    "errors": 0,
+    "false_alarms": 2,
+    "found": 4,
+    "seconds": 0.0079,
+    "tokens": null,
+    "truth": 4
+   },
+   "ripgrep": {
+    "cases": 3,
+    "errors": 0,
+    "false_alarms": 4,
+    "found": 4,
+    "seconds": 0.0223,
+    "tokens": null,
+    "truth": 4
+   }
+  }
+ },
+ "more": [],
+ "named": {
+  "cases": 13,
+  "total": {
+   "aerotrace": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 0,
+    "found": 91,
+    "seconds": 1.1316,
+    "tokens": null,
+    "truth": 91
+   },
+   "clangd": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 0,
+    "found": 91,
+    "seconds": 0.0066,
+    "tokens": null,
+    "truth": 91
+   },
+   "cscope": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 51,
+    "found": 91,
+    "seconds": 0.0094,
+    "tokens": null,
+    "truth": 91
+   },
+   "ripgrep": {
+    "cases": 13,
+    "errors": 0,
+    "false_alarms": 65,
+    "found": 91,
+    "seconds": 0.0194,
+    "tokens": null,
+    "truth": 91
+   }
+  }
+ },
+ "run": "2026-11-24-c7df917",
+ "setup_seconds": {
+  "curl": {
+   "aerotrace_index": 5.6,
+   "clangd_index": 4.8,
+   "cscope_db": 0.4
+  },
+  "redis": {
+   "aerotrace_index": 5.5,
+   "clangd_index": 2.2,
+   "cscope_db": 0.4
+  },
+  "sqlite": {
+   "aerotrace_index": 4.8,
+   "clangd_index": 0.8,
+   "cscope_db": 0.5
+  }
+ },
+ "ties": [
+  "redis-01",
+  "redis-02",
+  "redis-03",
+  "redis-04",
+  "redis-06",
+  "redis-08",
+  "redis-09",
+  "sqlite-01",
+  "sqlite-02",
+  "sqlite-03",
+  "sqlite-04",
+  "sqlite-05",
+  "sqlite-06",
+  "sqlite-07",
+  "sqlite-08",
+  "sqlite-09",
+  "curl-01",
+  "curl-02",
+  "curl-03",
+  "curl-04",
+  "curl-06",
+  "curl-08"
+ ],
+ "time_range": {
+  "aerotrace": [
+   0.3292,
+   6.2951
+  ],
+  "clangd": [
+   0.0009,
+   0.0814
+  ],
+  "cscope": [
+   0.0075,
+   0.0163
+  ],
+  "ripgrep": [
+   0.0134,
+   0.0379
+  ]
+ },
+ "tokens_counted": false,
+ "versions": {
+  "aerotrace": "aerotrace 0.1.0.dev0",
+  "clangd": "Apple clangd version 21.0.0 (clang-2100.1.1.101)",
+  "cscope": "cscope: version 15.9",
+  "rg": "ripgrep 15.2.0"
+ },
+ "views": {
+  "all": {
+   "cases": 27,
+   "easy": 9,
+   "hard": 18,
+   "label": "All build cases",
+   "repos": {
+    "curl": {
+     "aerotrace": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 18,
+      "seconds": 0.6591,
+      "tokens": null,
+      "truth": 364
+     },
+     "clangd": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 10,
+      "found": 24,
+      "seconds": 0.0014,
+      "tokens": null,
+      "truth": 364
+     },
+     "cscope": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 29,
+      "found": 24,
+      "seconds": 0.008,
+      "tokens": null,
+      "truth": 364
+     },
+     "ripgrep": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 29,
+      "found": 24,
+      "seconds": 0.0287,
+      "tokens": null,
+      "truth": 364
+     }
+    },
+    "redis": {
+     "aerotrace": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 56,
+      "seconds": 1.1399,
+      "tokens": null,
+      "truth": 58
+     },
+     "clangd": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 4,
+      "found": 58,
+      "seconds": 0.0027,
+      "tokens": null,
+      "truth": 58
+     },
+     "cscope": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 8,
+      "found": 58,
+      "seconds": 0.0081,
+      "tokens": null,
+      "truth": 58
+     },
+     "ripgrep": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 9,
+      "found": 58,
+      "seconds": 0.0242,
+      "tokens": null,
+      "truth": 58
+     }
+    },
+    "sqlite": {
+     "aerotrace": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 42,
+      "seconds": 5.1831,
+      "tokens": null,
+      "truth": 42
+     },
+     "clangd": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 42,
+      "seconds": 0.078,
+      "tokens": null,
+      "truth": 42
+     },
+     "cscope": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 49,
+      "found": 42,
+      "seconds": 0.0089,
+      "tokens": null,
+      "truth": 42
+     },
+     "ripgrep": {
+      "cases": 9,
+      "errors": 0,
+      "false_alarms": 62,
+      "found": 42,
+      "seconds": 0.0148,
+      "tokens": null,
+      "truth": 42
+     }
+    }
+   },
+   "total": {
+    "aerotrace": {
+     "cases": 27,
+     "errors": 0,
+     "false_alarms": 1,
+     "found": 116,
+     "seconds": 1.0477,
+     "tokens": null,
+     "truth": 464
+    },
+    "clangd": {
+     "cases": 27,
+     "errors": 0,
+     "false_alarms": 14,
+     "found": 124,
+     "seconds": 0.0034,
+     "tokens": null,
+     "truth": 464
+    },
+    "cscope": {
+     "cases": 27,
+     "errors": 0,
+     "false_alarms": 86,
+     "found": 124,
+     "seconds": 0.0082,
+     "tokens": null,
+     "truth": 464
+    },
+    "ripgrep": {
+     "cases": 27,
+     "errors": 0,
+     "false_alarms": 100,
+     "found": 124,
+     "seconds": 0.0242,
+     "tokens": null,
+     "truth": 464
+    }
+   }
+  },
+  "easy": {
+   "cases": 9,
+   "easy": 9,
+   "hard": 0,
+   "label": "Easy",
+   "repos": {
+    "curl": {
+     "aerotrace": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 10,
+      "seconds": 0.6591,
+      "tokens": null,
+      "truth": 10
+     },
+     "clangd": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 4,
+      "found": 10,
+      "seconds": 0.0014,
+      "tokens": null,
+      "truth": 10
+     },
+     "cscope": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 10,
+      "found": 10,
+      "seconds": 0.0079,
+      "tokens": null,
+      "truth": 10
+     },
+     "ripgrep": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 10,
+      "found": 10,
+      "seconds": 0.0289,
+      "tokens": null,
+      "truth": 10
+     }
+    },
+    "redis": {
+     "aerotrace": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 10,
+      "seconds": 1.1399,
+      "tokens": null,
+      "truth": 10
+     },
+     "clangd": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 10,
+      "seconds": 0.0022,
+      "tokens": null,
+      "truth": 10
+     },
+     "cscope": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 10,
+      "seconds": 0.0081,
+      "tokens": null,
+      "truth": 10
+     },
+     "ripgrep": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 10,
+      "seconds": 0.0248,
+      "tokens": null,
+      "truth": 10
+     }
+    },
+    "sqlite": {
+     "aerotrace": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 5,
+      "seconds": 3.6852,
+      "tokens": null,
+      "truth": 5
+     },
+     "clangd": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 5,
+      "seconds": 0.0783,
+      "tokens": null,
+      "truth": 5
+     },
+     "cscope": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 5,
+      "seconds": 0.008,
+      "tokens": null,
+      "truth": 5
+     },
+     "ripgrep": {
+      "cases": 3,
+      "errors": 0,
+      "false_alarms": 1,
+      "found": 5,
+      "seconds": 0.0146,
+      "tokens": null,
+      "truth": 5
+     }
+    }
+   },
+   "total": {
+    "aerotrace": {
+     "cases": 9,
+     "errors": 0,
+     "false_alarms": 1,
+     "found": 25,
+     "seconds": 1.1299,
+     "tokens": null,
+     "truth": 25
+    },
+    "clangd": {
+     "cases": 9,
+     "errors": 0,
+     "false_alarms": 4,
+     "found": 25,
+     "seconds": 0.0022,
+     "tokens": null,
+     "truth": 25
+    },
+    "cscope": {
+     "cases": 9,
+     "errors": 0,
+     "false_alarms": 12,
+     "found": 25,
+     "seconds": 0.008,
+     "tokens": null,
+     "truth": 25
+    },
+    "ripgrep": {
+     "cases": 9,
+     "errors": 0,
+     "false_alarms": 12,
+     "found": 25,
+     "seconds": 0.0248,
+     "tokens": null,
+     "truth": 25
+    }
+   }
+  },
+  "hard": {
+   "cases": 18,
+   "easy": 0,
+   "hard": 18,
+   "label": "Hard",
+   "repos": {
+    "curl": {
+     "aerotrace": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 8,
+      "seconds": 0.67145,
+      "tokens": null,
+      "truth": 354
+     },
+     "clangd": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 6,
+      "found": 14,
+      "seconds": 0.00135,
+      "tokens": null,
+      "truth": 354
+     },
+     "cscope": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 19,
+      "found": 14,
+      "seconds": 0.00865,
+      "tokens": null,
+      "truth": 354
+     },
+     "ripgrep": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 19,
+      "found": 14,
+      "seconds": 0.02855,
+      "tokens": null,
+      "truth": 354
+     }
+    },
+    "redis": {
+     "aerotrace": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 46,
+      "seconds": 1.30255,
+      "tokens": null,
+      "truth": 48
+     },
+     "clangd": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 4,
+      "found": 48,
+      "seconds": 0.0030499999999999998,
+      "tokens": null,
+      "truth": 48
+     },
+     "cscope": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 7,
+      "found": 48,
+      "seconds": 0.00805,
+      "tokens": null,
+      "truth": 48
+     },
+     "ripgrep": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 8,
+      "found": 48,
+      "seconds": 0.02335,
+      "tokens": null,
+      "truth": 48
+     }
+    },
+    "sqlite": {
+     "aerotrace": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 37,
+      "seconds": 5.33355,
+      "tokens": null,
+      "truth": 37
+     },
+     "clangd": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 37,
+      "seconds": 0.06935,
+      "tokens": null,
+      "truth": 37
+     },
+     "cscope": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 48,
+      "found": 37,
+      "seconds": 0.0095,
+      "tokens": null,
+      "truth": 37
+     },
+     "ripgrep": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 61,
+      "found": 37,
+      "seconds": 0.015550000000000001,
+      "tokens": null,
+      "truth": 37
+     }
+    }
+   },
+   "total": {
+    "aerotrace": {
+     "cases": 18,
+     "errors": 0,
+     "false_alarms": 0,
+     "found": 91,
+     "seconds": 1.0259,
+     "tokens": null,
+     "truth": 439
+    },
+    "clangd": {
+     "cases": 18,
+     "errors": 0,
+     "false_alarms": 10,
+     "found": 99,
+     "seconds": 0.00375,
+     "tokens": null,
+     "truth": 439
+    },
+    "cscope": {
+     "cases": 18,
+     "errors": 0,
+     "false_alarms": 74,
+     "found": 99,
+     "seconds": 0.00885,
+     "tokens": null,
+     "truth": 439
+    },
+    "ripgrep": {
+     "cases": 18,
+     "errors": 0,
+     "false_alarms": 88,
+     "found": 99,
+     "seconds": 0.02335,
+     "tokens": null,
+     "truth": 439
+    }
+   }
+  },
+  "hard_x": {
+   "cases": 17,
+   "easy": 0,
+   "hard": 17,
+   "label": "Hard, without curl-09",
+   "repos": {
+    "curl": {
+     "aerotrace": {
+      "cases": 5,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 8,
+      "seconds": 0.6924,
+      "tokens": null,
+      "truth": 10
+     },
+     "clangd": {
+      "cases": 5,
+      "errors": 0,
+      "false_alarms": 4,
+      "found": 10,
+      "seconds": 0.0015,
+      "tokens": null,
+      "truth": 10
+     },
+     "cscope": {
+      "cases": 5,
+      "errors": 0,
+      "false_alarms": 5,
+      "found": 10,
+      "seconds": 0.0093,
+      "tokens": null,
+      "truth": 10
+     },
+     "ripgrep": {
+      "cases": 5,
+      "errors": 0,
+      "false_alarms": 5,
+      "found": 10,
+      "seconds": 0.0287,
+      "tokens": null,
+      "truth": 10
+     }
+    },
+    "redis": {
+     "aerotrace": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 46,
+      "seconds": 1.30255,
+      "tokens": null,
+      "truth": 48
+     },
+     "clangd": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 4,
+      "found": 48,
+      "seconds": 0.0030499999999999998,
+      "tokens": null,
+      "truth": 48
+     },
+     "cscope": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 7,
+      "found": 48,
+      "seconds": 0.00805,
+      "tokens": null,
+      "truth": 48
+     },
+     "ripgrep": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 8,
+      "found": 48,
+      "seconds": 0.02335,
+      "tokens": null,
+      "truth": 48
+     }
+    },
+    "sqlite": {
+     "aerotrace": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 37,
+      "seconds": 5.33355,
+      "tokens": null,
+      "truth": 37
+     },
+     "clangd": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 0,
+      "found": 37,
+      "seconds": 0.06935,
+      "tokens": null,
+      "truth": 37
+     },
+     "cscope": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 48,
+      "found": 37,
+      "seconds": 0.0095,
+      "tokens": null,
+      "truth": 37
+     },
+     "ripgrep": {
+      "cases": 6,
+      "errors": 0,
+      "false_alarms": 61,
+      "found": 37,
+      "seconds": 0.015550000000000001,
+      "tokens": null,
+      "truth": 37
+     }
+    }
+   },
+   "total": {
+    "aerotrace": {
+     "cases": 17,
+     "errors": 0,
+     "false_alarms": 0,
+     "found": 91,
+     "seconds": 1.0477,
+     "tokens": null,
+     "truth": 95
+    },
+    "clangd": {
+     "cases": 17,
+     "errors": 0,
+     "false_alarms": 8,
+     "found": 95,
+     "seconds": 0.0041,
+     "tokens": null,
+     "truth": 95
+    },
+    "cscope": {
+     "cases": 17,
+     "errors": 0,
+     "false_alarms": 60,
+     "found": 95,
+     "seconds": 0.0089,
+     "tokens": null,
+     "truth": 95
+    },
+    "ripgrep": {
+     "cases": 17,
+     "errors": 0,
+     "false_alarms": 74,
+     "found": 95,
+     "seconds": 0.0225,
+     "tokens": null,
+     "truth": 95
+    }
+   }
+  }
+ },
+ "whole_answer": {
+  "false_alarms": 3507,
+  "found": 118
+ },
+ "wrong_safe": [
+  "redis-05",
+  "redis-07",
+  "curl-05",
+  "curl-07"
+ ]
+}

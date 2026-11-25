@@ -1,0 +1,1746 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "lib/cfilters.c",
+   172
+  ],
+  [
+   "lib/cfilters.c",
+   444
+  ],
+  [
+   "lib/cf-https-connect.c",
+   65
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   184
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   262
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   298
+  ],
+  [
+   "lib/cf-setup.c",
+   382
+  ],
+  [
+   "lib/cfilters.c",
+   183
+  ],
+  [
+   "lib/cfilters.c",
+   358
+  ],
+  [
+   "lib/connect.c",
+   318
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   787
+  ],
+  [
+   "lib/cf-haproxy.c",
+   119
+  ],
+  [
+   "lib/cf-https-connect.c",
+   132
+  ],
+  [
+   "lib/cf-https-connect.c",
+   605
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   238
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   326
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   329
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   386
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   427
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   631
+  ],
+  [
+   "lib/cf-socket.c",
+   2439
+  ],
+  [
+   "lib/cfilters.c",
+   47
+  ],
+  [
+   "lib/cfilters.c",
+   368
+  ],
+  [
+   "lib/cshutdn.c",
+   165
+  ],
+  [
+   "lib/cshutdn.c",
+   261
+  ],
+  [
+   "lib/cshutdn.c",
+   262
+  ],
+  [
+   "lib/ftp.c",
+   356
+  ],
+  [
+   "lib/ftp.c",
+   550
+  ],
+  [
+   "lib/ftp.c",
+   2242
+  ],
+  [
+   "lib/ftp.c",
+   2282
+  ],
+  [
+   "lib/ftp.c",
+   2763
+  ],
+  [
+   "lib/ftp.c",
+   2860
+  ],
+  [
+   "lib/ftp.c",
+   3231
+  ],
+  [
+   "lib/ftp.c",
+   3551
+  ],
+  [
+   "lib/http_proxy.c",
+   562
+  ],
+  [
+   "lib/multi.c",
+   2520
+  ],
+  [
+   "lib/socks.c",
+   1195
+  ],
+  [
+   "lib/url.c",
+   504
+  ],
+  [
+   "lib/vquic/cf-capsule.c",
+   67
+  ],
+  [
+   "lib/cf-https-connect.c",
+   189
+  ],
+  [
+   "lib/cf-https-connect.c",
+   727
+  ],
+  [
+   "lib/cf-https-connect.c",
+   773
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   704
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   792
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   817
+  ],
+  [
+   "lib/cf-setup.c",
+   316
+  ],
+  [
+   "lib/conncache.c",
+   230
+  ],
+  [
+   "lib/conncache.c",
+   444
+  ],
+  [
+   "lib/conncache.c",
+   469
+  ],
+  [
+   "lib/cshutdn.c",
+   205
+  ],
+  [
+   "lib/cshutdn.c",
+   212
+  ],
+  [
+   "lib/cshutdn.c",
+   290
+  ],
+  [
+   "lib/cshutdn.c",
+   354
+  ],
+  [
+   "lib/cshutdn.c",
+   409
+  ],
+  [
+   "lib/cshutdn.c",
+   497
+  ],
+  [
+   "lib/cshutdn.c",
+   504
+  ],
+  [
+   "lib/ftp.c",
+   1379
+  ],
+  [
+   "lib/ftp.c",
+   1989
+  ],
+  [
+   "lib/ftp.c",
+   2388
+  ],
+  [
+   "lib/ftp.c",
+   3729
+  ],
+  [
+   "lib/multi.c",
+   1781
+  ],
+  [
+   "lib/multi.c",
+   1803
+  ],
+  [
+   "lib/multi.c",
+   1874
+  ],
+  [
+   "lib/multi.c",
+   1894
+  ],
+  [
+   "lib/multi.c",
+   1920
+  ],
+  [
+   "lib/multi.c",
+   2805
+  ],
+  [
+   "lib/pingpong.c",
+   116
+  ],
+  [
+   "lib/transfer.c",
+   150
+  ],
+  [
+   "lib/transfer.c",
+   164
+  ],
+  [
+   "lib/url.c",
+   1538
+  ],
+  [
+   "lib/url.c",
+   2063
+  ],
+  [
+   "lib/url.c",
+   2471
+  ],
+  [
+   "lib/vdns/cf-dns.c",
+   334
+  ],
+  [
+   "lib/cf-https-connect.c",
+   534
+  ],
+  [
+   "lib/cf-https-connect.c",
+   547
+  ],
+  [
+   "lib/cf-https-connect.c",
+   787
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   799
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   903
+  ],
+  [
+   "lib/cf-ip-happy.c",
+   959
+  ],
+  [
+   "lib/conncache.c",
+   279
+  ],
+  [
+   "lib/conncache.c",
+   456
+  ],
+  [
+   "lib/conncache.c",
+   516
+  ],
+  [
+   "lib/conncache.c",
+   553
+  ],
+  [
+   "lib/conncache.c",
+   746
+  ],
+  [
+   "lib/conncache.c",
+   771
+  ],
+  [
+   "lib/conncache.c",
+   864
+  ],
+  [
+   "lib/conncache.c",
+   911
+  ],
+  [
+   "lib/conncache.c",
+   995
+  ],
+  [
+   "lib/cshutdn.c",
+   231
+  ],
+  [
+   "lib/cshutdn.c",
+   306
+  ],
+  [
+   "lib/cshutdn.c",
+   440
+  ],
+  [
+   "lib/cshutdn.c",
+   516
+  ],
+  [
+   "lib/ftp.c",
+   1471
+  ],
+  [
+   "lib/ftp.c",
+   2131
+  ],
+  [
+   "lib/ftp.c",
+   2163
+  ],
+  [
+   "lib/ftp.c",
+   2196
+  ],
+  [
+   "lib/ftp.c",
+   2436
+  ],
+  [
+   "lib/ftp.c",
+   3519
+  ],
+  [
+   "lib/ftp.c",
+   3855
+  ],
+  [
+   "lib/ftp.c",
+   4212
+  ],
+  [
+   "lib/ftp.c",
+   4362
+  ],
+  [
+   "lib/imap.c",
+   1671
+  ],
+  [
+   "lib/imap.c",
+   1684
+  ],
+  [
+   "lib/multi.c",
+   2189
+  ],
+  [
+   "lib/multi.c",
+   2557
+  ],
+  [
+   "lib/multi.c",
+   2583
+  ],
+  [
+   "lib/multi.c",
+   2606
+  ],
+  [
+   "lib/multi.c",
+   2634
+  ],
+  [
+   "lib/multi.c",
+   2919
+  ],
+  [
+   "lib/multi.c",
+   3227
+  ],
+  [
+   "lib/pop3.c",
+   1370
+  ],
+  [
+   "lib/pop3.c",
+   1387
+  ],
+  [
+   "lib/request.c",
+   333
+  ],
+  [
+   "lib/smtp.c",
+   1622
+  ],
+  [
+   "lib/smtp.c",
+   1634
+  ],
+  [
+   "lib/transfer.c",
+   203
+  ],
+  [
+   "lib/url.c",
+   2498
+  ],
+  [
+   "lib/curl_trc.c",
+   594
+  ],
+  [
+   "lib/http_proxy.c",
+   748
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/http_proxy.c",
+   "id": "c:@Curl_cft_http_proxy",
+   "line": 706,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/http_proxy.c",
+   "id": "removed:lib/http_proxy.c:696:http_proxy_cf_destroy",
+   "line": 696,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_conn_cf_discard_chain",
+   "line": 159,
+   "lines": [
+    172
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_conn_remove_setup_filters",
+   "line": 434,
+   "lines": [
+    444
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_baller_discard",
+   "line": 61,
+   "lines": [
+    65
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_attempt_free",
+   "line": 179,
+   "lines": [
+    184
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_attempt_connect",
+   "line": 244,
+   "lines": [
+    262
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_attempt_restart",
+   "line": 290,
+   "lines": [
+    298
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cf-setup.c",
+   "id": "c:cf-setup.c@F@cf_setup_connect",
+   "line": 361,
+   "lines": [
+    382
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_conn_cf_discard_all",
+   "line": 179,
+   "lines": [
+    183
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_conn_cf_discard",
+   "line": 339,
+   "lines": [
+    358
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/connect.c",
+   "id": "c:@F@Curl_conn_connect",
+   "line": 255,
+   "lines": [
+    318
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@cf_h1_proxy_connect",
+   "line": 773,
+   "lines": [
+    787
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-haproxy.c",
+   "id": "c:cf-haproxy.c@F@cf_haproxy_connect",
+   "line": 105,
+   "lines": [
+    119
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_ctx_destroy",
+   "line": 126,
+   "lines": [
+    132
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_shutdown",
+   "line": 585,
+   "lines": [
+    605
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_attempt_new",
+   "line": 192,
+   "lines": [
+    238
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_ballers_clear",
+   "line": 320,
+   "lines": [
+    326,
+    329
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_ballers_prune",
+   "line": 365,
+   "lines": [
+    386
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_ballers_run",
+   "line": 396,
+   "lines": [
+    427
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_ballers_shutdown",
+   "line": 618,
+   "lines": [
+    631
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-socket.c",
+   "id": "c:@F@Curl_conn_tcp_listen_set",
+   "line": 2430,
+   "lines": [
+    2439
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_cf_def_connect",
+   "line": 36,
+   "lines": [
+    47
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cfilters.c",
+   "id": "c:@F@Curl_conn_cf_connect",
+   "line": 363,
+   "lines": [
+    368
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_try_once_idx",
+   "line": 127,
+   "lines": [
+    165
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_terminate",
+   "line": 236,
+   "lines": [
+    261,
+    262
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@close_secondarysocket",
+   "line": 351,
+   "lines": [
+    356
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_initiate_transfer",
+   "line": 543,
+   "lines": [
+    550
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_do_more",
+   "line": 2215,
+   "lines": [
+    2242,
+    2282
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_stor_resp",
+   "line": 2745,
+   "lines": [
+    2763
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_get_resp",
+   "line": 2778,
+   "lines": [
+    2860
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_pp_statemachine",
+   "line": 3180,
+   "lines": [
+    3231
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_connect",
+   "line": 3535,
+   "lines": [
+    3551
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@http_proxy_cf_connect",
+   "line": 545,
+   "lines": [
+    562
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connecting",
+   "line": 2508,
+   "lines": [
+    2520
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/socks.c",
+   "id": "c:socks.c@F@socks_proxy_cf_connect",
+   "line": 1182,
+   "lines": [
+    1195
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_conn_free",
+   "line": 493,
+   "lines": [
+    504
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/vquic/cf-capsule.c",
+   "id": "c:cf-capsule.c@F@cf_capsule_connect",
+   "line": 58,
+   "lines": [
+    67
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_baller_connect",
+   "line": 181,
+   "lines": [
+    189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_destroy",
+   "line": 722,
+   "lines": [
+    727
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_create",
+   "line": 747,
+   "lines": [
+    773
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@is_connected",
+   "line": 696,
+   "lines": [
+    704
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_happy_ctx_clear",
+   "line": 787,
+   "lines": [
+    792
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_happy_shutdown",
+   "line": 804,
+   "lines": [
+    817
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-setup.c",
+   "id": "c:cf-setup.c@F@cf_setup_connect_steps",
+   "line": 299,
+   "lines": [
+    316
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_discard_conn",
+   "line": 187,
+   "lines": [
+    230
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_conn_close",
+   "line": 397,
+   "lines": [
+    444
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_evict_conn",
+   "line": 463,
+   "lines": [
+    469
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cshutdn.c",
+   "id": "c:cshutdn.c@F@cshutdn_run_once",
+   "line": 183,
+   "lines": [
+    205,
+    212
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cshutdn.c",
+   "id": "c:cshutdn.c@F@cshutdn_destroy_oldest",
+   "line": 275,
+   "lines": [
+    290
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cshutdn.c",
+   "id": "c:cshutdn.c@F@cshutdn_perform",
+   "line": 334,
+   "lines": [
+    354
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cshutdn.c",
+   "id": "c:cshutdn.c@F@cshutdn_terminate_all",
+   "line": 370,
+   "lines": [
+    409
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_add",
+   "line": 479,
+   "lines": [
+    497,
+    504
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_use_port",
+   "line": 1324,
+   "lines": [
+    1379
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_epsv_disable",
+   "line": 1974,
+   "lines": [
+    1989
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_dophase_done",
+   "line": 2378,
+   "lines": [
+    2388
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_done_secondary_socket",
+   "line": 3712,
+   "lines": [
+    3729
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_do",
+   "line": 1772,
+   "lines": [
+    1781
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_do_more",
+   "line": 1795,
+   "lines": [
+    1803
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connecting",
+   "line": 1867,
+   "lines": [
+    1874
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_doing",
+   "line": 1887,
+   "lines": [
+    1894
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connect",
+   "line": 1907,
+   "lines": [
+    1920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_runsingle",
+   "line": 2717,
+   "lines": [
+    2805
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/pingpong.c",
+   "id": "c:@F@Curl_pp_statemach",
+   "line": 62,
+   "lines": [
+    116
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/transfer.c",
+   "id": "c:transfer.c@F@xfer_recv_shutdown",
+   "line": 146,
+   "lines": [
+    150
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_send_shutdown",
+   "line": 160,
+   "lines": [
+    164
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@setup_connection_internals",
+   "line": 1532,
+   "lines": [
+    1538
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_create_needle",
+   "line": 1949,
+   "lines": [
+    2063
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_find_or_create_conn",
+   "line": 2281,
+   "lines": [
+    2471
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/vdns/cf-dns.c",
+   "id": "c:cf-dns.c@F@cf_dns_connect",
+   "line": 287,
+   "lines": [
+    334
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_connect",
+   "line": 478,
+   "lines": [
+    534,
+    547
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-https-connect.c",
+   "id": "c:cf-https-connect.c@F@cf_hc_add",
+   "line": 777,
+   "lines": [
+    787
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_happy_ctx_destroy",
+   "line": 795,
+   "lines": [
+    799
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_happy_connect",
+   "line": 837,
+   "lines": [
+    903
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-ip-happy.c",
+   "id": "c:cf-ip-happy.c@F@cf_ip_happy_destroy",
+   "line": 952,
+   "lines": [
+    959
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_destroy",
+   "line": 260,
+   "lines": [
+    279
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_conn_close",
+   "line": 451,
+   "lines": [
+    456
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_check_limits",
+   "line": 479,
+   "lines": [
+    516,
+    553
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_conn_now_idle",
+   "line": 709,
+   "lines": [
+    746
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_find_act",
+   "line": 758,
+   "lines": [
+    771
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_reap_dead_cb",
+   "line": 853,
+   "lines": [
+    864
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@conn_upkeep",
+   "line": 892,
+   "lines": [
+    911
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_reap_no_reuse",
+   "line": 988,
+   "lines": [
+    995
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_try_once",
+   "line": 224,
+   "lines": [
+    231
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_close_oldest",
+   "line": 300,
+   "lines": [
+    306
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_destroy",
+   "line": 421,
+   "lines": [
+    440
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cshutdn.c",
+   "id": "c:@F@Curl_cshutdn_perform",
+   "line": 512,
+   "lines": [
+    516
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_prepare_transfer",
+   "line": 1455,
+   "lines": [
+    1471
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_pasv_resp",
+   "line": 2046,
+   "lines": [
+    2131,
+    2163
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_statemach",
+   "line": 2192,
+   "lines": [
+    2196
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_port_resp",
+   "line": 2405,
+   "lines": [
+    2436
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_block_statemach",
+   "line": 3510,
+   "lines": [
+    3519
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_done",
+   "line": 3841,
+   "lines": [
+    3855
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_regular_transfer",
+   "line": 4189,
+   "lines": [
+    4212
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_doing",
+   "line": 4348,
+   "lines": [
+    4362
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/imap.c",
+   "id": "c:imap.c@F@imap_multi_statemach",
+   "line": 1662,
+   "lines": [
+    1671
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/imap.c",
+   "id": "c:imap.c@F@imap_block_statemach",
+   "line": 1677,
+   "lines": [
+    1684
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_do",
+   "line": 2153,
+   "lines": [
+    2189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnect",
+   "line": 2542,
+   "lines": [
+    2557
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnecting",
+   "line": 2576,
+   "lines": [
+    2583
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing",
+   "line": 2598,
+   "lines": [
+    2606
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing_more",
+   "line": 2624,
+   "lines": [
+    2634
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_perform",
+   "line": 2896,
+   "lines": [
+    2919
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_run_dirty",
+   "line": 3199,
+   "lines": [
+    3227
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/pop3.c",
+   "id": "c:pop3.c@F@pop3_multi_statemach",
+   "line": 1362,
+   "lines": [
+    1370
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/pop3.c",
+   "id": "c:pop3.c@F@pop3_block_statemach",
+   "line": 1376,
+   "lines": [
+    1387
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/request.c",
+   "id": "c:request.c@F@req_flush",
+   "line": 298,
+   "lines": [
+    333
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/smtp.c",
+   "id": "c:smtp.c@F@smtp_multi_statemach",
+   "line": 1612,
+   "lines": [
+    1622
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/smtp.c",
+   "id": "c:smtp.c@F@smtp_block_statemach",
+   "line": 1627,
+   "lines": [
+    1634
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/transfer.c",
+   "id": "c:transfer.c@F@xfer_recv_resp",
+   "line": 175,
+   "lines": [
+    203
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_connect",
+   "line": 2476,
+   "lines": [
+    2498
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "unknown",
+   "distance": 1,
+   "file": "lib/curl_trc.c",
+   "id": "c:curl_trc.c@trc_cfts",
+   "line": 565,
+   "lines": [
+    594
+   ],
+   "status": "unknown"
+  },
+  {
+   "certainty": "unknown",
+   "distance": 1,
+   "file": "lib/http_proxy.c",
+   "id": "c:@F@Curl_cf_http_proxy_insert_after",
+   "line": 723,
+   "lines": [
+    748
+   ],
+   "status": "unknown"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.6924,
+ "summary": {
+  "affected_direct": 2,
+  "affected_further": 107,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 8,
+  "unknown": 2
+ },
+ "text": "[!] This change may affect 109 things you didn't touch (2 direct, 107 further up). None is sure to break.\n    2 are unknown and 8 parts of the change could not be followed.\n    You removed 1 function and changed 1 declaration in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] CHANGED    Curl_cft_http_proxy (global)  lib/http_proxy.c:706  (its declaration text changed (bit-field width, attributes, array size or qualifiers?), but its type looks the same)\n  [*] REMOVED    http_proxy_cf_destroy  lib/http_proxy.c:696  (removed by the patch)\n\nFunctions (110)\n  [~] AFFECTED   Curl_conn_cf_discard_chain  lib/cfilters.c:159\n                 calls a pointer of the type of http_proxy_cf_destroy, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_conn_remove_setup_filters  lib/cfilters.c:434\n                 calls a pointer of the type of http_proxy_cf_destroy, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   cf_hc_baller_discard  lib/cf-https-connect.c:61\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_ip_attempt_free  lib/cf-ip-happy.c:179\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_ip_attempt_connect  lib/cf-ip-happy.c:244\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_ip_attempt_restart  lib/cf-ip-happy.c:290\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_setup_connect  lib/cf-setup.c:361\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   Curl_conn_cf_discard_all  lib/cfilters.c:179\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   Curl_conn_cf_discard  lib/cfilters.c:339\n                 calls Curl_conn_cf_discard_chain (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   Curl_conn_connect  lib/connect.c:255\n                 calls Curl_conn_remove_setup_filters (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_h1_proxy_connect  lib/cf-h1-proxy.c:773\n                 calls cf_setup_connect (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_haproxy_connect  lib/cf-haproxy.c:105\n                 calls cf_setup_connect (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_hc_ctx_destroy  lib/cf-https-connect.c:126\n                 calls cf_hc_baller_discard (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_hc_shutdown  lib/cf-https-connect.c:585\n                 calls cf_setup_connect (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   cf_ip_attempt_new  lib/cf-ip-happy.c:192\n                 calls cf_ip_attempt_free (a call through a function pointer of the matching type). Link: probable.\n  ... and 95 more (94 AFFECTED, 1 UNKNOWN). Raise --limit or use --html to see all.\n\nData (1)\n  [?] UNKNOWN    trc_cfts (global)  lib/curl_trc.c:565\n                 its initializer stores the address of Curl_cft_http_proxy (address stored in the initializer of trc_cfts); code that uses it may change Curl_cft_http_proxy. Link: unknown.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (8)\n  [?] 1 changed function(s) are used as function pointers. Callers were matched by type; calls from outside this repo (callbacks into libraries) are not visible.\n  [?] 2 places pass its address on. Reads and writes made through that pointer elsewhere are not listed.\n  [?] Curl_cft_http_proxy can be used from outside this repo (code that links to it); that is not seen.\n  [?] Curl_cft_http_proxy: its declaration text changed (bit-field width, attributes, array size or qualifiers?), but its type looks the same. Its users are listed as unknown.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] lib/http_proxy.c:701 does not compile after this change: use of undeclared identifier 'http_proxy_cf_destroy'\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object); unknown = the data leaves code AeroTrace can follow; what happens next is not known.\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

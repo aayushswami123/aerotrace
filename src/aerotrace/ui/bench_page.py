@@ -1,0 +1,442 @@
+"""The benchmark results page: one self-contained, offline HTML file built from a benchmark run.
+
+`build(run_dir) -> dict` reads results.json, truth.json and setup-*.json from a run folder and computes
+every number the page shows. `render(data) -> str` turns that into HTML. Nothing is typed by hand.
+Same run in, same bytes out. The page loads nothing: fonts are inlined, and a Content-Security-Policy
+with sha256 hashes allows only its own style and script. All tables are plain HTML; the chart is drawn
+on top by the script.
+"""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+import json
+import re
+import statistics
+from html import escape
+from importlib import resources
+from pathlib import Path
+
+TOOLS = ["aerotrace", "clangd", "cscope", "ripgrep"]
+TOOL_NAME = {"aerotrace": "AeroTrace", "clangd": "clangd", "cscope": "cscope", "ripgrep": "ripgrep"}
+TOOL_HOW = {
+    "aerotrace": "claimed breaks from `aerotrace check --patch case.diff --json`",
+    "clangd": "find-references at the symbol's definition (background index)",
+    "cscope": "`cscope -d -L0 <name>` (find this C symbol)",
+    "ripgrep": "`rg -n -w <name>` over the build's files",
+}
+REPOS = ["redis", "sqlite", "curl"]
+REPO_NAME = {"redis": "Redis", "sqlite": "SQLite", "curl": "curl"}
+VIEWS = {
+    "all": ("All build cases", lambda r: r["level"] != "might_break"),
+    "easy": ("Easy", lambda r: r["level"] == "easy"),
+    "hard": ("Hard", lambda r: r["level"] == "hard"),
+    "hard_x": ("Hard, without curl-09", lambda r: r["level"] == "hard" and r["id"] != "curl-09"),
+}
+VIEW_GROUP = {"all": "all/all", "easy": "all/easy", "hard": "all/hard", "hard_x": "all/hard_without_curl-09"}
+MACRO_CASE = "curl-09"
+SAFE_PHRASE = "None is sure to break"
+
+
+def _found(r: dict, tool: str) -> int:
+    return 0 if "error" in r["tools"][tool] else r["tools"][tool]["found"]
+
+
+def _median(xs: list[float]) -> float | None:
+    return statistics.median(xs) if xs else None
+
+
+def _agg(rows: list[dict], tool: str) -> dict:
+    """Totals for one tool. A case where the tool errored counts as a miss of all its breaks."""
+    ok = [r for r in rows if "error" not in r["tools"][tool]]
+    toks = [r["tools"][tool].get("tokens") for r in ok]
+    return {
+        "cases": len(rows),
+        "found": sum(r["tools"][tool]["found"] for r in ok),
+        "truth": sum(len(r["truth"]) for r in rows),
+        "false_alarms": sum(r["tools"][tool]["false_alarms"] for r in ok),
+        "seconds": _median([r["tools"][tool]["seconds"] for r in ok]),
+        "tokens": sum(toks) if ok and all(t is not None for t in toks) else None,
+        "errors": len(rows) - len(ok),
+    }
+
+
+def build(run_dir: Path) -> dict:
+    run_dir = Path(run_dir)
+    res = json.loads((run_dir / "results.json").read_text())
+    truth = json.loads((run_dir / "truth.json").read_text())
+    setups = {r: json.loads((run_dir / f"setup-{r}.json").read_text()) for r in REPOS}
+    rows = res["cases"]
+    views = {}
+    for key, (label, keep) in VIEWS.items():
+        sel = [r for r in rows if keep(r)]
+        views[key] = {
+            "label": label,
+            "cases": len(sel),
+            "easy": sum(r["level"] == "easy" for r in sel),
+            "hard": sum(r["level"] == "hard" for r in sel),
+            "total": {t: _agg(sel, t) for t in TOOLS},
+            "repos": {rp: {t: _agg([r for r in sel if r["repo"] == rp], t) for t in TOOLS} for rp in REPOS},
+        }
+    build_rows = [r for r in rows if r["level"] != "might_break"]
+    ties = [r["id"] for r in build_rows if all(_found(r, t) == len(r["truth"]) for t in TOOLS)]
+    fewer = [r["id"] for r in build_rows if _found(r, "aerotrace") < max(_found(r, t) for t in TOOLS[1:])]
+    more = [r["id"] for r in build_rows if _found(r, "aerotrace") > max(_found(r, t) for t in TOOLS[1:])]
+    # Build cases that break, where AeroTrace's own answer says nothing is sure to break (product rule 5).
+    texts = {
+        r["id"]: json.loads((run_dir / "raw" / r["id"] / "aerotrace.json").read_text()).get("text", "")
+        for r in rows
+    }
+    wrong_safe = [r["id"] for r in build_rows if r["truth"] and SAFE_PHRASE in texts[r["id"]]]
+    claimed_none = [
+        r["id"]
+        for r in build_rows
+        if r["truth"] and _found(r, "aerotrace") == 0 and r["id"] not in wrong_safe
+    ]
+    # The first line of AeroTrace's answer in those cases, quoted on the page.
+    claimed_none_open = {i: texts[i].split("\n", 1)[0].removeprefix("[i] ").strip() for i in claimed_none}
+    # Hard cases (without the macro case) where AeroTrace named at least one break: the fair place to
+    # compare false alarms, since a tool that names nothing can have no false alarm.
+    named = [r for r in rows if VIEWS["hard_x"][1](r) and r["tools"]["aerotrace"].get("answer_sites")]
+    errors = {t: sum("error" in r["tools"][t] for r in rows) for t in TOOLS}
+    notes = json.loads((run_dir / "notes.json").read_text()) if (run_dir / "notes.json").exists() else {}
+    might = [r for r in rows if r["level"] == "might_break"]
+    macro = next(r for r in rows if r["id"] == MACRO_CASE)
+    capped = sorted(
+        (r["id"], r["tools"]["aerotrace"]["breaks_beyond_text_cap"])
+        for r in rows
+        if r["tools"]["aerotrace"].get("breaks_beyond_text_cap")
+    )
+    cases = [
+        {
+            "id": r["id"],
+            "repo": r["repo"],
+            "kind": r["kind"],
+            "level": r["level"],
+            "breaks": len(r["truth"]),
+            "tools": {t: {k: r["tools"][t][k] for k in ("found", "false_alarms")} for t in TOOLS},
+            "whole": {k: r["tools"]["aerotrace"]["anywhere"][k] for k in ("found", "false_alarms")},
+        }
+        for r in rows
+    ]
+    s = truth["setup"]
+    return {
+        "run": run_dir.name,
+        "machine": f"{s['cpu']}, macOS {s['macos']}, {s['machine']}",
+        "compiler": s["cc"],
+        "versions": setups["redis"]["versions"],
+        "aerotrace_code": notes.get("aerotrace_code", setups["redis"]["aerotrace_commit"][:7]),
+        "wrong_safe": wrong_safe,
+        "claimed_none": claimed_none,
+        "claimed_none_open": claimed_none_open,
+        "named": {"cases": len(named), "total": {t: _agg(named, t) for t in TOOLS}},
+        "link_checked": sum(1 for r in build_rows if r.get("link_checked")),
+        "errors": errors,
+        "time_range": {
+            t: [
+                min(r["tools"][t]["seconds"] for r in rows if "error" not in r["tools"][t]),
+                max(r["tools"][t]["seconds"] for r in rows if "error" not in r["tools"][t]),
+            ]
+            for t in TOOLS
+        },
+        "setup_seconds": {
+            r: {k: setups[r][f"{k}_seconds"] for k in ("aerotrace_index", "clangd_index", "cscope_db")}
+            for r in REPOS
+        },
+        "views": views,
+        "might_break": {"cases": len(might), "total": {t: _agg(might, t) for t in TOOLS}},
+        "macro_case": {
+            "id": MACRO_CASE,
+            "breaks": len(macro["truth"]),
+            "tools": {t: macro["tools"][t]["found"] for t in TOOLS},
+        },
+        "whole_answer": {
+            "found": sum(r["tools"]["aerotrace"]["anywhere"]["found"] for r in build_rows),
+            "false_alarms": sum(r["tools"]["aerotrace"]["anywhere"]["false_alarms"] for r in build_rows),
+        },
+        "ties": ties,
+        "fewer": fewer,
+        "more": more,
+        "build_cases": len(build_rows),
+        "capped": capped,
+        "tokens_counted": any(r["tools"][t].get("tokens") is not None for r in rows for t in TOOLS),
+        "cases": cases,
+    }
+
+
+# ---------------------------------------------------------------- HTML
+
+
+def _asset(rel: str) -> bytes:
+    return (resources.files("aerotrace.ui") / "web" / rel).read_bytes()
+
+
+def _tokens_css() -> str:
+    css = _asset("tokens.css").decode("utf-8")
+
+    def inline(m: re.Match[str]) -> str:
+        data = base64.b64encode(_asset(m.group(1))).decode("ascii")
+        return f'url("data:font/woff2;base64,{data}")'
+
+    return re.sub(r'url\("(fonts/[^"]+\.woff2)"\)', inline, css)
+
+
+def _n(x: int) -> str:
+    return f"{x:,}"
+
+
+def _pct(found: int, truth: int) -> str:
+    return "n/a" if not truth else f"{100 * found / truth:.0f}%"
+
+
+def _secs(x: float | None) -> str:
+    if x is None:
+        return "n/a"
+    return f"{x * 1000:.0f} ms" if x < 1 else f"{x:.1f} s"
+
+
+def _headline(d: dict) -> list[str]:
+    e, hx = d["views"]["easy"], d["views"]["hard_x"]
+    at, others = hx["total"]["aerotrace"], [hx["total"][t] for t in TOOLS[1:]]
+    ea = e["total"]["aerotrace"]
+    easy_all = all(e["total"][t]["found"] == e["total"][t]["truth"] for t in TOOLS)
+    first = (
+        f"Easy cases ({e['cases']}): every tool found all {_n(ea['truth'])} breaks."
+        if easy_all
+        else f"Easy cases ({e['cases']}): AeroTrace found {_n(ea['found'])} of {_n(ea['truth'])} breaks."
+    )
+    other_txt = ", ".join(
+        f"{TOOL_NAME[t]} {_n(o['found'])} with {_n(o['false_alarms'])}"
+        for t, o in zip(TOOLS[1:], others, strict=True)
+    )
+    second = (
+        f"Hard cases without the macro case {d['macro_case']['id']} ({hx['cases']}): AeroTrace found "
+        f"{_n(at['found'])} of {_n(at['truth'])} with {_n(at['false_alarms'])} false alarms; {other_txt}."
+    )
+    tr = d["time_range"]
+    others_max = max(tr[t][1] for t in TOOLS[1:])
+    nm = d["named"]["total"]
+    na, nc = nm["aerotrace"], nm["clangd"]
+    same = (na["found"], na["false_alarms"]) == (nc["found"], nc["false_alarms"])
+    vs_clangd = (
+        f"AeroTrace did not beat clangd here. On the {d['named']['cases']} hard cases where AeroTrace named "
+        f"at least one break, both score the same ({_n(na['found'])} of {_n(na['truth'])} found, {_n(na['false_alarms'])} false "
+        "alarms each). AeroTrace's lower false-alarm count against clangd comes from cases where it named no "
+        "break at all."
+        if same
+        else f"On the {d['named']['cases']} hard cases where AeroTrace named at least one break: AeroTrace "
+        f"{_n(na['found'])} of {_n(na['truth'])} with {_n(na['false_alarms'])} false alarms, clangd "
+        f"{_n(nc['found'])} with {_n(nc['false_alarms'])}."
+    )
+    rest = " and ".join(_n(nm[t]["false_alarms"]) for t in TOOLS[2:])
+    third = (
+        f"In one line: {vs_clangd} Against {' and '.join(TOOL_NAME[t] for t in TOOLS[2:])} it has fewer false "
+        f"alarms there ({_n(na['false_alarms'])} against {rest}). It found fewer breaks than another tool in "
+        f"{len(d['fewer'])} of {d['build_cases']} build cases, and it takes {_secs(tr['aerotrace'][0])} to "
+        f"{_secs(tr['aerotrace'][1])} per check where the others take at most {_secs(others_max)}."
+    )
+    return [first, second, third]
+
+
+def _might_line(mb: dict) -> str:
+    a = mb["aerotrace"]
+    if all(mb[t]["found"] == mb[t]["truth"] for t in TOOLS):
+        rest = ", ".join(f"{TOOL_NAME[t]} {_n(mb[t]['false_alarms'])}" for t in TOOLS[1:])
+        return (
+            f"every tool found all {_n(a['truth'])}; false alarms: AeroTrace {_n(a['false_alarms'])} "
+            f"(callers further up the chain), {rest}"
+        )
+    return ", ".join(f"{TOOL_NAME[t]} {_n(mb[t]['found'])} of {_n(mb[t]['truth'])}" for t in TOOLS)
+
+
+def _summary_table(v: dict, caption: str) -> str:
+    head = "<tr><th>Tool</th><th class=num>Breaks found</th><th class=num>Recall</th><th class=num>False alarms</th><th class=num>Median time</th><th class=num>Tokens</th></tr>"
+    body = "".join(
+        f"<tr><th scope=row>{TOOL_NAME[t]}</th><td class=num>{_n(x['found'])} / {_n(x['truth'])}</td>"
+        f"<td class=num>{_pct(x['found'], x['truth'])}</td><td class=num>{_n(x['false_alarms'])}</td>"
+        f"<td class=num>{_secs(x['seconds'])}</td><td class=num>{'not counted' if x['tokens'] is None else _n(x['tokens'])}</td></tr>"
+        for t in TOOLS
+        for x in [v["total"][t]]
+    )
+    return f"<div class=scroll><table><caption>{escape(caption)}</caption><thead>{head}</thead><tbody>{body}</tbody></table></div>"
+
+
+def _case_table(d: dict) -> str:
+    head = (
+        "<tr><th>Case</th><th>Kind</th><th>Level</th><th class=num>Breaks</th>"
+        + "".join(f"<th class=num>{TOOL_NAME[t]}</th>" for t in TOOLS)
+        + "</tr>"
+    )
+    rows = []
+    for c in d["cases"]:
+        cells = "".join(
+            f"<td class=num{' at' if t == 'aerotrace' else ''}>{c['tools'][t]['found']}/{c['breaks']}"
+            f"<span class=fa> · {c['tools'][t]['false_alarms']} fa</span></td>"
+            for t in TOOLS
+        )
+        rows.append(
+            f"<tr><td class=mono>{escape(c['id'])}</td><td class=mono>{escape(c['kind'])}</td>"
+            f"<td>{escape(c['level'].replace('_', ' '))}</td><td class=num>{c['breaks']}</td>{cells}</tr>"
+        )
+    return f"<table class=cases><thead>{head}</thead><tbody>{''.join(rows)}</tbody></table>"
+
+
+def render(d: dict) -> str:
+    css = _tokens_css() + _asset("bench-page.css").decode("utf-8")
+    js = _asset("bench-page.js").decode("utf-8")
+    data_json = json.dumps(d, sort_keys=True, separators=(",", ":")).replace("</", "<\\/")
+    sha = lambda s: base64.b64encode(hashlib.sha256(s.encode("utf-8")).digest()).decode()  # noqa: E731
+    csp = (
+        f"default-src 'none'; style-src 'sha256-{sha(css)}'; script-src 'sha256-{sha(js)}'; "
+        "font-src data:; base-uri 'none'; form-action 'none'"
+    )
+    raw = f"../../bench/results/{d['run']}/raw/"
+    v = d["versions"]
+    head1, head2, head3 = _headline(d)
+    ws = ", ".join(d["wrong_safe"])
+    wrong_safe = (
+        f'<p class="note bad"><b>A wrong "safe" answer in {len(d["wrong_safe"])} cases.</b> In {escape(ws)} the build '
+        f"fails, but AeroTrace's answer says \"{SAFE_PHRASE}\". That is the worst kind of answer by AeroTrace's own "
+        "rules. It is a product bug, reported, not fixed in this run. A fix (#77) has since been merged into "
+        "launch-candidate; it is not measured here."
+        + (
+            "".join(
+                f" In {escape(i)}, which breaks {_n(next(c['breaks'] for c in d['cases'] if c['id'] == i))} "
+                f'functions, its answer opens with "{escape(line)}" It does say what it couldn\'t see, so the '
+                'rules don\'t count it as a wrong "safe" answer, but an agent that reads only that line is misled.'
+                for i, line in d["claimed_none_open"].items()
+            )
+            if d["claimed_none"]
+            else ""
+        )
+        + "</p>"
+        if d["wrong_safe"]
+        else ""
+    )
+    seg = "".join(
+        f'<button type=button data-view="{k}" aria-pressed="{"true" if k == "all" else "false"}">{escape(x["label"])}</button>'
+        for k, x in d["views"].items()
+    )
+    tables = "".join(
+        f"<details{' open' if k == 'all' else ''}><summary>{escape(x['label'])}: {x['cases']} cases "
+        f"({x['easy']} easy, {x['hard']} hard)</summary>{_summary_table(x, x['label'])}</details>"
+        for k, x in d["views"].items()
+    )
+    mb = d["might_break"]["total"]
+    mac = d["macro_case"]
+    setup_rows = "".join(
+        f"<li>{REPO_NAME[r]}: AeroTrace index {s['aerotrace_index']} s, clangd index {s['clangd_index']} s, "
+        f"cscope database {s['cscope_db']} s</li>"
+        for r, s in d["setup_seconds"].items()
+    )
+    fewer = ", ".join(d["fewer"]) or "none"
+    more = ", ".join(d["more"]) or "none"
+    capped = ", ".join(f"{i} ({n})" for i, n in d["capped"]) or "none"
+    tokens_note = (
+        ""
+        if d["tokens_counted"]
+        else "<p class=note><b>Tokens not counted yet.</b> The token counts need the Anthropic token-counting "
+        "API, which this run didn't have access to. Every token cell says so until they're counted.</p>"
+    )
+    body = f"""<main class=wrap>
+<header class=hero>
+<p class=caps>Recall · False alarms · Time{" · Tokens" if d["tokens_counted"] else ""}</p>
+<h1>What does a C change break? Four tools, {len(d["cases"])} changes: {d["build_cases"]} checked against the compiler, {d["might_break"]["cases"]} by hand.</h1>
+<p class=lead>{escape(head1)} {escape(head2)}</p>
+<p class=lead>{escape(head3)}</p>
+{wrong_safe}
+<p class=lead>Each tool was asked the question an agent asks before an edit, the way the tool is normally used. {d["build_cases"]} changes were scored against what the compiler and linker report; the other {d["might_break"]["cases"]}, which build fine, against callers checked by hand.</p>
+{tokens_note}
+</header>
+
+<section aria-labelledby=chart-h>
+<h2 id=chart-h class=sr>Chart</h2>
+<div class=controls>
+<div class=seg role=group aria-label="Which cases">{seg}</div>
+<div class=seg role=group aria-label="Measure"><button type=button data-metric=found aria-pressed=true>Breaks found</button><button type=button data-metric=fa aria-pressed=false>False alarms</button></div>
+<button type=button class=toggle role=switch aria-checked=true id=others><span class=sw aria-hidden=true></span>Show other tools</button>
+</div>
+<p class=mix id=mix></p>
+<div id=legend class=legend></div>
+<div id=chart class=chart></div>
+<noscript><p class=note>The chart needs JavaScript. Every number is in the tables below.</p></noscript>
+</section>
+
+<section class=cards aria-label="Wins, ties and losses">
+<div class=card><h3>Ties <span class=mono>{len(d["ties"])} of {d["build_cases"]}</span></h3><p>Build cases where every tool found every break.</p></div>
+<div class=card><h3>AeroTrace finds fewer <span class=mono>{len(d["fewer"])} of {d["build_cases"]}</span></h3><p class=mono>{escape(fewer)}</p></div>
+<div class=card><h3>AeroTrace finds more <span class=mono>{len(d["more"])} of {d["build_cases"]}</span></h3><p class=mono>{escape(more)}</p></div>
+</section>
+
+<section aria-labelledby=tables-h>
+<h2 id=tables-h>Every view, as a table</h2>
+{tables}
+</section>
+
+<section class=also aria-labelledby=also-h>
+<h2 id=also-h class=caps>Also run</h2>
+<ul>
+<li><a href="#might">Might-break cases ({d["might_break"]["cases"]}): {_might_line(mb)} <span aria-hidden=true>→</span></a></li>
+<li><a href="#macro">The macro case {escape(mac["id"])}: {_n(mac["breaks"])} breaks; found: {", ".join(f"{TOOL_NAME[t]} {_n(mac['tools'][t])}" for t in TOOLS)} <span aria-hidden=true>→</span></a></li>
+<li><a href="{escape(raw)}">Raw answers of every tool for every case <span aria-hidden=true>→</span></a></li>
+<li><a href="RESULTS.md">Full write-up, limits, and AeroTrace bugs found <span aria-hidden=true>→</span></a></li>
+<li><span class=dim>Agent case studies: not run yet</span></li>
+</ul>
+</section>
+
+<section id=might aria-labelledby=might-h>
+<h2 id=might-h>Might-break cases</h2>
+<p>Nothing fails to build; the function returns a different value. Truth: the direct callers that use the value, checked by hand.</p>
+{_summary_table(d["might_break"], "Might-break cases")}
+</section>
+
+<section id=macro aria-labelledby=macro-h>
+<h2 id=macro-h>The macro case {escape(mac["id"])}</h2>
+<p>A function-like macro in a header gets a new parameter. It is used inside other macros, so the compiler reports {_n(mac["breaks"])} functions. Found: {", ".join(f"{TOOL_NAME[t]} {_n(mac['tools'][t])}" for t in TOOLS)}. clangd, cscope and ripgrep point at the macro definitions that cause it, which the rules don't count as breaks. AeroTrace says it couldn't follow the change. Shown apart so one case doesn't decide the headline.</p>
+</section>
+
+<section aria-labelledby=cases-h>
+<h2 id=cases-h>Every case</h2>
+<p class=dim>found / breaks · false alarms (fa). AeroTrace's whole answer, AFFECTED places included, finds {_n(d["whole_answer"]["found"])} with {_n(d["whole_answer"]["false_alarms"])} false alarms over the build cases.</p>
+<div class=scroll>{_case_table(d)}</div>
+</section>
+
+<footer class=foot>
+<p><b>How each tool was run.</b> {" ".join(f"{TOOL_NAME[t]}: {escape(TOOL_HOW[t])}." for t in TOOLS)} Truth: each patch applied to a built copy of the pinned release, rebuilt with every error reported; every compile and link error is a break. A break is counted per function (or table).</p>
+<p><b>Versions.</b> {escape(v["aerotrace"])} (analysis code as of commit {escape(d["aerotrace_code"])}), {escape(v["clangd"])}, {escape(v["cscope"])}, {escape(v["rg"])}. Compiler: {escape(d["compiler"])}. <b>Machine.</b> {escape(d["machine"])}. <b>Time</b> is the median of 3 runs per query; one-off setup:</p>
+<ul>{setup_rows}</ul>
+<p><b>Read with care.</b> The {d["build_cases"]} build changes are edits we made, of 10 kinds we chose, scored by rules we wrote before any tool ran; most have only 1 to 25 breaks. The link step ran in {d["link_checked"]} of them; in the others the build stopped at compile errors, so link-only breaks are not in the truth. AeroTrace's time is a new <span class=mono>uv run aerotrace check</span> process each time (Python start-up included; the running MCP server was not timed). clangd's is one query to a running, indexed server, asked at the symbol's definition, which an agent first has to find. cscope was asked <span class=mono>-L0</span> (every use of the symbol); <span class=mono>-L3</span> (callers only) would list fewer prototypes and was not run.</p>
+<p>Tool errors (counted as misses): {", ".join(f"{TOOL_NAME[t]} {n}" for t, n in d["errors"].items())}.</p>
+<p>The MCP text of AeroTrace's answer shows at most 15 items per list; in {escape(capped)} it hides that many claimed breaks behind "N more". Recall is scored on the full answer.</p>
+<p><b>Reproduce</b> (from an AeroTrace checkout): <a href="../../bench/truth/README.md">bench/truth/README.md</a>. Cases: <a href="../../bench/cases/CASES.md">bench/cases/CASES.md</a>. Rules, fixed before any tool ran: <a href="accuracy-cases-protocol.md">accuracy-cases-protocol.md</a>. Run: <span class=mono>{escape(d["run"])}</span>.</p>
+</footer>
+</main>"""
+    return (
+        "<!doctype html>\n<html lang=en>\n<head>\n<meta charset=utf-8>\n"
+        f'<meta http-equiv="Content-Security-Policy" content="{csp}">\n'
+        '<meta name=viewport content="width=device-width,initial-scale=1">\n'
+        "<title>AeroTrace accuracy benchmark</title>\n"
+        f"<style>{css}</style>\n</head>\n<body>\n{body}\n"
+        f'<script type="application/json" id=data>{data_json}</script>\n'
+        f"<script>{js}</script>\n</body>\n</html>\n"
+    )
+
+
+def published(d: dict) -> dict:
+    """The data plus the generated sentences, as shipped in the package for the dashboard's Benchmark page."""
+    return {**d, "headline": _headline(d)}
+
+
+def csp_of(html: str) -> str:
+    """The Content-Security-Policy the page carries in its <meta> (served as a header by `aerotrace ui`)."""
+    m = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)
+    return m.group(1) if m else "default-src 'none'"
+
+
+def write(run_dir: Path, out: Path, package_json: Path | None = None) -> Path:
+    d = build(run_dir)
+    out.write_text(render(d), encoding="utf-8")
+    if package_json is not None:
+        package_json.write_text(json.dumps(published(d), indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    return out

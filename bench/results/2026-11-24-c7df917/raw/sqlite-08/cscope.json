@@ -1,0 +1,23 @@
+{
+ "command": "cscope -d -L0 shellCmdLineEdit",
+ "hits": [
+  [
+   "shell.c",
+   238
+  ],
+  [
+   "shell.c",
+   26230
+  ],
+  [
+   "shell.c",
+   39061
+  ],
+  [
+   "shell.c",
+   39311
+  ]
+ ],
+ "seconds": 0.0094,
+ "text": "shell.c <global> 238 static int shellCmdLineEdit = SHELL_CMDLINE_EDIT_AVAILABLE;\nshell.c one_input_line 26230 if( shellCmdLineEdit ){\nshell.c main 39061 shellCmdLineEdit = 0;\nshell.c main 39311 shellCmdLineEdit = booleanValue(cmdline_option_value(argc,argv,++i));\n"
+}

@@ -1,0 +1,35 @@
+{
+ "command": "cscope -d -L0 upkeep_interval_ms",
+ "hits": [
+  [
+   "lib/conncache.c",
+   901
+  ],
+  [
+   "lib/mqtt.c",
+   840
+  ],
+  [
+   "lib/mqtt.c",
+   844
+  ],
+  [
+   "lib/setopt.c",
+   878
+  ],
+  [
+   "lib/url.c",
+   418
+  ],
+  [
+   "lib/url.c",
+   2621
+  ],
+  [
+   "lib/urldata.h",
+   965
+  ]
+ ],
+ "seconds": 0.0093,
+ "text": "lib/conncache.c conn_upkeep 901 admin->set.upkeep_interval_ms) {\nlib/mqtt.c mqtt_ping 840 data->set.upkeep_interval_ms > 0) {\nlib/mqtt.c mqtt_ping 844 if(diff > data->set.upkeep_interval_ms) {\nlib/setopt.c setopt_long_net 878 return setopt_set_timeout_ms(&s->upkeep_interval_ms, arg);\nlib/url.c Curl_init_userdefined 418 set->upkeep_interval_ms = CURL_UPKEEP_INTERVAL_DEFAULT;\nlib/url.c Curl_get_admin 2621 admin->set.upkeep_interval_ms = data->set.upkeep_interval_ms;\nlib/urldata.h CURLcode 965 timediff_t upkeep_interval_ms;\n"
+}

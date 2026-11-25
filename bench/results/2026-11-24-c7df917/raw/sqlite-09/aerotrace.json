@@ -1,0 +1,316 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "sqlite3.c",
+   32007
+  ],
+  [
+   "sqlite3.c",
+   37055
+  ],
+  [
+   "sqlite3.c",
+   57518
+  ],
+  [
+   "sqlite3.c",
+   69190
+  ],
+  [
+   "sqlite3.c",
+   69262
+  ],
+  [
+   "sqlite3.c",
+   70088
+  ],
+  [
+   "sqlite3.c",
+   70137
+  ],
+  [
+   "sqlite3.c",
+   70213
+  ],
+  [
+   "sqlite3.c",
+   70215
+  ],
+  [
+   "sqlite3.c",
+   70543
+  ],
+  [
+   "sqlite3.c",
+   83293
+  ],
+  [
+   "sqlite3.c",
+   83369
+  ],
+  [
+   "sqlite3.c",
+   89936
+  ],
+  [
+   "sqlite3.c",
+   97235
+  ],
+  [
+   "sqlite3.c",
+   97425
+  ],
+  [
+   "sqlite3.c",
+   187644
+  ],
+  [
+   "sqlite3.c",
+   190308
+  ],
+  [
+   "sqlite3.c",
+   191502
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "sqlite3.c",
+   32007
+  ],
+  [
+   "sqlite3.c",
+   37055
+  ],
+  [
+   "sqlite3.c",
+   57518
+  ],
+  [
+   "sqlite3.c",
+   69190
+  ],
+  [
+   "sqlite3.c",
+   69262
+  ],
+  [
+   "sqlite3.c",
+   70088
+  ],
+  [
+   "sqlite3.c",
+   70137
+  ],
+  [
+   "sqlite3.c",
+   70213
+  ],
+  [
+   "sqlite3.c",
+   70215
+  ],
+  [
+   "sqlite3.c",
+   70543
+  ],
+  [
+   "sqlite3.c",
+   83293
+  ],
+  [
+   "sqlite3.c",
+   83369
+  ],
+  [
+   "sqlite3.c",
+   89936
+  ],
+  [
+   "sqlite3.c",
+   97235
+  ],
+  [
+   "sqlite3.c",
+   97425
+  ],
+  [
+   "sqlite3.c",
+   187644
+  ],
+  [
+   "sqlite3.c",
+   190308
+  ],
+  [
+   "sqlite3.c",
+   191502
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3HeapNearlyFull",
+   "line": 32006,
+   "lines": [
+    32007
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ProgressCheck",
+   "line": 37053,
+   "lines": [
+    37055
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pcache1UnderMemoryPressure",
+   "line": 57516,
+   "lines": [
+    57518
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@walCheckpoint",
+   "line": 69153,
+   "lines": [
+    69190,
+    69262
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@walTryBeginRead",
+   "line": 69974,
+   "lines": [
+    70088,
+    70137,
+    70213,
+    70215
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@walFindFrame",
+   "line": 70479,
+   "lines": [
+    70543
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCount",
+   "line": 83280,
+   "lines": [
+    83293
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@checkProgress",
+   "line": 83367,
+   "lines": [
+    83369
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeList",
+   "line": 89891,
+   "lines": [
+    89936
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    97235,
+    97425
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RunParser",
+   "line": 187579,
+   "lines": [
+    187644
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_is_interrupted",
+   "line": 190299,
+   "lines": [
+    190308
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3ParseUri",
+   "line": 191484,
+   "lines": [
+    191502
+   ],
+   "status": "breaks"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 5.3865,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 0,
+  "breaks_exact": 13,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 2,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 13 things you didn't touch (13 BREAKS).\n    2 parts of the change could not be followed.\n    You changed no function or declaration AeroTrace can place in 1 C/C++ file (a patch that is not applied yet).\n\nFunctions (13)\n  [x] BREAKS     sqlite3HeapNearlyFull  sqlite3.c:32006\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3ProgressCheck  sqlite3.c:37053\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     pcache1UnderMemoryPressure  sqlite3.c:57516\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     walCheckpoint  sqlite3.c:69153\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 3 other links). Link: exact.\n  [x] BREAKS     walTryBeginRead  sqlite3.c:69974\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 7 other links). Link: exact.\n  [x] BREAKS     walFindFrame  sqlite3.c:70479\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3BtreeCount  sqlite3.c:83280\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     checkProgress  sqlite3.c:83367\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3VdbeList  sqlite3.c:89891\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3VdbeExec  sqlite3.c:97179\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 3 other links). Link: exact.\n  [x] BREAKS     sqlite3RunParser  sqlite3.c:187579\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3_is_interrupted  sqlite3.c:190299\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n  [x] BREAKS     sqlite3ParseUri  sqlite3.c:191484\n                 does not compile after this change: too few arguments provided to function-like macro invocation (and 1 other link). Link: exact.\n\nChanges AeroTrace could not follow (1)\n  [?] sqlite3.c: lines 15115, 15119 outside any function; added lines 15115, 15119 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: no)"
+}

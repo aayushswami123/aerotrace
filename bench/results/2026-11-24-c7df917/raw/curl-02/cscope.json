@@ -1,0 +1,75 @@
+{
+ "command": "cscope -d -L0 add2list",
+ "hits": [
+  [
+   "src/tool_paramhlp.h",
+   52
+  ],
+  [
+   "src/tool_getparam.c",
+   1314
+  ],
+  [
+   "src/tool_getparam.c",
+   1333
+  ],
+  [
+   "src/tool_getparam.c",
+   1335
+  ],
+  [
+   "src/tool_getparam.c",
+   1429
+  ],
+  [
+   "src/tool_getparam.c",
+   1434
+  ],
+  [
+   "src/tool_getparam.c",
+   1437
+  ],
+  [
+   "src/tool_getparam.c",
+   2671
+  ],
+  [
+   "src/tool_getparam.c",
+   2683
+  ],
+  [
+   "src/tool_getparam.c",
+   2707
+  ],
+  [
+   "src/tool_getparam.c",
+   2748
+  ],
+  [
+   "src/tool_getparam.c",
+   2753
+  ],
+  [
+   "src/tool_getparam.c",
+   2888
+  ],
+  [
+   "src/tool_operate.c",
+   933
+  ],
+  [
+   "src/tool_paramhlp.c",
+   601
+  ],
+  [
+   "src/tool_paramhlp.c",
+   683
+  ],
+  [
+   "src/tool_paramhlp.c",
+   685
+  ]
+ ],
+ "seconds": 0.0079,
+ "text": "src/tool_paramhlp.h <global> 52 ParameterError add2list(struct curl_slist **list, const char *ptr);\nsrc/tool_getparam.c parse_header 1314 err = add2list(cmd == C_PROXY_HEADER ?\nsrc/tool_getparam.c parse_header 1333 err = add2list(&config->proxyheaders, nextarg);\nsrc/tool_getparam.c parse_header 1335 err = add2list(&config->headers, nextarg);\nsrc/tool_getparam.c parse_quote 1429 err = add2list(&config->postquote, nextarg);\nsrc/tool_getparam.c parse_quote 1434 err = add2list(&config->prequote, nextarg);\nsrc/tool_getparam.c parse_quote 1437 err = add2list(&config->quote, nextarg);\nsrc/tool_getparam.c opt_string 2671 err = add2list(&config->mail_rcpt, nextarg);\nsrc/tool_getparam.c opt_string 2683 err = add2list(&config->resolve, nextarg);\nsrc/tool_getparam.c opt_string 2707 err = add2list(&config->connect_to, nextarg);\nsrc/tool_getparam.c opt_string 2748 err = add2list(&config->cookies, nextarg);\nsrc/tool_getparam.c opt_string 2753 err = add2list(&config->cookiefiles, nextarg);\nsrc/tool_getparam.c opt_string 2888 err = add2list(&config->telnet_options, nextarg);\nsrc/tool_operate.c etag_compare 933 pe = add2list(&config->headers, header);\nsrc/tool_paramhlp.c add2list 601 ParameterError add2list(struct curl_slist **list, const char *ptr)\nsrc/tool_paramhlp.c get_args 683 err = add2list(&config->headers, \"Content-Type: application/json\");\nsrc/tool_paramhlp.c get_args 685 err = add2list(&config->headers, \"Accept: application/json\");\n"
+}

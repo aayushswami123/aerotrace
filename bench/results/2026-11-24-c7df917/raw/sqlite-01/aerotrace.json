@@ -1,0 +1,228 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "shell.c",
+   9530
+  ],
+  [
+   "shell.c",
+   9562
+  ],
+  [
+   "shell.c",
+   9567
+  ],
+  [
+   "shell.c",
+   9603
+  ],
+  [
+   "shell.c",
+   9612
+  ],
+  [
+   "shell.c",
+   9641
+  ],
+  [
+   "shell.c",
+   9648
+  ],
+  [
+   "shell.c",
+   9652
+  ],
+  [
+   "shell.c",
+   9661
+  ],
+  [
+   "shell.c",
+   9669
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "shell.c",
+   9530
+  ],
+  [
+   "shell.c",
+   9562
+  ],
+  [
+   "shell.c",
+   9567
+  ],
+  [
+   "shell.c",
+   9603
+  ],
+  [
+   "shell.c",
+   9612
+  ],
+  [
+   "shell.c",
+   9641
+  ],
+  [
+   "shell.c",
+   9648
+  ],
+  [
+   "shell.c",
+   9652
+  ],
+  [
+   "shell.c",
+   9661
+  ],
+  [
+   "shell.c",
+   9669
+  ],
+  [
+   "shell.c",
+   9755
+  ],
+  [
+   "shell.c",
+   9844
+  ],
+  [
+   "sqlite3.c",
+   104377
+  ],
+  [
+   "sqlite3.c",
+   104380
+  ],
+  [
+   "sqlite3.c",
+   105333
+  ],
+  [
+   "sqlite3.c",
+   94174
+  ],
+  [
+   "sqlite3.c",
+   105924
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "shell.c",
+   "id": "c:shell.c@F@rePeek",
+   "line": 9516,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "shell.c",
+   "id": "c:shell.c@F@re_subcompile_re",
+   "line": 9524,
+   "lines": [
+    9530
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "shell.c",
+   "id": "c:shell.c@F@re_subcompile_string",
+   "line": 9546,
+   "lines": [
+    9562,
+    9567,
+    9603,
+    9612,
+    9641,
+    9648,
+    9652,
+    9661,
+    9669
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "shell.c",
+   "id": "c:shell.c@F@sqlite3re_compile",
+   "line": 9724,
+   "lines": [
+    9755
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "shell.c",
+   "id": "c:shell.c@F@re_sql_func",
+   "line": 9822,
+   "lines": [
+    9844
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    104377,
+    104380,
+    105333
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Step",
+   "line": 94082,
+   "lines": [
+    94174
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@blobSeekToRow",
+   "line": 105907,
+   "lines": [
+    105924
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.8713,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 5,
+  "breaks_exact": 2,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 3,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 2 things you didn't touch (2 BREAKS, 5 AFFECTED).\n    5 may be affected (5 further up) and 3 parts of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    rePeek  shell.c:9516  (signature changed: now takes 2 parameters (was 1))\n\nFunctions (7)\n  [x] BREAKS     re_subcompile_re  shell.c:9524\n                 passes 1 argument; rePeek now takes 2 (and 2 other links). Link: exact.\n  [x] BREAKS     re_subcompile_string  shell.c:9546\n                 passes 1 argument; rePeek now takes 2 (and 18 other links). Link: exact.\n  [~] AFFECTED   sqlite3re_compile  shell.c:9724\n                 calls re_subcompile_re, which calls rePeek (and 1 other link). Link: exact.\n  [~] AFFECTED   re_sql_func  shell.c:9822\n                 calls sqlite3re_compile, which calls rePeek (and 1 other link). Link: exact.\n  [~] AFFECTED   sqlite3VdbeExec  sqlite3.c:97179\n                 calls re_sql_func (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3Step  sqlite3.c:94082\n                 calls sqlite3VdbeExec (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   blobSeekToRow  sqlite3.c:105907\n                 calls sqlite3VdbeExec (a call through a function pointer of the matching type). Link: probable.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (3)\n  [?] Signature effects follow callers 2 steps further up; more exist.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}

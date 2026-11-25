@@ -1,0 +1,46 @@
+{
+ "machine": "Apple M1 Pro, Darwin 26.7.2",
+ "browser": "Chrome",
+ "results": [
+  {
+   "nodes": 1000,
+   "view": "default",
+   "first_frame_ms": 56,
+   "fps": 58.9,
+   "draw_ms_avg": 0.2,
+   "draw_ms_max": 0.7,
+   "redraws": 116,
+   "drawn": 36
+  },
+  {
+   "nodes": 1000,
+   "view": "all groups",
+   "first_frame_ms": 53,
+   "fps": 60.7,
+   "draw_ms_avg": 0.7,
+   "draw_ms_max": 1.4,
+   "redraws": 120,
+   "drawn": 722
+  },
+  {
+   "nodes": 5000,
+   "view": "default",
+   "first_frame_ms": 102,
+   "fps": 60.4,
+   "draw_ms_avg": 0.4,
+   "draw_ms_max": 1.6,
+   "redraws": 120,
+   "drawn": 133
+  },
+  {
+   "nodes": 5000,
+   "view": "all groups",
+   "first_frame_ms": 109,
+   "fps": 60.6,
+   "draw_ms_avg": 1.6,
+   "draw_ms_max": 2.6,
+   "redraws": 119,
+   "drawn": 3572
+  }
+ ]
+}

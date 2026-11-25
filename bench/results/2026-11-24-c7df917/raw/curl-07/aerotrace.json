@@ -1,0 +1,1381 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "lib/conncache.c",
+   901
+  ],
+  [
+   "lib/mqtt.c",
+   840
+  ],
+  [
+   "lib/mqtt.c",
+   844
+  ],
+  [
+   "lib/setopt.c",
+   878
+  ],
+  [
+   "lib/url.c",
+   418
+  ],
+  [
+   "lib/url.c",
+   2621
+  ],
+  [
+   "lib/conncache.c",
+   200
+  ],
+  [
+   "lib/conncache.c",
+   420
+  ],
+  [
+   "lib/conncache.c",
+   501
+  ],
+  [
+   "lib/conncache.c",
+   540
+  ],
+  [
+   "lib/conncache.c",
+   739
+  ],
+  [
+   "lib/conncache.c",
+   882
+  ],
+  [
+   "lib/conncache.c",
+   920
+  ],
+  [
+   "lib/conncache.c",
+   1054
+  ],
+  [
+   "lib/easy.c",
+   1159
+  ],
+  [
+   "lib/mqtt.c",
+   881
+  ],
+  [
+   "lib/url.c",
+   487
+  ],
+  [
+   "lib/vdns/asyn-thrdd.c",
+   658
+  ],
+  [
+   "lib/vdns/hostip.c",
+   603
+  ],
+  [
+   "lib/vdns/hostip.c",
+   614
+  ],
+  [
+   "lib/conncache.c",
+   279
+  ],
+  [
+   "lib/conncache.c",
+   456
+  ],
+  [
+   "lib/conncache.c",
+   472
+  ],
+  [
+   "lib/conncache.c",
+   597
+  ],
+  [
+   "lib/conncache.c",
+   771
+  ],
+  [
+   "lib/conncache.c",
+   799
+  ],
+  [
+   "lib/conncache.c",
+   861
+  ],
+  [
+   "lib/conncache.c",
+   966
+  ],
+  [
+   "lib/conncache.c",
+   995
+  ],
+  [
+   "lib/easy.c",
+   388
+  ],
+  [
+   "lib/easy.c",
+   1403
+  ],
+  [
+   "lib/url.c",
+   1071
+  ],
+  [
+   "lib/vdns/doh.c",
+   280
+  ],
+  [
+   "lib/vdns/hostip.c",
+   760
+  ],
+  [
+   "lib/curl_share.c",
+   41
+  ],
+  [
+   "lib/curl_share.c",
+   82
+  ],
+  [
+   "lib/easy.c",
+   796
+  ],
+  [
+   "lib/multi.c",
+   349
+  ],
+  [
+   "lib/multi.c",
+   747
+  ],
+  [
+   "lib/multi.c",
+   844
+  ],
+  [
+   "lib/multi.c",
+   2389
+  ],
+  [
+   "lib/multi.c",
+   3035
+  ],
+  [
+   "lib/url.c",
+   1121
+  ],
+  [
+   "lib/url.c",
+   2532
+  ],
+  [
+   "lib/vdns/doh.c",
+   447
+  ],
+  [
+   "lib/vdns/doh.c",
+   460
+  ],
+  [
+   "lib/vdns/hostip.c",
+   809
+  ],
+  [
+   "lib/vdns/hostip.c",
+   1068
+  ],
+  [
+   "src/tool_help.c",
+   394
+  ],
+  [
+   "src/tool_operate.c",
+   1410
+  ],
+  [
+   "src/tool_ssls.c",
+   41
+  ],
+  [
+   "lib/cf-socket.c",
+   800
+  ],
+  [
+   "lib/curl_share.c",
+   190
+  ],
+  [
+   "lib/easy.c",
+   855
+  ],
+  [
+   "lib/ftp.c",
+   1063
+  ],
+  [
+   "lib/multi.c",
+   379
+  ],
+  [
+   "lib/multi.c",
+   498
+  ],
+  [
+   "lib/multi.c",
+   894
+  ],
+  [
+   "lib/multi.c",
+   1760
+  ],
+  [
+   "lib/multi.c",
+   1853
+  ],
+  [
+   "lib/multi.c",
+   2093
+  ],
+  [
+   "lib/multi.c",
+   2115
+  ],
+  [
+   "lib/multi.c",
+   2135
+  ],
+  [
+   "lib/multi.c",
+   2304
+  ],
+  [
+   "lib/multi.c",
+   2322
+  ],
+  [
+   "lib/multi.c",
+   2534
+  ],
+  [
+   "lib/multi.c",
+   2649
+  ],
+  [
+   "lib/multi.c",
+   2694
+  ],
+  [
+   "lib/multi.c",
+   2879
+  ],
+  [
+   "lib/url.c",
+   211
+  ],
+  [
+   "lib/vdns/cf-dns.c",
+   209
+  ],
+  [
+   "lib/vdns/doh.c",
+   1257
+  ],
+  [
+   "src/tool_operate.c",
+   1553
+  ],
+  [
+   "src/tool_operate.c",
+   2027
+  ],
+  [
+   "src/tool_operate.c",
+   2087
+  ],
+  [
+   "src/tool_operate.c",
+   2504
+  ],
+  [
+   "src/tool_ssls.c",
+   75
+  ],
+  [
+   "src/tool_ssls.c",
+   201
+  ],
+  [
+   "lib/conncache.c",
+   696
+  ],
+  [
+   "lib/setopt.c",
+   1275
+  ],
+  [
+   "lib/setopt.c",
+   2520
+  ],
+  [
+   "lib/conncache.c",
+   1003
+  ],
+  [
+   "lib/multi.c",
+   1781
+  ],
+  [
+   "lib/multi.c",
+   1874
+  ],
+  [
+   "lib/multi.c",
+   1894
+  ],
+  [
+   "lib/multi.c",
+   1920
+  ],
+  [
+   "lib/setopt.c",
+   2915
+  ],
+  [
+   "lib/url.c",
+   2314
+  ],
+  [
+   "lib/multi.c",
+   2189
+  ],
+  [
+   "lib/multi.c",
+   2557
+  ],
+  [
+   "lib/multi.c",
+   2583
+  ],
+  [
+   "lib/multi.c",
+   2606
+  ],
+  [
+   "lib/multi.c",
+   3413
+  ],
+  [
+   "lib/setopt.c",
+   2943
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/urldata.h",
+   "id": "c:@S@UserDefined@FI@resolver_start_client",
+   "line": 964,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/urldata.h",
+   "id": "c:@S@UserDefined@FI@upkeep_interval_ms",
+   "line": 965,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@conn_upkeep",
+   "line": 892,
+   "lines": [
+    901
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/mqtt.c",
+   "id": "c:mqtt.c@F@mqtt_ping",
+   "line": 828,
+   "lines": [
+    840,
+    844
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/setopt.c",
+   "id": "c:setopt.c@F@setopt_long_net",
+   "line": 763,
+   "lines": [
+    878
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_init_userdefined",
+   "line": 311,
+   "lines": [
+    418
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_get_admin",
+   "line": 2604,
+   "lines": [
+    2621
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_discard_conn",
+   "line": 187,
+   "lines": [
+    200
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_conn_close",
+   "line": 397,
+   "lines": [
+    420
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_check_limits",
+   "line": 479,
+   "lines": [
+    501,
+    540
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_conn_now_idle",
+   "line": 709,
+   "lines": [
+    739
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_prune_dead",
+   "line": 875,
+   "lines": [
+    882
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_upkeep",
+   "line": 917,
+   "lines": [
+    920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_conn_seems_healthy",
+   "line": 1041,
+   "lines": [
+    1054
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/easy.c",
+   "id": "c:@F@curl_easy_reset",
+   "line": 1142,
+   "lines": [
+    1159
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/mqtt.c",
+   "id": "c:mqtt.c@F@mqtt_doing",
+   "line": 859,
+   "lines": [
+    881
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_open",
+   "line": 452,
+   "lines": [
+    487
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/vdns/asyn-thrdd.c",
+   "id": "c:@F@Curl_async_getaddrinfo",
+   "line": 639,
+   "lines": [
+    658
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/vdns/hostip.c",
+   "id": "c:hostip.c@F@hostip_resolv_start",
+   "line": 558,
+   "lines": [
+    603,
+    614
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_destroy",
+   "line": 260,
+   "lines": [
+    279
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_conn_close",
+   "line": 451,
+   "lines": [
+    456
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_evict_conn",
+   "line": 463,
+   "lines": [
+    472
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_add",
+   "line": 572,
+   "lines": [
+    597
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_find_act",
+   "line": 758,
+   "lines": [
+    771
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_find",
+   "line": 779,
+   "lines": [
+    799
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_reap_dead_cb",
+   "line": 853,
+   "lines": [
+    861
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_return",
+   "line": 948,
+   "lines": [
+    966
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_reap_no_reuse",
+   "line": 988,
+   "lines": [
+    995
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/easy.c",
+   "id": "c:@F@curl_easy_init",
+   "line": 368,
+   "lines": [
+    388
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/easy.c",
+   "id": "c:@F@curl_easy_upkeep",
+   "line": 1396,
+   "lines": [
+    1403
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_match_conn",
+   "line": 1005,
+   "lines": [
+    1071
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/vdns/doh.c",
+   "id": "c:doh.c@F@doh_probe_run",
+   "line": 234,
+   "lines": [
+    280
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/vdns/hostip.c",
+   "id": "c:hostip.c@F@hostip_resolv",
+   "line": 704,
+   "lines": [
+    760
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/curl_share.c",
+   "id": "c:curl_share.c@F@share_destroy",
+   "line": 35,
+   "lines": [
+    41
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/curl_share.c",
+   "id": "c:@F@curl_share_init",
+   "line": 71,
+   "lines": [
+    82
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/easy.c",
+   "id": "c:easy.c@F@easy_perform",
+   "line": 770,
+   "lines": [
+    796
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:@F@Curl_multi_handle",
+   "line": 223,
+   "lines": [
+    349
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_done",
+   "line": 673,
+   "lines": [
+    747
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:@F@Curl_multi_remove_handle",
+   "line": 758,
+   "lines": [
+    844
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@is_finished",
+   "line": 2360,
+   "lines": [
+    2389
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:@F@curl_multi_cleanup",
+   "line": 2984,
+   "lines": [
+    3035
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_attach_existing",
+   "line": 1114,
+   "lines": [
+    1121
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_connect",
+   "line": 2476,
+   "lines": [
+    2532
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/vdns/doh.c",
+   "id": "c:@F@Curl_doh",
+   "line": 403,
+   "lines": [
+    447,
+    460
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/vdns/hostip.c",
+   "id": "c:@F@Curl_resolv_blocking",
+   "line": 790,
+   "lines": [
+    809
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/vdns/hostip.c",
+   "id": "c:@F@Curl_resolv",
+   "line": 1024,
+   "lines": [
+    1068
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_help.c",
+   "id": "c:@F@tool_list_engines",
+   "line": 392,
+   "lines": [
+    394
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@create_single",
+   "line": 1365,
+   "lines": [
+    1410
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "src/tool_ssls.c",
+   "id": "c:tool_ssls.c@F@tool_ssls_easy",
+   "line": 36,
+   "lines": [
+    41
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/cf-socket.c",
+   "id": "c:cf-socket.c@F@bindlocal",
+   "line": 671,
+   "lines": [
+    800
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/curl_share.c",
+   "id": "c:curl_share.c@F@share_unlink",
+   "line": 178,
+   "lines": [
+    190
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/easy.c",
+   "id": "c:@F@curl_easy_perform",
+   "line": 849,
+   "lines": [
+    855
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_port_resolve_host",
+   "line": 1054,
+   "lines": [
+    1063
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@curl_multi_init",
+   "line": 377,
+   "lines": [
+    379
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@Curl_multi_add_handle",
+   "line": 470,
+   "lines": [
+    498
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@curl_multi_remove_handle",
+   "line": 884,
+   "lines": [
+    894
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@Curl_multi_add_perform",
+   "line": 1746,
+   "lines": [
+    1760
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_handle_timeout",
+   "line": 1811,
+   "lines": [
+    1853
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_performing",
+   "line": 2014,
+   "lines": [
+    2093,
+    2115,
+    2135
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_ratelimiting",
+   "line": 2289,
+   "lines": [
+    2304
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connect",
+   "line": 2314,
+   "lines": [
+    2322
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connecting",
+   "line": 2508,
+   "lines": [
+    2534
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing_more",
+   "line": 2624,
+   "lines": [
+    2649
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_done",
+   "line": 2688,
+   "lines": [
+    2694
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_runsingle",
+   "line": 2717,
+   "lines": [
+    2879
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_close",
+   "line": 197,
+   "lines": [
+    211
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/vdns/cf-dns.c",
+   "id": "c:cf-dns.c@F@cf_dns_start",
+   "line": 184,
+   "lines": [
+    209
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/vdns/doh.c",
+   "id": "c:doh.c@F@doh_close",
+   "line": 1235,
+   "lines": [
+    1257
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@single_transfer",
+   "line": 1517,
+   "lines": [
+    1553
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_operate.c",
+   "id": "c:tool_operate.c@F@parallel_transfers",
+   "line": 1992,
+   "lines": [
+    2027,
+    2087
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_operate.c",
+   "id": "c:@F@operate",
+   "line": 2423,
+   "lines": [
+    2504
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_ssls.c",
+   "id": "c:@F@tool_ssls_load",
+   "line": 55,
+   "lines": [
+    75
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "src/tool_ssls.c",
+   "id": "c:@F@tool_ssls_save",
+   "line": 187,
+   "lines": [
+    201
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/conncache.c",
+   "id": "c:conncache.c@F@cpool_foreach",
+   "line": 680,
+   "lines": [
+    696
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/setopt.c",
+   "id": "c:setopt.c@F@setopt_long",
+   "line": 1258,
+   "lines": [
+    1275
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/setopt.c",
+   "id": "c:setopt.c@F@setopt_cptr",
+   "line": 2492,
+   "lines": [
+    2520
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/conncache.c",
+   "id": "c:@F@Curl_cpool_nw_changed",
+   "line": 999,
+   "lines": [
+    1003
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_do",
+   "line": 1772,
+   "lines": [
+    1781
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connecting",
+   "line": 1867,
+   "lines": [
+    1874
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_doing",
+   "line": 1887,
+   "lines": [
+    1894
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connect",
+   "line": 1907,
+   "lines": [
+    1920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/setopt.c",
+   "id": "c:@F@Curl_vsetopt",
+   "line": 2883,
+   "lines": [
+    2915
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_find_or_create_conn",
+   "line": 2281,
+   "lines": [
+    2314
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_do",
+   "line": 2153,
+   "lines": [
+    2189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnect",
+   "line": 2542,
+   "lines": [
+    2557
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnecting",
+   "line": 2576,
+   "lines": [
+    2583
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing",
+   "line": 2598,
+   "lines": [
+    2606
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:@F@curl_multi_setopt",
+   "line": 3330,
+   "lines": [
+    3413
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/setopt.c",
+   "id": "c:@F@curl_easy_setopt",
+   "line": 2932,
+   "lines": [
+    2943
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.876,
+ "summary": {
+  "affected_direct": 5,
+  "affected_further": 82,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 7,
+  "unknown": 0
+ },
+ "text": "[!] This change may affect 87 things you didn't touch (5 direct, 82 further up). None is sure to break.\n    7 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] CHANGED    UserDefined::resolver_start_client (field)  lib/urldata.h:964  (only comments or spacing changed on its line)\n  [*] CHANGED    UserDefined::upkeep_interval_ms (field)  lib/urldata.h:965  (type is now 'void *' (was 'timediff_t'))\n\nFunctions (87)\n  [~] AFFECTED   conn_upkeep  lib/conncache.c:892\n                 uses UserDefined::upkeep_interval_ms: type is now 'void *' (was 'timediff_t') (and 1 other link). Link: exact.\n  [~] AFFECTED   mqtt_ping  lib/mqtt.c:828\n                 uses UserDefined::upkeep_interval_ms: type is now 'void *' (was 'timediff_t') (and 1 other link). Link: exact.\n  [~] AFFECTED   setopt_long_net  lib/setopt.c:763\n                 uses UserDefined::upkeep_interval_ms: type is now 'void *' (was 'timediff_t') (and 2 other links). Link: exact.\n  [~] AFFECTED   Curl_init_userdefined  lib/url.c:311\n                 uses UserDefined::upkeep_interval_ms: type is now 'void *' (was 'timediff_t') (and 1 other link). Link: exact.\n  [~] AFFECTED   Curl_get_admin  lib/url.c:2604\n                 uses UserDefined::upkeep_interval_ms: type is now 'void *' (was 'timediff_t') (and 1 other link). Link: exact.\n  [~] AFFECTED   cpool_discard_conn  lib/conncache.c:187\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   cpool_conn_close  lib/conncache.c:397\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   cpool_check_limits  lib/conncache.c:479\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   cpool_conn_now_idle  lib/conncache.c:709\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   cpool_prune_dead  lib/conncache.c:875\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   Curl_cpool_upkeep  lib/conncache.c:917\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   Curl_cpool_conn_seems_healthy  lib/conncache.c:1041\n                 calls Curl_get_admin. Link: exact.\n  [~] AFFECTED   curl_easy_reset  lib/easy.c:1142\n                 calls Curl_init_userdefined. Link: exact.\n  [~] AFFECTED   mqtt_doing  lib/mqtt.c:859\n                 calls mqtt_ping. Link: exact.\n  [~] AFFECTED   Curl_open  lib/url.c:452\n                 calls Curl_init_userdefined. Link: exact.\n  ... and 72 more (72 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (7)\n  [?] 1 place passes its address on. Reads and writes made through that pointer elsewhere are not listed.\n  [?] Fields are tracked per struct type, not per object: every UserDefined's upkeep_interval_ms is listed.\n  [?] Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of a struct that contains it, are still listed as unknown. Not checked there: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. {0} (all zero) is not counted.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

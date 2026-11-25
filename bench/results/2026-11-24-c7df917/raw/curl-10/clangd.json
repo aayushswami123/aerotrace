@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at lib/vauth/vauth.c:145:6",
+ "hits": [
+  [
+   "lib/url.c",
+   1381
+  ],
+  [
+   "lib/vauth/vauth.c",
+   142
+  ]
+ ],
+ "seconds": 0.001,
+ "text": "lib/url.c:1381: Curl_auth_allowed_to_origin(data, data->state.origin)) {\nlib/vauth/vauth.c:142: return Curl_auth_allowed_to_origin(data, data->state.origin);\n"
+}

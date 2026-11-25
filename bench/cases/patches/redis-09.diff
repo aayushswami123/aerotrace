@@ -1,0 +1,11 @@
+--- a/src/zmalloc.c
++++ b/src/zmalloc.c
+@@ -53,7 +53,7 @@
+ /* When using the libc allocator, use a minimum allocation size to match the
+  * jemalloc behavior that doesn't return NULL in this case.
+  */
+-#define MALLOC_MIN_SIZE(x) ((x) > 0 ? (x) : sizeof(long))
++#define MALLOC_MIN_SIZE(x, aerotrace_bench) ((x) > 0 ? (x) : sizeof(long))
+ 
+ /* Explicitly override malloc/free etc when using tcmalloc. */
+ #if defined(USE_TCMALLOC)
