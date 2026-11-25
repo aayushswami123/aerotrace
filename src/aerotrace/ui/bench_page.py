@@ -13,6 +13,7 @@ import base64
 import hashlib
 import json
 import re
+import statistics
 from html import escape
 from importlib import resources
 from pathlib import Path
@@ -43,7 +44,7 @@ def _found(r: dict, tool: str) -> int:
 
 
 def _median(xs: list[float]) -> float | None:
-    return sorted(xs)[len(xs) // 2] if xs else None
+    return statistics.median(xs) if xs else None
 
 
 def _agg(rows: list[dict], tool: str) -> dict:
@@ -93,6 +94,11 @@ def build(run_dir: Path) -> dict:
         for r in build_rows
         if r["truth"] and _found(r, "aerotrace") == 0 and r["id"] not in wrong_safe
     ]
+    # The first line of AeroTrace's answer in those cases, quoted on the page.
+    claimed_none_open = {i: texts[i].split("\n", 1)[0].removeprefix("[i] ").strip() for i in claimed_none}
+    # Hard cases (without the macro case) where AeroTrace named at least one break: the fair place to
+    # compare false alarms, since a tool that names nothing can have no false alarm.
+    named = [r for r in rows if VIEWS["hard_x"][1](r) and r["tools"]["aerotrace"].get("answer_sites")]
     errors = {t: sum("error" in r["tools"][t] for r in rows) for t in TOOLS}
     notes = json.loads((run_dir / "notes.json").read_text()) if (run_dir / "notes.json").exists() else {}
     might = [r for r in rows if r["level"] == "might_break"]
@@ -123,6 +129,9 @@ def build(run_dir: Path) -> dict:
         "aerotrace_code": notes.get("aerotrace_code", setups["redis"]["aerotrace_commit"][:7]),
         "wrong_safe": wrong_safe,
         "claimed_none": claimed_none,
+        "claimed_none_open": claimed_none_open,
+        "named": {"cases": len(named), "total": {t: _agg(named, t) for t in TOOLS}},
+        "link_checked": sum(1 for r in build_rows if r.get("link_checked")),
         "errors": errors,
         "time_range": {
             t: [
@@ -207,11 +216,25 @@ def _headline(d: dict) -> list[str]:
     )
     tr = d["time_range"]
     others_max = max(tr[t][1] for t in TOOLS[1:])
+    nm = d["named"]["total"]
+    na, nc = nm["aerotrace"], nm["clangd"]
+    same = (na["found"], na["false_alarms"]) == (nc["found"], nc["false_alarms"])
+    vs_clangd = (
+        f"AeroTrace did not beat clangd here. On the {d['named']['cases']} hard cases where AeroTrace named "
+        f"at least one break, both score the same ({_n(na['found'])} of {_n(na['truth'])} found, {_n(na['false_alarms'])} false "
+        "alarms each). AeroTrace's lower false-alarm count against clangd comes from cases where it named no "
+        "break at all."
+        if same
+        else f"On the {d['named']['cases']} hard cases where AeroTrace named at least one break: AeroTrace "
+        f"{_n(na['found'])} of {_n(na['truth'])} with {_n(na['false_alarms'])} false alarms, clangd "
+        f"{_n(nc['found'])} with {_n(nc['false_alarms'])}."
+    )
+    rest = " and ".join(_n(nm[t]["false_alarms"]) for t in TOOLS[2:])
     third = (
-        f"In one line: AeroTrace's edge here is few false alarms, not more breaks found. It found fewer "
-        f"breaks than another tool in {len(d['fewer'])} of {d['build_cases']} build cases, and it takes "
-        f"{_secs(tr['aerotrace'][0])} to {_secs(tr['aerotrace'][1])} per check where the others take at most "
-        f"{_secs(others_max)}."
+        f"In one line: {vs_clangd} Against {' and '.join(TOOL_NAME[t] for t in TOOLS[2:])} it has fewer false "
+        f"alarms there ({_n(na['false_alarms'])} against {rest}). It found fewer breaks than another tool in "
+        f"{len(d['fewer'])} of {d['build_cases']} build cases, and it takes {_secs(tr['aerotrace'][0])} to "
+        f"{_secs(tr['aerotrace'][1])} per check where the others take at most {_secs(others_max)}."
     )
     return [first, second, third]
 
@@ -275,10 +298,15 @@ def render(d: dict) -> str:
     wrong_safe = (
         f'<p class="note bad"><b>A wrong "safe" answer in {len(d["wrong_safe"])} cases.</b> In {escape(ws)} the build '
         f"fails, but AeroTrace's answer says \"{SAFE_PHRASE}\". That is the worst kind of answer by AeroTrace's own "
-        "rules. It is a product bug, reported, not fixed in this run."
+        "rules. It is a product bug, reported, not fixed in this run. A fix (#77) has since been merged into "
+        "launch-candidate; it is not measured here."
         + (
-            f" In {escape(', '.join(d['claimed_none']))} it claims no break either, but says parts of the change "
-            "could not be followed."
+            "".join(
+                f" In {escape(i)}, which breaks {_n(next(c['breaks'] for c in d['cases'] if c['id'] == i))} "
+                f'functions, its answer opens with "{escape(line)}" It does say what it couldn\'t see, so the '
+                'rules don\'t count it as a wrong "safe" answer, but an agent that reads only that line is misled.'
+                for i, line in d["claimed_none_open"].items()
+            )
             if d["claimed_none"]
             else ""
         )
@@ -313,7 +341,7 @@ def render(d: dict) -> str:
     )
     body = f"""<main class=wrap>
 <header class=hero>
-<p class=caps>Recall · False alarms · Time · Tokens</p>
+<p class=caps>Recall · False alarms · Time{" · Tokens" if d["tokens_counted"] else ""}</p>
 <h1>What does a C change break? Four tools, {len(d["cases"])} changes: {d["build_cases"]} checked against the compiler, {d["might_break"]["cases"]} by hand.</h1>
 <p class=lead>{escape(head1)} {escape(head2)}</p>
 <p class=lead>{escape(head3)}</p>
@@ -378,6 +406,7 @@ def render(d: dict) -> str:
 <p><b>How each tool was run.</b> {" ".join(f"{TOOL_NAME[t]}: {escape(TOOL_HOW[t])}." for t in TOOLS)} Truth: each patch applied to a built copy of the pinned release, rebuilt with every error reported; every compile and link error is a break. A break is counted per function (or table).</p>
 <p><b>Versions.</b> {escape(v["aerotrace"])} (analysis code as of commit {escape(d["aerotrace_code"])}), {escape(v["clangd"])}, {escape(v["cscope"])}, {escape(v["rg"])}. Compiler: {escape(d["compiler"])}. <b>Machine.</b> {escape(d["machine"])}. <b>Time</b> is the median of 3 runs per query; one-off setup:</p>
 <ul>{setup_rows}</ul>
+<p><b>Read with care.</b> The {d["build_cases"]} build changes are edits we made, of 10 kinds we chose, scored by rules we wrote before any tool ran; most have only 1 to 25 breaks. The link step ran in {d["link_checked"]} of them; in the others the build stopped at compile errors, so link-only breaks are not in the truth. AeroTrace's time is a new <span class=mono>uv run aerotrace check</span> process each time (Python start-up included; the running MCP server was not timed). clangd's is one query to a running, indexed server, asked at the symbol's definition, which an agent first has to find. cscope was asked <span class=mono>-L0</span> (every use of the symbol); <span class=mono>-L3</span> (callers only) would list fewer prototypes and was not run.</p>
 <p>Tool errors (counted as misses): {", ".join(f"{TOOL_NAME[t]} {n}" for t, n in d["errors"].items())}.</p>
 <p>The MCP text of AeroTrace's answer shows at most 15 items per list; in {escape(capped)} it hides that many claimed breaks behind "N more". Recall is scored on the full answer.</p>
 <p><b>Reproduce</b> (from an AeroTrace checkout): <a href="../../bench/truth/README.md">bench/truth/README.md</a>. Cases: <a href="../../bench/cases/CASES.md">bench/cases/CASES.md</a>. Rules, fixed before any tool ran: <a href="accuracy-cases-protocol.md">accuracy-cases-protocol.md</a>. Run: <span class=mono>{escape(d["run"])}</span>.</p>

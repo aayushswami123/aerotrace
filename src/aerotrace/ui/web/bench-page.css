@@ -30,7 +30,7 @@ h3 .mono { font-size: var(--text-xs); color: var(--text-3); font-weight: var(--w
 .toggle[aria-checked="true"] .sw::after { transform: translateX(14px); }
 .mix { color: var(--text-2); font-size: var(--text-sm); margin: 0 0 var(--space-3); min-height: 1.5em; }
 .legend { display: flex; flex-wrap: wrap; gap: var(--space-5); font-size: var(--text-sm); color: var(--text-2); margin-bottom: var(--space-3); }
-.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: var(--space-2); vertical-align: -1px; border: 1px solid var(--chart-other-stroke); background: var(--chart-other-fill); }
+.legend i { display: inline-block; width: 8px; height: 14px; border-radius: 2px; margin-right: var(--space-2); vertical-align: -2px; border: 1px solid var(--chart-other-stroke); background: var(--chart-other-fill); }
 .legend i.at { background: var(--chart-1); border-color: var(--chart-1); }
 .chart { width: 100%; }
 .chart svg { display: block; width: 100%; height: auto; }

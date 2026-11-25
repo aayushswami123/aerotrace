@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import re
+from html import escape
 from pathlib import Path
 
 import pytest
@@ -113,3 +114,32 @@ def test_errored_cases_count_as_misses() -> None:
             {"truth": ["c"], "tools": {"x": {"found": 1, "truth_sites": 1, "false_alarms": 0, "seconds": 0.1}}}]  # fmt: skip
     agg = bench_page._agg(rows, "x")
     assert (agg["found"], agg["truth"], agg["errors"]) == (1, 3, 1)
+
+
+def test_medians_match_the_scorer(data: dict) -> None:
+    groups = json.loads((RUN / "results.json").read_text())["groups"]
+    for view, key in bench_page.VIEW_GROUP.items():
+        for tool in bench_page.TOOLS:
+            assert data["views"][view]["total"][tool]["seconds"] == pytest.approx(
+                groups[key][tool]["median_seconds"], abs=1e-4
+            ), (view, tool)
+
+
+def test_false_alarms_are_also_compared_where_aerotrace_named_a_break(data: dict, html: str) -> None:
+    """A tool that names no break has no false alarm; the page must not sell that as an edge."""
+    groups = json.loads((RUN / "results.json").read_text())["groups"]["all/hard_aerotrace_named_a_break"]
+    named = data["named"]
+    assert named["cases"] == groups["aerotrace"]["cases"]
+    for t in bench_page.TOOLS:
+        assert named["total"][t]["false_alarms"] == groups[t]["false_alarms"]
+    if (named["total"]["aerotrace"]["found"], named["total"]["aerotrace"]["false_alarms"]) == (
+        named["total"]["clangd"]["found"],
+        named["total"]["clangd"]["false_alarms"],
+    ):
+        assert "AeroTrace did not beat clangd here." in html
+    assert "edge here is few false alarms" not in html
+
+
+def test_a_no_break_answer_on_a_breaking_case_is_quoted(data: dict, html: str) -> None:
+    for cid, line in data["claimed_none_open"].items():
+        assert cid in html and escape(line) in html
