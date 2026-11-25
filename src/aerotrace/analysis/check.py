@@ -34,6 +34,7 @@ from aerotrace.toolchain.unidiff import FileDiff
 FORMAT = "aerotrace-check"
 VERSION = 1
 NODE_CAP = 5000
+BREAKS_ID = "{}#breaks"  # id of the break of a changed node that does not build (#49)
 STATUSES = ("changed", "new", "removed", "breaks", "affected", "unknown", "no_effect")
 USED_RESULT = {"stored", "compared", "checked", "passed", "returned", "used", "called"}
 CXX_EXTS = {".cc", ".cpp", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".h++", ".ipp", ".tcc"}
@@ -222,6 +223,10 @@ class _Run:
         self.lookup = diff._Collect(conn, root, DiffImpact(mode, None, 0))
         self.edited = {c.fn.id for c in res.diff.changed}
         self.index_limits = set(graph.index_limits(conn))
+        # shown as the coverage line (proof), not as a limit
+        self.outside_note = graph.outside_build_note(
+            dict(conn.execute("SELECT key, value FROM meta").fetchall())
+        )
         self.sig_seen: set[str] = set()
         self.compiled: set[str] = set()  # patch mode: files whose patched version was parsed
         self.no_proto: set[str] = set()  # functions declared somewhere (new side) without a prototype
@@ -242,13 +247,17 @@ class _Run:
             return (STATUSES.index(n.status), certainty.LEVELS.index(n.certainty), n.distance)
 
         if cur.distance == 0 and node.status == "breaks":
-            # part of the change, and it will not build: the break is what matters (never hide it)
-            node.why = f"{cur.why}; but {node.why}"
-            node.lines = sorted(set(node.lines) | set(cur.lines))
-            self.res.nodes[node.id] = node
+            # part of the change, and it will not build: it stays a changed node, and the break is kept as a
+            # node of its own, so it is still counted (never hide it) (#49)
+            cur.why = f"{cur.why}; but {node.why}"
+            node.id = BREAKS_ID.format(node.id)
+            node.via = None if node.via == cur.id else node.via
+            self.add(node)
             return
         if node.distance == 0 and cur.status == "breaks":
-            cur.why = f"{node.why}; but {cur.why}"
+            del self.res.nodes[cur.id]
+            self.add(node)
+            self.add(cur)
             return
         if rank(node) < rank(cur):
             node.others = cur.others + 1
@@ -302,6 +311,8 @@ class _Run:
         return self.mode == "patch" and fn.id in self.edited and fn.file in self.compiled
 
     def blind(self, text: str, node: str | None = None) -> None:
+        if text == self.outside_note:
+            return
         scope = "index" if text in self.index_limits else "change"
         self.res.blind_spots.append((text, scope, node if scope == "change" else None))
 
@@ -843,7 +854,8 @@ def _resolve_via(res: CheckResult) -> None:
     """`via` of walk hits is a qualified name: map it to the node id when exactly one node has that name."""
     by_name: dict[str, list[str]] = {}
     for n in res.nodes.values():
-        by_name.setdefault(n.name, []).append(n.id)
+        if not n.id.endswith(BREAKS_ID.format("")):  # the break of a changed node: point at the change
+            by_name.setdefault(n.name, []).append(n.id)
     for n in res.nodes.values():
         if n.via is None and n.via_name:
             ids = by_name.get(n.via_name, [])
@@ -892,9 +904,15 @@ def _change(d: DiffImpact, res: CheckResult) -> dict:
     }
 
 
-def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int = NODE_CAP) -> dict:
+OUTSIDE_EXAMPLES = 3  # repo sources outside the build named in every answer (the rest with --all)
+
+
+def to_contract(
+    conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int = NODE_CAP, list_outside: bool = False
+) -> dict:
     """The `aerotrace-check` v1 JSON (see aerotrace/ui/schema.py). Counts are over every node; the node
-    list is capped at `cap`, lowest ranked dropped first."""
+    list is capped at `cap`, lowest ranked dropped first. `list_outside` adds the sorted repo sources
+    outside the build (proof.outside_build_files); by default only their count is given."""
     d = res.diff
     change = _change(d, res)
     if d.files == 0:
@@ -955,6 +973,8 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
         conn.execute("SELECT COUNT(*) FROM files").fetchone()[0],
         conn.execute("SELECT COUNT(*) FROM functions").fetchone()[0],
     )
+    cov = graph.build_coverage(conn)
+    outside = cov.pop("outside_build")
     return {
         "format": FORMAT,
         "version": VERSION,
@@ -979,6 +999,10 @@ def to_contract(conn: sqlite3.Connection, res: CheckResult, tool: str, cap: int 
             "index_functions": functions,
             "depth": d.depth,
             "stopped_early": res.stopped_early,
+            **cov,
+            "outside_build": len(outside),
+            "outside_build_examples": outside[:OUTSIDE_EXAMPLES],
+            **({"outside_build_files": outside} if list_outside else {}),
         },
     }
 
@@ -1023,12 +1047,17 @@ def _tool() -> str:
 
 
 def check_loaded(
-    conn: sqlite3.Connection, root: Path, change: Change, outliner: Outliner, depth: int = 5
+    conn: sqlite3.Connection,
+    root: Path,
+    change: Change,
+    outliner: Outliner,
+    depth: int = 5,
+    list_outside: bool = False,
 ) -> dict:
     """The aerotrace-check JSON for a change, with an open index."""
     res = run(conn, root, change.diffs, mode=change.mode, outliner=outliner, base=change.base, depth=depth,
               old=change.old)  # fmt: skip
-    return to_contract(conn, res, _tool())
+    return to_contract(conn, res, _tool(), list_outside=list_outside)
 
 
 def check_change(
@@ -1039,6 +1068,7 @@ def check_change(
     patch_text: str | None = None,
     build_dir: Path | None = None,
     depth: int = 5,
+    list_outside: bool = False,
 ) -> tuple[dict, str]:
     """Read the change, open the index with `open_index(want) -> (conn, note)`, and return (the
     aerotrace-check JSON, note about the index). Raises ValueError or GitError when the change can't be
@@ -1056,6 +1086,6 @@ def check_change(
     except Exception as e:
         return empty_contract("index_error", _tool(), f"The index could not be opened: {e}"), ""
     try:
-        return check_loaded(conn, root, change, outliner, depth), note
+        return check_loaded(conn, root, change, outliner, depth, list_outside), note
     finally:
         conn.close()

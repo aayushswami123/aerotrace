@@ -56,6 +56,9 @@ def walk_text(w: Walk, limit: int = 50) -> str:
     if w.truncated_at_depth:
         lines.append(f"More exist beyond depth {w.depth}.")
     lines += _legend(shown)
+    if w.unknown:
+        lines.append("Not followed:")
+        lines += [f"  - {n}" for n in w.unknown]
     return "\n".join(lines)
 
 
@@ -94,7 +97,13 @@ def candidates_text(query: str, fns: list[Fn], limit: int = 20) -> str:
     if not fns:
         return f"No function matches '{query}'. Try `find` with part of the name, or `file.c:LINE`."
     lines = [f"'{query}' matches {len(fns)} functions. Ask again with one of these:"]
-    lines += [f"  - {f.qualified_name}@{f.file}  ({f.where})" for f in fns[:limit]]
+    shown = Counter(f"{f.qualified_name}@{f.file}" for f in fns)
+    for f in fns[:limit]:
+        name = f"{f.qualified_name}@{f.file}"
+        if shown[name] > 1:  # copies of one header function (C and C++): only the clang ID tells them apart
+            lines.append(f"  - {f.id}  ({f.where}, compiled as {f.language})")
+        else:
+            lines.append(f"  - {name}  ({f.where})")
     if len(fns) > limit:
         lines.append(f"  ... and {len(fns) - limit} more.")
     return "\n".join(lines)
@@ -119,6 +128,7 @@ def walk_json(w: Walk, limit: int = 50) -> dict:
         "truncated_at_depth": w.truncated_at_depth,
         "results": [hit_json(h) for h in w.hits[:limit]],
         "omitted": max(0, len(w.hits) - limit),
+        "unknown": w.unknown,
     }
 
 

@@ -44,6 +44,7 @@ class Walk:
     depth: int
     hits: list[Hit] = field(default_factory=list)
     truncated_at_depth: bool = False  # more functions exist beyond `depth`
+    unknown: list[str] = field(default_factory=list)  # callers that could not be followed (UNKNOWN notes)
 
     def by_distance(self) -> dict[int, list[Hit]]:
         out: dict[int, list[Hit]] = {}
@@ -150,7 +151,37 @@ def walk(
     (used for data coupling)."""
     seeds = {fid: (conf, start.id, lines) for fid, (conf, lines) in (extra_first_step or {}).items()}
     hits, truncated = walk_many(conn, [start], direction, depth, allowed, seeds)
-    return Walk(start, direction, depth, hits, truncated)
+    unknown = template_notes(conn, [start, *(h.fn for h in hits)]) if direction == "callers" else []
+    return Walk(start, direction, depth, hits, truncated, unknown)
+
+
+def template_notes(conn: sqlite3.Connection, fns: list[Fn], limit: int = 3) -> list[str]:
+    """UNKNOWN notes for calls in templates that may reach one of `fns` by name but are not linked, because
+    their target depends on the template type (#33). One note per name, the first `limit` names."""
+    names = sorted({f.name for f in fns})
+    if not names:
+        return []
+    rows = conn.execute(
+        """SELECT b.detail, f.qualified_name, f.file, b.line FROM blind_spots b
+           JOIN functions f ON f.id = b.function_id WHERE b.kind = 'template_call'
+           ORDER BY b.detail, f.file, b.line, f.qualified_name"""
+    ).fetchall()
+    by_name: dict[str, list[str]] = {}
+    for r in rows:
+        name = r["detail"].split(":", 1)[0]
+        by_name.setdefault(name, []).append(f"{r['qualified_name']} ({r['file']}:{r['line']})")
+    hit = [n for n in names if n in by_name]
+    notes = []
+    for n in hit[:limit]:
+        where = by_name[n]
+        shown = ", ".join(where[:3]) + (f" and {len(where) - 3} more" if len(where) > 3 else "")
+        notes.append(
+            f"UNKNOWN (#33): {len(where)} call(s) to a function named {n} inside templates depend on the "
+            f"template type and are not linked, so they may be missing callers: {shown}."
+        )
+    if len(hit) > limit:
+        notes.append(f"UNKNOWN (#33): template calls to {len(hit) - limit} more names are not linked either.")
+    return notes
 
 
 # ---------------------------------------------------------------- blast radius
@@ -232,8 +263,10 @@ def blind_spots_for(conn: sqlite3.Connection, target: Fn, callers: Walk) -> list
         ).fetchone()[0]
         if unknown:
             notes.append(
-                f"{unknown} call sites in the repo go through pointers of unknown type and could reach anything."
+                f"{unknown} call sites in the repo go through pointers of unknown type, or names that "
+                "depend on a template type, and could reach anything."
             )
+    notes += callers.unknown
     if callers.truncated_at_depth:
         notes.append(f"Stopped at depth {callers.depth}; more callers exist further up.")
     return notes + index_limits(conn)
@@ -263,6 +296,30 @@ def _names(items: list[str], n: int = 3) -> str:
     return ", ".join(items[:n]) + (", ..." if len(items) > n else "")
 
 
+def outside_build_note(meta: dict[str, str]) -> str | None:
+    """The limit for repo sources that compile_commands.json does not list (None when there are none)."""
+    outside = json.loads(meta.get("not_in_compdb") or "[]")
+    if not outside:
+        return None
+    return (
+        f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
+        f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
+    )
+
+
+def build_coverage(conn: sqlite3.Connection) -> dict:
+    """How much of the build the index covers: files in compile_commands.json, how many were parsed, how
+    many had parse errors, and the sorted repo sources outside the build."""
+    meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+    parsed = conn.execute("SELECT COUNT(*) FROM files WHERE is_unit = 1").fetchone()[0]
+    return {
+        "build_files": int(meta.get("units") or parsed),
+        "build_files_checked": parsed,
+        "build_files_with_errors": int(meta.get("files_with_errors") or 0),
+        "outside_build": sorted(json.loads(meta.get("not_in_compdb") or "[]")),
+    }
+
+
 def flag_limits(meta: dict[str, str]) -> list[str]:
     """Plain-English limits that come from the compile flags (see `aerotrace doctor` for details)."""
     notes: list[str] = []
@@ -272,12 +329,9 @@ def flag_limits(meta: dict[str, str]) -> list[str]:
             f"Used {meta.get('compdb_path')}; {len(alternatives)} other compile_commands.json "
             f"({_names(alternatives)}) were not used. Pick one with --build-dir."
         )
-    outside = json.loads(meta.get("not_in_compdb") or "[]")
+    outside = outside_build_note(meta)
     if outside:
-        notes.append(
-            f"{len(outside)} C/C++ source file{'s are' if len(outside) != 1 else ' is'} not in "
-            f"compile_commands.json and {'were' if len(outside) != 1 else 'was'} not analysed ({_names(outside)})."
-        )
+        notes.append(outside)
     missing = json.loads(meta.get("missing_headers") or "[]")
     if missing:
         shown = ", ".join(f"{h} ({n} file{'s' if n != 1 else ''})" for h, n in missing[:3])

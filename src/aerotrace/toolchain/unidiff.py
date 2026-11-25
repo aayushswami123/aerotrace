@@ -143,17 +143,25 @@ def apply(text: str, fd: FileDiff) -> str | None:
     lines = text.split("\n")  # a trailing "" means the file ends with a newline
     ends_nl = len(lines) > 1 and lines[-1] == ""
     body = lines[:-1] if ends_nl else lines
-    if any(not (0 < n <= len(body)) or body[n - 1] != t for n, t in fd.old_text.items()):
+    # A CRLF file still fits a patch written with LF line ends (and the other way round): the "\r" is not
+    # compared, and added lines get the file's line end (#51).
+    crlf = sum(t.endswith("\r") for t in body) * 2 > len(body)
+    if any(
+        not (0 < n <= len(body)) or body[n - 1].rstrip("\r") != t.rstrip("\r") for n, t in fd.old_text.items()
+    ):
         return None
     removed = {o for o, _ in fd.removed}
     inserts: dict[int, list[tuple[int, str]]] = {}
     for n, gap in fd.added:
-        inserts.setdefault(gap, []).append((n, fd.new_text.get(n, "")))
+        t = fd.new_text.get(n, "").rstrip("\r")
+        inserts.setdefault(gap, []).append((n, t + "\r" if crlf else t))
     out: list[str] = []
     for g in range(len(body) + 1):
         if g > 0 and g not in removed:
             out.append(body[g - 1])
         out.extend(t for _, t in sorted(inserts.get(g, [])))
-    if any(not (0 < n <= len(out)) or out[n - 1] != t for n, t in fd.new_text.items()):
+    if any(
+        not (0 < n <= len(out)) or out[n - 1].rstrip("\r") != t.rstrip("\r") for n, t in fd.new_text.items()
+    ):
         return None
     return "\n".join(out) + ("\n" if ends_nl or (fd.added and not body) else "")

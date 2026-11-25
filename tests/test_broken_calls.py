@@ -217,11 +217,12 @@ def test_rarer_c_forms_of_a_broken_call(repo_factory, tmp_path):
     assert ("bad_deref", "two: int two(int, int)", "exact", 9) in e
     assert ("bad_addr", "three: int three(int, int, int)", "exact", 10) in e
     # (c ? two : other2)(1) and p(1): calls through a pointer, linked to every function of that type
-    # (pair in forms.cpp has that type too)
+    # (pair in forms.cpp has that type too; so has ov(int, int), named as a value in templates there: #31)
     assert {x for x in e if x[0] == "bad_cond"} == {
         ("bad_cond", "two: int two(int, int)", "via_pointer", 13),
         ("bad_cond", "other2: int other2(int, int)", "via_pointer", 13),
         ("bad_cond", "pair: int pair(int, int)", "via_pointer", 13),
+        ("bad_cond", "ov: int ov(int, int)", "via_pointer", 13),
     }
     assert ("bad_ptr", "other2: int other2(int, int)", "via_pointer", 18) in e
     [ptr_site] = sites(conn, "bad_ptr", "src/forms.c")

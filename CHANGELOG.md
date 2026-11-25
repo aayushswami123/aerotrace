@@ -7,6 +7,15 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `aerotrace check`: when something breaks, the first line now ends with the counts in the words the
+  lists use, e.g. `(4 BREAKS, 19 AFFECTED)`. A coverage line comes before the proof line: `Checked 117
+  of 117 files in this build (1 had parse errors).`, plus one short line for repo sources outside
+  compile_commands.json, naming up to 3 of them (`1,696 C/C++ files outside this build were not checked:
+  deps/a.c, deps/b.c, deps/c.c and 1,693 more`); under a "nothing found" headline it comes right below it. It replaces the long
+  "not in compile_commands.json" limit. New `aerotrace check --all`: no caps, and lists those files. On a
+  terminal, long lines wrap at word boundaries to the terminal width; pipes, `--json` and MCP answers are
+  not wrapped. The JSON `proof` has new optional counts (`build_files`, `build_files_checked`,
+  `build_files_with_errors`, `outside_build`, `outside_build_examples`).
 - Claude Code edit check: `aerotrace install --client claude` now also adds a `PreToolUse` hook (in the
   repo's `.claude/settings.json`, other settings kept). Before Claude edits a C/C++ file, the edit is
   checked as a patch: exact breaks give the full list (functions, data, tests to run), probable breaks or
@@ -53,6 +62,21 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- C++ templates: a call whose target depends on the template type (`t.run(5)`, `T::f()`, `f(t)`) can't be
+  linked, because libclang does not show the instantiations. `callers`, `impact`, `signature`, `diff` and
+  `check` for a function with that name now say "UNKNOWN (#33)" and list the template calls, instead of
+  looking complete. An overload set used as a value in a template (`T p = ov;`) takes the address of every
+  candidate (#31).
+- `diff`/`check` in git mode: when a change makes a virtual override stop overriding (new parameters), the
+  callers that dispatched to it through the base are listed again, as `virtual` (#32).
+- `check`: a changed function that no longer builds stays in "What changed" (distance 0), and its break is a
+  separate node, still counted (#49).
+- `check --patch` on CRLF files: the patch is read as it is (no line-end change), and an LF patch fits a
+  CRLF file too, so the changed function is found (#51).
+- A header function compiled as C and as C++: `file:line` now gives both copies, and the choices show the
+  clang ID and the language, so each can be asked for (#40).
+- Comparing a function's address (`proc == f`, `if (f)`) no longer counts as taking it (#12). `(*f)(x)` and
+  `(&f)(x)` are direct calls to `f` (#22).
 - `aerotrace data` and `aerotrace check` see more uses of fields and globals: `&x` stored in a file-scope
   table (#27), fields set by position (`{1, 2}`, #26), `x++` and `x += n` as a read and a write (#52),
   `{.f = 1}` inside functions (#37), `offsetof` (#24), removed fields in `{.f = ...}` and removed globals
@@ -67,8 +91,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
   functions, templates, methods (`k.m(1)`, `p->m(1)`, virtual ones too) and static members. When no overload
   matches, the call is linked to every function of that name, marked `ambiguous`. A bad call through a
   function pointer, a `std::function` or a pointer to member is still a pointer call. A function used as a
-  value where it does not fit (`int x = f;`) is not taken for a call. Not covered yet: C++ constructor calls
-  (`K k(1, 2)`, `new K(1, 2)`, #21) and calls on an object with `operator()` (#39).
+  value where it does not fit (`int x = f;`) is not taken for a call. C++ constructor calls (`K k(1, 2)`,
+  `new K(1, 2)`, #21) and calls on an object with `operator()` (#39) are found from the compile error and
+  linked to every constructor (or `operator()`) of that class in the repo; an inherited one is not seen, and
+  the call is then listed as a blind spot.
 - Linux: when the `clang` on PATH and the loaded libclang were different versions (GitHub's Ubuntu runner has
   clang 21 and libclang 22), clang 21's own headers were passed to libclang 22. Its `stdatomic.h` then
   defined nothing, so every C11 atomic (all of Redis's `atomicIncr`/`atomicGet`) was a parse error. AeroTrace

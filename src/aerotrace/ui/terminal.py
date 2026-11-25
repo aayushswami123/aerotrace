@@ -2,13 +2,16 @@
 
 Meaning never depends on colour: every item has a status word, and colour (only on a TTY) is limited to
 bold, red and yellow on the icon and the word. With NO_COLOR, TERM=dumb or a non-UTF-8 stream the icons
-are plain ASCII. Lines are not wrapped, so the text stays the same everywhere and is easy to grep.
+are plain ASCII. Lines are wrapped at word boundaries only when the caller passes a width (the CLI does
+so on a terminal); in pipes, CI logs and MCP answers lines are not wrapped, so the text stays the same
+everywhere and is easy to grep.
 """
 
 from __future__ import annotations
 
 import codecs
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Mapping
 from typing import TextIO
@@ -80,7 +83,7 @@ def _cap_first(s: str) -> str:
 # ---------------------------------------------------------------- shared wording (terminal and HTML)
 
 
-def headline(data: dict) -> tuple[str, list[str]]:
+def headline(data: dict, all_hint: str = "") -> tuple[str, list[str]]:
     """(icon key, lines). The first line is the headline; it is chosen from counts only."""
     st = data["status"]
     change = data.get("change") or {}
@@ -150,6 +153,8 @@ def headline(data: dict) -> tuple[str, list[str]]:
         more.append(f"{unk:,} {'is' if unk == 1 else 'are'} unknown")
     if nf and (be or bp or aff or unk):
         more.append(f"{n_(nf, 'part')} of the change could not be followed")
+    if be or bp:
+        first = first[:-1] + f" ({_counts(be, bp, aff, unk)})."
     lines = [first]
     if more:
         lines.append(_cap_first(_join(more)) + ".")
@@ -157,10 +162,13 @@ def headline(data: dict) -> tuple[str, list[str]]:
     other = change.get("other_files", 0)
     if other:
         lines.append(f"({n_(other, 'other file')} in the diff {'is' if other == 1 else 'are'} not C or C++.)")
+    if icon == "info":
+        # nothing found here either, so what the build left out is said right away
+        lines += [f"Index limit: {t}" for t in coverage_lines(data, all_hint)[1:]]
     if icon == "clear":
         lines.append("No other indexed function calls what changed or reads what it writes.")
-        # A pass never hides what the index as a whole can't see.
-        limits = index_limits(data)
+        # A pass never hides what the index as a whole can't see; files outside the build come first.
+        limits = coverage_lines(data, all_hint)[1:] + index_limits(data)
         lines += [f"Index limit: {t}" for t in limits[:INDEX_LIMITS_UNDER_PASS]]
         if len(limits) > INDEX_LIMITS_UNDER_PASS:
             lines.append(
@@ -170,6 +178,36 @@ def headline(data: dict) -> tuple[str, list[str]]:
 
 
 INDEX_LIMITS_UNDER_PASS = 5
+
+
+def _counts(be: int, bp: int, aff: int, unk: int) -> str:
+    """'4 BREAKS, 19 AFFECTED': the status words of the lists below, with their counts."""
+    parts = [(be, "BREAKS"), (bp, "MAY BREAK"), (aff, "AFFECTED"), (unk, "UNKNOWN")]
+    return ", ".join(f"{n:,} {w}" for n, w in parts if n)
+
+
+def coverage_lines(data: dict, all_hint: str = "") -> list[str]:
+    """'Checked 117 of 117 files in this build (1 had parse errors).' and, when some repo sources are not
+    in compile_commands.json, one short line saying so and naming up to 3 of them. Empty when the JSON has
+    no coverage numbers."""
+    p = data.get("proof") or {}
+    if "build_files" not in p:
+        return []
+    errs = p["build_files_with_errors"]
+    err_txt = f" ({errs:,} had parse errors)" if errs else ""
+    out = [f"Checked {p['build_files_checked']:,} of {n_(p['build_files'], 'file')} in this build{err_txt}."]
+    outside = p["outside_build"]
+    if outside:
+        names = p.get("outside_build_examples") or []
+        more = outside > len(names)
+        rest = outside - len(names)
+        listed = (": " + ", ".join(names) + (f" and {rest:,} more" if rest else "")) if names else ""
+        hint = f" ({all_hint})" if all_hint and more and "outside_build_files" not in p else ""
+        out.append(
+            f"{n_(outside, 'C/C++ file')} outside this build {'was' if outside == 1 else 'were'} not "
+            f"checked{listed}{hint}."
+        )
+    return out
 
 
 def index_limits(data: dict) -> list[str]:
@@ -311,12 +349,80 @@ def clean(v: object, ascii_only: bool = False) -> object:
     return v
 
 
-def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int = 8) -> str:
-    """The whole terminal answer as one string (no trailing newline)."""
+def _width(s: str) -> int:
+    """Columns `s` takes on a terminal (ANSI codes take none, wide characters two)."""
+    s = strip_ansi(s)
+    return sum(
+        # U+FE0F asks for the emoji form, which terminals draw two columns wide
+        1
+        if c == "\ufe0f"
+        else 0
+        if unicodedata.combining(c)
+        else 2
+        if unicodedata.east_asian_width(c) in "WF"
+        else 1
+        for c in s
+    )
+
+
+def _hang(line: str) -> int:
+    """Where continuation lines start: under the text, after the indent and any icon."""
+    plain = strip_ansi(line)
+    indent = len(plain) - len(plain.lstrip(" "))
+    text = plain[indent:]
+    icons = sorted({f.rstrip() for pair in ICONS.values() for f in pair}, key=len, reverse=True)
+    for icon in icons:  # longest first; the ASCII "[ ]" has a space inside
+        if text.startswith(icon + " "):
+            rest = text[len(icon) :]
+            return _width(plain[: indent + len(icon)]) + len(rest) - len(rest.lstrip(" "))
+    return indent
+
+
+def wrap(text: str, width: int) -> str:
+    """Every line longer than `width` broken at spaces, continuation lines indented under the text.
+    A single word longer than the line (a long path) is never split."""
+    out: list[str] = []
+    for line in text.split("\n"):
+        if _width(line) <= width:
+            out.append(line)
+            continue
+        hang = " " * _hang(line)
+        indent = len(line) - len(line.lstrip(" "))
+        cur, words = line[:indent], line[indent:].split(" ")
+        start = True
+        for w in words:
+            if start:
+                cur, start = cur + w, False
+            elif w == "" or _width(cur) + 1 + _width(w) <= width or cur.strip() == "":
+                cur += " " + w
+            else:
+                out.append(cur.rstrip())
+                cur = hang + w
+        out.append(cur.rstrip())
+    return "\n".join(out)
+
+
+def render(
+    data: dict,
+    *,
+    color: bool = False,
+    unicode: bool = True,
+    limit: int = 8,
+    width: int | None = None,
+    all_hint: str = "",
+) -> str:
+    """The whole terminal answer as one string (no trailing newline). `width` wraps long lines at word
+    boundaries (None = no wrapping). `all_hint` names the option that lists the files outside the build
+    (the CLI passes '--all lists them'; MCP passes nothing)."""
+    text = _render(data, color=color, unicode=unicode, limit=limit, all_hint=all_hint)
+    return wrap(text, width) if width else text
+
+
+def _render(data: dict, *, color: bool, unicode: bool, limit: int, all_hint: str) -> str:
     check(data)
     data = clean(data, not unicode)  # type: ignore[assignment]
     o = _Out(color, unicode)
-    icon, head = headline(data)
+    icon, head = headline(data, all_hint)
     o.lines.append(o.paint(f"{o.icon(icon)} {head[0]}", "head"))
     o.lines += [f"    {line}" for line in head[1:]]
     if data["status"] != "ok":
@@ -384,7 +490,9 @@ def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int 
 
     for scope, heading in (("change", "Blind spots in this change"), ("index", "Limits of the index")):
         spots = [b for b in sec["blind_spots"] if b["scope"] == scope]
-        if scope == "index" and icon == "clear" and len(spots) <= INDEX_LIMITS_UNDER_PASS:
+        # the same count as under the headline: files outside the build come first there
+        shown_above = len(coverage_lines(data)[1:]) + len(spots)
+        if scope == "index" and icon == "clear" and shown_above <= INDEX_LIMITS_UNDER_PASS:
             continue  # already printed under the headline
         if spots:
             o.section(f"{heading} ({len(spots):,})")
@@ -399,5 +507,14 @@ def render(data: dict, *, color: bool = False, unicode: bool = True, limit: int 
     legend = [f"{c} = {CERTAINTY_MEANING[c]}" for c in CERTAINTIES if c in used and c != "exact"]
     if legend:
         o.section("Link: " + "; ".join(legend) + ".")
+    cov = coverage_lines(data, all_hint)
+    if cov:
+        o.section(cov[0])
+        if icon not in ("clear", "info"):  # under "nothing found" it is already right below the headline
+            o.lines += cov[1:]
+        outside = data["proof"].get("outside_build_files")
+        if outside:
+            o.section(f"Files outside this build ({len(outside):,})")
+            o.lines += [f"  {f}" for f in outside]
     o.section(proof_line(data))
     return "\n".join(o.lines)

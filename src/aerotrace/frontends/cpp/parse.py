@@ -144,6 +144,11 @@ _BINARY_SPELLING = {
     14: ">=", 15: "==", 16: "!=", 17: "&", 18: "^", 19: "|", 20: "&&", 21: "||", 22: "=", 23: "*=",
     24: "/=", 25: "%=", 26: "+=", 27: "-=", 28: "<<=", 29: ">>=", 30: "&=", 31: "^=", 32: "|=", 33: ",",
 }  # fmt: skip
+# Calls that do not compile and leave nothing in the tree to link (#21, #39): only the error names the class.
+_NO_CLASS_CALL = (
+    ("constructor", re.compile(r"^no matching constructor for initialization of '([^']+)'")),
+    ("operator()", re.compile(r"^no matching function for call to object of type '([^']+)'")),
+)
 _MISSING_MEMBER = re.compile(r"^no member named '([^']+)' in '(?:struct |union |class )?([^']+)'")
 # {.gone = 1} after the field is removed (#25)
 _MISSING_DESIGNATOR = re.compile(
@@ -333,6 +338,9 @@ class Collector:
         self.calls: set[tuple] = set()
         self.accesses: set[tuple] = set()  # (fn_usr, fn_file, var_usr, "reads"/"writes", line)
         self.pointer_calls: set[tuple] = set()  # (fn_usr, fn_file, line, function type called or "")
+        # (fn_usr, fn_file, line, name called): a call in a template whose target depends on the template
+        # parameters (`t.run(5)`, `T::f()`, `f(t)`). libclang shows no instantiation, so it is not linked (#33).
+        self.template_calls: set[tuple] = set()
         self.overrides: set[tuple] = set()  # (usr, base_usr)
         self.address_taken: dict[str, str] = {}  # function usr -> its type, for functions used as a value
         # (caller_usr, caller_file, callee_usr or "" for a pointer call, callee_name, line, column, n_args,
@@ -492,6 +500,19 @@ class Collector:
                     and not self.is_broken_callee(stack, idx)
                 ):
                     self.mark_address_taken(ref, (usr, rel, ""), c, self.address_use(stack, idx))
+                return
+            if ref is not None and ref.kind == K.OVERLOADED_DECL_REF:
+                # An overload set used as a value in a template (`T p = ov;`): which one is picked depends on
+                # T, so every candidate may have its address taken (#31).
+                if (
+                    k == K.DECL_REF_EXPR
+                    and not self.is_callee(stack, idx)
+                    and not self.is_broken_callee(stack, idx)
+                ):
+                    how = self.address_use(stack, idx)
+                    for d in _overloaded_decls(ref):
+                        if d.kind in FUNC_KINDS:
+                            self.mark_address_taken(d, (usr, rel, ""), c, how)
                 return
             self.on_ref(c, stack, idx, usr, rel)
         elif k == K.MEMBER_REF and len(stack) == 1:
@@ -657,7 +678,8 @@ class Collector:
         """True when the DECL_REF_EXPR at child position `idx` of stack[-1] is the function being called."""
         j = len(stack) - 1
         pos = idx
-        while j >= 0 and stack[j][0].kind in WRAPPER_KINDS:
+        # `(*f)(x)` and `(&f)(x)` call f directly, like `f(x)` (#22)
+        while j >= 0 and (stack[j][0].kind in WRAPPER_KINDS or _is_deref_or_addr(stack[j][0])):
             if pos != 0:
                 return False
             pos = stack[j - 1][1] - 1 if j > 0 else 0
@@ -675,7 +697,8 @@ class Collector:
         - C++: the expression keeps the return type. The callee is an overload set (`f(1)`, even when only
           one function has that name) or a member (`k.m(1)`, `k->m(1)`).
         Constructor calls (`K k(1, 2)`, `new K(1, 2)`) keep no reference to the class or the constructor,
-        so they are not found here (#21); neither are calls on an object with operator() (#39)."""
+        and calls on an object with operator() none to the operator: they are found from the compile error
+        instead (`_class_calls`, #21, #39)."""
         if c.kind != K.UNEXPOSED_EXPR:
             return None
         first = next(c.get_children(), None)
@@ -784,7 +807,9 @@ class Collector:
         ref = self.canonical(ref)
         if not ref.get_usr():
             return
-        self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
+        if how not in ("compared", "checked"):
+            # `proc == f`, `if (f)`: the address is only looked at, so no pointer call reaches f here (#12)
+            self.address_taken.setdefault(ref.get_usr(), function_type(ref.type) or "")
         if where is not None and at is not None and self.cursor_rel(ref) is not None:
             frel = self.rel(at.location.file)
             if frel is not None:
@@ -882,8 +907,25 @@ class Collector:
             p = p.semantic_parent
         return True
 
+    @staticmethod
+    def named_through_deref(call: Cursor) -> Cursor | None:
+        """The function in `(*f)(x)` or `(&f)(x)`: a direct call (#22). None for anything else."""
+        callee = next(call.get_children(), None)
+        seen_op = False
+        while callee is not None and (callee.kind in WRAPPER_KINDS or _is_deref_or_addr(callee)):
+            seen_op = seen_op or callee.kind == K.UNARY_OPERATOR
+            kids = list(callee.get_children())
+            callee = kids[0] if len(kids) == 1 else None
+        if seen_op and callee is not None and callee.kind == K.DECL_REF_EXPR:
+            r = callee.referenced
+            if r is not None and r.kind in (K.FUNCTION_DECL, K.CXX_METHOD):
+                return r
+        return None
+
     def on_call(self, c: Cursor, usr: str, rel: str, stack: list[list] | None = None, idx: int = 0) -> None:
         ref = c.referenced
+        if ref is None or ref.kind not in FUNC_KINDS:
+            ref = self.named_through_deref(c) or ref
         line = c.location.line
         site = None
         if stack is not None:
@@ -897,6 +939,10 @@ class Collector:
                 detail = "does not compile: an argument does not match" + (f"; {detail}" if detail else "")
             site = (line, c.location.column, n_args, use, detail)
         if ref is None or ref.kind not in FUNC_KINDS or self.is_std_function(ref):
+            if ref is None and stack is not None and self.in_template(stack):
+                name = self.dependent_name(c)
+                if name:
+                    self.template_calls.add((usr, rel, line, name))
             # through a pointer, std::function or a dependent name: remember the type that is called
             ptype = self.called_type(c)
             self.pointer_calls.add((usr, rel, line, ptype))
@@ -918,6 +964,33 @@ class Collector:
         self.calls.add((usr, rel, target, line, dispatch, ref.spelling, False))
         if site:
             self.call_sites.add((usr, rel, target, ref.spelling, *site, ""))
+
+    @staticmethod
+    def dependent_name(call: Cursor) -> str:
+        """The name a call in a template calls when it depends on the template parameters (`t.run(5)` ->
+        'run', `T::sm(1)` -> 'sm', `f(t)` -> 'f'), or '' for a call through an object or a pointer."""
+        callee = next(call.get_children(), None)
+        while callee is not None and callee.kind in WRAPPER_KINDS:
+            kids = list(callee.get_children())
+            callee = kids[0] if len(kids) == 1 else None
+        if callee is None or callee.kind not in (K.DECL_REF_EXPR, K.MEMBER_REF_EXPR):
+            return ""
+        r = callee.referenced
+        if r is not None:
+            return r.spelling if r.kind == K.OVERLOADED_DECL_REF else ""
+        if callee.spelling:
+            return callee.spelling
+        name, depth = "", 0  # the last name outside template arguments: `t.template get<int>` -> get
+        for t in callee.get_tokens():
+            if t.spelling == "<":
+                depth += 1
+            elif t.spelling == ">":
+                depth = max(0, depth - 1)
+            elif t.spelling == ">>":
+                depth = max(0, depth - 2)
+            elif depth == 0 and t.kind == TokenKind.IDENTIFIER:
+                name = t.spelling
+        return "" if name.startswith("operator") else name
 
     # -- how a value is used (the result of a call, or a function named as a value)
     @staticmethod
@@ -1343,6 +1416,36 @@ def without_machine_flags(args: list[str]) -> tuple[list[str], list[str]]:
     return kept, dropped
 
 
+def _class_name(spelled: str) -> str:
+    """'const struct ns::K<int>' -> 'ns::K': the class as the index names it (`container`)."""
+    words = [w for w in spelled.split() if w not in ("const", "volatile", "struct", "class", "union")]
+    name = " ".join(words)
+    if "<" in name:
+        name = name[: name.index("<")]
+    return name.strip()
+
+
+def _class_calls(col: Collector, found: set[tuple]) -> list[list]:
+    """[caller usr, caller file, class, line, column, what] for each broken constructor or operator() call
+    inside a function of the repo: the innermost function whose lines hold the error."""
+    out = []
+    for file, line, column, what, cls in sorted(found):
+        parts = cls.split("::")
+        if what == "operator()" and parts[0] == "std" and parts[-1] in STD_FUNCTION_CLASSES:
+            # std::function and friends: already a call through a pointer, with its own blind spot (#14).
+            # Seen once every compile error is read (#29).
+            continue
+        inside = [
+            f
+            for f in col.functions.values()
+            if f["file"] == file and f["line_start"] <= line <= f["line_end"] and not f["is_pure_virtual"]
+        ]
+        if inside and cls:
+            f = min(inside, key=lambda f: (f["line_end"] - f["line_start"], f["usr"]))
+            out.append([f["usr"], f["file"], cls, line, column, what])
+    return out
+
+
 def _collect_unit(
     unit: CompileUnit,
     root: Path,
@@ -1375,6 +1478,7 @@ def _collect_unit(
     ignored: set[str] = set()
     missing: set[str] = set()
     members: set[tuple] = set()
+    class_calls: set[tuple] = set()  # (file, line, column, "constructor" | "operator()", class)
     for d in tu.diagnostics:
         if d.severity < cindex.Diagnostic.Error:
             continue
@@ -1385,6 +1489,14 @@ def _collect_unit(
         h = _MISSING_HEADER.match(d.spelling)
         if h:
             missing.add(h.group(1))
+        for what, rx in _NO_CLASS_CALL:
+            cm = rx.match(d.spelling)
+            if cm and d.location.file is not None:
+                where = rel_to(d.location.file.name, root)
+                if where is not None:
+                    class_calls.add(
+                        (where, d.location.line, d.location.column, what, _class_name(cm.group(1)))
+                    )
         if d.location.file is not None:
             mm = _MISSING_MEMBER.match(d.spelling) or _MISSING_DESIGNATOR.match(d.spelling)
             un = None if mm else _UNDECLARED.match(d.spelling)
@@ -1420,6 +1532,8 @@ def _collect_unit(
     result["calls"] = sorted(list(t) for t in col.calls)
     result["accesses"] = sorted(list(t) for t in col.accesses)
     result["pointer_calls"] = sorted(list(t) for t in col.pointer_calls)
+    result["template_calls"] = sorted(list(t) for t in col.template_calls)
+    result["class_calls"] = _class_calls(col, class_calls)
     result["overrides"] = sorted(list(t) for t in col.overrides)
     result["address_taken"] = sorted([u, t] for u, t in col.address_taken.items())
     result["call_sites"] = sorted(list(t) for t in col.call_sites)
