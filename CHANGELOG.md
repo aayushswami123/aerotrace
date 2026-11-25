@@ -5,7 +5,71 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
+## [0.1.0] - not released yet
+
+The first release. AeroTrace tells an AI coding agent (or you) what a change to C or C++ code will
+affect, before the edit: callers, callees, callers further up, and the globals and struct fields the code
+reads and writes. It runs on your machine, reads your `compile_commands.json`, never runs your build and
+sends nothing anywhere. The same code, flags and version always give the same answer.
+
+### What it does
+
+- **`aerotrace check`**: the main question. For a change (your working tree, a commit, or a patch that is
+  not applied yet) it says what will not build, what may change behaviour, and what it could not follow.
+  The first line gives the verdict with counts. Exit code 1 when something breaks, 2 when it could not
+  check. `--html` writes the same answer as one offline HTML file.
+- **Questions about one function or field**: `callers`, `callees`, `impact` (what could break if this
+  function changes), `signature` (what a change to its parameters or return type affects, call site by
+  call site), `data` (who reads and writes a field or global, before you rename, remove or retype it),
+  `find`, and `diff` (the impact of a whole change).
+- **`aerotrace tests`**: which tests to run for a change and why. It reads tests from the index
+  (GoogleTest, Unity, CMocka, test programs). It never runs them, and code no test is known to reach is
+  listed as "not known", never as untested.
+- **For agents**: an MCP server (`aerotrace mcp`) with the same questions, `aerotrace install` for Claude
+  Code, Cursor and Codex, and an optional Claude Code edit check that warns before an edit that breaks
+  callers.
+- **Every answer says how sure it is and what it could not see.** Each result is `exact` or `probable`
+  (or `unknown`), with the reason, and the answer ends with its blind spots and the limits of the index.
+  Lists are short and say how many were left out.
+- Works on Linux and macOS (tested in CI with Python 3.11 and 3.13), with C and C++, including cross
+  builds (ARM and other targets). Checked against Redis 8.10.3 and SQLite 3.54.1 with hand-checked facts.
+
+### Main fixes before this release
+
+- Calls that don't compile (right after you change a function's parameters) are still found, in C and
+  C++, including constructors and `operator()` calls (#14, #21, #39).
+- A removed field or global still used in a file-scope table or initializer is reported as a break (#57),
+  and many more uses of fields and globals are seen: fields set by position, addresses stored in tables,
+  `x++`, `offsetof`, and every compile error in a file instead of the first 20 (#18, #19, #24 to #27, #29,
+  #37, #52).
+- C++: template calls that can't be linked say so instead of looking complete (#33); overrides that stop
+  overriding keep their callers (#32); header functions compiled as C and C++ can be told apart (#40).
+- Comparing a function's address is no longer taken for a use of it (#12); `(*f)(x)` is a direct call (#22).
+- `check`: a changed function that no longer builds stays in "What changed" (#49); CRLF files work with
+  `--patch` (#51); a pass names the files outside the build right below its headline.
+- The index: files saved during a build are re-indexed (#43); two parses at once in the MCP server no
+  longer use each other's folder (#46); C11 atomics parse on Linux.
+
+### Known limits
+
+- **One build configuration.** Code under other `#ifdef` settings, and files not in
+  `compile_commands.json`, are not analysed. Every answer says how many files were left out.
+- **Calls through function pointers** are matched by type: linked to every function of that type whose
+  address is taken, marked `probable`. Virtual calls are `probable` too.
+- **Macros**: uses are reported at the line where the macro is used; names built with `##` only where it
+  is expanded in this build.
+- **C++ templates**: calls whose target depends on the template type can't be linked (they are listed as
+  unknown). Inherited constructors in broken calls are not seen.
+- **Data**: fields are tracked per struct type, not per object. A pointer passed to another function
+  (`foo(&x)`) is not followed. Access through `void *`, casts, or raw bytes is not seen.
+- **Outside the repo**: callers in other programs or libraries that link your code are not visible.
+- **Open issues**: a class named `function` outside `std` is taken for `std::function` (#69); a relative
+  `directory` in `compile_commands.json` (#72); two file-scope things on one line (#73); C++ file-scope
+  dynamic initializers (#28); results stored in a local variable are not followed by `signature` (#16).
+- Needs libclang (the system one, or the bundled Python package). No Windows testing yet. Only C and
+  C++ (Ada later).
+
+### Added (in detail)
 
 - `aerotrace check`: when something breaks, the first line now ends with the counts in the words the
   lists use, e.g. `(4 BREAKS, 19 AFFECTED)`. A coverage line comes before the proof line: `Checked 117
@@ -60,7 +124,7 @@ and versions follow [Semantic Versioning](https://semver.org/).
   not list, and which headers were not found. `aerotrace doctor --build-dir` shows the same.
 - Specific advice on how to get a `compile_commands.json` for CMake, Meson, Bazel, Make or Visual Studio.
 
-### Fixed
+### Fixed (in detail)
 
 - `check` without `--patch` (the index already has the change): a removed field or global still used in a
   file-scope initializer (`{"hz", &server.hz}` in a table, `{.hz = 7}`) is now a break of that global.
