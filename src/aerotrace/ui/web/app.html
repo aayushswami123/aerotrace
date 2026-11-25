@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroTrace</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the page</a>
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="AeroTrace">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="logo-ring"/><circle cx="12" cy="12" r="5.5" class="logo-orbit"/><circle cx="12" cy="12" r="2.2" class="logo-core"/></svg>
+      <b class="brand-name">AeroTrace</b>
+    </div>
+    <div class="repo"><span class="dim">Repo</span><span class="mono" id="repo-name">…</span></div>
+    <nav class="nav" aria-label="Pages">
+      <a href="#/overview" data-page="overview" data-icon="overview"><span>Overview</span></a>
+      <a href="#/changes" data-page="changes" data-icon="changes"><span>Changes</span></a>
+      <a href="#/graph" data-page="graph" data-icon="graph"><span>Graph</span></a>
+      <a href="#/benchmark" data-page="benchmark" data-icon="benchmark"><span>Benchmark</span></a>
+      <div class="sep" role="separator"></div>
+      <a href="#/memory" data-page="memory" data-icon="memory"><span>Memory</span><span class="soon">soon</span></a>
+      <a href="#/track" data-page="track" data-icon="track"><span>Track record</span><span class="soon">soon</span></a>
+    </nav>
+    <div class="foot">
+      <button type="button" class="btn ghost icon sm" id="collapse" aria-label="Collapse sidebar" aria-expanded="true" data-icon="side"></button>
+      <button type="button" class="btn ghost icon sm" id="theme" aria-label="Switch to dark theme" data-icon="theme"></button>
+      <button type="button" class="btn ghost sm keys" id="keys-btn" aria-label="Keyboard shortcuts"><kbd>?</kbd><span>keys</span></button>
+    </div>
+  </aside>
+  <main class="main" id="main" tabindex="-1"></main>
+</div>
+<dialog id="keys" aria-labelledby="keys-h">
+  <h2 id="keys-h">Keyboard</h2>
+  <dl class="kv">
+    <dt><kbd>/</kbd></dt><dd>Search (on pages that have it)</dd>
+    <dt><kbd>Esc</kbd></dt><dd>Close the panel or this box</dd>
+    <dt><kbd>g</kbd> <kbd>o</kbd></dt><dd>Overview</dd>
+    <dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Changes</dd>
+    <dt><kbd>g</kbd> <kbd>g</kbd></dt><dd>Graph</dd>
+    <dt><kbd>g</kbd> <kbd>b</kbd></dt><dd>Benchmark</dd>
+    <dt><kbd>t</kbd></dt><dd>Switch light and dark</dd>
+  </dl>
+  <button class="btn sm" type="button" id="keys-close">Close</button>
+</dialog>
+</body>
+</html>

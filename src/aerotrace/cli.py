@@ -152,6 +152,12 @@ def flags_summary(r: dict) -> list[str]:
     return out
 
 
+def cmd_ui(args: argparse.Namespace) -> int:
+    from aerotrace.ui import server
+
+    return server.serve(find_root(args.root), args.port, not args.no_open)
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     from aerotrace.index import store
 
@@ -674,6 +680,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     hk.add_argument("action", choices=["on", "off", "status", "run"])
     hk.set_defaults(func=cmd_hook)
+
+    u = with_root(
+        sub.add_parser(
+            "ui", help="a local, read-only dashboard in your browser (127.0.0.1 only, nothing loaded online)"
+        )
+    )
+    u.add_argument("--port", type=int, default=0, help="port on 127.0.0.1 (default: any free port)")
+    u.add_argument("--no-open", action="store_true", help="print the link, don't open a browser")
+    u.set_defaults(func=cmd_ui)
 
     s = with_root(sub.add_parser("status", help="what is in the index and whether it is up to date"))
     s.add_argument("--json", action="store_true")
