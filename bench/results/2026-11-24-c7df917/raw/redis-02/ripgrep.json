@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename redisPopCountAarch64 <build files>",
+ "hits": [
+  [
+   "src/bitops.c",
+   168
+  ],
+  [
+   "src/bitops.c",
+   379
+  ],
+  [
+   "src/bitops.c",
+   2187
+  ]
+ ],
+ "seconds": 0.0172,
+ "text": "src/bitops.c:168:long long redisPopCountAarch64(void *s, long count) {\nsrc/bitops.c:379:    return redisPopCountAarch64((void*)p, count);\nsrc/bitops.c:2187:        long long result_aarch64 = redisPopCountAarch64(test_data, sizeof(test_data));\n"
+}

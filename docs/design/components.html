@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroTrace components</title>
+<link rel="stylesheet" href="mockups/mock.css"><script src="mockups/mock.js"></script>
+<style>
+  .sheet { max-width: 1040px; margin: 0 auto; padding: var(--space-7) var(--space-6) var(--space-9); }
+  .sec { margin-top: var(--space-7); }
+  .row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+  .sw2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+  .swatch { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; font-size: var(--text-xs); background: var(--surface); }
+  .swatch i { display: block; height: 44px; }
+  .swatch div { padding: var(--space-2) var(--space-3); }
+  .typ div { display: flex; gap: var(--space-5); align-items: baseline; padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
+  .typ .k { width: 120px; flex: none; }
+  .scale { display: flex; gap: var(--space-4); align-items: flex-end; }
+  .scale i { display: block; background: var(--accent-soft); border: 1px solid var(--accent); }
+  .tipdemo { position: relative; display: inline-block; }
+  .tipdemo .tip { left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); }
+  .legendbox { background: var(--graph-bg); color: #d7dce4; border-radius: var(--radius-lg); padding: var(--space-4); display: inline-grid; gap: 8px; font: 11px/1 var(--font-mono); }
+  .legendbox div { display: flex; gap: 8px; align-items: center; }
+  .legendbox svg { width: 14px; height: 14px; }
+  .panelbox { position: relative; height: 300px; border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg); }
+  .panelbox .panel { width: 360px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="caps">Design system</div>
+  <h1 style="margin-top:6px">AeroTrace components</h1>
+  <p class="muted" style="margin-top:var(--space-3)">Every value comes from <code>src/aerotrace/ui/web/tokens.css</code>. Add <code>?theme=dark</code> to the URL for the dark theme.</p>
+
+  <section class="sec"><h2>Status</h2>
+    <p class="muted" style="font-size:var(--text-sm)">Shape, icon and word, every time. Colour is never the only signal.</p>
+    <div class="row">
+      <span class="chip changed" data-s="changed">CHANGED</span>
+      <span class="chip breaks" data-s="breaks">BREAKS</span>
+      <span class="chip may" data-s="may">MAY BREAK</span>
+      <span class="chip affected" data-s="affected">AFFECTED</span>
+      <span class="chip unknown" data-s="unknown">UNKNOWN</span>
+      <span class="chip no_effect" data-s="no_effect">NO EFFECT FOUND</span>
+    </div>
+  </section>
+
+  <section class="sec"><h2>Colour</h2>
+    <div class="sw2">
+      <div class="swatch"><i style="background:var(--accent)"></i><div><b>accent</b><br><span class="mono dim">--accent</span></div></div>
+      <div class="swatch"><i style="background:var(--breaks)"></i><div><b>breaks</b><br><span class="mono dim">--breaks</span></div></div>
+      <div class="swatch"><i style="background:var(--may-fill)"></i><div><b>may break</b><br><span class="mono dim">--may-fill</span></div></div>
+      <div class="swatch"><i style="background:var(--affected)"></i><div><b>affected</b><br><span class="mono dim">--affected</span></div></div>
+      <div class="swatch"><i style="background:var(--unknown)"></i><div><b>unknown</b><br><span class="mono dim">--unknown</span></div></div>
+      <div class="swatch"><i style="background:var(--text)"></i><div><b>text</b><br><span class="mono dim">--text</span></div></div>
+      <div class="swatch"><i style="background:var(--text-3)"></i><div><b>text-3</b><br><span class="mono dim">--text-3</span></div></div>
+      <div class="swatch"><i style="background:var(--surface-2)"></i><div><b>surface-2</b><br><span class="mono dim">--surface-2</span></div></div>
+      <div class="swatch"><i style="background:var(--chart-other-fill);box-shadow:inset 0 0 0 1px var(--chart-other-stroke)"></i><div><b>other tools (chart)</b><br><span class="mono dim">--chart-other-*</span></div></div>
+      <div class="swatch"><i style="background:var(--graph-bg)"></i><div><b>graph canvas</b><br><span class="mono dim">--graph-bg</span></div></div>
+    </div>
+  </section>
+
+  <section class="sec typ"><h2>Type</h2>
+    <div><span class="k caps">2xl · mono</span><span class="mono" style="font-size:var(--text-2xl)">5,064</span></div>
+    <div><span class="k caps">xl</span><span style="font-size:var(--text-xl);font-weight:600">Past checks</span></div>
+    <div><span class="k caps">lg</span><span style="font-size:var(--text-lg);font-weight:600">Recent checks</span></div>
+    <div><span class="k caps">md · body</span><span>Breaks 4 places, 1 may break, 19 affected.</span></div>
+    <div><span class="k caps">sm · mono</span><span class="mono" style="font-size:var(--text-sm)">src/db.c:1192</span></div>
+    <div><span class="k caps">xs · caps</span><span class="caps">Recall · False alarms · Time · Tokens</span></div>
+  </section>
+
+  <section class="sec"><h2>Spacing and radius</h2>
+    <div class="scale">
+      <i style="width:4px;height:4px"></i><i style="width:8px;height:8px"></i><i style="width:12px;height:12px"></i><i style="width:16px;height:16px"></i><i style="width:24px;height:24px"></i><i style="width:32px;height:32px"></i><i style="width:48px;height:48px"></i><i style="width:64px;height:64px"></i>
+      <span class="fl">4 · 8 · 12 · 16 · 24 · 32 · 48 · 64</span>
+    </div>
+    <div class="row" style="margin-top:var(--space-4)">
+      <div class="card" style="border-radius:var(--radius-sm);padding:12px">4</div><div class="card" style="border-radius:var(--radius-md);padding:12px">8</div><div class="card" style="border-radius:var(--radius-lg);padding:12px;box-shadow:var(--shadow-2)">12 · shadow 2</div><div class="card" style="padding:12px;box-shadow:var(--shadow-3)">shadow 3</div>
+    </div>
+  </section>
+
+  <section class="sec"><h2>Buttons</h2>
+    <div class="row">
+      <button class="btn primary">Open in Graph</button>
+      <button class="btn">Fit to screen</button>
+      <button class="btn ghost">Cancel</button>
+      <button class="btn icon" aria-label="Copy" data-i="copy"></button>
+      <button class="btn sm">Small</button>
+      <button class="btn" disabled>Disabled</button>
+      <button class="btn" style="outline:2px solid var(--focus);outline-offset:2px">Keyboard focus</button>
+    </div>
+  </section>
+
+  <section class="sec"><h2>Filter chips, toggle, search</h2>
+    <div class="row">
+      <button class="chip filter breaks" aria-pressed="true" data-s="breaks">BREAKS <span class="c">4</span></button>
+      <button class="chip filter affected" aria-pressed="true" data-s="affected">AFFECTED <span class="c">19</span></button>
+      <button class="chip filter" aria-pressed="false" data-s="no_effect">NO EFFECT <span class="c">212</span></button>
+      <button class="toggle" role="switch" aria-checked="true"><span class="sw"></span>Show other tools</button>
+      <button class="toggle" role="switch" aria-checked="false"><span class="sw"></span>Dark theme</button>
+      <span class="tipdemo"><button class="btn sm">Hover me</button><span class="tip">Probable: one step is a guess</span></span>
+    </div>
+  </section>
+
+  <section class="sec"><h2>Table</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Function</th><th>Status</th><th class="num">Line</th></tr></thead>
+      <tbody>
+        <tr class="row"><td class="mono">scanCommand</td><td><span class="chip breaks" data-s="breaks">BREAKS</span></td><td class="num">src/db.c:1192</td></tr>
+        <tr class="row"><td class="mono">moduleScanKeys</td><td><span class="chip may" data-s="may">MAY BREAK</span></td><td class="num">src/module.c:11420</td></tr>
+        <tr class="row"><td class="mono">scanCallback</td><td><span class="chip affected" data-s="affected">AFFECTED</span></td><td class="num">src/db.c:944</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec"><h2>Legend and side panel</h2>
+    <div class="row" style="align-items:flex-start;gap:var(--space-5)">
+      <div class="legendbox">
+        <div><span data-s="changed" style="color:var(--graph-changed)"></span>CHANGED</div>
+        <div><span data-s="breaks" style="color:var(--graph-breaks)"></span>BREAKS</div>
+        <div><span data-s="may" style="color:var(--graph-may)"></span>MAY BREAK</div>
+        <div><span data-s="affected" style="color:var(--graph-affected)"></span>AFFECTED</div>
+        <div><span data-s="unknown" style="color:var(--graph-unknown)"></span>UNKNOWN</div>
+      </div>
+      <div class="panelbox" style="flex:1;min-width:320px">
+        <aside class="panel" aria-label="Details">
+          <header><div style="flex:1"><span class="chip affected" data-s="affected">AFFECTED</span><h2 class="mono" style="margin:10px 0 4px;font-size:var(--text-lg)">scanCallback</h2><div class="fl">src/db.c:944</div></div><button class="btn ghost icon sm" aria-label="Close panel" data-i="close"></button></header>
+          <div class="body"><section><div class="caps" style="margin-bottom:6px">Why</div>Reads <span class="mono">scanData.type</span>, whose type changed.</section></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec"><h2>Empty, error, loading</h2>
+    <p class="muted" style="font-size:var(--text-sm)">See <a href="mockups/states.html">mockups/states.html</a>.</p>
+  </section>
+</div>
+</body>
+</html>

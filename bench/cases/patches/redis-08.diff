@@ -1,0 +1,11 @@
+--- a/src/bitops.c
++++ b/src/bitops.c
+@@ -50,7 +50,7 @@
+  * -------------------------------------------------------------------------- */
+ 
+  /* Shared lookup table for bit counting - maps each byte value to its popcount */
+-static const uint8_t bitsinbyte[256] = {
++static const uint8_t bitsinbyte_renamed[256] = {
+     #define B2(n) n, n+1, n+1, n+2
+     #define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
+     #define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)

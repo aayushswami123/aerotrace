@@ -1,0 +1,402 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "lib/http.c",
+   1163
+  ],
+  [
+   "lib/http.c",
+   1168
+  ],
+  [
+   "lib/http.c",
+   1440
+  ],
+  [
+   "lib/http.c",
+   3455
+  ],
+  [
+   "lib/setopt.c",
+   1017
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "lib/http.c",
+   1163
+  ],
+  [
+   "lib/http.c",
+   1168
+  ],
+  [
+   "lib/http.c",
+   1440
+  ],
+  [
+   "lib/http.c",
+   3455
+  ],
+  [
+   "lib/setopt.c",
+   1017
+  ],
+  [
+   "lib/http.c",
+   1329
+  ],
+  [
+   "lib/http.c",
+   1351
+  ],
+  [
+   "lib/http.c",
+   1361
+  ],
+  [
+   "lib/http.c",
+   3733
+  ],
+  [
+   "lib/http.c",
+   4448
+  ],
+  [
+   "lib/http.c",
+   4513
+  ],
+  [
+   "lib/http.c",
+   4638
+  ],
+  [
+   "lib/http.c",
+   4671
+  ],
+  [
+   "lib/http.c",
+   4694
+  ],
+  [
+   "lib/multi.c",
+   1960
+  ],
+  [
+   "lib/setopt.c",
+   1275
+  ],
+  [
+   "lib/multi.c",
+   2117
+  ],
+  [
+   "lib/multi.c",
+   2132
+  ],
+  [
+   "lib/multi.c",
+   2254
+  ],
+  [
+   "lib/setopt.c",
+   2886
+  ],
+  [
+   "lib/multi.c",
+   2818
+  ],
+  [
+   "lib/setopt.c",
+   2943
+  ],
+  [
+   "lib/multi.c",
+   2919
+  ],
+  [
+   "lib/multi.c",
+   3227
+  ],
+  [
+   "lib/transfer.c",
+   754
+  ],
+  [
+   "lib/transfer.c",
+   789
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/urldata.h",
+   "id": "new:lib/urldata.h:1033:UserDefined::http_follow_mode_renamed",
+   "line": 1033,
+   "lines": [],
+   "status": "new"
+  },
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/urldata.h",
+   "id": "removed:lib/urldata.h:1033:UserDefined::http_follow_mode",
+   "line": 1033,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_switch_to_get",
+   "line": 1158,
+   "lines": [
+    1163,
+    1168
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_follow",
+   "line": 1383,
+   "lines": [
+    1440
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_header_l",
+   "line": 3419,
+   "lines": [
+    3455
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/setopt.c",
+   "id": "c:setopt.c@F@setopt_long_http",
+   "line": 1005,
+   "lines": [
+    1017
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@follow_switch_get",
+   "line": 1304,
+   "lines": [
+    1329,
+    1351,
+    1361
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_header",
+   "line": 3717,
+   "lines": [
+    3733
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_rw_hd",
+   "line": 4301,
+   "lines": [
+    4448
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_parse_headers",
+   "line": 4493,
+   "lines": [
+    4513,
+    4638
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_write_resp_hd",
+   "line": 4662,
+   "lines": [
+    4671
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_write_resp_hds",
+   "line": 4683,
+   "lines": [
+    4694
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_follow",
+   "line": 1954,
+   "lines": [
+    1960
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/setopt.c",
+   "id": "c:setopt.c@F@setopt_long",
+   "line": 1258,
+   "lines": [
+    1275
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_performing",
+   "line": 2014,
+   "lines": [
+    2117,
+    2132
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_do",
+   "line": 2153,
+   "lines": [
+    2254
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/setopt.c",
+   "id": "c:@F@Curl_vsetopt",
+   "line": 2883,
+   "lines": [
+    2886
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_runsingle",
+   "line": 2717,
+   "lines": [
+    2818
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/setopt.c",
+   "id": "c:@F@curl_easy_setopt",
+   "line": 2932,
+   "lines": [
+    2943
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_perform",
+   "line": 2896,
+   "lines": [
+    2919
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_run_dirty",
+   "line": 3199,
+   "lines": [
+    3227
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_write_resp",
+   "line": 745,
+   "lines": [
+    754
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_write_resp_hd",
+   "line": 782,
+   "lines": [
+    789
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 1.0041,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 17,
+  "breaks_exact": 4,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 9,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 4 things you didn't touch (4 BREAKS, 17 AFFECTED).\n    17 may be affected (17 further up) and 9 parts of the change could not be followed.\n    You changed 2 declarations in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (2)\n  [*] NEW        UserDefined::http_follow_mode_renamed (field)  lib/urldata.h:1033  (added (maybe renamed from http_follow_mode))\n  [*] REMOVED    UserDefined::http_follow_mode (field)  lib/urldata.h:1033  (removed (maybe renamed to http_follow_mode_renamed))\n\nFunctions (21)\n  [x] BREAKS     http_switch_to_get  lib/http.c:1158\n                 uses UserDefined::http_follow_mode, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     Curl_http_follow  lib/http.c:1383\n                 uses UserDefined::http_follow_mode, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     http_header_l  lib/http.c:3419\n                 uses UserDefined::http_follow_mode, which this change removes (and 1 other link). Link: exact.\n  [x] BREAKS     setopt_long_http  lib/setopt.c:1005\n                 uses UserDefined::http_follow_mode, which this change removes (and 1 other link). Link: exact.\n  [~] AFFECTED   follow_switch_get  lib/http.c:1304\n                 calls http_switch_to_get. Link: exact.\n  [~] AFFECTED   http_header  lib/http.c:3717\n                 calls http_header_l. Link: exact.\n  [~] AFFECTED   http_rw_hd  lib/http.c:4301\n                 calls http_header. Link: exact.\n  [~] AFFECTED   http_parse_headers  lib/http.c:4493\n                 calls http_rw_hd. Link: exact.\n  [~] AFFECTED   Curl_http_write_resp_hd  lib/http.c:4662\n                 calls http_rw_hd. Link: exact.\n  [~] AFFECTED   Curl_http_write_resp_hds  lib/http.c:4683\n                 calls http_parse_headers. Link: exact.\n  [~] AFFECTED   multi_follow  lib/multi.c:1954\n                 calls Curl_http_follow (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   setopt_long  lib/setopt.c:1258\n                 calls setopt_long_http (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   multistate_performing  lib/multi.c:2014\n                 calls multi_follow (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   multistate_do  lib/multi.c:2153\n                 calls multi_follow (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   Curl_vsetopt  lib/setopt.c:2883\n                 calls setopt_long (a call through a function pointer of the matching type). Link: probable.\n  ... and 6 more (6 AFFECTED). Raise --limit or use --html to see all.\n\nChanges AeroTrace could not follow (1)\n  [?] lib/urldata.h: added line 1033 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (8)\n  [?] Fields are tracked per struct type, not per object: every UserDefined's http_follow_mode is listed.\n  [?] Initializers that set it by position ({1, 2}) are listed. A value AeroTrace can't match to a field for sure (after a designator, as in {.a = 1, 2}) is left out, so globals of this struct type, or of a struct that contains it, are still listed as unknown. Not checked there: globals declared with a typedef name other than the struct's (node_t for struct node), and local variables. {0} (all zero) is not counted.\n  [?] Inside a macro, the line is where the macro is used. Names built by a macro with ## are only seen where that macro is expanded in this build.\n  [?] Not seen: access through a void * or a cast to another type, offsetof outside a function (a file-scope table or static_assert), or by size and layout (sizeof, copying the whole struct, raw reads and writes of its bytes).\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] The fields of UserDefined changed order or number, so its size and layout changed. Code that sets its fields by position, or depends on its size (sizeof, memcpy, file or network formats), is not followed.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

@@ -1,0 +1,23 @@
+{
+ "command": "cscope -d -L0 Curl_auth_allowed_to_origin",
+ "hits": [
+  [
+   "lib/vauth/vauth.h",
+   63
+  ],
+  [
+   "lib/url.c",
+   1381
+  ],
+  [
+   "lib/vauth/vauth.c",
+   142
+  ],
+  [
+   "lib/vauth/vauth.c",
+   145
+  ]
+ ],
+ "seconds": 0.0079,
+ "text": "lib/vauth/vauth.h <global> 63 bool Curl_auth_allowed_to_origin(struct Curl_easy *data,\nlib/url.c url_set_data_creds 1381 Curl_auth_allowed_to_origin(data, data->state.origin)) {\nlib/vauth/vauth.c Curl_auth_allowed_to_host 142 return Curl_auth_allowed_to_origin(data, data->state.origin);\nlib/vauth/vauth.c Curl_auth_allowed_to_origin 145 bool Curl_auth_allowed_to_origin(struct Curl_easy *data,\n"
+}

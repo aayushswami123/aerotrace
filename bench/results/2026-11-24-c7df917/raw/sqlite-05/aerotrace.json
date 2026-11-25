@@ -1,0 +1,852 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "shell.c",
+   19735
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "shell.c",
+   19735
+  ],
+  [
+   "shell.c",
+   12387
+  ],
+  [
+   "sqlite3.c",
+   27901
+  ],
+  [
+   "sqlite3.c",
+   61117
+  ],
+  [
+   "sqlite3.c",
+   61651
+  ],
+  [
+   "sqlite3.c",
+   62369
+  ],
+  [
+   "sqlite3.c",
+   64202
+  ],
+  [
+   "sqlite3.c",
+   66452
+  ],
+  [
+   "sqlite3.c",
+   66465
+  ],
+  [
+   "sqlite3.c",
+   69517
+  ],
+  [
+   "sqlite3.c",
+   90538
+  ],
+  [
+   "sqlite3.c",
+   90584
+  ],
+  [
+   "sqlite3.c",
+   90598
+  ],
+  [
+   "sqlite3.c",
+   90630
+  ],
+  [
+   "sqlite3.c",
+   61208
+  ],
+  [
+   "sqlite3.c",
+   62004
+  ],
+  [
+   "sqlite3.c",
+   63207
+  ],
+  [
+   "sqlite3.c",
+   64303
+  ],
+  [
+   "sqlite3.c",
+   65759
+  ],
+  [
+   "sqlite3.c",
+   65804
+  ],
+  [
+   "sqlite3.c",
+   65808
+  ],
+  [
+   "sqlite3.c",
+   66733
+  ],
+  [
+   "sqlite3.c",
+   90906
+  ],
+  [
+   "sqlite3.c",
+   104570
+  ],
+  [
+   "sqlite3.c",
+   104575
+  ],
+  [
+   "sqlite3.c",
+   104590
+  ],
+  [
+   "sqlite3.c",
+   64495
+  ],
+  [
+   "sqlite3.c",
+   75555
+  ],
+  [
+   "sqlite3.c",
+   75717
+  ],
+  [
+   "sqlite3.c",
+   76047
+  ],
+  [
+   "sqlite3.c",
+   77032
+  ],
+  [
+   "sqlite3.c",
+   77173
+  ],
+  [
+   "sqlite3.c",
+   77304
+  ],
+  [
+   "sqlite3.c",
+   91083
+  ],
+  [
+   "sqlite3.c",
+   94174
+  ],
+  [
+   "sqlite3.c",
+   105924
+  ],
+  [
+   "sqlite3.c",
+   64655
+  ],
+  [
+   "sqlite3.c",
+   64827
+  ],
+  [
+   "sqlite3.c",
+   76468
+  ],
+  [
+   "sqlite3.c",
+   77077
+  ],
+  [
+   "sqlite3.c",
+   77196
+  ],
+  [
+   "sqlite3.c",
+   77613
+  ],
+  [
+   "sqlite3.c",
+   84951
+  ],
+  [
+   "sqlite3.c",
+   84966
+  ],
+  [
+   "sqlite3.c",
+   85016
+  ],
+  [
+   "sqlite3.c",
+   91168
+  ],
+  [
+   "sqlite3.c",
+   93362
+  ],
+  [
+   "sqlite3.c",
+   93387
+  ],
+  [
+   "sqlite3.c",
+   94235
+  ],
+  [
+   "sqlite3.c",
+   106189
+  ],
+  [
+   "sqlite3.c",
+   106373
+  ],
+  [
+   "sqlite3.c",
+   125999
+  ],
+  [
+   "sqlite3.c",
+   126009
+  ],
+  [
+   "sqlite3.c",
+   126134
+  ],
+  [
+   "sqlite3.c",
+   126206
+  ],
+  [
+   "sqlite3.c",
+   132197
+  ],
+  [
+   "sqlite3.c",
+   145485
+  ],
+  [
+   "sqlite3.c",
+   162589
+  ],
+  [
+   "sqlite3.c",
+   189779
+  ],
+  [
+   "sqlite3.c",
+   189889
+  ],
+  [
+   "sqlite3.c",
+   191994
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "shell.c",
+   "id": "removed:shell.c:19506:vfstraceDelete",
+   "line": 19506,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "shell.c",
+   "id": "c:@F@vfstrace_register",
+   "line": 19707,
+   "lines": [
+    19735
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "shell.c",
+   "id": "c:shell.c@F@apndDelete",
+   "line": 12386,
+   "lines": [
+    12387
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3OsDelete",
+   "line": 27898,
+   "lines": [
+    27901
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pager_end_transaction",
+   "line": 61049,
+   "lines": [
+    61117
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pager_delsuper",
+   "line": 61542,
+   "lines": [
+    61651
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerOpenWalIfPresent",
+   "line": 62352,
+   "lines": [
+    62369
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@hasHotJournal",
+   "line": 64155,
+   "lines": [
+    64202
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerSetJournalMode",
+   "line": 66396,
+   "lines": [
+    66452,
+    66465
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3WalClose",
+   "line": 69461,
+   "lines": [
+    69517
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@vdbeCommit",
+   "line": 90404,
+   "lines": [
+    90538,
+    90584,
+    90598,
+    90630
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerUnlockAndRollback",
+   "line": 61199,
+   "lines": [
+    61208
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pager_playback",
+   "line": 61831,
+   "lines": [
+    62004
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerClose",
+   "line": 63189,
+   "lines": [
+    63207
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerSharedLock",
+   "line": 64275,
+   "lines": [
+    64303
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerCommitPhaseTwo",
+   "line": 65723,
+   "lines": [
+    65759
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerRollback",
+   "line": 65789,
+   "lines": [
+    65804,
+    65808
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerCloseWal",
+   "line": 66705,
+   "lines": [
+    66733
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeHalt",
+   "line": 90800,
+   "lines": [
+    90906
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeExec",
+   "line": 97179,
+   "lines": [
+    104570,
+    104575,
+    104590
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@pagerUnlockIfUnused",
+   "line": 64492,
+   "lines": [
+    64495
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeOpen",
+   "line": 75289,
+   "lines": [
+    75555
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeClose",
+   "line": 75678,
+   "lines": [
+    75717
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@lockBtree",
+   "line": 76039,
+   "lines": [
+    76047
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@autoVacuumCommit",
+   "line": 76959,
+   "lines": [
+    77032
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCommitPhaseTwo",
+   "line": 77159,
+   "lines": [
+    77173
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeRollback",
+   "line": 77279,
+   "lines": [
+    77304
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeReset",
+   "line": 91071,
+   "lines": [
+    91083
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3Step",
+   "line": 94082,
+   "lines": [
+    94174
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@blobSeekToRow",
+   "line": 105907,
+   "lines": [
+    105924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@getPageNormal",
+   "line": 64556,
+   "lines": [
+    64655
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3PagerUnrefPageOne",
+   "line": 64820,
+   "lines": [
+    64827
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@btreeBeginTrans",
+   "line": 76355,
+   "lines": [
+    76468
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCommitPhaseOne",
+   "line": 77070,
+   "lines": [
+    77077
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCommit",
+   "line": 77191,
+   "lines": [
+    77196
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3BtreeCloseCursor",
+   "line": 77587,
+   "lines": [
+    77613
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_backup_step",
+   "line": 84713,
+   "lines": [
+    84951,
+    84966
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_backup_finish",
+   "line": 84986,
+   "lines": [
+    85016
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3VdbeFinalize",
+   "line": 91162,
+   "lines": [
+    91168
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_finalize",
+   "line": 93349,
+   "lines": [
+    93362
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_reset",
+   "line": 93378,
+   "lines": [
+    93387
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_step",
+   "line": 94224,
+   "lines": [
+    94235
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_open",
+   "line": 105974,
+   "lines": [
+    106189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:@F@sqlite3_blob_reopen",
+   "line": 106356,
+   "lines": [
+    106373
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@attachFunc",
+   "line": 125944,
+   "lines": [
+    125999,
+    126009,
+    126134
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@detachFunc",
+   "line": 126170,
+   "lines": [
+    126206
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3OpenTempDatabase",
+   "line": 132185,
+   "lines": [
+    132197
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@invalidateTempStorage",
+   "line": 145475,
+   "lines": [
+    145485
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RunVacuum",
+   "line": 162315,
+   "lines": [
+    162589
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3LeaveMutexAndCloseZombie",
+   "line": 189747,
+   "lines": [
+    189779
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@sqlite3RollbackAll",
+   "line": 189867,
+   "lines": [
+    189889
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "sqlite3.c",
+   "id": "c:sqlite3.c@F@openDatabase",
+   "line": 191739,
+   "lines": [
+    191994
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.8544,
+ "summary": {
+  "affected_direct": 2,
+  "affected_further": 48,
+  "breaks_exact": 1,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 2,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS, 50 AFFECTED).\n    50 may be affected (2 direct, 48 further up) and 2 parts of the change could not be followed.\n    You removed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] REMOVED    vfstraceDelete  shell.c:19506  (removed by the patch)\n\nFunctions (51)\n  [x] BREAKS     vfstrace_register  shell.c:19707\n                 names vfstraceDelete as a value (stored in field xDelete), and this patch removes it. Link: exact.\n  [~] AFFECTED   apndDelete  shell.c:12386\n                 calls a pointer of the type of vfstraceDelete, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   sqlite3OsDelete  sqlite3.c:27898\n                 calls a pointer of the type of vfstraceDelete, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   pager_end_transaction  sqlite3.c:61049\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   pager_delsuper  sqlite3.c:61542\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   pagerOpenWalIfPresent  sqlite3.c:62352\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   hasHotJournal  sqlite3.c:64155\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3PagerSetJournalMode  sqlite3.c:66396\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3WalClose  sqlite3.c:69461\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   vdbeCommit  sqlite3.c:90404\n                 calls sqlite3OsDelete (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   pagerUnlockAndRollback  sqlite3.c:61199\n                 calls pager_end_transaction (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   pager_playback  sqlite3.c:61831\n                 calls pager_delsuper (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3PagerClose  sqlite3.c:63189\n                 calls sqlite3WalClose (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3PagerSharedLock  sqlite3.c:64275\n                 calls hasHotJournal (a call through a function pointer of the matching type). Link: probable.\n  [~] AFFECTED   sqlite3PagerCommitPhaseTwo  sqlite3.c:65723\n                 calls pager_end_transaction (a call through a function pointer of the matching type). Link: probable.\n  ... and 36 more (36 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (2)\n  [?] 1 changed function(s) are used as function pointers. Callers were matched by type; calls from outside this repo (callbacks into libraries) are not visible.\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 2 of 2 files in this build.\n\nindex: 3 files, 3,244 functions; followed callers up to 5 steps (stopped early: yes)"
+}

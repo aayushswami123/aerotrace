@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at src/zmalloc.c:56:9",
+ "hits": [
+  [
+   "src/zmalloc.c",
+   252
+  ],
+  [
+   "src/zmalloc.c",
+   383
+  ]
+ ],
+ "seconds": 0.0014,
+ "text": "src/zmalloc.c:252: void *ptr = malloc(MALLOC_MIN_SIZE(size)+PREFIX_SIZE);\nsrc/zmalloc.c:383: void *ptr = calloc(1, MALLOC_MIN_SIZE(size)+PREFIX_SIZE);\n"
+}

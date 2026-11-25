@@ -1,0 +1,43 @@
+{
+ "command": "cscope -d -L0 bitsinbyte",
+ "hits": [
+  [
+   "src/bitops.c",
+   53
+  ],
+  [
+   "src/bitops.c",
+   81
+  ],
+  [
+   "src/bitops.c",
+   150
+  ],
+  [
+   "src/bitops.c",
+   174
+  ],
+  [
+   "src/bitops.c",
+   265
+  ],
+  [
+   "src/bitops.c",
+   281
+  ],
+  [
+   "src/bitops.c",
+   309
+  ],
+  [
+   "src/bitops.c",
+   326
+  ],
+  [
+   "src/bitops.c",
+   359
+  ]
+ ],
+ "seconds": 0.0078,
+ "text": "src/bitops.c <global> 53 static const uint8_t bitsinbyte[256] = {\nsrc/bitops.c redisPopcount 81 bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopcount 150 while (count--) bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAarch64 174 bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAarch64 265 while (count--) bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAvx512 281 bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAvx512 309 bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAvx2 326 bits += bitsinbyte[*p++];\nsrc/bitops.c redisPopCountAvx2 359 bits += bitsinbyte[*p++];\n"
+}

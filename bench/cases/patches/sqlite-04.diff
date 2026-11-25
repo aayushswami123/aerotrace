@@ -1,0 +1,31 @@
+--- a/sqlite3.c
++++ b/sqlite3.c
+@@ -5949,7 +5949,7 @@
+ */
+ SQLITE_API const void *sqlite3_column_blob(sqlite3_stmt*, int iCol);
+ SQLITE_API double sqlite3_column_double(sqlite3_stmt*, int iCol);
+-SQLITE_API int sqlite3_column_int(sqlite3_stmt*, int iCol);
++SQLITE_API int sqlite3_column_int(sqlite3_stmt*, int iCol, int aerotrace_bench);
+ SQLITE_API sqlite3_int64 sqlite3_column_int64(sqlite3_stmt*, int iCol);
+ SQLITE_API const unsigned char *sqlite3_column_text(sqlite3_stmt*, int iCol);
+ SQLITE_API const void *sqlite3_column_text16(sqlite3_stmt*, int iCol);
+@@ -94714,7 +94714,7 @@
+   columnMallocFailure(pStmt);
+   return val;
+ }
+-SQLITE_API int sqlite3_column_int(sqlite3_stmt *pStmt, int i){
++SQLITE_API int sqlite3_column_int(sqlite3_stmt *pStmt, int i, int aerotrace_bench){
+   int val = sqlite3_value_int( columnMem(pStmt,i) );
+   columnMallocFailure(pStmt);
+   return val;
+--- a/sqlite3.h
++++ b/sqlite3.h
+@@ -5628,7 +5628,7 @@
+ */
+ SQLITE_API const void *sqlite3_column_blob(sqlite3_stmt*, int iCol);
+ SQLITE_API double sqlite3_column_double(sqlite3_stmt*, int iCol);
+-SQLITE_API int sqlite3_column_int(sqlite3_stmt*, int iCol);
++SQLITE_API int sqlite3_column_int(sqlite3_stmt*, int iCol, int aerotrace_bench);
+ SQLITE_API sqlite3_int64 sqlite3_column_int64(sqlite3_stmt*, int iCol);
+ SQLITE_API const unsigned char *sqlite3_column_text(sqlite3_stmt*, int iCol);
+ SQLITE_API const void *sqlite3_column_text16(sqlite3_stmt*, int iCol);

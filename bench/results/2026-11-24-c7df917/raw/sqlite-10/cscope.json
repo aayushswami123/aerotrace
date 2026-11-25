@@ -1,0 +1,31 @@
+{
+ "command": "cscope -d -L0 sqlite3BtreeCursor",
+ "hits": [
+  [
+   "sqlite3.c",
+   17473
+  ],
+  [
+   "sqlite3.c",
+   77526
+  ],
+  [
+   "sqlite3.c",
+   100884
+  ],
+  [
+   "sqlite3.c",
+   100930
+  ],
+  [
+   "sqlite3.c",
+   101027
+  ],
+  [
+   "sqlite3.c",
+   101033
+  ]
+ ],
+ "seconds": 0.0126,
+ "text": "sqlite3.c <global> 17473 SQLITE_PRIVATE int sqlite3BtreeCursor(\nsqlite3.c <global> 77526 SQLITE_PRIVATE int sqlite3BtreeCursor(\nsqlite3.c <global> 100884 rc = sqlite3BtreeCursor(pX, p2, wrFlag, pKeyInfo, pCur->uc.pCursor);\nsqlite3.c <global> 100930 rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c <global> 101027 rc = sqlite3BtreeCursor(pCx->ub.pBtx, pCx->pgnoRoot, BTREE_WRCSR,\nsqlite3.c <global> 101033 rc = sqlite3BtreeCursor(pCx->ub.pBtx, SCHEMA_ROOT, BTREE_WRCSR,\n"
+}

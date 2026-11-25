@@ -1,0 +1,15 @@
+{
+ "command": "textDocument/references at src/bitops.c:616:5",
+ "hits": [
+  [
+   "src/bitops.c",
+   2015
+  ],
+  [
+   "src/bitops.c",
+   2021
+  ]
+ ],
+ "seconds": 0.0015,
+ "text": "src/bitops.c:2015: overflow = checkSignedBitfieldOverflow(oldval,\nsrc/bitops.c:2021: overflow = checkSignedBitfieldOverflow(newval,\n"
+}

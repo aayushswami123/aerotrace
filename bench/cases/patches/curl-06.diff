@@ -1,0 +1,11 @@
+--- a/lib/urldata.h
++++ b/lib/urldata.h
+@@ -1030,7 +1030,7 @@
+   /* GSS-API/SSPI credential delegation, see CURLOPT_GSSAPI_DELEGATION */
+   uint8_t gssapi_delegation;
+ #endif
+-  uint8_t http_follow_mode; /* follow HTTP redirects */
++  uint8_t http_follow_mode_renamed; /* follow HTTP redirects */
+   BIT(connect_only); /* make connection/request, then let application use the
+                         socket */
+   BIT(connect_only_ws); /* special websocket connect-only level */

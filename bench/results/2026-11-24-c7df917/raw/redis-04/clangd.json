@@ -1,0 +1,75 @@
+{
+ "command": "textDocument/references at src/server.c:370:5",
+ "hits": [
+  [
+   "src/cluster_legacy.c",
+   131
+  ],
+  [
+   "src/cluster_legacy.c",
+   155
+  ],
+  [
+   "src/expire.c",
+   607
+  ],
+  [
+   "src/functions.c",
+   83
+  ],
+  [
+   "src/functions.c",
+   93
+  ],
+  [
+   "src/sentinel.c",
+   410
+  ],
+  [
+   "src/sentinel.c",
+   424
+  ],
+  [
+   "src/server.c",
+   423
+  ],
+  [
+   "src/server.c",
+   496
+  ],
+  [
+   "src/server.c",
+   637
+  ],
+  [
+   "src/server.c",
+   693
+  ],
+  [
+   "src/server.c",
+   704
+  ],
+  [
+   "src/server.c",
+   752
+  ],
+  [
+   "src/t_hash.c",
+   91
+  ],
+  [
+   "src/t_hash.c",
+   104
+  ],
+  [
+   "src/t_hash.c",
+   4094
+  ],
+  [
+   "src/t_zset.c",
+   58
+  ]
+ ],
+ "seconds": 0.0066,
+ "text": "src/cluster_legacy.c:131: dictSdsKeyCompare,          /* key compare */\nsrc/cluster_legacy.c:155: dictSdsKeyCompare,          /* key compare */\nsrc/expire.c:607: dictSdsKeyCompare,          /* key compare */\nsrc/functions.c:83: dictSdsKeyCompare,    /* key compare */\nsrc/functions.c:93: dictSdsKeyCompare,    /* key compare */\nsrc/sentinel.c:410: dictSdsKeyCompare,         /* key compare */\nsrc/sentinel.c:424: dictSdsKeyCompare,         /* key compare */\nsrc/server.c:423: return dictSdsKeyCompare(cache, o1->ptr,o2->ptr);\nsrc/server.c:496: cmp = dictSdsKeyCompare(cache,o1->ptr,o2->ptr);\nsrc/server.c:637: dictSdsKeyCompare,         /* key compare */\nsrc/server.c:693: dictSdsKeyCompare,          /* key compare */\nsrc/server.c:704: dictSdsKeyCompare,          /* key compare */\nsrc/server.c:752: dictSdsKeyCompare,          /* key compare */\nsrc/t_hash.c:104: dictSdsKeyCompare,                          /* lookup key compare */\nsrc/t_hash.c:4094: .keyCompare = dictSdsKeyCompare,\nsrc/t_hash.c:91: dictSdsKeyCompare,                          /* lookup key compare */\nsrc/t_zset.c:58: dictSdsKeyCompare,  /* compares embedded sds by keyFromStoredKey */\n"
+}

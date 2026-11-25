@@ -1,0 +1,40 @@
+--- a/sqlite3.c
++++ b/sqlite3.c
+@@ -60254,24 +60254,24 @@
+ ** If the filename matches either of these patterns, return non-zero.
+ ** Otherwise, return zero.
+ */
+-static int pagerIsSuperJrnlName(const char *zSuper){
++static void pagerIsSuperJrnlName(const char *zSuper){
+   const int nSuper = sqlite3Strlen30(zSuper);
+   int ii;
+ 
+ #ifdef SQLITE_ENABLE_8_3_NAMES
+-  if( nSuper<4 ) return 0;
+-  if( zSuper[nSuper-3]!='9' ) return 0;
+-  if( sqlite3Isxdigit(zSuper[nSuper-2])==0 ) return 0;
+-  if( sqlite3Isxdigit(zSuper[nSuper-1])==0 ) return 0;
+-  if( zSuper[nSuper-4]=='.' ) return 1;
+-#endif
+-  if( nSuper<12 ) return 0;
+-  if( memcmp(&zSuper[nSuper-12], "-mj", 3) ) return 0;
+-  if( zSuper[nSuper-3]!='9' ) return 0;
++  if( nSuper<4 ) { (void)(0); return; } /* aerotrace bench */
++  if( zSuper[nSuper-3]!='9' ) { (void)(0); return; } /* aerotrace bench */
++  if( sqlite3Isxdigit(zSuper[nSuper-2])==0 ) { (void)(0); return; } /* aerotrace bench */
++  if( sqlite3Isxdigit(zSuper[nSuper-1])==0 ) { (void)(0); return; } /* aerotrace bench */
++  if( zSuper[nSuper-4]=='.' ) { (void)(1); return; } /* aerotrace bench */
++#endif
++  if( nSuper<12 ) { (void)(0); return; } /* aerotrace bench */
++  if( memcmp(&zSuper[nSuper-12], "-mj", 3) ) { (void)(0); return; } /* aerotrace bench */
++  if( zSuper[nSuper-3]!='9' ) { (void)(0); return; } /* aerotrace bench */
+   for(ii=nSuper-9; ii<nSuper; ii++){
+-    if( sqlite3Isxdigit(zSuper[ii])==0 ) return 0;
+-  }
+-  return 1;
++    if( sqlite3Isxdigit(zSuper[ii])==0 ) { (void)(0); return; } /* aerotrace bench */
++  }
++  { (void)(1); return; } /* aerotrace bench */
+ }
+ 
+ /*

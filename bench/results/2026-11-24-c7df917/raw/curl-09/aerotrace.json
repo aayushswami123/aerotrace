@@ -1,0 +1,21 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [],
+ "nodes": [],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.3292,
+ "summary": {
+  "affected_direct": 0,
+  "affected_further": 0,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 2,
+  "unknown": 0
+ },
+ "text": "[i] Nothing found that this change can break, but 2 parts of the change could not be followed.\n    You changed no function or declaration AeroTrace can place in 1 C/C++ file (a patch that is not applied yet).\n    Index limit: 576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nChanges AeroTrace could not follow (1)\n  [?] lib/curl_trc.h: lines 321, 340 outside any function; added lines 321, 340 (new numbering) outside any function.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Some changed lines are outside every function (macros, types, includes, comments). AeroTrace does not follow who uses a macro or a type, so check those by hand.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 237 of 237 files in this build.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: no)"
+}

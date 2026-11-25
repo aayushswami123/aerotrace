@@ -1,0 +1,2211 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 1,
+ "hits": [
+  [
+   "lib/cw-pause.c",
+   158
+  ],
+  [
+   "lib/cw-pause.c",
+   219
+  ]
+ ],
+ "hits_anywhere": [
+  [
+   "lib/cw-pause.c",
+   158
+  ],
+  [
+   "lib/cw-pause.c",
+   219
+  ],
+  [
+   "lib/cw-pause.c",
+   86
+  ],
+  [
+   "lib/cw-pause.c",
+   87
+  ],
+  [
+   "lib/cw-pause.c",
+   88
+  ],
+  [
+   "lib/sendf.c",
+   146
+  ],
+  [
+   "lib/sendf.c",
+   412
+  ],
+  [
+   "lib/sendf.c",
+   436
+  ],
+  [
+   "lib/sendf.c",
+   531
+  ],
+  [
+   "lib/ws.c",
+   731
+  ],
+  [
+   "lib/ws.c",
+   784
+  ],
+  [
+   "lib/ws.c",
+   818
+  ],
+  [
+   "lib/content_encoding.c",
+   700
+  ],
+  [
+   "lib/content_encoding.c",
+   840
+  ],
+  [
+   "lib/cw-out.c",
+   509
+  ],
+  [
+   "lib/cw-pause.c",
+   99
+  ],
+  [
+   "lib/ftp.c",
+   383
+  ],
+  [
+   "lib/ftp.c",
+   397
+  ],
+  [
+   "lib/ftp.c",
+   413
+  ],
+  [
+   "lib/ftp.c",
+   427
+  ],
+  [
+   "lib/ftp.c",
+   433
+  ],
+  [
+   "lib/ftp.c",
+   436
+  ],
+  [
+   "lib/ftp.c",
+   4248
+  ],
+  [
+   "lib/headers.c",
+   428
+  ],
+  [
+   "lib/headers.c",
+   452
+  ],
+  [
+   "lib/http_chunks.c",
+   128
+  ],
+  [
+   "lib/http_chunks.c",
+   206
+  ],
+  [
+   "lib/http_chunks.c",
+   276
+  ],
+  [
+   "lib/http_chunks.c",
+   438
+  ],
+  [
+   "lib/sendf.c",
+   140
+  ],
+  [
+   "lib/sendf.c",
+   196
+  ],
+  [
+   "lib/sendf.c",
+   261
+  ],
+  [
+   "lib/sendf.c",
+   317
+  ],
+  [
+   "lib/sendf.c",
+   350
+  ],
+  [
+   "lib/sendf.c",
+   355
+  ],
+  [
+   "lib/sendf.c",
+   360
+  ],
+  [
+   "lib/sendf.c",
+   395
+  ],
+  [
+   "lib/sendf.c",
+   473
+  ],
+  [
+   "lib/transfer.c",
+   890
+  ],
+  [
+   "lib/ws.c",
+   693
+  ],
+  [
+   "lib/ws.c",
+   1444
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   444
+  ],
+  [
+   "lib/cw-out.c",
+   207
+  ],
+  [
+   "lib/easy.c",
+   1226
+  ],
+  [
+   "lib/file.c",
+   526
+  ],
+  [
+   "lib/file.c",
+   530
+  ],
+  [
+   "lib/file.c",
+   552
+  ],
+  [
+   "lib/file.c",
+   555
+  ],
+  [
+   "lib/file.c",
+   646
+  ],
+  [
+   "lib/file.c",
+   671
+  ],
+  [
+   "lib/file.c",
+   675
+  ],
+  [
+   "lib/ftp.c",
+   2494
+  ],
+  [
+   "lib/gopher.c",
+   77
+  ],
+  [
+   "lib/gopher.c",
+   186
+  ],
+  [
+   "lib/http.c",
+   1707
+  ],
+  [
+   "lib/http.c",
+   3111
+  ],
+  [
+   "lib/http.c",
+   3344
+  ],
+  [
+   "lib/http.c",
+   3672
+  ],
+  [
+   "lib/http.c",
+   3996
+  ],
+  [
+   "lib/http.c",
+   4459
+  ],
+  [
+   "lib/http.c",
+   4673
+  ],
+  [
+   "lib/http.c",
+   4700
+  ],
+  [
+   "lib/http.c",
+   4733
+  ],
+  [
+   "lib/http_chunks.c",
+   404
+  ],
+  [
+   "lib/imap.c",
+   1259
+  ],
+  [
+   "lib/imap.c",
+   1279
+  ],
+  [
+   "lib/imap.c",
+   1327
+  ],
+  [
+   "lib/imap.c",
+   1332
+  ],
+  [
+   "lib/imap.c",
+   1451
+  ],
+  [
+   "lib/mqtt.c",
+   775
+  ],
+  [
+   "lib/multi.c",
+   1781
+  ],
+  [
+   "lib/multi.c",
+   1874
+  ],
+  [
+   "lib/multi.c",
+   1894
+  ],
+  [
+   "lib/multi.c",
+   1920
+  ],
+  [
+   "lib/pingpong.c",
+   316
+  ],
+  [
+   "lib/pop3.c",
+   1105
+  ],
+  [
+   "lib/pop3.c",
+   1163
+  ],
+  [
+   "lib/pop3.c",
+   1167
+  ],
+  [
+   "lib/pop3.c",
+   1187
+  ],
+  [
+   "lib/pop3.c",
+   1200
+  ],
+  [
+   "lib/rtsp.c",
+   595
+  ],
+  [
+   "lib/rtsp.c",
+   902
+  ],
+  [
+   "lib/sendf.c",
+   52
+  ],
+  [
+   "lib/sendf.c",
+   449
+  ],
+  [
+   "lib/sendf.c",
+   497
+  ],
+  [
+   "lib/smtp.c",
+   1362
+  ],
+  [
+   "lib/telnet.c",
+   1093
+  ],
+  [
+   "lib/telnet.c",
+   1102
+  ],
+  [
+   "lib/telnet.c",
+   1207
+  ],
+  [
+   "lib/tftp.c",
+   1092
+  ],
+  [
+   "lib/transfer.c",
+   763
+  ],
+  [
+   "lib/transfer.c",
+   798
+  ],
+  [
+   "lib/url.c",
+   2314
+  ],
+  [
+   "lib/url.c",
+   2520
+  ],
+  [
+   "lib/ws.c",
+   503
+  ],
+  [
+   "lib/ws.c",
+   552
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   567
+  ],
+  [
+   "lib/cw-out.c",
+   250
+  ],
+  [
+   "lib/cw-out.c",
+   261
+  ],
+  [
+   "lib/ftp.c",
+   599
+  ],
+  [
+   "lib/ftp.c",
+   2561
+  ],
+  [
+   "lib/ftp.c",
+   2690
+  ],
+  [
+   "lib/ftp.c",
+   2722
+  ],
+  [
+   "lib/http.c",
+   1737
+  ],
+  [
+   "lib/http.c",
+   3729
+  ],
+  [
+   "lib/http.c",
+   4032
+  ],
+  [
+   "lib/http.c",
+   4188
+  ],
+  [
+   "lib/http.c",
+   4294
+  ],
+  [
+   "lib/http.c",
+   4513
+  ],
+  [
+   "lib/http.c",
+   4638
+  ],
+  [
+   "lib/imap.c",
+   1584
+  ],
+  [
+   "lib/mqtt.c",
+   998
+  ],
+  [
+   "lib/multi.c",
+   730
+  ],
+  [
+   "lib/multi.c",
+   2189
+  ],
+  [
+   "lib/multi.c",
+   2322
+  ],
+  [
+   "lib/multi.c",
+   2557
+  ],
+  [
+   "lib/multi.c",
+   2583
+  ],
+  [
+   "lib/multi.c",
+   2606
+  ],
+  [
+   "lib/pop3.c",
+   1252
+  ],
+  [
+   "lib/pop3.c",
+   1300
+  ],
+  [
+   "lib/rtsp.c",
+   685
+  ],
+  [
+   "lib/rtsp.c",
+   716
+  ],
+  [
+   "lib/rtsp.c",
+   814
+  ],
+  [
+   "lib/rtsp.c",
+   922
+  ],
+  [
+   "lib/sendf.c",
+   74
+  ],
+  [
+   "lib/sendf.c",
+   90
+  ],
+  [
+   "lib/smtp.c",
+   1539
+  ],
+  [
+   "lib/telnet.c",
+   1487
+  ],
+  [
+   "lib/tftp.c",
+   1213
+  ],
+  [
+   "lib/transfer.c",
+   297
+  ],
+  [
+   "lib/transfer.c",
+   789
+  ],
+  [
+   "lib/ws.c",
+   1663
+  ],
+  [
+   "src/tool_cb_prg.c",
+   227
+  ],
+  [
+   "src/tool_cb_rea.c",
+   180
+  ],
+  [
+   "src/tool_cb_wrt.c",
+   386
+  ],
+  [
+   "src/tool_progress.c",
+   85
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   694
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   812
+  ],
+  [
+   "lib/cw-out.c",
+   291
+  ],
+  [
+   "lib/cw-out.c",
+   411
+  ],
+  [
+   "lib/ftp.c",
+   716
+  ],
+  [
+   "lib/ftp.c",
+   1732
+  ],
+  [
+   "lib/ftp.c",
+   3196
+  ],
+  [
+   "lib/mime.c",
+   742
+  ],
+  [
+   "lib/multi.c",
+   794
+  ],
+  [
+   "lib/multi.c",
+   1853
+  ],
+  [
+   "lib/multi.c",
+   2093
+  ],
+  [
+   "lib/multi.c",
+   2115
+  ],
+  [
+   "lib/multi.c",
+   2135
+  ],
+  [
+   "lib/multi.c",
+   2304
+  ],
+  [
+   "lib/multi.c",
+   2534
+  ],
+  [
+   "lib/multi.c",
+   2649
+  ],
+  [
+   "lib/multi.c",
+   2694
+  ],
+  [
+   "lib/multi.c",
+   2730
+  ],
+  [
+   "lib/multi.c",
+   3017
+  ],
+  [
+   "lib/pingpong.c",
+   116
+  ],
+  [
+   "lib/progress.c",
+   666
+  ],
+  [
+   "lib/request.c",
+   108
+  ],
+  [
+   "lib/request.c",
+   124
+  ],
+  [
+   "lib/request.c",
+   183
+  ],
+  [
+   "lib/rtsp.c",
+   173
+  ],
+  [
+   "lib/rtsp.c",
+   627
+  ],
+  [
+   "lib/sendf.c",
+   689
+  ],
+  [
+   "lib/sendf.c",
+   812
+  ],
+  [
+   "lib/tftp.c",
+   1240
+  ],
+  [
+   "lib/tftp.c",
+   1276
+  ],
+  [
+   "lib/transfer.c",
+   368
+  ],
+  [
+   "lib/url.c",
+   1538
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/cw-pause.c",
+   "id": "c:cw-pause.c@F@cw_pause_flush",
+   "line": 102,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/cw-pause.c",
+   "id": "c:cw-pause.c@F@cw_pause_write",
+   "line": 149,
+   "lines": [
+    158
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/cw-pause.c",
+   "id": "c:@Curl_cwt_pause",
+   "line": 213,
+   "lines": [
+    219
+   ],
+   "status": "breaks"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/cw-pause.c",
+   "id": "c:cw-pause.c@F@cw_pause_bufs_free",
+   "line": 84,
+   "lines": [
+    86,
+    87,
+    88
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_def_flush",
+   "line": 143,
+   "lines": [
+    146
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_client_flush",
+   "line": 401,
+   "lines": [
+    412
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_create",
+   "line": 418,
+   "lines": [
+    436
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_unpause",
+   "line": 528,
+   "lines": [
+    531
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/ws.c",
+   "id": "c:ws.c@F@ws_cw_write",
+   "line": 703,
+   "lines": [
+    731
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "lib/ws.c",
+   "id": "c:ws.c@F@ws_cw_flush",
+   "line": 771,
+   "lines": [
+    784,
+    818
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/content_encoding.c",
+   "id": "c:content_encoding.c@F@error_do_write",
+   "line": 691,
+   "lines": [
+    700
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/content_encoding.c",
+   "id": "c:@F@Curl_build_unencoding_stack",
+   "line": 751,
+   "lines": [
+    840
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cw-out.c",
+   "id": "c:@F@Curl_cw_out_done",
+   "line": 501,
+   "lines": [
+    509
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/cw-pause.c",
+   "id": "c:cw-pause.c@F@cw_pause_close",
+   "line": 94,
+   "lines": [
+    99
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_cw_lc_write",
+   "line": 371,
+   "lines": [
+    383,
+    397,
+    413,
+    427,
+    433,
+    436
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_do",
+   "line": 4232,
+   "lines": [
+    4248
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/headers.c",
+   "id": "c:headers.c@F@hds_cw_collect_write",
+   "line": 412,
+   "lines": [
+    428
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/headers.c",
+   "id": "c:@F@Curl_headers_init",
+   "line": 442,
+   "lines": [
+    452
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http_chunks.c",
+   "id": "c:http_chunks.c@F@httpchunk_readwrite",
+   "line": 108,
+   "lines": [
+    128,
+    206,
+    276
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/http_chunks.c",
+   "id": "c:http_chunks.c@F@cw_chunked_write",
+   "line": 429,
+   "lines": [
+    438
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_def_write",
+   "line": 136,
+   "lines": [
+    140
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cw_download_write",
+   "line": 173,
+   "lines": [
+    196,
+    261
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cw_raw_write",
+   "line": 310,
+   "lines": [
+    317
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@do_init_writer_stack",
+   "line": 344,
+   "lines": [
+    350,
+    355,
+    360
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_client_write",
+   "line": 373,
+   "lines": [
+    395
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cwriter_ensure_pause_writer",
+   "line": 466,
+   "lines": [
+    473
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_pause_recv",
+   "line": 885,
+   "lines": [
+    890
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/ws.c",
+   "id": "c:ws.c@F@ws_cw_dec_next",
+   "line": 656,
+   "lines": [
+    693
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "lib/ws.c",
+   "id": "c:@F@Curl_ws_accept",
+   "line": 1380,
+   "lines": [
+    1444
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@single_header",
+   "line": 421,
+   "lines": [
+    444
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/cw-out.c",
+   "id": "c:cw-out.c@F@cw_out_cb_write",
+   "line": 174,
+   "lines": [
+    207
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/easy.c",
+   "id": "c:@F@curl_easy_pause",
+   "line": 1194,
+   "lines": [
+    1226
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/file.c",
+   "id": "c:file.c@F@file_do",
+   "line": 474,
+   "lines": [
+    526,
+    530,
+    552,
+    555,
+    646,
+    671,
+    675
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@client_write_header",
+   "line": 2474,
+   "lines": [
+    2494
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/gopher.c",
+   "id": "c:gopher.c@F@send_buf",
+   "line": 61,
+   "lines": [
+    77
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/gopher.c",
+   "id": "c:gopher.c@F@gopher_do",
+   "line": 121,
+   "lines": [
+    186
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_write_header",
+   "line": 1694,
+   "lines": [
+    1707
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http",
+   "line": 3082,
+   "lines": [
+    3111
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_header_c",
+   "line": 3283,
+   "lines": [
+    3344
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_header_t",
+   "line": 3649,
+   "lines": [
+    3672
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_on_101_upgrade",
+   "line": 3950,
+   "lines": [
+    3996
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_rw_hd",
+   "line": 4301,
+   "lines": [
+    4459
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_write_resp_hd",
+   "line": 4662,
+   "lines": [
+    4673
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_write_resp_hds",
+   "line": 4683,
+   "lines": [
+    4700
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_write_resp",
+   "line": 4710,
+   "lines": [
+    4733
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/http_chunks.c",
+   "id": "c:@F@Curl_httpchunk_read",
+   "line": 399,
+   "lines": [
+    404
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/imap.c",
+   "id": "c:imap.c@F@imap_state_listsearch_resp",
+   "line": 1218,
+   "lines": [
+    1259,
+    1279,
+    1327,
+    1332
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/imap.c",
+   "id": "c:imap.c@F@imap_state_fetch_resp",
+   "line": 1398,
+   "lines": [
+    1451
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/mqtt.c",
+   "id": "c:mqtt.c@F@mqtt_read_publish",
+   "line": 694,
+   "lines": [
+    775
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_do",
+   "line": 1772,
+   "lines": [
+    1781
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connecting",
+   "line": 1867,
+   "lines": [
+    1874
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_doing",
+   "line": 1887,
+   "lines": [
+    1894
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connect",
+   "line": 1907,
+   "lines": [
+    1920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/pingpong.c",
+   "id": "c:@F@Curl_pp_readresp",
+   "line": 241,
+   "lines": [
+    316
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/pop3.c",
+   "id": "c:pop3.c@F@pop3_write",
+   "line": 1075,
+   "lines": [
+    1105,
+    1163,
+    1167,
+    1187,
+    1200
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtp_write_body_junk",
+   "line": 579,
+   "lines": [
+    595
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_rtp_write_resp",
+   "line": 828,
+   "lines": [
+    902
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cl_reset_writer",
+   "line": 47,
+   "lines": [
+    52
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_free",
+   "line": 445,
+   "lines": [
+    449
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_cwriter_add",
+   "line": 481,
+   "lines": [
+    497
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/smtp.c",
+   "id": "c:smtp.c@F@smtp_state_command_resp",
+   "line": 1343,
+   "lines": [
+    1362
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/telnet.c",
+   "id": "c:telnet.c@F@telrcv",
+   "line": 1057,
+   "lines": [
+    1093,
+    1102,
+    1207
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/tftp.c",
+   "id": "c:tftp.c@F@tftp_receive_packet",
+   "line": 1043,
+   "lines": [
+    1092
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_write_resp",
+   "line": 745,
+   "lines": [
+    763
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_write_done",
+   "line": 795,
+   "lines": [
+    798
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_find_or_create_conn",
+   "line": 2281,
+   "lines": [
+    2314
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_connect",
+   "line": 2476,
+   "lines": [
+    2520
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ws.c",
+   "id": "c:ws.c@F@ws_dec_pass_payload",
+   "line": 486,
+   "lines": [
+    503
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "lib/ws.c",
+   "id": "c:ws.c@F@ws_dec_pass",
+   "line": 519,
+   "lines": [
+    552
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@recv_CONNECT_resp",
+   "line": 502,
+   "lines": [
+    567
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/cw-out.c",
+   "id": "c:cw-out.c@F@cw_out_ptr_flush",
+   "line": 223,
+   "lines": [
+    250,
+    261
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_readresp",
+   "line": 591,
+   "lines": [
+    599
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_mdtm_resp",
+   "line": 2499,
+   "lines": [
+    2561
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_size_resp",
+   "line": 2646,
+   "lines": [
+    2690
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_rest_resp",
+   "line": 2709,
+   "lines": [
+    2722
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_done",
+   "line": 1726,
+   "lines": [
+    1737
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_header",
+   "line": 3717,
+   "lines": [
+    3729
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_on_1xx_response",
+   "line": 4013,
+   "lines": [
+    4032
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_on_response",
+   "line": 4166,
+   "lines": [
+    4188,
+    4294
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_parse_headers",
+   "line": 4493,
+   "lines": [
+    4513,
+    4638
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/imap.c",
+   "id": "c:imap.c@F@imap_pp_statemachine",
+   "line": 1557,
+   "lines": [
+    1584
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/mqtt.c",
+   "id": "c:mqtt.c@F@mqtt_doing",
+   "line": 859,
+   "lines": [
+    998
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_done",
+   "line": 673,
+   "lines": [
+    730
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_do",
+   "line": 2153,
+   "lines": [
+    2189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connect",
+   "line": 2314,
+   "lines": [
+    2322
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnect",
+   "line": 2542,
+   "lines": [
+    2557
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnecting",
+   "line": 2576,
+   "lines": [
+    2583
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing",
+   "line": 2598,
+   "lines": [
+    2606
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/pop3.c",
+   "id": "c:pop3.c@F@pop3_state_command_resp",
+   "line": 1208,
+   "lines": [
+    1252
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/pop3.c",
+   "id": "c:pop3.c@F@pop3_statemachine",
+   "line": 1272,
+   "lines": [
+    1300
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_filter_rtp",
+   "line": 643,
+   "lines": [
+    685,
+    716,
+    814
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_rtp_write_resp_hd",
+   "line": 917,
+   "lines": [
+    922
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_client_cleanup",
+   "line": 71,
+   "lines": [
+    74
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/sendf.c",
+   "id": "c:@F@Curl_client_reset",
+   "line": 80,
+   "lines": [
+    90
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/smtp.c",
+   "id": "c:smtp.c@F@smtp_pp_statemachine",
+   "line": 1513,
+   "lines": [
+    1539
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/telnet.c",
+   "id": "c:telnet.c@F@telnet_do",
+   "line": 1220,
+   "lines": [
+    1487
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/tftp.c",
+   "id": "c:tftp.c@F@tftp_multi_statemach",
+   "line": 1175,
+   "lines": [
+    1213
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/transfer.c",
+   "id": "c:transfer.c@F@sendrecv_dl",
+   "line": 220,
+   "lines": [
+    297
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_xfer_write_resp_hd",
+   "line": 782,
+   "lines": [
+    789
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/ws.c",
+   "id": "c:@F@curl_ws_recv",
+   "line": 1596,
+   "lines": [
+    1663
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/tool_cb_prg.c",
+   "id": "c:@F@tool_progress_cb",
+   "line": 119,
+   "lines": [
+    227
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/tool_cb_rea.c",
+   "id": "c:@F@tool_readbusy_cb",
+   "line": 157,
+   "lines": [
+    180
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/tool_cb_wrt.c",
+   "id": "c:@F@tool_write_cb",
+   "line": 289,
+   "lines": [
+    386
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/tool_progress.c",
+   "id": "c:@F@xferinfo_cb",
+   "line": 67,
+   "lines": [
+    85
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@H1_CONNECT",
+   "line": 651,
+   "lines": [
+    694
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@cf_h1_proxy_connect",
+   "line": 773,
+   "lines": [
+    812
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cw-out.c",
+   "id": "c:cw-out.c@F@cw_out_buf_flush",
+   "line": 281,
+   "lines": [
+    291
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/cw-out.c",
+   "id": "c:cw-out.c@F@cw_out_do_write",
+   "line": 383,
+   "lines": [
+    411
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@getftpresponse",
+   "line": 631,
+   "lines": [
+    716
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_state_ul_setup",
+   "line": 1673,
+   "lines": [
+    1732
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/ftp.c",
+   "id": "c:ftp.c@F@ftp_pp_statemachine",
+   "line": 3180,
+   "lines": [
+    3196
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/mime.c",
+   "id": "c:mime.c@F@read_part_content",
+   "line": 702,
+   "lines": [
+    742
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@Curl_multi_remove_handle",
+   "line": 758,
+   "lines": [
+    794
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_handle_timeout",
+   "line": 1811,
+   "lines": [
+    1853
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_performing",
+   "line": 2014,
+   "lines": [
+    2093,
+    2115,
+    2135
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_ratelimiting",
+   "line": 2289,
+   "lines": [
+    2304
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connecting",
+   "line": 2508,
+   "lines": [
+    2534
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing_more",
+   "line": 2624,
+   "lines": [
+    2649
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_done",
+   "line": 2688,
+   "lines": [
+    2694
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_runsingle",
+   "line": 2717,
+   "lines": [
+    2730
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:@F@curl_multi_cleanup",
+   "line": 2984,
+   "lines": [
+    3017
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/pingpong.c",
+   "id": "c:@F@Curl_pp_statemach",
+   "line": 62,
+   "lines": [
+    116
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/progress.c",
+   "id": "c:progress.c@F@pgrsupdate",
+   "line": 658,
+   "lines": [
+    666
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/request.c",
+   "id": "c:@F@Curl_req_done",
+   "line": 102,
+   "lines": [
+    108
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/request.c",
+   "id": "c:@F@Curl_req_hard_reset",
+   "line": 112,
+   "lines": [
+    124
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/request.c",
+   "id": "c:@F@Curl_req_free",
+   "line": 174,
+   "lines": [
+    183
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_done",
+   "line": 158,
+   "lines": [
+    173
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtp_client_write",
+   "line": 600,
+   "lines": [
+    627
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cr_in_read",
+   "line": 659,
+   "lines": [
+    689
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/sendf.c",
+   "id": "c:sendf.c@F@cr_in_resume_from",
+   "line": 775,
+   "lines": [
+    812
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/tftp.c",
+   "id": "c:tftp.c@F@tftp_doing",
+   "line": 1237,
+   "lines": [
+    1240
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/tftp.c",
+   "id": "c:tftp.c@F@tftp_perform",
+   "line": 1261,
+   "lines": [
+    1276
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/transfer.c",
+   "id": "c:@F@Curl_sendrecv",
+   "line": 354,
+   "lines": [
+    368
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@setup_connection_internals",
+   "line": 1532,
+   "lines": [
+    1538
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.6505,
+ "summary": {
+  "affected_direct": 7,
+  "affected_further": 124,
+  "breaks_exact": 1,
+  "breaks_probable": 1,
+  "no_effect": 0,
+  "not_followed": 6,
+  "unknown": 0
+ },
+ "text": "[!] This change can break 1 thing you didn't touch (1 BREAKS, 1 MAY BREAK, 131 AFFECTED).\n    1 more may not build or link, 131 may be affected (7 direct, 124 further up) and 6 parts of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    cw_pause_flush  lib/cw-pause.c:102  (signature changed: now takes 3 parameters (was 2))\n\nFunctions (132)\n  [x] BREAKS     cw_pause_write  lib/cw-pause.c:149\n                 passes 2 arguments; cw_pause_flush now takes 3 (and 2 other links). Link: exact.\n  [~] AFFECTED   cw_pause_bufs_free  lib/cw-pause.c:84\n                 reads data that cw_pause_flush writes. Link: probable.\n  [~] AFFECTED   Curl_cwriter_def_flush  lib/sendf.c:143\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_client_flush  lib/sendf.c:401\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_cwriter_create  lib/sendf.c:418\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_cwriter_unpause  lib/sendf.c:528\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 1 other link). Link: probable.\n  [~] AFFECTED   ws_cw_write  lib/ws.c:703\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 1 other link). Link: probable.\n  [~] AFFECTED   ws_cw_flush  lib/ws.c:771\n                 calls a pointer of the old type of cw_pause_flush (now takes 3 parameters (was 2)) (and 2 other links). Link: probable.\n  [~] AFFECTED   error_do_write  lib/content_encoding.c:691\n                 calls cw_pause_write, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_build_unencoding_stack  lib/content_encoding.c:751\n                 calls Curl_cwriter_create, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   Curl_cw_out_done  lib/cw-out.c:501\n                 calls Curl_client_flush, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   cw_pause_close  lib/cw-pause.c:94\n                 calls cw_pause_bufs_free (reads data the changed function writes). Link: probable.\n  [~] AFFECTED   ftp_cw_lc_write  lib/ftp.c:371\n                 calls cw_pause_write, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   ftp_do  lib/ftp.c:4232\n                 calls Curl_cwriter_create, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  [~] AFFECTED   hds_cw_collect_write  lib/headers.c:412\n                 calls cw_pause_write, which calls cw_pause_flush (a call through a function pointer of the matching type) (and 1 other link). Link: probable.\n  ... and 117 more (117 AFFECTED). Raise --limit or use --html to see all.\n\nData (1)\n  [x] MAY BREAK  Curl_cwt_pause (global)  lib/cw-pause.c:213\n                 names cw_pause_flush as a value (stored in an initializer); its pointer type there no longer matches (current compilers reject that: clang 16+, GCC 14+, every C++ compiler). Link: probable.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (6)\n  [?] 1 changed function(s) are used as function pointers. Callers were matched by type; calls from outside this repo (callbacks into libraries) are not visible.\n  [?] Code that receives its address (a table or callback) calls it through a pointer. Those calls are matched by type; a call through a cast or a void * is not seen.\n  [?] Signature effects follow callers 2 steps further up; more exist.\n  [?] Stopped at depth 5; more callers exist further up.\n  [?] Uses in code that is not compiled with these flags (other #if branches) are not checked.\n  [?] lib/cw-pause.c:219 does not compile after this change: incompatible function pointer types initializing 'CURLcode (*)(struct Curl_easy *, struct Curl_cwriter *)' with an expression of type 'CURLcode (struct Curl_easy *, struct Curl_cwriter *, int)'\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

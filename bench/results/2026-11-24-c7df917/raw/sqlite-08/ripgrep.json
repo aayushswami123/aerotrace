@@ -1,0 +1,27 @@
+{
+ "command": "rg -n -w --no-heading --with-filename shellCmdLineEdit <build files>",
+ "hits": [
+  [
+   "shell.c",
+   232
+  ],
+  [
+   "shell.c",
+   238
+  ],
+  [
+   "shell.c",
+   26230
+  ],
+  [
+   "shell.c",
+   39061
+  ],
+  [
+   "shell.c",
+   39311
+  ]
+ ],
+ "seconds": 0.0136,
+ "text": "shell.c:232:** Global variable shellCmdLineEdit determines whether or not command-line\nshell.c:238:static int shellCmdLineEdit = SHELL_CMDLINE_EDIT_AVAILABLE;\nshell.c:26230:    if( shellCmdLineEdit ){\nshell.c:39061:    shellCmdLineEdit = 0;\nshell.c:39311:      shellCmdLineEdit = booleanValue(cmdline_option_value(argc,argv,++i));\n"
+}

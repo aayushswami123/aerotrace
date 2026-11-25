@@ -1,0 +1,22 @@
+--- a/lib/dynhds.c
++++ b/lib/dynhds.c
+@@ -133,7 +133,7 @@
+ 
+ CURLcode Curl_dynhds_add(struct dynhds *dynhds,
+                          const char *name, size_t namelen,
+-                         const char *value, size_t valuelen)
++                         const char *value, size_t valuelen, int aerotrace_bench)
+ {
+   struct dynhds_entry *entry = NULL;
+   CURLcode result = CURLE_OUT_OF_MEMORY;
+--- a/lib/dynhds.h
++++ b/lib/dynhds.h
+@@ -103,7 +103,7 @@
+  */
+ CURLcode Curl_dynhds_add(struct dynhds *dynhds,
+                          const char *name, size_t namelen,
+-                         const char *value, size_t valuelen);
++                         const char *value, size_t valuelen, int aerotrace_bench);
+ 
+ /**
+  * Add a header, c-string name + value, to `dynhds` at the end.

@@ -1,0 +1,20 @@
+--- a/shell.c
++++ b/shell.c
+@@ -19503,17 +19503,6 @@
+ ** ensure the file-system modifications are synced to disk before
+ ** returning.
+ */
+-static int vfstraceDelete(sqlite3_vfs *pVfs, const char *zPath, int dirSync){
+-  vfstrace_info *pInfo = (vfstrace_info*)pVfs->pAppData;
+-  sqlite3_vfs *pRoot = pInfo->pRootVfs;
+-  int rc;
+-  vfstraceOnOff(pInfo, VTR_DELETE);
+-  vfstrace_printf(pInfo, "%s.xDelete(\"%s\",%d)",
+-                  pInfo->zVfsName, zPath, dirSync);
+-  rc = pRoot->xDelete(pRoot, zPath, dirSync);
+-  vfstrace_print_errcode(pInfo, " -> %s\n", rc);
+-  return rc;
+-}
+ 
+ /*
+ ** Test for access permissions. Return true if the requested permission

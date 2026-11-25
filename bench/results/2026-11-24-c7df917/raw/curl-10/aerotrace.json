@@ -1,0 +1,437 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "lib/url.c",
+   1381
+  ],
+  [
+   "lib/vauth/vauth.c",
+   142
+  ],
+  [
+   "lib/http.c",
+   879
+  ],
+  [
+   "lib/http.c",
+   1926
+  ],
+  [
+   "lib/http.c",
+   2602
+  ],
+  [
+   "lib/http_proxy.c",
+   163
+  ],
+  [
+   "lib/url.c",
+   2209
+  ],
+  [
+   "lib/http.c",
+   3058
+  ],
+  [
+   "lib/http.c",
+   3126
+  ],
+  [
+   "lib/http_proxy.c",
+   230
+  ],
+  [
+   "lib/http_proxy.c",
+   366
+  ],
+  [
+   "lib/rtsp.c",
+   385
+  ],
+  [
+   "lib/rtsp.c",
+   536
+  ],
+  [
+   "lib/url.c",
+   2486
+  ],
+  [
+   "lib/http_proxy.c",
+   449
+  ],
+  [
+   "lib/multi.c",
+   2322
+  ],
+  [
+   "lib/cf-h1-proxy.c",
+   247
+  ],
+  [
+   "lib/multi.c",
+   2800
+  ],
+  [
+   "lib/multi.c",
+   1781
+  ],
+  [
+   "lib/multi.c",
+   1874
+  ],
+  [
+   "lib/multi.c",
+   1894
+  ],
+  [
+   "lib/multi.c",
+   1920
+  ],
+  [
+   "lib/url.c",
+   2314
+  ],
+  [
+   "lib/multi.c",
+   2189
+  ],
+  [
+   "lib/multi.c",
+   2557
+  ],
+  [
+   "lib/multi.c",
+   2583
+  ],
+  [
+   "lib/multi.c",
+   2606
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "lib/vauth/vauth.c",
+   "id": "c:@F@Curl_auth_allowed_to_origin",
+   "line": 145,
+   "lines": [],
+   "status": "changed"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_set_data_creds",
+   "line": 1371,
+   "lines": [
+    1381
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 1,
+   "file": "lib/vauth/vauth.c",
+   "id": "c:@F@Curl_auth_allowed_to_host",
+   "line": 140,
+   "lines": [
+    142
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http_output_auth",
+   "line": 803,
+   "lines": [
+    879
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_add_custom_headers",
+   "line": 1808,
+   "lines": [
+    1926
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_cookies",
+   "line": 2594,
+   "lines": [
+    2602
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@dynhds_add_custom",
+   "line": 41,
+   "lines": [
+    163
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 2,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_set_data_origin_and_creds",
+   "line": 2068,
+   "lines": [
+    2209
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:http.c@F@http_add_hd",
+   "line": 2927,
+   "lines": [
+    3058
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http.c",
+   "id": "c:@F@Curl_http",
+   "line": 3082,
+   "lines": [
+    3126
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@http_proxy_create_CONNECT",
+   "line": 199,
+   "lines": [
+    230
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/http_proxy.c",
+   "id": "c:http_proxy.c@F@http_proxy_create_CONNECTUDP",
+   "line": 278,
+   "lines": [
+    366
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_setup_request",
+   "line": 333,
+   "lines": [
+    385
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/rtsp.c",
+   "id": "c:rtsp.c@F@rtsp_do",
+   "line": 428,
+   "lines": [
+    536
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 3,
+   "file": "lib/url.c",
+   "id": "c:@F@Curl_connect",
+   "line": 2476,
+   "lines": [
+    2486
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/http_proxy.c",
+   "id": "c:@F@Curl_http_proxy_create_tunnel_request",
+   "line": 442,
+   "lines": [
+    449
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_connect",
+   "line": 2314,
+   "lines": [
+    2322
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/cf-h1-proxy.c",
+   "id": "c:cf-h1-proxy.c@F@start_CONNECT",
+   "line": 233,
+   "lines": [
+    247
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "exact",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_runsingle",
+   "line": 2717,
+   "lines": [
+    2800
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multi_do",
+   "line": 1772,
+   "lines": [
+    1781
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connecting",
+   "line": 1867,
+   "lines": [
+    1874
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_doing",
+   "line": 1887,
+   "lines": [
+    1894
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@protocol_connect",
+   "line": 1907,
+   "lines": [
+    1920
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "lib/url.c",
+   "id": "c:url.c@F@url_find_or_create_conn",
+   "line": 2281,
+   "lines": [
+    2314
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_do",
+   "line": 2153,
+   "lines": [
+    2189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnect",
+   "line": 2542,
+   "lines": [
+    2557
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_protoconnecting",
+   "line": 2576,
+   "lines": [
+    2583
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "lib/multi.c",
+   "id": "c:multi.c@F@multistate_doing",
+   "line": 2598,
+   "lines": [
+    2606
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 0.5867,
+ "summary": {
+  "affected_direct": 2,
+  "affected_further": 25,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 1,
+  "unknown": 0
+ },
+ "text": "[!] This change may affect 27 things you didn't touch (2 direct, 25 further up). None is sure to break.\n    1 part of the change could not be followed.\n    You changed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] CHANGED    Curl_auth_allowed_to_origin  lib/vauth/vauth.c:145  (changed (0 lines))\n\nFunctions (27)\n  [~] AFFECTED   url_set_data_creds  lib/url.c:1371\n                 calls Curl_auth_allowed_to_origin. Link: exact.\n  [~] AFFECTED   Curl_auth_allowed_to_host  lib/vauth/vauth.c:140\n                 calls Curl_auth_allowed_to_origin. Link: exact.\n  [~] AFFECTED   Curl_http_output_auth  lib/http.c:803\n                 calls Curl_auth_allowed_to_host. Link: exact.\n  [~] AFFECTED   Curl_add_custom_headers  lib/http.c:1808\n                 calls Curl_auth_allowed_to_host. Link: exact.\n  [~] AFFECTED   http_cookies  lib/http.c:2594\n                 calls Curl_auth_allowed_to_host. Link: exact.\n  [~] AFFECTED   dynhds_add_custom  lib/http_proxy.c:41\n                 calls Curl_auth_allowed_to_host. Link: exact.\n  [~] AFFECTED   url_set_data_origin_and_creds  lib/url.c:2068\n                 calls url_set_data_creds. Link: exact.\n  [~] AFFECTED   http_add_hd  lib/http.c:2927\n                 calls Curl_add_custom_headers. Link: exact.\n  [~] AFFECTED   Curl_http  lib/http.c:3082\n                 calls Curl_http_output_auth. Link: exact.\n  [~] AFFECTED   http_proxy_create_CONNECT  lib/http_proxy.c:199\n                 calls Curl_http_output_auth. Link: exact.\n  [~] AFFECTED   http_proxy_create_CONNECTUDP  lib/http_proxy.c:278\n                 calls Curl_http_output_auth. Link: exact.\n  [~] AFFECTED   rtsp_setup_request  lib/rtsp.c:333\n                 calls Curl_http_output_auth. Link: exact.\n  [~] AFFECTED   rtsp_do  lib/rtsp.c:428\n                 calls Curl_add_custom_headers. Link: exact.\n  [~] AFFECTED   Curl_connect  lib/url.c:2476\n                 calls url_set_data_origin_and_creds. Link: exact.\n  [~] AFFECTED   Curl_http_proxy_create_tunnel_request  lib/http_proxy.c:442\n                 calls http_proxy_create_CONNECT. Link: exact.\n  ... and 12 more (12 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (1)\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nChecked 237 of 237 files in this build.\n576 C/C++ files outside this build were not checked: CMake/CurlTests.c, docs/examples/10-at-a-time.c, docs/examples/address-scope.c and 573 more.\n\nindex: 461 files, 2,751 functions; followed callers up to 5 steps (stopped early: yes)"
+}

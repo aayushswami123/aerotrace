@@ -1,0 +1,11 @@
+{
+ "command": "textDocument/references at lib/http_proxy.c:696:13",
+ "hits": [
+  [
+   "lib/http_proxy.c",
+   710
+  ]
+ ],
+ "seconds": 0.0012,
+ "text": "lib/http_proxy.c:710: http_proxy_cf_destroy,\n"
+}

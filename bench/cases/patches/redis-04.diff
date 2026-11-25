@@ -1,0 +1,22 @@
+--- a/src/server.c
++++ b/src/server.c
+@@ -368,7 +368,7 @@
+ }
+ 
+ int dictSdsKeyCompare(dictCmpCache *cache, const void *key1,
+-        const void *key2)
++        const void *key2, int aerotrace_bench)
+ {
+     int l1,l2;
+     UNUSED(cache);
+--- a/src/server.h
++++ b/src/server.h
+@@ -4483,7 +4483,7 @@
+ uint64_t dictPtrHash(const void *key);
+ uint64_t dictSdsCaseHash(const void *key);
+ size_t dictSdsKeyLen(dict *d, const void *key);
+-int dictSdsKeyCompare(dictCmpCache *cache, const void *key1, const void *key2);
++int dictSdsKeyCompare(dictCmpCache *cache, const void *key1, const void *key2, int aerotrace_bench);
+ int dictSdsKeyCaseCompare(dictCmpCache *cache, const void *key1, const void *key2);
+ void dictSdsDestructor(dict *d, void *val);
+ void dictListDestructor(dict *d, void *val);

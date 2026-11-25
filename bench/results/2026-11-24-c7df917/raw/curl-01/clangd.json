@@ -1,0 +1,43 @@
+{
+ "command": "textDocument/references at lib/dynhds.c:134:10",
+ "hits": [
+  [
+   "lib/dynhds.c",
+   190
+  ],
+  [
+   "lib/dynhds.c",
+   225
+  ],
+  [
+   "lib/http.c",
+   5039
+  ],
+  [
+   "lib/http.c",
+   5042
+  ],
+  [
+   "lib/http.c",
+   5046
+  ],
+  [
+   "lib/http.c",
+   5050
+  ],
+  [
+   "lib/http.c",
+   5059
+  ],
+  [
+   "lib/http.c",
+   5063
+  ],
+  [
+   "lib/http_proxy.c",
+   167
+  ]
+ ],
+ "seconds": 0.0009,
+ "text": "lib/dynhds.c:190: return Curl_dynhds_add(dynhds, name, strlen(name),\nlib/dynhds.c:225: return Curl_dynhds_add(dynhds, name, namelen, value, valuelen);\nlib/http.c:5039: result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_METHOD),\nlib/http.c:5042: result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_SCHEME),\nlib/http.c:5046: result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_AUTHORITY),\nlib/http.c:5050: result = Curl_dynhds_add(h2_headers, STRCONST(HTTP_PSEUDO_PATH),\nlib/http.c:5059: result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/http.c:5063: result = Curl_dynhds_add(h2_headers, e->name, e->namelen,\nlib/http_proxy.c:167: Curl_dynhds_add(hds, curlx_str(&name), curlx_strlen(&name),\n"
+}

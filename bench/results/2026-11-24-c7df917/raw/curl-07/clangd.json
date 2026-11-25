@@ -1,0 +1,35 @@
+{
+ "command": "textDocument/references at lib/urldata.h:965:14",
+ "hits": [
+  [
+   "lib/conncache.c",
+   901
+  ],
+  [
+   "lib/mqtt.c",
+   840
+  ],
+  [
+   "lib/mqtt.c",
+   844
+  ],
+  [
+   "lib/setopt.c",
+   878
+  ],
+  [
+   "lib/url.c",
+   418
+  ],
+  [
+   "lib/url.c",
+   2621
+  ],
+  [
+   "lib/url.c",
+   2621
+  ]
+ ],
+ "seconds": 0.0015,
+ "text": "lib/conncache.c:901: admin->set.upkeep_interval_ms) {\nlib/mqtt.c:840: data->set.upkeep_interval_ms > 0) {\nlib/mqtt.c:844: if(diff > data->set.upkeep_interval_ms) {\nlib/setopt.c:878: return setopt_set_timeout_ms(&s->upkeep_interval_ms, arg);\nlib/url.c:2621: admin->set.upkeep_interval_ms = data->set.upkeep_interval_ms;\nlib/url.c:2621: admin->set.upkeep_interval_ms = data->set.upkeep_interval_ms;\nlib/url.c:418: set->upkeep_interval_ms = CURL_UPKEEP_INTERVAL_DEFAULT;\n"
+}

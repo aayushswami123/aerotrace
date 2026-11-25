@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Changes · AeroTrace (mockup)</title>
+<link rel="stylesheet" href="mock.css"><script src="mock.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-current="changes"></aside>
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div>
+          <div class="caps">Changes</div>
+          <h1 style="margin-top:6px">Past checks</h1>
+          <div class="sub">Every <code>aerotrace check</code> run in this repo. Newest first. Click one to open it in Graph.</div>
+        </div>
+      </div>
+      <div class="warnbar"><span data-i="warn" style="width:16px;height:16px"></span>12 files changed since the last index. Answers may be out of date. Run: <code>aerotrace index</code></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Verdict</th><th>What it found</th><th>Source</th><th class="num">Date</th></tr></thead>
+          <tbody>
+            <tr class="row">
+              <td><span class="chip breaks" data-s="breaks">BREAKS</span></td>
+              <td><a href="graph.html">Breaks 4 places, 1 may break, 19 affected</a><div class="fl">1 changed function · 2 parts not followed</div></td>
+              <td><span class="mono" style="font-size:12px">working tree vs HEAD</span></td>
+              <td class="num">2026-11-24 14:58</td>
+            </tr>
+            <tr class="row">
+              <td><span class="chip may" data-s="may">MAY BREAK</span></td>
+              <td><a href="graph.html">1 may break, 3 affected</a><div class="fl">1 removed function, matched by name</div></td>
+              <td><span class="mono" style="font-size:12px">branch feat/scan-opts vs main</span></td>
+              <td class="num">2026-11-24 12:40</td>
+            </tr>
+            <tr class="row">
+              <td><span class="chip affected" data-s="affected">AFFECTED</span></td>
+              <td><a href="graph.html">Nothing breaks, 6 affected, 2 unknown</a><div class="fl">1 changed field</div></td>
+              <td><span class="mono" style="font-size:12px">branch fix/expire vs main</span></td>
+              <td class="num">2026-11-24 11:02</td>
+            </tr>
+            <tr class="row">
+              <td><span class="chip unknown" data-s="unknown">UNKNOWN</span></td>
+              <td><a href="graph.html">Nothing breaks, 3 unknown</a><div class="fl">called through a pointer table</div></td>
+              <td><span class="mono" style="font-size:12px">patch aof-rewrite.diff</span></td>
+              <td class="num">2026-11-23 17:21</td>
+            </tr>
+            <tr class="row">
+              <td><span class="chip no_effect" data-s="no_effect">NO EFFECT FOUND</span></td>
+              <td><a href="graph.html">No effect found outside the change</a><div class="fl">all parts followed</div></td>
+              <td><span class="mono" style="font-size:12px">working tree vs HEAD</span></td>
+              <td class="num">2026-11-23 09:15</td>
+            </tr>
+            <tr class="row">
+              <td><span class="chip affected" data-s="affected">AFFECTED</span></td>
+              <td><a href="graph.html">Nothing breaks, 2 affected</a><div class="fl">saved by hand, no run details</div></td>
+              <td class="dim">source unknown</td>
+              <td class="num dim">date unknown</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim" style="font-size:var(--text-sm);margin-top:var(--space-4)">Showing 6 of 6 saved checks. AeroTrace keeps the last 50.</p>
+      <p class="refnote">Influenced by: Linear issue list (dense rows, whole row clickable, muted second line), Sentry stale-data bar, Vercel deployments (source in mono, date right-aligned). Made our own: the warning bar names the exact fix, and a missing date or source says "unknown" instead of a guess.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

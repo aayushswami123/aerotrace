@@ -1,0 +1,2452 @@
+{
+ "command": "aerotrace check --patch <case.diff> --json",
+ "exit": 0,
+ "hits": [],
+ "hits_anywhere": [
+  [
+   "src/acl.c",
+   1746
+  ],
+  [
+   "src/acl.c",
+   1747
+  ],
+  [
+   "src/acl.c",
+   1748
+  ],
+  [
+   "src/acl.c",
+   1750
+  ],
+  [
+   "src/acl.c",
+   1763
+  ],
+  [
+   "src/acl.c",
+   1764
+  ],
+  [
+   "src/acl.c",
+   1765
+  ],
+  [
+   "src/acl.c",
+   1766
+  ],
+  [
+   "src/acl.c",
+   1769
+  ],
+  [
+   "src/cluster.c",
+   1185
+  ],
+  [
+   "src/cluster.c",
+   1189
+  ],
+  [
+   "src/cluster.c",
+   1190
+  ],
+  [
+   "src/cluster.c",
+   1320
+  ],
+  [
+   "src/cluster.c",
+   1330
+  ],
+  [
+   "src/cluster_asm.c",
+   3690
+  ],
+  [
+   "src/db.c",
+   3189
+  ],
+  [
+   "src/db.c",
+   3201
+  ],
+  [
+   "src/db.c",
+   3202
+  ],
+  [
+   "src/db.c",
+   3231
+  ],
+  [
+   "src/db.c",
+   3302
+  ],
+  [
+   "src/db.c",
+   3318
+  ],
+  [
+   "src/db.c",
+   3319
+  ],
+  [
+   "src/db.c",
+   3320
+  ],
+  [
+   "src/db.c",
+   3341
+  ],
+  [
+   "src/db.c",
+   3378
+  ],
+  [
+   "src/db.c",
+   3563
+  ],
+  [
+   "src/db.c",
+   3619
+  ],
+  [
+   "src/db.c",
+   3697
+  ],
+  [
+   "src/db.c",
+   3750
+  ],
+  [
+   "src/db.c",
+   3773
+  ],
+  [
+   "src/hotkeys.c",
+   109
+  ],
+  [
+   "src/hotkeys.c",
+   117
+  ],
+  [
+   "src/hotkeys.c",
+   151
+  ],
+  [
+   "src/memory_prefetch.c",
+   513
+  ],
+  [
+   "src/memory_prefetch.c",
+   514
+  ],
+  [
+   "src/module.c",
+   1030
+  ],
+  [
+   "src/module.c",
+   1049
+  ],
+  [
+   "src/module.c",
+   1094
+  ],
+  [
+   "src/module.c",
+   1099
+  ],
+  [
+   "src/module.c",
+   1100
+  ],
+  [
+   "src/module.c",
+   1101
+  ],
+  [
+   "src/module.c",
+   1153
+  ],
+  [
+   "src/module.c",
+   1164
+  ],
+  [
+   "src/module.c",
+   1165
+  ],
+  [
+   "src/module.c",
+   1166
+  ],
+  [
+   "src/module.c",
+   15286
+  ],
+  [
+   "src/module.c",
+   15287
+  ],
+  [
+   "src/module.c",
+   15294
+  ],
+  [
+   "src/module.c",
+   15298
+  ],
+  [
+   "src/module.c",
+   15299
+  ],
+  [
+   "src/module.c",
+   15301
+  ],
+  [
+   "src/server.c",
+   4876
+  ],
+  [
+   "src/server.c",
+   5792
+  ],
+  [
+   "src/server.c",
+   5793
+  ],
+  [
+   "src/server.c",
+   5795
+  ],
+  [
+   "src/server.c",
+   5798
+  ],
+  [
+   "src/server.c",
+   5799
+  ],
+  [
+   "src/tracking.c",
+   228
+  ],
+  [
+   "src/acl.c",
+   1848
+  ],
+  [
+   "src/acl.c",
+   1925
+  ],
+  [
+   "src/db.c",
+   501
+  ],
+  [
+   "src/db.c",
+   3453
+  ],
+  [
+   "src/db.c",
+   3479
+  ],
+  [
+   "src/db.c",
+   3523
+  ],
+  [
+   "src/db.c",
+   3624
+  ],
+  [
+   "src/db.c",
+   3629
+  ],
+  [
+   "src/db.c",
+   3634
+  ],
+  [
+   "src/db.c",
+   3639
+  ],
+  [
+   "src/db.c",
+   3644
+  ],
+  [
+   "src/db.c",
+   3649
+  ],
+  [
+   "src/db.c",
+   3654
+  ],
+  [
+   "src/db.c",
+   3659
+  ],
+  [
+   "src/db.c",
+   3664
+  ],
+  [
+   "src/db.c",
+   3669
+  ],
+  [
+   "src/db.c",
+   3674
+  ],
+  [
+   "src/db.c",
+   3819
+  ],
+  [
+   "src/db.c",
+   3860
+  ],
+  [
+   "src/db.c",
+   3921
+  ],
+  [
+   "src/db.c",
+   3936
+  ],
+  [
+   "src/db.c",
+   3995
+  ],
+  [
+   "src/hotkeys.c",
+   86
+  ],
+  [
+   "src/iothread.c",
+   552
+  ],
+  [
+   "src/module.c",
+   1110
+  ],
+  [
+   "src/module.c",
+   7117
+  ],
+  [
+   "src/module.c",
+   15310
+  ],
+  [
+   "src/networking.c",
+   3822
+  ],
+  [
+   "src/replication.c",
+   594
+  ],
+  [
+   "src/script.c",
+   509
+  ],
+  [
+   "src/script.c",
+   567
+  ],
+  [
+   "src/server.c",
+   4152
+  ],
+  [
+   "src/server.c",
+   4241
+  ],
+  [
+   "src/server.c",
+   4631
+  ],
+  [
+   "src/server.c",
+   5808
+  ],
+  [
+   "src/server.c",
+   5813
+  ],
+  [
+   "src/acl.c",
+   1953
+  ],
+  [
+   "src/acl.c",
+   3224
+  ],
+  [
+   "src/aof.c",
+   1993
+  ],
+  [
+   "src/cluster_asm.c",
+   805
+  ],
+  [
+   "src/cluster_asm.c",
+   3868
+  ],
+  [
+   "src/iothread.c",
+   623
+  ],
+  [
+   "src/module.c",
+   10864
+  ],
+  [
+   "src/multi.c",
+   227
+  ],
+  [
+   "src/multi.c",
+   229
+  ],
+  [
+   "src/networking.c",
+   3559
+  ],
+  [
+   "src/networking.c",
+   3603
+  ],
+  [
+   "src/networking.c",
+   4045
+  ],
+  [
+   "src/replication.c",
+   643
+  ],
+  [
+   "src/replication.c",
+   745
+  ],
+  [
+   "src/replication.c",
+   4278
+  ],
+  [
+   "src/script.c",
+   693
+  ],
+  [
+   "src/script_lua.c",
+   1137
+  ],
+  [
+   "src/server.c",
+   4444
+  ],
+  [
+   "src/server.c",
+   6028
+  ],
+  [
+   "src/sort.c",
+   197
+  ],
+  [
+   "src/aof.c",
+   2152
+  ],
+  [
+   "src/aof.c",
+   2182
+  ],
+  [
+   "src/blocked.c",
+   149
+  ],
+  [
+   "src/blocked.c",
+   754
+  ],
+  [
+   "src/cluster_asm.c",
+   541
+  ],
+  [
+   "src/cluster_asm.c",
+   2583
+  ],
+  [
+   "src/connection.h",
+   247
+  ],
+  [
+   "src/connection.h",
+   251
+  ],
+  [
+   "src/connection.h",
+   356
+  ],
+  [
+   "src/connhelpers.h",
+   59
+  ],
+  [
+   "src/debug.c",
+   989
+  ],
+  [
+   "src/iothread.c",
+   731
+  ],
+  [
+   "src/iothread.c",
+   749
+  ],
+  [
+   "src/module.c",
+   10208
+  ],
+  [
+   "src/module.c",
+   12019
+  ],
+  [
+   "src/rdb.c",
+   4993
+  ],
+  [
+   "src/replication.c",
+   794
+  ],
+  [
+   "src/replication.c",
+   4127
+  ],
+  [
+   "src/replication.c",
+   4386
+  ],
+  [
+   "src/replication.c",
+   5137
+  ],
+  [
+   "src/script.c",
+   409
+  ],
+  [
+   "src/script_lua.c",
+   924
+  ],
+  [
+   "src/server.c",
+   1928
+  ],
+  [
+   "src/server.c",
+   3757
+  ],
+  [
+   "src/sort.c",
+   655
+  ],
+  [
+   "src/sort.c",
+   659
+  ],
+  [
+   "src/unix.c",
+   118
+  ],
+  [
+   "src/unix.c",
+   122
+  ],
+  [
+   "src/ae.c",
+   440
+  ],
+  [
+   "src/ae.c",
+   448
+  ],
+  [
+   "src/ae.c",
+   460
+  ],
+  [
+   "src/aof.c",
+   1745
+  ],
+  [
+   "src/aof.c",
+   1761
+  ],
+  [
+   "src/blocked.c",
+   668
+  ],
+  [
+   "src/blocked.c",
+   852
+  ],
+  [
+   "src/cluster.c",
+   423
+  ],
+  [
+   "src/cluster.c",
+   433
+  ],
+  [
+   "src/cluster.c",
+   463
+  ],
+  [
+   "src/cluster.c",
+   478
+  ],
+  [
+   "src/cluster_asm.c",
+   1144
+  ],
+  [
+   "src/cluster_asm.c",
+   1177
+  ],
+  [
+   "src/cluster_asm.c",
+   1178
+  ],
+  [
+   "src/cluster_asm.c",
+   2668
+  ],
+  [
+   "src/cluster_legacy.c",
+   1203
+  ],
+  [
+   "src/cluster_legacy.c",
+   1248
+  ],
+  [
+   "src/cluster_legacy.c",
+   1297
+  ],
+  [
+   "src/cluster_legacy.c",
+   1314
+  ],
+  [
+   "src/cluster_legacy.c",
+   1329
+  ],
+  [
+   "src/iothread.c",
+   122
+  ],
+  [
+   "src/iothread.c",
+   206
+  ],
+  [
+   "src/iothread.c",
+   272
+  ],
+  [
+   "src/iothread.c",
+   357
+  ],
+  [
+   "src/networking.c",
+   1678
+  ],
+  [
+   "src/networking.c",
+   1704
+  ],
+  [
+   "src/networking.c",
+   1717
+  ],
+  [
+   "src/networking.c",
+   1947
+  ],
+  [
+   "src/networking.c",
+   3537
+  ],
+  [
+   "src/rdb.c",
+   5111
+  ],
+  [
+   "src/replication.c",
+   2794
+  ],
+  [
+   "src/replication.c",
+   3153
+  ],
+  [
+   "src/replication.c",
+   3519
+  ],
+  [
+   "src/replication.c",
+   3521
+  ],
+  [
+   "src/replication.c",
+   3547
+  ],
+  [
+   "src/replication.c",
+   3564
+  ],
+  [
+   "src/replication.c",
+   4076
+  ],
+  [
+   "src/replication.c",
+   4151
+  ],
+  [
+   "src/replication.c",
+   4197
+  ],
+  [
+   "src/replication.c",
+   4475
+  ],
+  [
+   "src/script_lua.c",
+   1017
+  ],
+  [
+   "src/script_lua.c",
+   1022
+  ],
+  [
+   "src/server.c",
+   1778
+  ],
+  [
+   "src/server.c",
+   1780
+  ],
+  [
+   "src/server.c",
+   1967
+  ],
+  [
+   "src/server.c",
+   2079
+  ],
+  [
+   "src/server.c",
+   2088
+  ],
+  [
+   "src/server.c",
+   3876
+  ],
+  [
+   "src/server.c",
+   3882
+  ],
+  [
+   "src/server.c",
+   3887
+  ],
+  [
+   "src/server.c",
+   5020
+  ],
+  [
+   "src/server.c",
+   7758
+  ],
+  [
+   "src/socket.c",
+   189
+  ],
+  [
+   "src/socket.c",
+   266
+  ],
+  [
+   "src/socket.c",
+   288
+  ],
+  [
+   "src/socket.c",
+   292
+  ],
+  [
+   "src/socket.c",
+   297
+  ],
+  [
+   "src/unix.c",
+   39
+  ]
+ ],
+ "nodes": [
+  {
+   "certainty": "exact",
+   "distance": 0,
+   "file": "src/db.c",
+   "id": "removed:src/db.c:3964:delexGetKeys",
+   "line": 3964,
+   "lines": [],
+   "status": "removed"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/acl.c",
+   "id": "c:acl.c@F@ACLSelectorCheckCmd",
+   "line": 1709,
+   "lines": [
+    1746,
+    1747,
+    1748,
+    1750,
+    1763,
+    1764,
+    1765,
+    1766,
+    1769
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/cluster.c",
+   "id": "c:@F@extractSlotFromKeysResult",
+   "line": 1184,
+   "lines": [
+    1185,
+    1189,
+    1190
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/cluster.c",
+   "id": "c:@F@getNodeByQuery",
+   "line": 1236,
+   "lines": [
+    1320,
+    1330
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmGetTrimmingSlotForCommand",
+   "line": 3681,
+   "lines": [
+    3690
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@getKeysPrepareResult",
+   "line": 3185,
+   "lines": [
+    3189,
+    3201,
+    3202
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@getKeysUsingKeySpecs",
+   "line": 3228,
+   "lines": [
+    3231,
+    3302,
+    3318,
+    3319,
+    3320,
+    3341
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@getKeysFromCommandWithSpecs",
+   "line": 3356,
+   "lines": [
+    3378
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@getKeysFromCommand",
+   "line": 3559,
+   "lines": [
+    3563
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@genericGetKeys",
+   "line": 3588,
+   "lines": [
+    3619
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@sortROGetKeys",
+   "line": 3687,
+   "lines": [
+    3697
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@sortGetKeys",
+   "line": 3709,
+   "lines": [
+    3750
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/db.c",
+   "id": "c:@F@pfmergeGetKeys",
+   "line": 3753,
+   "lines": [
+    3773
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/hotkeys.c",
+   "id": "c:@F@hotkeyStatsUpdateCurrentCmd",
+   "line": 107,
+   "lines": [
+    109,
+    117,
+    151
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/memory_prefetch.c",
+   "id": "c:@F@addCommandToBatch",
+   "line": 475,
+   "lines": [
+    513,
+    514
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/module.c",
+   "id": "c:@F@moduleGetCommandKeysViaAPI",
+   "line": 1016,
+   "lines": [
+    1030
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/module.c",
+   "id": "c:@F@moduleGetCommandChannelsViaAPI",
+   "line": 1036,
+   "lines": [
+    1049
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/module.c",
+   "id": "c:@F@RM_KeyAtPosWithFlags",
+   "line": 1087,
+   "lines": [
+    1094,
+    1099,
+    1100,
+    1101
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ChannelAtPosWithFlags",
+   "line": 1146,
+   "lines": [
+    1153,
+    1164,
+    1165,
+    1166
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/module.c",
+   "id": "c:@F@RM_GetCommandKeysWithFlags",
+   "line": 15261,
+   "lines": [
+    15286,
+    15287,
+    15294,
+    15298,
+    15299,
+    15301
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/server.c",
+   "id": "c:@F@areCommandKeysInSameSlot",
+   "line": 4854,
+   "lines": [
+    4876
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/server.c",
+   "id": "c:@F@getKeysSubcommandImpl",
+   "line": 5767,
+   "lines": [
+    5792,
+    5793,
+    5795,
+    5798,
+    5799
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 1,
+   "file": "src/tracking.c",
+   "id": "c:@F@trackingRememberKeys",
+   "line": 203,
+   "lines": [
+    228
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/acl.c",
+   "id": "c:@F@ACLUserCheckCmdWithUnrestrictedKeyAccess",
+   "line": 1831,
+   "lines": [
+    1848
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/acl.c",
+   "id": "c:@F@ACLCheckAllUserCommandPerm",
+   "line": 1890,
+   "lines": [
+    1925
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@getSlotFromCommand",
+   "line": 496,
+   "lines": [
+    501
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@getChannelsFromCommand",
+   "line": 3440,
+   "lines": [
+    3453
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@extractKeysAndSlot",
+   "line": 3474,
+   "lines": [
+    3479
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@getKeysUsingLegacyRangeSpec",
+   "line": 3504,
+   "lines": [
+    3523
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@sintercardGetKeys",
+   "line": 3622,
+   "lines": [
+    3624
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@sunioncardGetKeys",
+   "line": 3627,
+   "lines": [
+    3629
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@sdiffcardGetKeys",
+   "line": 3632,
+   "lines": [
+    3634
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@zunionInterDiffStoreGetKeys",
+   "line": 3637,
+   "lines": [
+    3639
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@zunionInterDiffGetKeys",
+   "line": 3642,
+   "lines": [
+    3644
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@evalGetKeys",
+   "line": 3647,
+   "lines": [
+    3649
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@functionGetKeys",
+   "line": 3652,
+   "lines": [
+    3654
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@lmpopGetKeys",
+   "line": 3657,
+   "lines": [
+    3659
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@blmpopGetKeys",
+   "line": 3662,
+   "lines": [
+    3664
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@zmpopGetKeys",
+   "line": 3667,
+   "lines": [
+    3669
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@bzmpopGetKeys",
+   "line": 3672,
+   "lines": [
+    3674
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@migrateGetKeys",
+   "line": 3777,
+   "lines": [
+    3819
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@georadiusGetKeys",
+   "line": 3836,
+   "lines": [
+    3860
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@xreadGetKeys",
+   "line": 3878,
+   "lines": [
+    3921
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@setGetKeys",
+   "line": 3932,
+   "lines": [
+    3936
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/db.c",
+   "id": "c:@F@bitfieldGetKeys",
+   "line": 3990,
+   "lines": [
+    3995
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/hotkeys.c",
+   "id": "c:@F@hotkeyStatsPreCurrentCmd",
+   "line": 79,
+   "lines": [
+    86
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/iothread.c",
+   "id": "c:@F@prefetchIOThreadCommands",
+   "line": 524,
+   "lines": [
+    552
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/module.c",
+   "id": "c:@F@RM_KeyAtPos",
+   "line": 1107,
+   "lines": [
+    1110
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/module.c",
+   "id": "c:@F@RM_Call",
+   "line": 6859,
+   "lines": [
+    7117
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/module.c",
+   "id": "c:@F@RM_GetCommandKeys",
+   "line": 15309,
+   "lines": [
+    15310
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/networking.c",
+   "id": "c:@F@processInputBuffer",
+   "line": 3690,
+   "lines": [
+    3822
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@replBufWriterEnd",
+   "line": 586,
+   "lines": [
+    594
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/script.c",
+   "id": "c:script.c@F@scriptVerifyClusterState",
+   "line": 496,
+   "lines": [
+    509
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/script.c",
+   "id": "c:script.c@F@scriptCheckClusterCompatibility",
+   "line": 560,
+   "lines": [
+    567
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@call",
+   "line": 3992,
+   "lines": [
+    4152,
+    4241
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@processCommand",
+   "line": 4467,
+   "lines": [
+    4631
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@commandGetKeysAndFlagsCommand",
+   "line": 5807,
+   "lines": [
+    5808
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 2,
+   "file": "src/server.c",
+   "id": "c:@F@getKeysSubcommand",
+   "line": 5812,
+   "lines": [
+    5813
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/acl.c",
+   "id": "c:@F@ACLCheckAllPerm",
+   "line": 1949,
+   "lines": [
+    1953
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/acl.c",
+   "id": "c:@F@aclCommand",
+   "line": 2938,
+   "lines": [
+    3224
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/aof.c",
+   "id": "c:@F@loadSingleAppendOnlyFile",
+   "line": 1810,
+   "lines": [
+    1993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmFeedMigrationClient",
+   "line": 778,
+   "lines": [
+    805
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmModulePropagateForSlotMigration",
+   "line": 3833,
+   "lines": [
+    3868
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/iothread.c",
+   "id": "c:@F@processClientsFromIOThread",
+   "line": 603,
+   "lines": [
+    623
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ACLCheckCommandPermissions",
+   "line": 10849,
+   "lines": [
+    10864
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/multi.c",
+   "id": "c:@F@execCommand",
+   "line": 127,
+   "lines": [
+    227,
+    229
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/networking.c",
+   "id": "c:@F@processCommandAndResetClient",
+   "line": 3555,
+   "lines": [
+    3559
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/networking.c",
+   "id": "c:@F@processPendingCommandAndInputBuffer",
+   "line": 3585,
+   "lines": [
+    3603
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/networking.c",
+   "id": "c:@F@readQueryFromClient",
+   "line": 3893,
+   "lines": [
+    4045
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@feedReplicationBuffer",
+   "line": 639,
+   "lines": [
+    643
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/replication.c",
+   "id": "c:@F@replicationFeedSlaves",
+   "line": 652,
+   "lines": [
+    745
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/replication.c",
+   "id": "c:@F@replDataBufStreamToDb",
+   "line": 4230,
+   "lines": [
+    4278
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/script.c",
+   "id": "c:@F@scriptCall",
+   "line": 638,
+   "lines": [
+    693
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisAclCheckCmdPermissionsCommand",
+   "line": 1116,
+   "lines": [
+    1137
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/server.c",
+   "id": "c:@F@preprocessCommand",
+   "line": 4411,
+   "lines": [
+    4444
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/server.c",
+   "id": "c:@F@commandGetKeysCommand",
+   "line": 6027,
+   "lines": [
+    6028
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 3,
+   "file": "src/sort.c",
+   "id": "c:@F@sortCommandGeneric",
+   "line": 178,
+   "lines": [
+    197
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/aof.c",
+   "id": "c:@F@loadAppendOnlyFiles",
+   "line": 2113,
+   "lines": [
+    2152,
+    2182
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/blocked.c",
+   "id": "c:@F@processUnblockedClients",
+   "line": 115,
+   "lines": [
+    149
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/blocked.c",
+   "id": "c:blocked.c@F@unblockClientOnKey",
+   "line": 725,
+   "lines": [
+    754
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmNotifyReplicasStateChange",
+   "line": 529,
+   "lines": [
+    541
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmSyncBufferStreamToDb",
+   "line": 2550,
+   "lines": [
+    2583
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connShutdown",
+   "line": 246,
+   "lines": [
+    247
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connClose",
+   "line": 250,
+   "lines": [
+    251
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connection.h",
+   "id": "c:connection.h@F@connUnbindEventLoop",
+   "line": 351,
+   "lines": [
+    356
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/connhelpers.h",
+   "id": "c:connhelpers.h@F@callHandler",
+   "line": 57,
+   "lines": [
+    59
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/debug.c",
+   "id": "c:@F@debugCommand",
+   "line": 420,
+   "lines": [
+    989
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/iothread.c",
+   "id": "c:@F@handleClientsFromIOThread",
+   "line": 720,
+   "lines": [
+    731
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/iothread.c",
+   "id": "c:@F@processClientsOfAllIOThreads",
+   "line": 746,
+   "lines": [
+    749
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/module.c",
+   "id": "c:@F@RM_ClusterPropagateForSlotMigration",
+   "line": 10182,
+   "lines": [
+    10208
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/module.c",
+   "id": "c:@F@moduleCallCommandFilters",
+   "line": 11974,
+   "lines": [
+    12019
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/rdb.c",
+   "id": "c:rdb.c@F@rdbLoadRioWithLoadingCtxInternal",
+   "line": 4677,
+   "lines": [
+    4993
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:@F@replicationFeedStreamFromMasterStream",
+   "line": 787,
+   "lines": [
+    794
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@replDataBufReadIntoLastBlock",
+   "line": 4116,
+   "lines": [
+    4127
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@rdbChannelStreamReplDataToDb",
+   "line": 4359,
+   "lines": [
+    4386
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/replication.c",
+   "id": "c:@F@replicationCron",
+   "line": 5078,
+   "lines": [
+    5137
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/script.c",
+   "id": "c:script.c@F@scriptVerifyACL",
+   "line": 404,
+   "lines": [
+    409
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisGenericCommand",
+   "line": 879,
+   "lines": [
+    924
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:server.c@F@sendGetackToReplicas",
+   "line": 1923,
+   "lines": [
+    1928
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/server.c",
+   "id": "c:server.c@F@propagateNow",
+   "line": 3744,
+   "lines": [
+    3757
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/sort.c",
+   "id": "c:@F@sortroCommand",
+   "line": 654,
+   "lines": [
+    655
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/sort.c",
+   "id": "c:@F@sortCommand",
+   "line": 658,
+   "lines": [
+    659
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/unix.c",
+   "id": "c:unix.c@F@connUnixShutdown",
+   "line": 117,
+   "lines": [
+    118
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 4,
+   "file": "src/unix.c",
+   "id": "c:unix.c@F@connUnixClose",
+   "line": 121,
+   "lines": [
+    122
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/ae.c",
+   "id": "c:@F@aeProcessEvents",
+   "line": 365,
+   "lines": [
+    440,
+    448,
+    460
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadAOFFile",
+   "line": 1730,
+   "lines": [
+    1745
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/aof.c",
+   "id": "c:@F@loadPreLoadManifestFile",
+   "line": 1752,
+   "lines": [
+    1761
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/blocked.c",
+   "id": "c:blocked.c@F@handleClientsBlockedOnKey",
+   "line": 620,
+   "lines": [
+    668
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/blocked.c",
+   "id": "c:@F@blockedBeforeSleep",
+   "line": 825,
+   "lines": [
+    852
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateGetSocket",
+   "line": 402,
+   "lines": [
+    423,
+    433
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateCloseSocket",
+   "line": 450,
+   "lines": [
+    463
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster.c",
+   "id": "c:@F@migrateCloseTimedoutSockets",
+   "line": 469,
+   "lines": [
+    478
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmNotifyStateChange",
+   "line": 1116,
+   "lines": [
+    1144
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmImportSetFailed",
+   "line": 1148,
+   "lines": [
+    1177,
+    1178
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_asm.c",
+   "id": "c:@F@asmBeforeSleep",
+   "line": 2658,
+   "lines": [
+    2668
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@freeClusterLink",
+   "line": 1201,
+   "lines": [
+    1203
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:cluster_legacy.c@F@clusterConnAcceptHandler",
+   "line": 1242,
+   "lines": [
+    1248
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/cluster_legacy.c",
+   "id": "c:@F@clusterAcceptHandler",
+   "line": 1266,
+   "lines": [
+    1297,
+    1314,
+    1329
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@enqueuePendingClientsToMainThread",
+   "line": 115,
+   "lines": [
+    122
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@unbindClientFromIOThreadEventLoop",
+   "line": 195,
+   "lines": [
+    206
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@fetchClientFromIOThread",
+   "line": 245,
+   "lines": [
+    272
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/iothread.c",
+   "id": "c:@F@assignClientToIOThread",
+   "line": 334,
+   "lines": [
+    357
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@acceptCommonHandler",
+   "line": 1666,
+   "lines": [
+    1678,
+    1704,
+    1717
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@unlinkClient",
+   "line": 1903,
+   "lines": [
+    1947
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/networking.c",
+   "id": "c:@F@commandProcessed",
+   "line": 3509,
+   "lines": [
+    3537
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/rdb.c",
+   "id": "c:@F@rdbLoadRioWithLoadingCtx",
+   "line": 5102,
+   "lines": [
+    5111
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@readSyncBulkPayload",
+   "line": 2319,
+   "lines": [
+    2794
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@syncWithMaster",
+   "line": 3144,
+   "lines": [
+    3153,
+    3519,
+    3521
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@connectWithMaster",
+   "line": 3539,
+   "lines": [
+    3547
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@undoConnectWithMaster",
+   "line": 3563,
+   "lines": [
+    3564
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@rdbChannelFullSyncWithMaster",
+   "line": 4022,
+   "lines": [
+    4076
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:@F@replDataBufReadFromConn",
+   "line": 4140,
+   "lines": [
+    4151,
+    4197
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/replication.c",
+   "id": "c:replication.c@F@rdbChannelAbort",
+   "line": 4430,
+   "lines": [
+    4475
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisCallCommand",
+   "line": 1016,
+   "lines": [
+    1017
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/script_lua.c",
+   "id": "c:script_lua.c@F@luaRedisPCallCommand",
+   "line": 1021,
+   "lines": [
+    1022
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@serverCron",
+   "line": 1562,
+   "lines": [
+    1778,
+    1780
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@beforeSleep",
+   "line": 1947,
+   "lines": [
+    1967,
+    2079,
+    2088
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:server.c@F@propagatePendingCommands",
+   "line": 3851,
+   "lines": [
+    3876,
+    3882,
+    3887
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@prepareForShutdown",
+   "line": 4992,
+   "lines": [
+    5020
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/server.c",
+   "id": "c:@F@loadDataFromDisk",
+   "line": 7703,
+   "lines": [
+    7758
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/socket.c",
+   "id": "c:socket.c@F@connSocketAccept",
+   "line": 182,
+   "lines": [
+    189
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/socket.c",
+   "id": "c:socket.c@F@connSocketEventHandler",
+   "line": 247,
+   "lines": [
+    266,
+    288,
+    292,
+    297
+   ],
+   "status": "affected"
+  },
+  {
+   "certainty": "probable",
+   "distance": 5,
+   "file": "src/unix.c",
+   "id": "c:unix.c@F@connUnixEventHandler",
+   "line": 38,
+   "lines": [
+    39
+   ],
+   "status": "affected"
+  }
+ ],
+ "omitted": {
+  "nodes": 0
+ },
+ "seconds": 1.0477,
+ "summary": {
+  "affected_direct": 22,
+  "affected_further": 120,
+  "breaks_exact": 0,
+  "breaks_probable": 0,
+  "no_effect": 0,
+  "not_followed": 2,
+  "unknown": 0
+ },
+ "text": "[!] This change may affect 142 things you didn't touch (22 direct, 120 further up). None is sure to break.\n    2 parts of the change could not be followed.\n    You removed 1 function in 1 C/C++ file (a patch that is not applied yet).\n\nWhat changed (1)\n  [*] REMOVED    delexGetKeys  src/db.c:3964  (removed by the patch)\n\nFunctions (142)\n  [~] AFFECTED   ACLSelectorCheckCmd  src/acl.c:1709\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   extractSlotFromKeysResult  src/cluster.c:1184\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   getNodeByQuery  src/cluster.c:1236\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   asmGetTrimmingSlotForCommand  src/cluster_asm.c:3681\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   getKeysPrepareResult  src/db.c:3185\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   getKeysUsingKeySpecs  src/db.c:3228\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   getKeysFromCommandWithSpecs  src/db.c:3356\n                 calls a pointer of the type of delexGetKeys, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   getKeysFromCommand  src/db.c:3559\n                 calls a pointer of the type of delexGetKeys, which this patch removes (and 1 other link). Link: probable.\n  [~] AFFECTED   genericGetKeys  src/db.c:3588\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   sortROGetKeys  src/db.c:3687\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   sortGetKeys  src/db.c:3709\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   pfmergeGetKeys  src/db.c:3753\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   hotkeyStatsUpdateCurrentCmd  src/hotkeys.c:107\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   addCommandToBatch  src/memory_prefetch.c:475\n                 reads data that delexGetKeys writes. Link: probable.\n  [~] AFFECTED   moduleGetCommandKeysViaAPI  src/module.c:1016\n                 reads data that delexGetKeys writes. Link: probable.\n  ... and 127 more (127 AFFECTED). Raise --limit or use --html to see all.\n\nTests: not known yet (no test map in the index).\n\nBlind spots in this change (2)\n  [?] 1 changed function(s) are used as function pointers. Callers were matched by type; calls from outside this repo (callbacks into libraries) are not visible.\n  [?] Stopped at depth 5; more callers exist further up.\n\nLimits of the index (2)\n  [?] Only one build configuration was analysed; code under other #ifdef settings is not seen.\n  [?] Writes made inside another function through a pointer (foo(&x)) are not seen; atomics and memset/memcpy-style calls are.\n\nLink: probable = the link is real, but may not apply here (pointer, virtual call, same name, other object).\n\nChecked 117 of 117 files in this build.\n1,696 C/C++ files outside this build were not checked: deps/fpconv/fpconv_dtoa.c, deps/hdr_histogram/hdr_histogram.c, deps/hiredis/alloc.c and 1,693 more.\n\nindex: 216 files, 5,064 functions; followed callers up to 5 steps (stopped early: yes)"
+}

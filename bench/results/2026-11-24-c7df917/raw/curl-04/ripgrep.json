@@ -1,0 +1,19 @@
+{
+ "command": "rg -n -w --no-heading --with-filename cw_pause_flush <build files>",
+ "hits": [
+  [
+   "lib/cw-pause.c",
+   102
+  ],
+  [
+   "lib/cw-pause.c",
+   158
+  ],
+  [
+   "lib/cw-pause.c",
+   219
+  ]
+ ],
+ "seconds": 0.0293,
+ "text": "lib/cw-pause.c:102:static CURLcode cw_pause_flush(struct Curl_easy *data,\nlib/cw-pause.c:158:    result = cw_pause_flush(data, writer);\nlib/cw-pause.c:219:  cw_pause_flush,\n"
+}

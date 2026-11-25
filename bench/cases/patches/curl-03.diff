@@ -1,0 +1,34 @@
+--- a/lib/cf-socket.c
++++ b/lib/cf-socket.c
+@@ -532,11 +532,11 @@
+   return socket_open(data, addr, sockfd);
+ }
+ 
+-static int socket_close(struct Curl_easy *data, struct connectdata *conn,
++static void socket_close(struct Curl_easy *data, struct connectdata *conn,
+                         int use_callback, curl_socket_t sock)
+ {
+   if(sock == CURL_SOCKET_BAD)
+-    return 0;
++    { (void)(0); return; } /* aerotrace bench */
+ 
+   if(use_callback && conn && conn->fclosesocket) {
+     struct Curl_mapi_guard guard;
+@@ -545,7 +545,7 @@
+     CURL_CBAPI_START(&guard, data, easy_closesocket);
+     rc = conn->fclosesocket(conn->closesocket_client, sock);
+     CURL_CBAPI_END(&guard);
+-    return rc;
++    { (void)(rc); return; } /* aerotrace bench */
+   }
+ 
+   if(conn)
+@@ -554,7 +554,7 @@
+ 
+   sclose(sock);
+ 
+-  return 0;
++  { (void)(0); return; } /* aerotrace bench */
+ }
+ 
+ /*
