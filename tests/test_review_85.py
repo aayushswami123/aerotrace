@@ -56,7 +56,11 @@ def test_a_binary_hunk_on_a_code_table_assembly_or_build_file_is_unknown(unseen,
     c = contract_for(unseen, text)
     assert c["verdict"] == "unknown", c["verdict"]
     assert check.exit_code(c) == 2
-    assert f"{rel} changed but the patch has no text for it" in c["unchecked_reason"], c["unchecked_reason"]
+    assert c["change"]["not_followed"]["no_text"] == [rel]
+    gaps = " ".join(ui.terminal.not_followed_lines(c))
+    assert f"{rel} changed but the patch has no text for it" in gaps, gaps
+    if rel != "Makefile":  # a build file is also listed as a build file, first
+        assert c["unchecked_reason"] == f"{rel} changed but the patch has no text for it"
     first = ui.render_text(c, unicode=True).splitlines()[0]
     assert "nothing to check" not in first and not first.startswith("✅"), first
 
@@ -99,5 +103,6 @@ GLOBAL_DEF = [
 def test_a_file_scope_definition_is_named_in_the_reason(unseen):
     c = contract_for(unseen, make_patch(unseen, GLOBAL_DEF))
     assert c["verdict"] == "unknown"
-    assert "the declaration of hits in src/lib.c" in c["unchecked_reason"], c["unchecked_reason"]
-    assert "file-scope" in c["unchecked_reason"]
+    assert (
+        "the declaration of hits (file-scope code is not followed) in src/lib.c" in c["unchecked_reason"]
+    ), c["unchecked_reason"]

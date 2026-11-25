@@ -19,6 +19,13 @@ and versions follow [Semantic Versioning](https://semver.org/).
   give one line ("AeroTrace could not check this edit (...). Build before you go on."). With a break, the
   message says how many parts could not be checked. Other non-C files stay silent. It still only warns.
 
+- `aerotrace check` (review of #84 and #85): the search for names AeroTrace did not compile now also reads
+  `.def`, `.tbl` and assembly files (`.s`, `.S`, `.asm`; a leading `_` is allowed there). A binary hunk on a C,
+  table, assembly or build file is UNKNOWN ("lib.c changed but the patch has no text for it"). A removed
+  constructor or destructor counts only names in files outside the build. A part at file scope that
+  declares a name says so ("the declaration of hits"). The JSON `change.not_followed` has a new list
+  `no_text`. `check --help` says exit 2 also covers a check that could not run.
+
 ### Added
 
 - `aerotrace check`: when something breaks, the first line now ends with the counts in the words the

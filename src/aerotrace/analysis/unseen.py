@@ -5,7 +5,8 @@ static, or whose signature or type changed), code AeroTrace did not compile can 
 an `#if` that is off with these flags, a file outside compile_commands.json, a macro body. This is a plain
 word search over the repo's C and C++ files, comments and strings left out. A place counts as unseen when
 the index records no use of that name on that line. It is cheap: each file is read once per check, and
-only when it contains one of the names. Struct fields are not searched (names like `len` are everywhere).
+only when it contains one of the names. Constructors and destructors count only in files outside the build (a class names them in its own
+declaration). Table (`.def`, `.tbl`) and assembly (`.s`, `.S`, `.asm`) files are searched too. Struct fields are not searched (names like `len` are everywhere).
 """
 
 from __future__ import annotations
@@ -20,6 +21,9 @@ from aerotrace.index import store
 
 MAX_BYTES = 128 * 1024 * 1024  # read at most this much; past it, the search is not complete
 _SKIP_DIRS = {"node_modules", "__pycache__"}
+# Table files (`.def`, `.tbl`) are included by C files; in assembly the C symbol may carry a leading `_`.
+TABLE_ASM_EXTS = {".def", ".tbl", ".s", ".asm"}
+ASM_EXTS = {".s", ".asm"}
 _JUNK = re.compile(r"//[^\n]*|/\*.*?\*/|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'", re.S)
 
 
@@ -45,13 +49,14 @@ def code_files(root: Path) -> list[str]:
     """Repo-relative C and C++ files, sorted. Hidden folders (.git, .aerotrace, ...) are skipped."""
     from aerotrace.analysis.diff import CODE_EXTS
 
+    exts = CODE_EXTS | TABLE_ASM_EXTS
     out = []
     top = str(root)
     for d, dirs, files in os.walk(top):
         dirs[:] = sorted(x for x in dirs if not x.startswith(".") and x not in _SKIP_DIRS)
         rel = os.path.relpath(d, top).replace(os.sep, "/")
         for f in files:
-            if os.path.splitext(f)[1].lower() in CODE_EXTS:
+            if os.path.splitext(f)[1].lower() in exts:
                 out.append(f if rel == "." else f"{rel}/{f}")
     return sorted(out)
 
@@ -94,11 +99,15 @@ def _seen(conn: sqlite3.Connection, names: list[str]) -> tuple[set[tuple[str, in
 
 def _pattern(name: str, kind: str) -> re.Pattern:
     n = re.escape(name)
+    if kind == "asm":  # `bl _helper`, `call helper`: `_` is a word character, so allow it in front
+        return re.compile(rf"(?<![\w.])_?{n}\b")
     if kind == "global":
         return re.compile(rf"(?<![\w.])(?<!->){n}\b")
     member = kind == "method"
     guard = r"(?<!\w)" if member else r"(?<![\w.])(?<!->)"
     # a call, the address, or an entry of a table: f(  &f  f,  f}
+    if kind == "special":  # a constructor or destructor: written like a call
+        return re.compile(rf"(?<![\w.])(?<!->){n}\s*\(")
     return re.compile(rf"{guard}{n}\s*\(|&\s*{n}\b|{guard}{n}\s*[,}}]")
 
 
@@ -126,10 +135,11 @@ def find(
     plain = sorted(names)
     seen, ranges = _seen(conn, plain)
     indexed = store.indexed_paths(conn)
-    quick = re.compile(r"\b(?:" + "|".join(re.escape(n) for n in plain) + r")\b")
+    quick = re.compile(r"(?<![A-Za-z0-9])_?(?:" + "|".join(re.escape(n) for n in plain) + r")\b")
     quick_bytes = re.compile(quick.pattern.encode("utf-8"))
     raw = [n.encode("utf-8") for n in plain]
     pats = {n: _pattern(n, names[n]) for n in plain}
+    asm_pats = {n: _pattern(n, "asm") for n in plain}
     places: list[Place] = []
     read = 0
     for rel in code_files(root):
@@ -147,12 +157,17 @@ def find(
         code = _JUNK.sub(_blank, text)
         lines = code.split("\n")
         outside = rel not in indexed
+        is_asm = os.path.splitext(rel)[1].lower() in ASM_EXTS
         fn_ranges = ranges.get(rel, [])
         for no, line in enumerate(lines, 1):
             if not any(n in line for n in plain) or no in skip.get(rel, ()):
                 continue
             for n in plain:
-                if n not in line or not pats[n].search(line) or (rel, no, n) in seen:
+                if n not in line or (rel, no, n) in seen:
+                    continue
+                if names[n] == "special" and not outside:
+                    continue  # the class's own declarations name its constructor and destructor
+                if not (asm_pats if is_asm else pats)[n].search(line):
                     continue
                 at_file_scope = not outside and not any(s <= no <= e for s, e in fn_ranges)
                 if at_file_scope and not line.lstrip().startswith("#") and _declares(line, n, names[n]):

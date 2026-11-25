@@ -517,8 +517,9 @@ def cmd_install(args: argparse.Namespace) -> int:
 CHECK_EXIT_CODES = """Exit codes:
   0  nothing found to break, and every part of the change was checked
   1  something breaks or may break (also when some parts could not be checked)
-  2  UNKNOWN: some part of the change could not be checked or followed, or there is no
-     usable index. Build before you rely on it.
+  2  UNKNOWN: some part of the change could not be checked or followed, or AeroTrace
+     could not run the check at all (bad patch file, bad git ref, no index).
+     Build before you rely on it.
 """
 
 

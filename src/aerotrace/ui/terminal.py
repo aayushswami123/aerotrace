@@ -293,6 +293,9 @@ def not_followed_lines(data: dict) -> list[str]:
         f"{f}: a build file changed. AeroTrace does not read build files." for f in nf.get("build_files", [])
     ]
     out += [
+        f"{f} changed but the patch has no text for it, so it was not read." for f in nf.get("no_text", [])
+    ]
+    out += [
         f"{f}: could not read its old version; removed functions there are not listed."
         for f in nf["unreadable"]
     ]
