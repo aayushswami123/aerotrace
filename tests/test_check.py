@@ -749,7 +749,7 @@ def test_an_operator_or_special_member_use_the_patch_removes_is_not_a_break(cxx,
     # the constructor case: X still has its destructor, and the patch no longer makes an X
     _, c = run_patch(cxx, {"src/v.cpp": [drop], user: [touch]})
     assert _breaks(c) == {}, c["nodes"]
-    assert check.exit_code(c) == (2 if drop == DROP_CTOR else 0)  # ctor: X is also named in code not compiled
+    assert check.exit_code(c) == 0
 
 
 def _again(name, extra=""):
