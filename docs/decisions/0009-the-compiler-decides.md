@@ -21,9 +21,8 @@ The compiler and linker already know the answer. Until now we never ran them, be
 - For each file the edit reaches, AeroTrace compiles the edited code with a **trusted** compiler, using
   the flags from `compile_commands.json`, in every captured build variant. Link breaks are checked with
   the linker on the resulting objects, or with an equivalent symbol check.
-- **Edits are applied in memory only.** The edited text goes to a temp folder or an overlay outside the
-  source tree (for example an overlay file AeroTrace writes in a temp folder). Nothing is written into the user's tree except
-  `.aerotrace/`. Objects go to a temp folder and are deleted.
+- **Edits are applied in memory only.** The edited text goes to a temp folder (copies, or an overlay
+  file AeroTrace writes there). Nothing is written into the user's tree except `.aerotrace/`. Objects go to a temp folder and are deleted.
 - **Never run build scripts.** No `make`, `cmake`, `ninja`, configure scripts, or any program from inside
   the repo. Only a compiler driver and a linker.
 - **Trusted compiler** means: a compiler found on the user's `PATH` or named in the user's own
