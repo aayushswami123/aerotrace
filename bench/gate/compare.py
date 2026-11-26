@@ -9,6 +9,8 @@ A mode key is missing when the case does not run in that mode.
 
 from __future__ import annotations
 
+import math
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -57,6 +59,7 @@ class Verdict:
     failures: list[str] = field(default_factory=list)
     better: list[str] = field(default_factory=list)
     changes: list[str] = field(default_factory=list)  # "id (mode): from -> to", sorted
+    info: list[str] = field(default_factory=list)  # reason count changes: never a failure
 
     @property
     def ok(self) -> bool:
@@ -92,11 +95,135 @@ def compare(
             was, now = class_of(bc, i, mode), class_of(cc, i, mode)
             if was != now:
                 v.changes.append(f"{i} ({mode}): {was or '-'} -> {now or '-'}")
+    v.info = reason_changes(bc, cc)
     for i in sorted(cc):
         for mode in MODES:
             if class_of(cc, i, mode) == "false safe" and (i, mode) not in known:
                 v.failures.append(f"{i} ({mode} mode): false safe, and not in the known limits")
     return v
+
+
+# -- why an answer is UNKNOWN (info only: a reason never fails the gate) --
+
+# (key in change.not_followed, label), in a fixed order. "outside" uses the item's own "what".
+NOT_FOLLOWED = (
+    ("outside", "code outside any function"),
+    ("mismatched", "the patch does not match"),
+    ("unreadable", "the old version of a file could not be read"),
+    ("not_indexed", "a changed file is not in the index"),
+    ("new_files", "a new file is not in the build yet"),
+    ("deleted", "a file was deleted or renamed"),
+    ("build_files", "a build file changed"),
+    ("no_text", "a changed file has no text in the patch"),
+)
+# Ordered: the first match wins. Names of files and symbols never go into a label.
+UNCHECKED = (
+    (r"named in .*\(a file outside the build\)", "named in a file outside the build"),
+    (r"named in .*\(code AeroTrace did not compile\)", "named in code that was not compiled"),
+    (r"^\d+ calls? of .* not compiled", "a call not compiled with the new signature"),
+    (r"^The prototype of .* is removed", "a prototype removed but the function is still defined"),
+    (r"relied on a removed prototype", "files relied on a removed prototype"),
+    (r"^overrides of ", "overrides of a changed method"),
+    (r"^tables or pointers that name ", "a table or pointer names the function"),
+    (r"^the head of ", "the head of a function changed"),
+    (r"^the type of ", "the type of a variable changed"),
+    (r"the layout of", "struct layout changed"),
+)
+OTHER = "other"
+
+
+def _outside_label(what: str) -> str:
+    """The item's own "what" ("a macro", "an include"), without any name in it."""
+    if not what:
+        return LABEL_OUTSIDE
+    if what.startswith("the declaration of"):
+        return "a declaration outside a function"
+    return what if "outside" in what else f"{what} outside a function"
+
+
+LABEL_OUTSIDE = "code outside any function"
+
+
+def _first_not_followed(doc: dict[str, Any]) -> str:
+    nf = (doc.get("change") or {}).get("not_followed") or {}
+    for key, label in NOT_FOLLOWED:
+        items = nf.get(key)
+        if items:
+            if key == "outside" and isinstance(items[0], dict):
+                return _outside_label(str(items[0].get("what") or ""))
+            return label
+    return ""
+
+
+def unknown_reason(doc: dict[str, Any]) -> str:
+    """A short, stable label for why a `check --json` answer is UNKNOWN. No file or symbol names."""
+    kind = _first_not_followed(doc)
+    if doc.get("status") != "ok":
+        status = f"no check: {doc.get('status')}"
+        return f"{status} ({kind})" if kind else status
+    if kind:
+        return kind
+    raw = doc.get("unchecked_reason") or ""
+    for pattern, label in UNCHECKED:
+        if re.search(pattern, raw):
+            return label
+    # check.to_contract puts the unknown nodes last, as "<name> in <file>"
+    if any(
+        n.get("status") == "unknown" and raw == f"{n.get('name')} in {n.get('file')}"
+        for n in doc.get("nodes") or []
+    ):
+        return "an UNKNOWN item"
+    return OTHER
+
+
+def reason_table(cases: dict[str, Any]) -> list[tuple[str, int, int, int]]:
+    """(reason, honest unknown, false unknown, total) for every exit-2 answer, sorted by reason."""
+    t: dict[str, list[int]] = {}
+    for e in cases.values():
+        for mode in MODES:
+            m = e.get(mode)
+            if m and m["rc"] == 2:
+                row = t.setdefault(m.get("reason") or "(not recorded)", [0, 0])
+                row[1 if m["class"] == "false unknown" else 0] += 1
+    return [(r, h, f, h + f) for r, (h, f) in sorted(t.items())]
+
+
+def reason_lines(cases: dict[str, Any]) -> list[str]:
+    rows = reason_table(cases)
+    total = sum(r[3] for r in rows)
+    n = sum(1 for e in cases.values() for m in MODES if m in e)
+    out = ["UNKNOWN by reason", ""]
+    if rows:
+        head = ["reason", "honest unknown", "false unknown", "total"]
+        body = [[r, str(h), str(f), str(t)] for r, h, f, t in rows]
+        w = [max(len(x[i]) for x in [head, *body]) for i in range(4)]
+        for row in [head, *body]:
+            out.append("  ".join(c.ljust(w[i]) if i == 0 else c.rjust(w[i]) for i, c in enumerate(row)))
+        out.append("")
+    pct = f"{100 * total / n:.1f}" if n else "0.0"
+    out.append(f"UNKNOWN: {total} of {n} answers ({pct}%); quality bar: under 2%")
+    return out
+
+
+def reason_changes(base: dict[str, Any], cur: dict[str, Any]) -> list[str]:
+    """Info lines for reasons whose count changed. Empty when the baseline has no reasons (old file)."""
+    if not any(m.get("reason") for e in base.values() for mode in MODES if (m := e.get(mode))):
+        return []
+    was = {r: t for r, _, _, t in reason_table(base)}
+    now = {r: t for r, _, _, t in reason_table(cur)}
+    return [
+        f"UNKNOWN reason '{r}': {was.get(r, 0)} -> {now.get(r, 0)}"
+        for r in sorted(set(was) | set(now))
+        if was.get(r, 0) != now.get(r, 0)
+    ]
+
+
+def percentile(values: list[float], p: float) -> float:
+    """Nearest-rank percentile (p in 1..100). 0.0 for no values."""
+    if not values:
+        return 0.0
+    xs = sorted(values)
+    return xs[max(1, math.ceil(p / 100 * len(xs))) - 1]
 
 
 def known_block(
@@ -201,6 +328,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         "",
         "```text",
         *summary_lines(data, None, with_before),
+        *reason_lines(cases),
     ]
     fs = sorted({i for i, e in cases.items() for m in MODES if m in e and e[m]["class"] == "false safe"})
     out += ["false safe ids: " + (", ".join(fs) if fs else "none"), "```", ""]

@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -36,9 +37,12 @@ from compare import (
     compare,
     expectation_error,
     known_block,
+    percentile,
+    reason_lines,
     render_markdown,
     render_text,
     summary_lines,
+    unknown_reason,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -82,6 +86,8 @@ class Answer:
     first: str
     breaks: list[dict] = field(default_factory=list)  # json nodes with status "breaks"
     bucket: str = ""
+    reason: str = ""  # why it is UNKNOWN (exit 2 only), see compare.unknown_reason
+    raw: str = ""  # the tool's own words, kept for the "other" reasons only
 
 
 @dataclass
@@ -90,6 +96,7 @@ class Result:
     error: str = ""
     truth: Build | None = None
     answers: dict[str, Answer] = field(default_factory=dict)
+    hook_times: list[float] = field(default_factory=list)  # seconds per hook call (never saved)
 
 
 def load_cases(only: str | None) -> list[Case]:
@@ -180,8 +187,14 @@ def ask(at: list[str], w: Path, args: list[str]) -> Answer:
     try:
         doc = json.loads(j.stdout)
         ans.breaks = [n for n in doc.get("nodes", []) if n.get("status") == "breaks"]
+        if ans.rc == 2:
+            ans.reason = unknown_reason(doc)
+            ans.raw = str(doc.get("unchecked_reason") or "")
     except (ValueError, AttributeError):
         ans.breaks = []
+        if ans.rc == 2:
+            ans.reason = "other"
+            ans.raw = "check --json gave no JSON"
     return ans
 
 
@@ -214,6 +227,40 @@ def _names_failure(ans: Answer, truth: Build) -> bool:
         if name and re.search(rf"\b{re.escape(name)}\b", truth.text):
             return True
     return False
+
+
+HOOK_SUFFIXES = (".c", ".cpp", ".cc", ".cxx", ".h", ".hh", ".hpp")
+
+
+def time_hook(at: list[str], w: Path, patch: str) -> list[float]:
+    """Wall time of one `hook run` per changed C/C++ file, with the tree back at the base commit.
+
+    Needs the patch applied on entry. Reverses it (the text of each file is read first). Info only.
+    """
+    names = sh(["git", "diff", "--name-only"], w).stdout.split()
+    texts = {
+        n: (w / n).read_text(errors="replace")
+        for n in sorted(names)
+        if n.endswith(HOOK_SUFFIXES) and (w / n).is_file()
+    }
+    if not texts or sh(["git", "apply", "-R", patch], w).returncode != 0:
+        return []
+    root = w.resolve()
+    times: list[float] = []
+    for name, text in texts.items():
+        event = {
+            "tool_name": "Write",
+            "tool_input": {"file_path": str(root / name), "content": text},
+            "cwd": str(root),
+            "hook_event_name": "PreToolUse",
+        }
+        t0 = time.perf_counter()
+        subprocess.run(
+            [*at, "hook", "run"], cwd=root, input=json.dumps(event), capture_output=True, text=True,
+            timeout=TIMEOUT,
+        )  # fmt: skip
+        times.append(time.perf_counter() - t0)
+    return times
 
 
 def supported(needs: str) -> bool:
@@ -267,6 +314,7 @@ def run_case(case: Case, at: list[str]) -> Result:
                 return res
             if "git" in case.modes:
                 res.answers["git"] = ask(at, w, [])
+            res.hook_times = time_hook(at, w, patch)
         else:
             res.truth = Build(False)
         for ans in res.answers.values():
@@ -301,6 +349,8 @@ def to_data(results: list[Result], before: dict[str, Result] | None, measured: s
         old = before.get(r.case.id) if before else None
         for mode, a in sorted(r.answers.items()):
             e[mode] = {"rc": a.rc, "class": a.bucket}
+            if a.reason:
+                e[mode]["reason"] = a.reason
             oa = old.answers.get(mode) if old else None
             if oa:
                 e[mode]["before"] = f"{oa.rc} {oa.bucket}"
@@ -338,6 +388,17 @@ def measured_label(args: argparse.Namespace) -> str:
     sha = sh(["git", "log", "-1", "--format=%h", "--", "src", "pyproject.toml"], REPO).stdout.strip()
     dirty = sh(["git", "status", "--porcelain", "--", "src", "pyproject.toml"], REPO).stdout.strip()
     return sha + (" (with uncommitted changes in src/)" if dirty else "")
+
+
+def hook_line(results: list[Result], jobs: int) -> str:
+    times = [t for r in results for t in r.hook_times]
+    n = len([r for r in results if r.hook_times])
+    if not times:
+        return "Hook: no calls timed"
+    return (
+        f"Hook: {len(times)} calls, p50 {percentile(times, 50):.2f} s, p95 {percentile(times, 95):.2f} s "
+        f"(wall time with process start; {max(1, jobs)} cases at a time; {n} cases)"
+    )
 
 
 def main() -> int:
@@ -378,6 +439,12 @@ def main() -> int:
     print("\n".join(summary_lines(data, compare_to, with_before)))
     k_lines, k_better = known_block(data, known, issue)
     print("\n".join(k_lines) + "\n")
+    print("\n".join(reason_lines(data["cases"])))
+    for r in results:
+        for mode, a in sorted(r.answers.items()):
+            if a.reason == "other":
+                print(f"  other: {r.case.id} ({mode}): {a.raw}")
+    print(hook_line(results, args.jobs) + "\n")
 
     if args.write_baseline:
         if any(r.error for r in results):
@@ -410,6 +477,9 @@ def main() -> int:
     if v.changes:
         print("Cases that changed class (from -> to):")
         print("\n".join(f"  {c}" for c in v.changes) + "\n")
+    if v.info:
+        print("UNKNOWN reasons that changed (info only):")
+        print("\n".join(f"  {c}" for c in v.info) + "\n")
     if v.failures:
         print("GATE FAILED:")
         print("\n".join(f"  {f}" for f in v.failures))
