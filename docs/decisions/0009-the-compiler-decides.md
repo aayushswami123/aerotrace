@@ -22,7 +22,7 @@ The compiler and linker already know the answer. Until now we never ran them, be
   the flags from `compile_commands.json`, in every captured build variant. Link breaks are checked with
   the linker on the resulting objects, or with an equivalent symbol check.
 - **Edits are applied in memory only.** The edited text goes to a temp folder or an overlay outside the
-  source tree (for example clang's `-ivfsoverlay`). Nothing is written into the user's tree except
+  source tree (for example an overlay file AeroTrace writes in a temp folder). Nothing is written into the user's tree except
   `.aerotrace/`. Objects go to a temp folder and are deleted.
 - **Never run build scripts.** No `make`, `cmake`, `ninja`, configure scripts, or any program from inside
   the repo. Only a compiler driver and a linker.
@@ -30,9 +30,17 @@ The compiler and linker already know the answer. Until now we never ran them, be
   AeroTrace config (outside the repo), with a known driver name (`cc`, `gcc`, `g++`, `clang`, `clang++`,
   `<triple>-gcc`, ...). A compiler path inside the repo, or an unknown program name, is never run: that
   file's build answer is UNKNOWN with the reason and the fix (name a trusted compiler).
-- Flags that run other programs or load code are removed first: plugins (`-fplugin=`, `-Xclang -load`),
-  `-B`, `-specs=`, `-wrapper`, response files outside the repo or build folder. The rule list is kept in
-  one place and tested.
+- **Flags are kept by an allowlist, not a blocklist.** Only flags known to be safe pass (`-I`, `-D`,
+  `-U`, `-std=`, `-W...`, `-f...` and `-m...` without a path or plugin, `--target=`, `-isystem`, ...).
+  Anything that can run or load another program is dropped and the answer says so: plugins
+  (`-fplugin=`, `-fpass-plugin=`, `-Xclang -load`, `-Xclang -plugin`, `-mllvm -load`), `-B`, `-specs=`,
+  `-wrapper`, `-fuse-ld=<path>`, `-Wl,-plugin=`, `-fuse-linker-plugin`. Response files are read only from
+  inside the repo or the build folder. The list lives in one place and is tested.
+- **Files the repo names are data only.** Headers, `-include` files and overlay files named in the flags
+  are read by the compiler as input; they never pick the program that runs.
+- **The environment is cleaned.** `PATH` entries inside the repo (and `.`) are ignored when finding the
+  compiler. Variables that change which programs the compiler starts (`GCC_EXEC_PREFIX`,
+  `COMPILER_PATH`, `CCC_OVERRIDE_OPTIONS`, ...) are removed.
 - **BREAKS carries the compiler's own error text.** AeroTrace does not rewrite it into its own words.
 - What the compiler can't see (function pointers, data flow, behaviour changes, tests, history) stays
   AeroTrace's own analysis, with confidence labels as before.
