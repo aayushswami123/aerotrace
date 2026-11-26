@@ -9,8 +9,11 @@ AeroTrace reads source code that is often private and safety-critical. We treat 
 
 What AeroTrace does to stay safe on an untrusted repo:
 
-- It never runs the compiler or any other program named in `compile_commands.json`. A cross compiler's
-  target is read from its name.
+- Today it never runs the compiler or any other program named in `compile_commands.json`. A cross
+  compiler's target is read from its name. [ADR 0009](docs/decisions/0009-the-compiler-decides.md) will
+  change this: AeroTrace will run a *trusted* compiler (on your `PATH` or named in your own config, never
+  a program inside the repo) on the edited code, in memory. It never runs build scripts (`make`, `cmake`,
+  ...). Running a program named only by the repo stays a security bug.
 - Flags that load plugins into clang (`-fplugin=`, `-Xclang -load`, ...) are removed, including inside
   response files.
 - Response files (`@file`) are only read from inside the repo or the build folder.

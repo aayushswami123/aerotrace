@@ -25,6 +25,7 @@ Dashboard work (#79, #80) is paused until the audit must-fix list is done (owner
 | `docs/launch-readme` (#54) | product | Launch README | `README.md`, `docs/launch/` | waits for benchmark results; do not merge |
 | `fix/wrong-safe-answers` | merge | The 4 wrong "safe" answers from benchmark run 1 (redis-05, curl-05, redis-07, curl-07) | `src/aerotrace/analysis/check.py`, `analysis/data.py`, `index/history.py`, `ui/terminal.py` | review |
 | `fix/git-no-lazy-fetch` | audit-fix | A-07: partial clones never fetch; a missing object is reported | `src/aerotrace/toolchain/git.py`, `tests/test_git_partial_clone.py` | in review |
+| `chore/software-factory` | owner (agent) | PRODUCT, QUALITY_BAR, ROADMAP, ADR 0009, CLAUDE.md, agents, `make gate` reasons and hook timing | `docs/*.md`, `docs/decisions/0009*`, `CLAUDE.md`, `SECURITY.md`, `.claude/agents/`, `bench/gate/` | in review |
 | `feat/test-impact-coverage` | owner | gcov coverage for test impact | `src/aerotrace/analysis/testimpact.py` and more | parked until after launch |
 | `docs/morning-report` | owner | Day notes and screenshots | `docs/launch/` | owner decides (has budget figures) |
 | `fix/removed-fn-diff` | audit-fix | A-01, A-02: removed functions seen as "changed" | `src/aerotrace/analysis/diff.py`, tests | in review |
