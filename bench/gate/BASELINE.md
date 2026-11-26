@@ -113,5 +113,30 @@ git mode (88 cases)
   before (older build):
     correct 36, honest unknown 0, false safe 45, weak 1, false alarm 6 (false unknown 0)
 
+UNKNOWN by reason
+
+reason                                                           honest unknown  false unknown  total
+a call not compiled with the new signature                                    4              5      9
+a changed file is not in the index                                            1              0      1
+a declaration outside a function                                              3              5      8
+a file was deleted or renamed                                                 2              0      2
+a macro outside a function                                                    7              0      7
+a prototype removed but the function is still defined                         1              1      2
+a table or pointer names the function                                        14              4     18
+a type outside a function                                                     9              0      9
+an include outside a function                                                 0             14     14
+code outside any function                                                     4              1      5
+files relied on a removed prototype                                           0              1      1
+named in a file outside the build                                            11              0     11
+named in code that was not compiled                                           7              0      7
+no check: nothing_to_check (a build file changed)                             0              2      2
+no check: nothing_to_check (a changed file is not in the index)               1              0      1
+no check: nothing_to_check (the patch does not match)                         1              0      1
+overrides of a changed method                                                 2              0      2
+struct layout changed                                                         8              0      8
+the head of a function changed                                                3              2      5
+the type of a variable changed                                                0              1      1
+
+UNKNOWN: 114 of 175 answers (65.1%); quality bar: under 2%
 false safe ids: a1-paste2, cases1-ifdef2
 ```

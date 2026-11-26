@@ -89,6 +89,28 @@ Notes:
 - Any other exit code is counted as "other" and printed.
 - A case whose built result differs from `expect_build` in `case.toml` is listed under "notes".
 
+## Two reports (info only)
+
+They never fail the gate. Only the rule above does.
+
+**UNKNOWN by reason.** For every answer with exit 2 (honest unknown or false unknown, both modes) the
+runner reads `check --json` and gives it a short label (`unknown_reason` in `compare.py`): first the
+status (`no check: ...`), then the first kind in `change.not_followed` (code outside a function, patch
+does not match, file not in the index, ...), then a few patterns on `unchecked_reason` (named in a file
+outside the build, a call not compiled with the new signature, struct layout changed, ...), then
+"an UNKNOWN item". Labels hold no file or symbol names. Anything else is `other`, and the run prints the
+tool's own words for it, so a new kind shows up. The table has one row per reason: honest unknown, false
+unknown, total. The last line is `UNKNOWN: X of N answers (Y%); quality bar: under 2%` (N counts every
+answer, both modes). The label is saved in `baseline.json` (`reason`) and in `BASELINE.md`. If a reason's
+count differs from the baseline, the run lists it under "UNKNOWN reasons that changed (info only)". An old
+baseline without reasons still loads; nothing is compared until a new baseline is recorded.
+
+**Hook timing.** After the git-mode check, the runner reverses the patch and sends each changed C/C++ file
+(as a `Write` of the patched text) to `aerotrace hook run`, timing each call. The line is
+`Hook: N calls, p50 X s, p95 Y s`. p50 and p95 are nearest-rank. The time is wall time and includes
+starting the process; cases run in parallel (`--jobs`, default 4), so it is higher than a single call. Cases
+whose patch does not apply are skipped. Timings are never saved: they differ from run to run.
+
 ## Known limits
 
 Listed in `known_limits.toml`, tracked in https://github.com/aayushswami123/aerotrace/issues/93. They are

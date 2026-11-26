@@ -5,9 +5,13 @@ Human contributors: read `CONTRIBUTING.md`. It has the same rules plus the workf
 
 ## What this project is
 
-AeroTrace tells an AI coding agent what a change to C or C++ code will affect *before* the edit:
-callers, callees, transitive impact, and the globals and struct fields the code reads and writes.
-It ships as an MCP server and a command-line tool. Everything runs on the user's machine.
+AeroTrace is the change-safety gate for AI-written C/C++ code. Before an edit it says exactly what will
+break; after the edit it proves what happened. The compiler and linker decide build and link breaks;
+AeroTrace adds what they can't see (function pointers, data flow, behaviour changes, tests, history).
+It ships as an MCP server, a hook and a command-line tool. Everything runs on the user's machine.
+
+Read these first: `docs/PRODUCT.md` (what it is), `docs/QUALITY_BAR.md` (every prompt and PR is judged
+against it), `docs/ROADMAP.md` (phases and their gates), `docs/decisions/` (ADRs).
 
 ## Product rules (never break these)
 
@@ -21,9 +25,11 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 5. **A wrong "safe" answer is the worst bug.** Missing a caller is worse than listing an extra one.
    When in doubt, report the uncertainty.
 6. **Never write into the user's source tree** except `.aerotrace/` (the index) and files the user asked
-   `aerotrace install` to change. Never run the user's build (`cmake`, `make`) on our own.
-7. **Out of scope for now:** dashboards or web UI, languages other than C/C++ (Ada comes later),
-   cloud or team features.
+   `aerotrace install` to change. Edits are applied in memory only. **Never run build scripts** (`make`,
+   `cmake`, `ninja`, configure, anything from the repo). The only programs we may run are a *trusted*
+   compiler and linker, on the edited code in a temp folder (ADR 0009). Today the code still runs none.
+7. **Out of scope for now:** languages other than C/C++ (Ada comes later), cloud or team features.
+   **Dashboard and web UI work is paused until Phase 1 (Trust) passes** (`docs/ROADMAP.md`).
 
 ## Code layout
 
@@ -52,15 +58,47 @@ It ships as an MCP server and a command-line tool. Everything runs on the user's
 - Output for agents must be small. Rank results and cap lists, and say how many were left out.
 - Keep messages, docs and tool descriptions in plain, short English.
 
+## Testing rules
+
+- **Failing test first.** Every fix starts with a test or gate case that fails, then the fix makes it pass.
+- **Never weaken a test**, a golden file, a realrepo fact or a gate case to make a change pass. A wrong
+  answer is marked (`known_bug`, `bench/gate/known_limits.toml`, an issue), never edited away.
+- If a change can move a BREAKS, UNKNOWN or "nothing found" answer or an exit code, run `make gate`
+  (macOS with Apple clang). It fails if anything is worse than `bench/gate/BASELINE.md`. A new baseline
+  is recorded on purpose, in a PR (`make gate-baseline`).
+
 ## Git workflow
 
 - Before working on a branch or file area, check `docs/COORDINATION.md`. Add your branch when you start it;
   remove it when it's merged.
-- Never commit to `main`. One branch per feature: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `docs/<topic>`.
+- Never commit to `main` or `launch-candidate`. Commit only on feature branches: `feat/<topic>`,
+  `fix/<topic>`, `chore/<topic>`, `docs/<topic>`, each in its own git worktree.
+- **Small PRs into `launch-candidate`.** One topic per PR.
 - Commit after each meaningful, working step. Conventional Commits: `feat(mcp): add install command`.
 - Before every commit run `uv run ruff check . && uv run ruff format --check . && uv run pytest`.
 - Open a PR with the template filled in. Don't merge your own PR without the owner's OK.
 - No AI attribution in commits or PRs (no `Co-Authored-By` lines for tools, no "Generated with" footers).
+
+## Agents and cost
+
+Agents live in `.claude/agents/`. Pick the cheapest one that can do the job. **Nobody reviews their own work.**
+
+| Agent | Model | Job |
+|---|---|---|
+| `scout` | Haiku | Runs and reads: tests, `make gate`, logs, numbers. Never edits. |
+| `builder` | Sonnet | Writes most code, tests and docs. |
+| `architect` | Opus | Designs only (plans, ADRs, test plans). No product code. |
+| `deep-fixer` | Opus | Only for the hard parts a prompt names. |
+| `reviewer` | Sonnet | Reviews normal PRs. |
+| `critical-reviewer` | Opus | Final review only, for PRs that change BREAKS, UNKNOWN, "nothing found" or exit codes. |
+
+Cost rules:
+
+- The orchestrator (the main session) reads summaries only. It hands file reading and long outputs to
+  subagents instead of reading them itself.
+- Subagents report in 10 lines or fewer.
+- Report the session cost (`/cost`) at the end of each task.
+- **Stop and ask the owner if a session passes $20.**
 
 ## Commands
 
@@ -70,4 +108,5 @@ uv run pytest                # tests
 uv run pytest -m realrepo    # slow tests on real repos (needs network the first time)
 uv run ruff check . && uv run ruff format .
 uv run aerotrace --help
+make gate                    # gate cases vs BASELINE.md (macOS, Apple clang)
 ```

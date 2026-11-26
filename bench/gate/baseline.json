@@ -7,12 +7,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -23,7 +25,8 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 correct",
@@ -39,12 +42,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "sites": "main.c"
   },
@@ -55,12 +60,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -71,12 +78,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -87,12 +96,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -103,12 +114,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -119,12 +132,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -135,12 +150,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "sites": "main.c"
   },
@@ -151,12 +168,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "sites": "extra.c"
   },
@@ -167,12 +186,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "sites": "main.c"
   },
@@ -199,12 +220,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -215,12 +238,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "sites": "main.cpp"
   },
@@ -231,12 +256,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "main.cpp"
   },
@@ -247,12 +274,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "sites": "main.c"
   },
@@ -279,7 +308,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "patch": {
     "before": "0 false safe",
@@ -295,12 +325,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "sites": "main.c"
   },
@@ -311,12 +343,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "sites": "main.c"
   },
@@ -327,12 +361,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "sites": "extra.c"
   },
@@ -343,7 +379,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the head of a function changed"
    },
    "patch": {
     "before": "0 false safe",
@@ -359,12 +396,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -375,12 +414,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -391,12 +432,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -407,12 +450,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -423,12 +468,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "helper"
   },
@@ -439,12 +486,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "sites": ""
   },
@@ -455,12 +504,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the head of a function changed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the head of a function changed"
    },
    "sites": "main.cpp"
   },
@@ -471,7 +522,8 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "patch": {
     "before": "0 correct",
@@ -503,12 +555,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "sites": ""
   },
@@ -524,7 +578,8 @@
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "sites": ""
   },
@@ -551,7 +606,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "patch": {
     "before": "1 correct",
@@ -567,7 +623,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "patch": {
     "before": "1 correct",
@@ -583,12 +640,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "no check: nothing_to_check (a build file changed)"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "no check: nothing_to_check (a build file changed)"
    },
    "sites": ""
   },
@@ -599,12 +658,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "code outside any function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "code outside any function"
    },
    "sites": "main.c, ops.def"
   },
@@ -615,12 +676,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "code outside any function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "code outside any function"
    },
    "sites": "main.c"
   },
@@ -631,12 +694,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "sites": "main.c"
   },
@@ -647,12 +712,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a file was deleted or renamed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a prototype removed but the function is still defined"
    },
    "sites": "main.c"
   },
@@ -663,12 +730,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in code that was not compiled"
    },
    "sites": "main.c"
   },
@@ -695,12 +764,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "main.c"
   },
@@ -711,12 +782,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "f"
   },
@@ -727,12 +800,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "sites": "main.c"
   },
@@ -743,7 +818,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "no check: nothing_to_check (a changed file is not in the index)"
    },
    "patch": {
     "before": "0 false safe",
@@ -759,12 +835,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "overrides of a changed method"
    },
    "sites": "main.cpp"
   },
@@ -775,12 +853,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "overrides of a changed method"
    },
    "sites": "main.cpp"
   },
@@ -791,7 +871,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "patch": {
     "before": "1 correct",
@@ -807,12 +888,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "sites": "main.c"
   },
@@ -823,12 +906,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "struct layout changed"
    },
    "sites": "main.c"
   },
@@ -839,7 +924,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "1 weak",
@@ -855,12 +941,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a type outside a function"
    },
    "sites": "main.c"
   },
@@ -871,12 +959,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a changed file is not in the index"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a file was deleted or renamed"
    },
    "sites": "main.c"
   },
@@ -967,12 +1057,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "an include outside a function"
    },
    "sites": ""
   },
@@ -1031,12 +1123,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "named in a file outside the build"
    },
    "sites": "X::X"
   },
@@ -1084,7 +1178,8 @@
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the type of a variable changed"
    },
    "sites": ""
   },
@@ -1100,7 +1195,8 @@
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "code outside any function"
    },
    "sites": ""
   },
@@ -1111,12 +1207,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the head of a function changed"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "the head of a function changed"
    },
    "sites": ""
   },
@@ -1127,7 +1225,8 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 correct",
@@ -1143,7 +1242,8 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 correct",
@@ -1196,7 +1296,8 @@
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a prototype removed but the function is still defined"
    },
    "sites": ""
   },
@@ -1212,7 +1313,8 @@
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "files relied on a removed prototype"
    },
    "sites": ""
   },
@@ -1223,12 +1325,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "sites": ""
   },
@@ -1255,12 +1359,14 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "patch": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a declaration outside a function"
    },
    "sites": ""
   },
@@ -1271,7 +1377,8 @@
    "git": {
     "before": "0 correct",
     "class": "false unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "patch": {
     "before": "0 correct",
@@ -1335,7 +1442,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a table or pointer names the function"
    },
    "sites": "op_sub"
   },
@@ -1346,12 +1454,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a macro outside a function"
    },
    "sites": "user.c"
   },
@@ -1362,12 +1472,14 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "patch": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "sites": "main.c"
   },
@@ -1394,7 +1506,8 @@
    "patch": {
     "before": "0 false safe",
     "class": "correct",
-    "rc": 2
+    "rc": 2,
+    "reason": "no check: nothing_to_check (the patch does not match)"
    },
    "sites": ""
   },
@@ -1405,7 +1518,8 @@
    "git": {
     "before": "0 false safe",
     "class": "honest unknown",
-    "rc": 2
+    "rc": 2,
+    "reason": "a call not compiled with the new signature"
    },
    "sites": "helper"
   }

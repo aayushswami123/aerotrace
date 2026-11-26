@@ -1,6 +1,6 @@
 # 0006: Compile flags on real builds, without running the user's tools
 
-- Status: proposed
+- Status: proposed; the "never run a program named in the database" part is replaced by 0009
 - Date: 2026-11-08
 
 ## Context

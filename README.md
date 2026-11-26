@@ -103,7 +103,8 @@ index is rebuilt.
 It handles what real builds contain:
 
 - **Cross compilers.** `arm-none-eabi-gcc` means AeroTrace parses for `arm-none-eabi`, so `-mcpu=...` works
-  and target `#ifdef`s match the real build. The compiler is never run; only its name is read.
+  and target `#ifdef`s match the real build. Today the compiler is never run; only its name is read
+  ([ADR 0009](docs/decisions/0009-the-compiler-decides.md) will let a trusted compiler decide build breaks).
 - **GCC-only flags** that clang does not know are ignored and listed, not counted as errors.
 - **Response files** (`@flags.rsp`) are read when they are inside the repo or the build folder.
 
